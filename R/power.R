@@ -15,12 +15,12 @@
 #' @param planned_read Planned total sequencing reads
 #' @param mapping_efficiency Mapping efficiency for sequenced reads
 #' @param effect_size Effect size matrix for each element l and gene j (L by J dimension)
-#' @param sideness Left, right or double
+#' @param sideness Left, right or both
 #' @param correction Multiplicity correction, example including BH, bonferroni
 #' @param sig_level False discovery rate level
 #' @param return_discovery A logic value; if TRUE then returning the discovery set
 #'
-#' @return Either p-value or p-value and discovery size
+#' @return Either power list or power list and discovery size
 #' @importFrom dplyr if_else
 #' @importFrom stats p.adjust pnorm
 #' @export
@@ -36,14 +36,6 @@ power_function <- function(control_cell, target_cell_mat, UMI_s, library_size = 
   # either library size or UMI_s has to be provided
   if(all(is.null(library_size), is.null(UMI_s))){
     stop("One of library size or UMI per singlet has to be provided!")
-  }
-  
-  # sidenss and sign of effect_size should be same
-  if(sideness %in% c("right", "left")){
-    side_sign <- dplyr::if_else(sideness == "left", -1, 1)
-    dplyr::if_else(min(effect_size * side_sign) < 0, 
-                   stop("Sideness of test and sign of effect size does not match!"),
-                   TRUE)
   }
   
   # compute the list of number of total planned cells
@@ -78,21 +70,44 @@ power_function <- function(control_cell, target_cell_mat, UMI_s, library_size = 
   
   # compute p_value list
   gRNA_gene_part <- outer(gRNA_part, gene_part, FUN = "*")
-  local_mean <- effect_size * gRNA_gene_part
-  p_values <- stats::pnorm(as.vector(local_mean), 
-                           lower.tail = dplyr::if_else(sideness == "left", TRUE, FALSE))
+  local_mean <- as.vector(effect_size * gRNA_gene_part)
+  p_values <- switch (sideness,
+    left = {
+      stats::pnorm(local_mean)
+    },
+    right = {
+      stats::pnorm(local_mean, lower.tail = FALSE)
+    },
+    both = {
+      2 * min(stats::pnorm(local_mean), 1 - stats::pnorm(local_mean))
+    }
+  )
   
   # apply multiplicity correction
   adjusted_pvalue <- stats::p.adjust(p_values, method = correction)
   
+  # compute the power function
+  power <- switch (sideness,
+                   left = {
+                     pnorm(qnorm(sig_level), mean = local_mean)
+                   },
+                   right = {
+                     pnorm(qnorm(1 - sig_level), mean = local_mean, lower.tail = FALSE)
+                   },
+                   both = {
+                     pnorm(qnorm(1 - sig_level / 2), mean = local_mean,  
+                           lower.tail = FALSE) + pnorm(qnorm(sig_level / 2), mean = local_mean)
+                   }
+  )
+  
   # return the output
   if(return_discovery == TRUE){
     output <- list(
-      p_value = p_values,
+      power = power,
       num_discovery = sum(adjusted_pvalue <= sig_level)
     )
     return(output)
   }else{
-    return(p_values)
+    return(power)
   }
 }

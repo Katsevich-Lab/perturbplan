@@ -51,7 +51,7 @@ power_function(
 
 \item{effect_size}{Effect size matrix for each element l and gene j (L by J dimension)}
 
-\item{sideness}{Left, right or double}
+\item{sideness}{Left, right or both}
 
 \item{correction}{Multiplicity correction, example including BH, bonferroni}
 
@@ -60,7 +60,7 @@ power_function(
 \item{return_discovery}{A logic value; if TRUE then returning the discovery set}
 }
 \value{
-Either p-value or p-value and discovery size
+Either power list or power list and discovery size
 }
 \description{
 Power function for CRISPR screen experimental design
