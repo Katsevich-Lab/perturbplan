@@ -83,3 +83,151 @@ gene_part_computation <- function(expression_level_list, dispersion_list, librar
   # return the gene expression related part
   return(gene_part)
 }
+
+#' Adjusted power based on adjusted significance level
+#'
+#' @param mean_list List of mean under local alternative
+#' @param sig_level Significance level imposed by users
+#' @param correction Either BH or Bonferroni 
+#' @param sideness Sideness of the testing procedure
+#'
+#' @return Adjusted power list including adjusted power and discovery size estimate
+#' @export
+
+adjusted_power <- function(mean_list, sig_level, correction, sideness){
+  
+  # compute the adjusted cutoff
+  adjusted_cutoff <- adjusted_cutoff(mean_list = mean_list, 
+                                     sig_level = sig_level, 
+                                     correction = correction, 
+                                     sideness = sideness)
+  
+  # compute the adjusted power
+  adjusted_power <- rejection_computation(mean_list = mean_list, 
+                                          sideness = sideness,
+                                          sig_level = adjusted_cutoff)
+  
+  # compute the discovery set
+  discovery_size <- sum(adjusted_power)
+    
+  # compute the rejection probability with the adjusted cutoff
+  return(output = list(
+    adjusted_power = adjusted_power,
+    discovery_size_estimate = discovery_size
+  ))
+}
+
+#' Compute the adjusted significance level with either BH or Bonferroni procedure
+#'
+#' @param mean_list List of mean under local alternative
+#' @param sig_level Significance level imposed by users
+#' @param correction Either BH or Bonferroni 
+#' @param sideness Sideness of the testing procedure
+#'
+#' @return The adjusted significance level
+#' @export
+
+adjusted_cutoff <- function(mean_list, sig_level, correction, sideness){
+  
+  # extract the number of hypotheses from the mean_list
+  num_hypotheses <- length(mean_list)
+  
+  # compute the adjusted cutoff/significance level
+  adjusted_sig_level <- switch (correction,
+                                BH = {
+                                  BH_cutoff(mean_list = mean_list, 
+                                            sig_level = sig_level, 
+                                            sideness = sideness)
+                                },
+                                Bonferroni = {
+                                  sig_level / num_hypotheses
+                                }
+  )
+  
+  # return the adjusted cutoff/significance level
+  return(adjusted_sig_level)
+}
+
+#' Compute the adjusted cutoff/significance level applying BH procedure
+#'
+#' @param mean_list List of mean under local alternative
+#' @param sideness Sideness of the testing procedure
+#' @param sig_level Significance level imposed by users
+#'
+#' @return Adjusted cutoff/significance level
+#' @importFrom stats uniroot
+#' @export
+
+BH_cutoff <- function(mean_list, sideness, sig_level){
+  
+  # compute the FDP estimate with the given significance level
+  FDP <- function(t){FDP_estimate(mean_list = mean_list,
+                                  sideness = sideness,
+                                  sig_level = t)}
+  
+  # do a grid search to obtain the adjusted cutoff
+  num_hypotheses <- length(mean_list)
+  t_vals <- seq(sig_level / num_hypotheses, sig_level, length.out = num_hypotheses)
+  fdp_hat_vals <- sapply(t_vals, FDP)
+  if(all(fdp_hat_vals > sig_level)){
+    t_hat <- 0
+  } else{
+    t_hat <- t_vals[max(which(fdp_hat_vals <= sig_level))]
+  }
+  
+  # return the adjusted cutoff/significance level
+  return(t_hat)
+}
+
+#' FDP estimate based on rejection probability
+#'
+#' @param mean_list List of mean under local alternative
+#' @param sideness Sideness of the testing procedure
+#' @param sig_level Significance level imposed by users
+#'
+#' @return FDP estimate
+#' @export
+
+FDP_estimate <- function(mean_list, sideness, sig_level){
+  
+  # extract the number of hypotheses considered
+  num_hypotheses <- length(mean_list)
+  
+  # define the function with cutoff
+  rejection_size <- sum(rejection_computation(mean_list = mean_list,
+                                              sideness = sideness,
+                                              sig_level = sig_level))
+  
+  # return the FDP estimate 
+  return(num_hypotheses * sig_level / rejection_size)
+}
+
+#' Compute the rejection probability
+#'
+#' @param mean_list List of mean under local alternative
+#' @param sideness Sideness of the testing procedure
+#' @param sig_level Significance level imposed by users
+#'
+#' @return The rejection probablity
+#' @importFrom stats qnorm pnorm
+#' @export
+
+rejection_computation <- function(mean_list, sideness, sig_level){
+  
+  # compute different rejection probability based on sideness 
+  rejection_prob <- switch (sideness,
+                            left = {
+                              stats::pnorm(stats::qnorm(sig_level), mean = mean_list)
+                            },
+                            right = {
+                              stats::pnorm(stats::qnorm(1 - sig_level), mean = mean_list, lower.tail = FALSE)
+                            },
+                            both = {
+                              stats::pnorm(stats::qnorm(1 - sig_level / 2), mean = mean_list,  
+                                           lower.tail = FALSE) + stats::pnorm(stats::qnorm(sig_level / 2), mean = mean_list)
+                            }
+  )
+  
+  # return the rejection probability list
+  return(rejection_prob)
+}

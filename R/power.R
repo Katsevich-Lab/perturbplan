@@ -22,7 +22,6 @@
 #'
 #' @return Either power list or power list and discovery size
 #' @importFrom dplyr if_else
-#' @importFrom stats p.adjust pnorm
 #' @export
 
 power_function <- function(control_cell, target_cell_mat, UMI_s, library_size = NULL,  # cell-level parameter
@@ -71,43 +70,29 @@ power_function <- function(control_cell, target_cell_mat, UMI_s, library_size = 
   # compute p_value list
   gRNA_gene_part <- outer(gRNA_part, gene_part, FUN = "*")
   local_mean <- as.vector(effect_size * gRNA_gene_part)
-  p_values <- switch (sideness,
-    left = {
-      stats::pnorm(local_mean)
-    },
-    right = {
-      stats::pnorm(local_mean, lower.tail = FALSE)
-    },
-    both = {
-      2 * min(stats::pnorm(local_mean), 1 - stats::pnorm(local_mean))
-    }
-  )
   
-  # apply multiplicity correction
-  adjusted_pvalue <- stats::p.adjust(p_values, method = correction)
+  # compute the unadjusted power function
+  unadjusted_power <- rejection_computation(mean_list = local_mean,
+                                            sideness = sideness,
+                                            sig_level = sig_level)
   
-  # compute the power function
-  power <- switch (sideness,
-                   left = {
-                     pnorm(qnorm(sig_level), mean = local_mean)
-                   },
-                   right = {
-                     pnorm(qnorm(1 - sig_level), mean = local_mean, lower.tail = FALSE)
-                   },
-                   both = {
-                     pnorm(qnorm(1 - sig_level / 2), mean = local_mean,  
-                           lower.tail = FALSE) + pnorm(qnorm(sig_level / 2), mean = local_mean)
-                   }
-  )
-  
-  # return the output
-  if(return_discovery == TRUE){
+  # decide if adjusted power is computed or not
+  if(return_discovery){
+    
+    # compute the adjusted power and discovery set
+    adjusted_power_list <- adjusted_power(mean_list = local_mean, 
+                                          sig_level = sig_level, 
+                                          correction = correction, 
+                                          sideness = sideness)
+    
+    # return the output
     output <- list(
-      power = power,
-      num_discovery = sum(adjusted_pvalue <= sig_level)
+      unadjusted_power = unadjusted_power,
+      adjusted_power = adjusted_power_list$adjusted_power,
+      num_discovery = adjusted_power_list$discovery_size_estimate
     )
     return(output)
   }else{
-    return(power)
+    return(unadjusted_power)
   }
 }
