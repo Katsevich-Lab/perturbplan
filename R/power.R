@@ -7,7 +7,7 @@
 #' @param UMI_s Estimate for UMI count per singlet for the underlying type of cell
 #' @param library_size Library size from pilot data or set as a parameter in simulation study
 #' @param expression_level Expression level for J genes (values between 0 and 1)
-#' @param dispersion_list Dispersion list including for all J genes
+#' @param size_parameter_list Size parameter list including for all J genes
 #' @param gRNA_efficiency_mat gRNA efficiency matrix of dimension L by K
 #' @param recovery_rate Recovery rate for cells surviving the library preparation
 #' @param doublet_rate Doublet rate for droplet containing more than one cell
@@ -25,7 +25,7 @@
 #' @export
 
 power_function <- function(control_cell, target_cell_mat, UMI_s, library_size = NULL,  # cell-level parameter
-                           expression_level, dispersion_list,                          # gene expression parameters
+                           expression_level, size_parameter_list,                      # gene expression parameters
                            gRNA_efficiency_mat,                                        # gRNA library parameters
                            recovery_rate, doublet_rate, doublet_factor,                # Library prep parameters
                            planned_read, mapping_efficiency,                           # Sequencing parameters
@@ -64,7 +64,7 @@ power_function <- function(control_cell, target_cell_mat, UMI_s, library_size = 
   
   ## compute the final gene expression related part in power formula
   gene_part <- gene_part_computation(expression_level_list = expression_level, 
-                                     dispersion_list = dispersion_list, 
+                                     size_parameter_list = size_parameter_list, 
                                      library_size = library_size)
   
   # compute p_value list

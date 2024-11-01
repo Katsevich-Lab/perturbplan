@@ -4,12 +4,12 @@
 \alias{gene_part_computation}
 \title{Compute the gene expression related quantity in the power function}
 \usage{
-gene_part_computation(expression_level_list, dispersion_list, library_size)
+gene_part_computation(expression_level_list, size_parameter_list, library_size)
 }
 \arguments{
 \item{expression_level_list}{List of relative gene expression level}
 
-\item{dispersion_list}{Dispersion parameter for each gene}
+\item{size_parameter_list}{Size parameter for each gene}
 
 \item{library_size}{Library size for each cell considered}
 }

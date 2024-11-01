@@ -68,17 +68,17 @@ read_per_cell <- function(planned_read, mapping_efficiency,
 #' Compute the gene expression related quantity in the power function
 #'
 #' @param expression_level_list List of relative gene expression level
-#' @param dispersion_list Dispersion parameter for each gene
+#' @param size_parameter_list Size parameter for each gene
 #' @param library_size Library size for each cell considered
 #'
 #' @return The gene expression related part in the power function
 #' @export
 
-gene_part_computation <- function(expression_level_list, dispersion_list, library_size){
+gene_part_computation <- function(expression_level_list, size_parameter_list, library_size){
   
   # compute the gene expression related part in power formula
   baseline_expression <- library_size * expression_level_list
-  gene_part <- sqrt(baseline_expression / (1 + baseline_expression / dispersion_list))
+  gene_part <- sqrt(baseline_expression / (1 + baseline_expression / size_parameter_list))
   
   # return the gene expression related part
   return(gene_part)
@@ -230,4 +230,38 @@ rejection_computation <- function(mean_list, sideness, sig_level){
   
   # return the rejection probability list
   return(rejection_prob)
+}
+
+
+#' Compute the score test statistic
+#'
+#' @param X Treatment/control indicator
+#' @param Y Outcome for two groups
+#' @param size_parameter Size parameter list
+#'
+#' @return Score test statistic
+#' @export
+
+score_test <- function(X, Y, size_parameter){
+  
+  # compute the number of treat and number of control group
+  n_trt <- sum(X == 1)
+  n_ctl <- sum(X == 0)
+  
+  # compute the sample-mean
+  trt_mean <- mean(Y[X == 1])
+  ctl_mean <- mean(Y[X == 0])
+  
+  # compute the pooled sample mean
+  pooled_mean <- mean(Y)
+  
+  # compute the numerator and denominator of the test statistic
+  test_stat_numerator <- trt_mean - ctl_mean
+  test_stat_denominator <- sqrt(pooled_mean * (1 + pooled_mean / size_parameter)) * sqrt(1 / n_trt + 1 / n_ctl)
+  
+  # compute the test statistic 
+  test_stat <- test_stat_numerator / test_stat_denominator
+  
+  # return the score test statistic
+  return(test_stat)
 }

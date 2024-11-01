@@ -10,7 +10,7 @@ power_function(
   UMI_s,
   library_size = NULL,
   expression_level,
-  dispersion_list,
+  size_parameter_list,
   gRNA_efficiency_mat,
   recovery_rate,
   doublet_rate,
@@ -35,7 +35,7 @@ power_function(
 
 \item{expression_level}{Expression level for J genes (values between 0 and 1)}
 
-\item{dispersion_list}{Dispersion list including for all J genes}
+\item{size_parameter_list}{Size parameter list including for all J genes}
 
 \item{gRNA_efficiency_mat}{gRNA efficiency matrix of dimension L by K}
 
