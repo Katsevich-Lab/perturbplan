@@ -4,7 +4,7 @@
 \alias{adjusted_power}
 \title{Adjusted power based on adjusted significance level}
 \usage{
-adjusted_power(mean_list, sig_level, correction, sideness)
+adjusted_power(mean_list, sig_level, correction, sideness, QC_prob)
 }
 \arguments{
 \item{mean_list}{List of mean under local alternative}
@@ -14,6 +14,8 @@ adjusted_power(mean_list, sig_level, correction, sideness)
 \item{correction}{Either BH or Bonferroni}
 
 \item{sideness}{Sideness of the testing procedure}
+
+\item{QC_prob}{QC probability}
 }
 \value{
 Adjusted power list including adjusted power and discovery size estimate

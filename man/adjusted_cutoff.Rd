@@ -4,7 +4,7 @@
 \alias{adjusted_cutoff}
 \title{Compute the adjusted significance level with either BH or Bonferroni procedure}
 \usage{
-adjusted_cutoff(mean_list, sig_level, correction, sideness)
+adjusted_cutoff(mean_list, sig_level, correction, sideness, QC_prob)
 }
 \arguments{
 \item{mean_list}{List of mean under local alternative}
@@ -14,6 +14,8 @@ adjusted_cutoff(mean_list, sig_level, correction, sideness)
 \item{correction}{Either BH or Bonferroni}
 
 \item{sideness}{Sideness of the testing procedure}
+
+\item{QC_prob}{QC probability}
 }
 \value{
 The adjusted significance level

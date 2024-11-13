@@ -5,7 +5,7 @@
 \title{Power function for CRISPR screen experimental design}
 \usage{
 power_function(
-  control_cell,
+  control_cell_vec,
   target_cell_mat,
   UMI_s,
   library_size = NULL,
@@ -21,11 +21,13 @@ power_function(
   sideness,
   correction = "BH",
   sig_level = 0.1,
-  return_discovery = TRUE
+  QC = TRUE,
+  n_thresh = 7,
+  intermediate_outcome = FALSE
 )
 }
 \arguments{
-\item{control_cell}{Number of cell in the negative control group}
+\item{control_cell_vec}{Vector including number of cell negative control group for each element}
 
 \item{target_cell_mat}{Matrix including number of cell in group (l,k) (row: L genomic elements; column: K gRNA libraries)}
 
@@ -57,7 +59,11 @@ power_function(
 
 \item{sig_level}{False discovery rate level}
 
-\item{return_discovery}{A logic value; if TRUE then returning the discovery set}
+\item{QC}{A logic value; if TRUE, then do quality control}
+
+\item{n_thresh}{QC threshold}
+
+\item{intermediate_outcome}{A logic value indicating if only local mean and QC prob is output}
 }
 \value{
 Either power list or power list and discovery size

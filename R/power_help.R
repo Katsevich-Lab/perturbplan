@@ -90,17 +90,18 @@ gene_part_computation <- function(expression_level_list, size_parameter_list, li
 #' @param sig_level Significance level imposed by users
 #' @param correction Either BH or Bonferroni 
 #' @param sideness Sideness of the testing procedure
+#' @param QC_prob QC probability
 #'
 #' @return Adjusted power list including adjusted power and discovery size estimate
 #' @export
 
-adjusted_power <- function(mean_list, sig_level, correction, sideness){
+adjusted_power <- function(mean_list, sig_level, correction, sideness, QC_prob){
   
   # compute the adjusted cutoff
   adjusted_cutoff <- adjusted_cutoff(mean_list = mean_list, 
                                      sig_level = sig_level, 
                                      correction = correction, 
-                                     sideness = sideness)
+                                     sideness = sideness, QC_prob)
   
   # compute the adjusted power
   adjusted_power <- rejection_computation(mean_list = mean_list, 
@@ -108,7 +109,7 @@ adjusted_power <- function(mean_list, sig_level, correction, sideness){
                                           sig_level = adjusted_cutoff)
   
   # compute the discovery set
-  discovery_size <- sum(adjusted_power)
+  discovery_size <- sum(adjusted_power * (1 - QC_prob))
     
   # compute the rejection probability with the adjusted cutoff
   return(output = list(
@@ -123,24 +124,24 @@ adjusted_power <- function(mean_list, sig_level, correction, sideness){
 #' @param sig_level Significance level imposed by users
 #' @param correction Either BH or Bonferroni 
 #' @param sideness Sideness of the testing procedure
+#' @param QC_prob QC probability
 #'
 #' @return The adjusted significance level
 #' @export
 
-adjusted_cutoff <- function(mean_list, sig_level, correction, sideness){
-  
-  # extract the number of hypotheses from the mean_list
-  num_hypotheses <- length(mean_list)
+adjusted_cutoff <- function(mean_list, sig_level, correction, sideness, QC_prob){
   
   # compute the adjusted cutoff/significance level
   adjusted_sig_level <- switch (correction,
                                 BH = {
                                   BH_cutoff(mean_list = mean_list, 
                                             sig_level = sig_level, 
-                                            sideness = sideness)
+                                            sideness = sideness, 
+                                            QC_prob = QC_prob)
                                 },
                                 Bonferroni = {
-                                  sig_level / num_hypotheses
+                                  num_hypo_adjusted <- sum(1 - QC_prob)
+                                  sig_level / num_hypo_adjusted
                                 }
   )
   
@@ -153,17 +154,18 @@ adjusted_cutoff <- function(mean_list, sig_level, correction, sideness){
 #' @param mean_list List of mean under local alternative
 #' @param sideness Sideness of the testing procedure
 #' @param sig_level Significance level imposed by users
+#' @param QC_prob QC probability
 #'
 #' @return Adjusted cutoff/significance level
 #' @importFrom stats uniroot
 #' @export
 
-BH_cutoff <- function(mean_list, sideness, sig_level){
+BH_cutoff <- function(mean_list, sideness, sig_level, QC_prob){
   
   # compute the FDP estimate with the given significance level
   FDP <- function(t){FDP_estimate(mean_list = mean_list,
                                   sideness = sideness,
-                                  sig_level = t)}
+                                  sig_level = t, QC_prob = QC_prob)}
   
   # do a grid search to obtain the adjusted cutoff
   num_hypotheses <- length(mean_list)
@@ -184,22 +186,23 @@ BH_cutoff <- function(mean_list, sideness, sig_level){
 #' @param mean_list List of mean under local alternative
 #' @param sideness Sideness of the testing procedure
 #' @param sig_level Significance level imposed by users
+#' @param QC_prob QC probability
 #'
 #' @return FDP estimate
 #' @export
 
-FDP_estimate <- function(mean_list, sideness, sig_level){
+FDP_estimate <- function(mean_list, sideness, sig_level, QC_prob){
   
-  # extract the number of hypotheses considered
-  num_hypotheses <- length(mean_list)
+  # adjust the number of hypothesis by taking QC probability into consideration
+  num_hypo_adjusted <- sum(1 - QC_prob)
   
   # define the function with cutoff
   rejection_size <- sum(rejection_computation(mean_list = mean_list,
                                               sideness = sideness,
-                                              sig_level = sig_level))
+                                              sig_level = sig_level) * (1 - QC_prob))
   
   # return the FDP estimate 
-  return(num_hypotheses * sig_level / rejection_size)
+  return(num_hypo_adjusted * sig_level / rejection_size)
 }
 
 #' Compute the rejection probability
