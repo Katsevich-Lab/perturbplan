@@ -170,11 +170,44 @@ BH_cutoff <- function(mean_list, sideness, sig_level, QC_prob){
   # do a grid search to obtain the adjusted cutoff
   num_hypotheses <- length(mean_list)
   t_vals <- seq(sig_level / num_hypotheses, sig_level, length.out = num_hypotheses)
-  fdp_hat_vals <- sapply(t_vals, FDP)
-  if(all(fdp_hat_vals > sig_level)){
-    t_hat <- 0
-  } else{
-    t_hat <- t_vals[max(which(fdp_hat_vals <= sig_level))]
+  
+  # if the grid search line is too long, we split it
+  if(length(t_vals) > 1e4){
+    
+    ## check in batches with 1e4 size
+    t_hat <- NULL
+    tolerance <-  1 / num_hypotheses
+    batch <- 0
+    splitted_tvals <- split(t_vals, ceiling(seq_along(t_vals) / 1e4))
+    while(is.null(t_hat)){
+      
+      # add another batch
+      batch <- batch + 1
+      
+      # grid search in next batch
+      fdp_hat_vals <- sapply(splitted_tvals[[batch]], FDP)
+      
+      # tell if all the values fdp_hat_vals are smaller than alpha
+      if(all(fdp_hat_vals <= sig_level)){
+        next
+      }
+      
+      # if the above condition is not tru than do the following
+      if(all(fdp_hat_vals > sig_level)){
+        t_hat <- 0
+      } else{
+        t_hat <- t_vals[max(which(fdp_hat_vals <= sig_level))]
+      }
+      
+    }
+  }else{
+    
+    # do not split
+    if(all(fdp_hat_vals > sig_level)){
+      t_hat <- 0
+    } else{
+      t_hat <- t_vals[max(which(fdp_hat_vals <= sig_level))]
+    }
   }
   
   # return the adjusted cutoff/significance level

@@ -106,12 +106,12 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
                                           QC_prob = rep(0, length(local_mean)))
   }
   
+  # extract gRNA and gene names
+  gRNA_name <- rownames(target_cell_mat)
+  gene_name <- names(expression_level)
+  
   # output depending the intermediate outcome is required or not
   if(intermediate_outcome){
-    
-    # gRNA and gene names
-    gRNA_name <- rownames(target_cell_mat)
-    gene_name <- names(expression_level)
     
     # create a dataframe with outered names
     result_df <- data.frame(
@@ -125,11 +125,15 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
     
   }else{
     
-    # return the output
-    output <- list(
-      adjusted_power = adjusted_power_list$adjusted_power,
+    # create a dataframe with outered names
+    result_df <- list(
+      individual_power = data.frame(
+        pair = as.vector(outer(gRNA_name, gene_name, paste, sep = "_")),
+        adjusted_power = adjusted_power_list$adjusted_power
+      ),
       num_discovery = adjusted_power_list$discovery_size_estimate
     )
-    return(output)
+    
+    return(result_df)
   }
 }
