@@ -25,14 +25,19 @@ QC_prob <- function(effect_size, baseline_expression, size_parameter,
                                  baseline_expression = baseline_expression, 
                                  size_parameter = size_parameter)
   
+  # construct size matrix for pbinom
+  num_gene <- length(baseline_expression)
+  size_ctl_mat <- matrix(rep(num_control, num_gene), ncol = num_gene)
+  size_trt_mat <- matrix(rep(num_trt, num_gene), ncol = num_gene)
+  
   # compute the control group being kept
-  p_ctl_kept <- pbinom(q = n_thresh, size = num_control, prob = prob_vec_ctl, lower.tail = FALSE)
+  p_ctl_kept <- pbinom(q = n_thresh, size = size_ctl_mat, prob = prob_vec_ctl, lower.tail = FALSE)
   
   # compute the treatment group being kept
-  p_trt_kept <- pbinom(q = n_thresh, size = num_trt, prob = prob_vec_trt, lower.tail = FALSE)
+  p_trt_kept <- pbinom(q = n_thresh, size = size_trt_mat, prob = prob_vec_trt, lower.tail = FALSE)
   
   # compute the kept probability
-  kept_prob <- p_ctl_kept * p_trt_kept
+  kept_prob <- as.vector(p_ctl_kept * p_trt_kept)
   
   # return the QC probability
   return(1 - kept_prob)
@@ -54,12 +59,12 @@ zero_prob <- function(effect_size, baseline_expression, size_parameter){
   num_element <- nrow(effect_size)
   baseline_expression_mat <- matrix(rep(baseline_expression, times = num_element),
                                     nrow = num_element, byrow = TRUE)
-  size_parameter_vec <- as.vector(matrix(rep(size_parameter, times = num_element),
-                                         nrow = num_element, byrow = TRUE))
+  size_parameter_mat <- matrix(rep(size_parameter, times = num_element),
+                               nrow = num_element, byrow = TRUE)
   
-  # compute mean_expression and transform the matrix to vector
-  mean_expression_vec <- as.vector(baseline_expression_mat * exp(effect_size))
+  # compute mean_expression matrix
+  mean_expression_mat <- baseline_expression_mat * exp(effect_size)
   
-  # return the zero probability
-  return((size_parameter_vec / (mean_expression_vec + size_parameter_vec))^size_parameter_vec)
+  # return the zero probability matrix
+  return((size_parameter_mat / (mean_expression_mat + size_parameter_mat))^size_parameter_mat)
 }

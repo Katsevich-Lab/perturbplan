@@ -203,6 +203,7 @@ BH_cutoff <- function(mean_list, sideness, sig_level, QC_prob){
   }else{
     
     # do not split
+    fdp_hat_vals <- sapply(t_vals, FDP)
     if(all(fdp_hat_vals > sig_level)){
       t_hat <- 0
     } else{

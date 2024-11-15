@@ -54,7 +54,7 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
   # compute the gRNA related part in power formula
   gRNA_efficiency_list <- efficiency_computation(pi_mat = gRNA_efficiency_mat,
                                                  cell_mat = target_cell_mat)
-  gRNA_part <- gRNA_efficiency_list / (sqrt(1 / target_cell_list + 1 / control_cell))
+  gRNA_part <- gRNA_efficiency_list / (sqrt(1 / target_cell_list + 1 / control_cell_vec))
   
   # compute the gene expression related part in power formula
   if(is.null(library_size)){
@@ -87,7 +87,7 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
     QC_prob <- QC_prob(effect_size = effect_size, 
                        baseline_expression = expression_level * library_size, 
                        size_parameter = size_parameter_list, 
-                       num_control = control_cell, num_trt = apply(target_cell_mat, 1, sum), 
+                       num_control = control_cell_vec, num_trt = target_cell_list, 
                        n_thresh = n_thresh)
     
     # compute the adjusted power and discovery set with QC probability computed
