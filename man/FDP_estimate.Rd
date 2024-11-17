@@ -4,10 +4,12 @@
 \alias{FDP_estimate}
 \title{FDP estimate based on rejection probability}
 \usage{
-FDP_estimate(mean_list, sideness, sig_level, QC_prob)
+FDP_estimate(mean_list, sd_list, sideness, sig_level, QC_prob)
 }
 \arguments{
 \item{mean_list}{List of mean under local alternative}
+
+\item{sd_list}{List of sd under local alternative}
 
 \item{sideness}{Sideness of the testing procedure}
 

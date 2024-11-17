@@ -4,14 +4,24 @@
 \alias{gene_part_computation}
 \title{Compute the gene expression related quantity in the power function}
 \usage{
-gene_part_computation(expression_level_list, size_parameter_list, library_size)
+gene_part_computation(
+  expression_level_list,
+  library_size,
+  effect_size,
+  num_control,
+  num_trt
+)
 }
 \arguments{
 \item{expression_level_list}{List of relative gene expression level}
 
-\item{size_parameter_list}{Size parameter for each gene}
-
 \item{library_size}{Library size for each cell considered}
+
+\item{effect_size}{Effect size matrix (L by J)}
+
+\item{num_control}{Control cell vector (of length L)}
+
+\item{num_trt}{Treatment cell vector (of length L)}
 }
 \value{
 The gene expression related part in the power function

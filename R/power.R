@@ -40,8 +40,8 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
   }
   
   # compute the list of number of total planned cells
-  target_cell_list <- rowSums(target_cell_mat)
-  planned_cell_list <- control_cell_vec + target_cell_list 
+  target_cell_vec <- rowSums(target_cell_mat)
+  planned_cell_list <- control_cell_vec + target_cell_vec 
   
   # tell if the element in planned_cell_list is all the same or not
   if(length(unique(planned_cell_list)) > 1){
@@ -50,11 +50,8 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
   
   # compute the total number of cell
   total_cell <- planned_cell_list[1]
-  
-  # compute the gRNA related part in power formula
-  gRNA_efficiency_list <- efficiency_computation(pi_mat = gRNA_efficiency_mat,
-                                                 cell_mat = target_cell_mat)
-  gRNA_part <- gRNA_efficiency_list / (sqrt(1 / target_cell_list + 1 / control_cell_vec))
+  num_element <- length(target_cell_vec)
+  num_gene <- length(expression_level)
   
   # compute the gene expression related part in power formula
   if(is.null(library_size)){
@@ -71,14 +68,48 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
                                         doublet_factor = doublet_factor)
   }
   
-  ## compute the final gene expression related part in power formula
-  gene_part <- gene_part_computation(expression_level_list = expression_level, 
-                                     size_parameter_list = size_parameter_list, 
-                                     library_size = library_size)
+  # compute the gRNA efficiency
+  gRNA_efficiency_list <- efficiency_computation(pi_mat = gRNA_efficiency_mat,
+                                                 cell_mat = target_cell_mat)
+  gRNA_mat <- matrix(rep(as.vector(gRNA_efficiency_list), times = num_gene), ncol = num_gene)
   
-  # compute p_value list
-  gRNA_gene_part <- outer(gRNA_part, gene_part, FUN = "*")
-  local_mean <- as.vector(effect_size * gRNA_gene_part)
+  # compute the gene expression related part in power formula
+  gene_part <- gene_part_computation(expression_level_list = expression_level, 
+                                     library_size = library_size,
+                                     effect_size = effect_size,
+                                     num_control = control_cell_vec, 
+                                     num_trt = target_cell_vec)
+  
+  # compute the size parameter matrix
+  size_mat <- matrix(rep(size_parameter_list, num_element), ncol = num_gene)
+  
+  # compute the different variance quantities
+  pooled_mean <- gene_part$pooled_mat
+  trt_mean <- gene_part$trt_mat
+  ctl_mean <- gene_part$ctl_mat
+  pooled_var <- var_nb(mean = pooled_mean, size = size_mat)
+  trt_var <- var_nb(mean = trt_mean, size = size_mat)
+  ctl_var <- var_nb(mean = ctl_mean, size = size_mat)
+  
+  # compute the gene expression part depending if all gRNA is efficient or not
+  if(min(gRNA_efficiency_list) == 1){
+    
+    # compute the denominator
+    denominator <- sweep(pooled_var, 1, 
+                         (1/control_cell_vec + 1/target_cell_vec), "*")
+    
+    # compute the asymptotic mean 
+    asy_mean <- as.vector(ctl_mean * (exp(effect_size) - 1) / sqrt(denominator))
+    
+    # compute the asymptotic sd
+    asy_var_1 <- sweep(ctl_var, 1, 1 / control_cell_vec, "*")
+    asy_var_2 <- sweep(trt_var, 1, 1 / target_cell_vec, "*")
+    asy_var <- (asy_var_1 + asy_var_2) / denominator
+    asy_sd <- as.vector(sqrt(asy_var))
+    
+  }else{
+    stop("Code is not finished when gRNA efficiency is not 1!")
+  }
   
   # next step depends if QC_prob is used or not
   if(QC){
@@ -87,11 +118,12 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
     QC_prob <- QC_prob(effect_size = effect_size, 
                        baseline_expression = expression_level * library_size, 
                        size_parameter = size_parameter_list, 
-                       num_control = control_cell_vec, num_trt = target_cell_list, 
+                       num_control = control_cell_vec, num_trt = target_cell_vec, 
                        n_thresh = n_thresh)
     
     # compute the adjusted power and discovery set with QC probability computed
-    adjusted_power_list <- adjusted_power(mean_list = local_mean, 
+    adjusted_power_list <- adjusted_power(mean_list = asy_mean,
+                                          sd_list = asy_sd,
                                           sig_level = sig_level, 
                                           correction = correction, 
                                           sideness = sideness,
@@ -99,14 +131,15 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
   }else{
     
     # add QC probability
-    QC_prob <- rep(0, length(local_mean))
+    QC_prob <- rep(0, length(asy_mean))
 
     # compute the adjusted power and discovery set with QC probability being 0
-    adjusted_power_list <- adjusted_power(mean_list = local_mean, 
+    adjusted_power_list <- adjusted_power(mean_list = asy_mean, 
+                                          sd_list = asy_sd,
                                           sig_level = sig_level, 
                                           correction = correction, 
                                           sideness = sideness, 
-                                          QC_prob = rep(0, length(local_mean)))
+                                          QC_prob = rep(0, length(asy_mean)))
   }
   
   # extract gRNA and gene names
@@ -119,7 +152,8 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
     # create a dataframe with outered names
     result_df <- data.frame(
       pair = as.vector(outer(gRNA_name, gene_name, paste, sep = "_")),
-      local_mean = local_mean,
+      asy_mean = asy_mean,
+      asy_sd = asy_sd,
       QC_prob = QC_prob
     )
     

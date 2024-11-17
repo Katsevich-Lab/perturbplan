@@ -68,25 +68,56 @@ read_per_cell <- function(planned_read, mapping_efficiency,
 #' Compute the gene expression related quantity in the power function
 #'
 #' @param expression_level_list List of relative gene expression level
-#' @param size_parameter_list Size parameter for each gene
 #' @param library_size Library size for each cell considered
+#' @param effect_size Effect size matrix (L by J)
+#' @param num_control Control cell vector (of length L)
+#' @param num_trt Treatment cell vector (of length L)
 #'
 #' @return The gene expression related part in the power function
 #' @export
 
-gene_part_computation <- function(expression_level_list, size_parameter_list, library_size){
+gene_part_computation <- function(expression_level_list, library_size, 
+                                  effect_size, num_control, num_trt){
+  
+  # extract information
+  num_element <- length(num_trt)
+  num_gene <- length(expression_level_list)
+  num_cell <- num_trt + num_control
   
   # compute the gene expression related part in power formula
   baseline_expression <- library_size * expression_level_list
-  gene_part <- sqrt(baseline_expression / (1 + baseline_expression / size_parameter_list))
+  baseline_mat <- matrix(rep(baseline_expression, num_element),
+                         ncol = num_gene, byrow = TRUE)
+  trt_mat <- baseline_mat * exp(effect_size)
+  ctl_mat <- baseline_mat
+  pooled_mat <- trt_mat * (num_trt / num_cell) + ctl_mat * (num_control / num_cell)
   
   # return the gene expression related part
-  return(gene_part)
+  return(list(
+    baseline_mat = baseline_mat,
+    trt_mat = trt_mat,
+    ctl_mat = ctl_mat,
+    pooled_mat = pooled_mat
+  ))
+}
+
+
+#' Variance of NB distribution
+#'
+#' @param mean mu
+#' @param size size parameter
+#'
+#' @return variance of NB
+#' @export
+
+var_nb <- function(mean, size){
+  mean * (1 + mean / size)
 }
 
 #' Adjusted power based on adjusted significance level
 #'
 #' @param mean_list List of mean under local alternative
+#' @param sd_list List of sd under local alternative
 #' @param sig_level Significance level imposed by users
 #' @param correction Either BH or Bonferroni 
 #' @param sideness Sideness of the testing procedure
@@ -95,16 +126,18 @@ gene_part_computation <- function(expression_level_list, size_parameter_list, li
 #' @return Adjusted power list including adjusted power and discovery size estimate
 #' @export
 
-adjusted_power <- function(mean_list, sig_level, correction, sideness, QC_prob){
+adjusted_power <- function(mean_list, sd_list, sig_level, correction, sideness, QC_prob){
   
   # compute the adjusted cutoff
   adjusted_cutoff <- adjusted_cutoff(mean_list = mean_list, 
+                                     sd_list = sd_list,
                                      sig_level = sig_level, 
                                      correction = correction, 
                                      sideness = sideness, QC_prob)
   
   # compute the adjusted power
-  adjusted_power <- rejection_computation(mean_list = mean_list, 
+  adjusted_power <- rejection_computation(mean_list = mean_list,
+                                          sd_list = sd_list,
                                           sideness = sideness,
                                           sig_level = adjusted_cutoff)
   
@@ -121,6 +154,7 @@ adjusted_power <- function(mean_list, sig_level, correction, sideness, QC_prob){
 #' Compute the adjusted significance level with either BH or Bonferroni procedure
 #'
 #' @param mean_list List of mean under local alternative
+#' @param sd_list List of sd under local alternative
 #' @param sig_level Significance level imposed by users
 #' @param correction Either BH or Bonferroni 
 #' @param sideness Sideness of the testing procedure
@@ -129,12 +163,13 @@ adjusted_power <- function(mean_list, sig_level, correction, sideness, QC_prob){
 #' @return The adjusted significance level
 #' @export
 
-adjusted_cutoff <- function(mean_list, sig_level, correction, sideness, QC_prob){
+adjusted_cutoff <- function(mean_list, sd_list, sig_level, correction, sideness, QC_prob){
   
   # compute the adjusted cutoff/significance level
   adjusted_sig_level <- switch (correction,
                                 BH = {
                                   BH_cutoff(mean_list = mean_list, 
+                                            sd_list = sd_list,
                                             sig_level = sig_level, 
                                             sideness = sideness, 
                                             QC_prob = QC_prob)
@@ -152,6 +187,7 @@ adjusted_cutoff <- function(mean_list, sig_level, correction, sideness, QC_prob)
 #' Compute the adjusted cutoff/significance level applying BH procedure
 #'
 #' @param mean_list List of mean under local alternative
+#' @param sd_list List of sd under local alternative
 #' @param sideness Sideness of the testing procedure
 #' @param sig_level Significance level imposed by users
 #' @param QC_prob QC probability
@@ -160,10 +196,11 @@ adjusted_cutoff <- function(mean_list, sig_level, correction, sideness, QC_prob)
 #' @importFrom stats uniroot
 #' @export
 
-BH_cutoff <- function(mean_list, sideness, sig_level, QC_prob){
+BH_cutoff <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
   
   # compute the FDP estimate with the given significance level
   FDP <- function(t){FDP_estimate(mean_list = mean_list,
+                                  sd_list = sd_list,
                                   sideness = sideness,
                                   sig_level = t, QC_prob = QC_prob)}
   
@@ -218,6 +255,7 @@ BH_cutoff <- function(mean_list, sideness, sig_level, QC_prob){
 #' FDP estimate based on rejection probability
 #'
 #' @param mean_list List of mean under local alternative
+#' @param sd_list List of sd under local alternative
 #' @param sideness Sideness of the testing procedure
 #' @param sig_level Significance level imposed by users
 #' @param QC_prob QC probability
@@ -225,13 +263,14 @@ BH_cutoff <- function(mean_list, sideness, sig_level, QC_prob){
 #' @return FDP estimate
 #' @export
 
-FDP_estimate <- function(mean_list, sideness, sig_level, QC_prob){
+FDP_estimate <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
   
   # adjust the number of hypothesis by taking QC probability into consideration
   num_hypo_adjusted <- sum(1 - QC_prob)
   
   # define the function with cutoff
   rejection_size <- sum(rejection_computation(mean_list = mean_list,
+                                              sd_list = sd_list,
                                               sideness = sideness,
                                               sig_level = sig_level) * (1 - QC_prob))
   
@@ -242,6 +281,7 @@ FDP_estimate <- function(mean_list, sideness, sig_level, QC_prob){
 #' Compute the rejection probability
 #'
 #' @param mean_list List of mean under local alternative
+#' @param sd_list List of sd under local alternative
 #' @param sideness Sideness of the testing procedure
 #' @param sig_level Significance level imposed by users
 #'
@@ -249,19 +289,22 @@ FDP_estimate <- function(mean_list, sideness, sig_level, QC_prob){
 #' @importFrom stats qnorm pnorm
 #' @export
 
-rejection_computation <- function(mean_list, sideness, sig_level){
+rejection_computation <- function(mean_list, sd_list, sideness, sig_level){
   
   # compute different rejection probability based on sideness 
   rejection_prob <- switch (sideness,
                             left = {
-                              stats::pnorm(stats::qnorm(sig_level), mean = mean_list)
+                              stats::pnorm(stats::qnorm(sig_level), mean = mean_list, sd = sd_list)
                             },
                             right = {
-                              stats::pnorm(stats::qnorm(1 - sig_level), mean = mean_list, lower.tail = FALSE)
+                              stats::pnorm(stats::qnorm(1 - sig_level), 
+                                           mean = mean_list, sd = sd_list,
+                                           lower.tail = FALSE)
                             },
                             both = {
-                              stats::pnorm(stats::qnorm(1 - sig_level / 2), mean = mean_list,  
-                                           lower.tail = FALSE) + stats::pnorm(stats::qnorm(sig_level / 2), mean = mean_list)
+                              stats::pnorm(stats::qnorm(1 - sig_level / 2), mean = mean_list, sd = sd_list, 
+                                           lower.tail = FALSE) + stats::pnorm(stats::qnorm(sig_level / 2), 
+                                                                              mean = mean_list, sd = sd_list)
                             }
   )
   

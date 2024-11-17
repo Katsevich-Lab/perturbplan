@@ -4,10 +4,12 @@
 \alias{rejection_computation}
 \title{Compute the rejection probability}
 \usage{
-rejection_computation(mean_list, sideness, sig_level)
+rejection_computation(mean_list, sd_list, sideness, sig_level)
 }
 \arguments{
 \item{mean_list}{List of mean under local alternative}
+
+\item{sd_list}{List of sd under local alternative}
 
 \item{sideness}{Sideness of the testing procedure}
 

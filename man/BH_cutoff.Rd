@@ -4,10 +4,12 @@
 \alias{BH_cutoff}
 \title{Compute the adjusted cutoff/significance level applying BH procedure}
 \usage{
-BH_cutoff(mean_list, sideness, sig_level, QC_prob)
+BH_cutoff(mean_list, sd_list, sideness, sig_level, QC_prob)
 }
 \arguments{
 \item{mean_list}{List of mean under local alternative}
+
+\item{sd_list}{List of sd under local alternative}
 
 \item{sideness}{Sideness of the testing procedure}
 
