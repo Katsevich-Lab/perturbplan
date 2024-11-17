@@ -81,7 +81,8 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
                                      num_trt = target_cell_vec)
   
   # compute the size parameter matrix
-  size_mat <- matrix(rep(size_parameter_list, num_element), ncol = num_gene)
+  size_mat <- matrix(rep(size_parameter_list, num_element), 
+                     ncol = num_gene, byrow = TRUE)
   
   # compute the different variance quantities
   pooled_mean <- gene_part$pooled_mat
