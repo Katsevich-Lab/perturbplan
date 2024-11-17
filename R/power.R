@@ -97,6 +97,9 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
                                           sideness = sideness,
                                           QC_prob = QC_prob)
   }else{
+    
+    # add QC probability
+    QC_prob <- rep(0, length(local_mean))
 
     # compute the adjusted power and discovery set with QC probability being 0
     adjusted_power_list <- adjusted_power(mean_list = local_mean, 
