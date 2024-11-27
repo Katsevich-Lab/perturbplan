@@ -31,10 +31,10 @@ QC_prob <- function(effect_size, baseline_expression, size_parameter,
   size_trt_mat <- matrix(rep(num_trt, num_gene), ncol = num_gene)
   
   # compute the control group being kept
-  p_ctl_kept <- pbinom(q = n_thresh, size = size_ctl_mat, prob = prob_vec_ctl, lower.tail = FALSE)
+  p_ctl_kept <- pbinom(q = n_thresh - 1, size = size_ctl_mat, prob = prob_vec_ctl, lower.tail = FALSE)
   
   # compute the treatment group being kept
-  p_trt_kept <- pbinom(q = n_thresh, size = size_trt_mat, prob = prob_vec_trt, lower.tail = FALSE)
+  p_trt_kept <- pbinom(q = n_thresh - 1, size = size_trt_mat, prob = prob_vec_trt, lower.tail = FALSE)
   
   # compute the kept probability
   kept_prob <- as.vector(p_ctl_kept * p_trt_kept)
