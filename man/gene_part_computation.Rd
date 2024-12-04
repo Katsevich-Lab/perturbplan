@@ -9,7 +9,9 @@ gene_part_computation(
   library_size,
   effect_size,
   num_control,
-  num_trt
+  num_trt,
+  size_factor_trt,
+  size_factor_ctl
 )
 }
 \arguments{
@@ -22,6 +24,10 @@ gene_part_computation(
 \item{num_control}{Control cell vector (of length L)}
 
 \item{num_trt}{Treatment cell vector (of length L)}
+
+\item{size_factor_trt}{size factor matrix for treatment group}
+
+\item{size_facotr_ctl}{size factor matrix for control group}
 }
 \value{
 The gene expression related part in the power function

@@ -23,7 +23,11 @@ power_function(
   sig_level = 0.1,
   QC = TRUE,
   n_thresh = 7,
-  intermediate_outcome = FALSE
+  intermediate_outcome = FALSE,
+  size_factor_list = list(size_factor = matrix(1, nrow = nrow(target_cell_mat), ncol = 2,
+    dimnames = list(element = NULL, group = c("trt", "ctl"))), size_factor_sq = matrix(1,
+    nrow = nrow(target_cell_mat), ncol = 2, dimnames = list(element = NULL, group =
+    c("trt", "ctl"))))
 )
 }
 \arguments{
@@ -64,6 +68,8 @@ power_function(
 \item{n_thresh}{QC threshold}
 
 \item{intermediate_outcome}{A logic value indicating if only local mean and QC prob is output}
+
+\item{size_factor_list}{List of size factor with two matrices}
 }
 \value{
 Either power list or power list and discovery size

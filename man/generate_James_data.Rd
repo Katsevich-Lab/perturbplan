@@ -10,7 +10,8 @@ generate_James_data(
   discovery_pairs,
   sce,
   grna_target_data_frame,
-  trt_group
+  trt_group,
+  size_factor = TRUE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ generate_James_data(
 \item{grna_target_data_frame}{grna target dataframe}
 
 \item{trt_group}{treatment group}
+
+\item{size_factor}{A logic value; if TRUE, use the one in sce; false, set to 1}
 }
 \value{
 A lsit of information

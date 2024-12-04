@@ -9,14 +9,30 @@
 #' @param sce sce object
 #' @param grna_target_data_frame grna target dataframe
 #' @param trt_group treatment group
+#' @param size_factor A logic value; if TRUE, use the one in sce; false, set to 1
 #'
 #' @return A lsit of information
 #' @export
 #' @importFrom dplyr filter pull
+#' @importFrom stats setNames
 
 
 generate_James_data <- function(effect_size, guide_sd, discovery_pairs,
-                                sce, grna_target_data_frame, trt_group){
+                                sce, grna_target_data_frame, trt_group, size_factor = TRUE){
+
+  # reset the cell size factor if size_factor is false
+  if(!size_factor){
+
+    # extract the cell size factor vector
+    cell_size_factor <- SummarizedExperiment::colData(sce)[, "size_factors"]
+
+    # create a new size factor of the same length with cell_size_factor but with value 1
+    new_size_factor <- stats::setNames(rep(1, length(cell_size_factor)),
+                                       names(cell_size_factor))
+
+    # store the new_size_factor to sce
+    SummarizedExperiment::colData(sce)[, "size_factors"] <- new_size_factor
+  }
 
   # Initialize the pert object with the given pert and sce
   pert <- trt_group

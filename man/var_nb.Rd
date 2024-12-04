@@ -4,12 +4,16 @@
 \alias{var_nb}
 \title{Variance of NB distribution}
 \usage{
-var_nb(mean, size)
+var_nb(mean, size, size_factor, size_factor_sq)
 }
 \arguments{
 \item{mean}{mu}
 
 \item{size}{size parameter}
+
+\item{size_factor}{A size factor matrix (L by J dim)}
+
+\item{size_factor_sq}{A squared size factor matrix (L by J dim)}
 }
 \value{
 variance of NB
