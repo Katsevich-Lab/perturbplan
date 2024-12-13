@@ -6,7 +6,8 @@
 \usage{
 generate_James_data(
   effect_size,
-  guide_sd,
+  guide_sd_trt,
+  guide_sd_ctl,
   discovery_pairs,
   sce,
   grna_target_data_frame,
@@ -17,7 +18,9 @@ generate_James_data(
 \arguments{
 \item{effect_size}{Effect size: a scalar}
 
-\item{guide_sd}{Guide RNA sd}
+\item{guide_sd_trt}{Guide RNA sd for treatment group}
+
+\item{guide_sd_ctl}{Guide RNA sd for control group}
 
 \item{discovery_pairs}{Discovery pairs}
 

@@ -4,7 +4,8 @@
 #' This is a function generating data from James' DGP
 #'
 #' @param effect_size Effect size: a scalar
-#' @param guide_sd Guide RNA sd
+#' @param guide_sd_trt Guide RNA sd for treatment group
+#' @param guide_sd_ctl Guide RNA sd for control group
 #' @param discovery_pairs Discovery pairs
 #' @param sce sce object
 #' @param grna_target_data_frame grna target dataframe
@@ -17,7 +18,9 @@
 #' @importFrom stats setNames
 
 
-generate_James_data <- function(effect_size, guide_sd, discovery_pairs,
+generate_James_data <- function(effect_size,
+                                guide_sd_trt, guide_sd_ctl,
+                                discovery_pairs,
                                 sce, grna_target_data_frame, trt_group, size_factor = TRUE){
 
   # reset the cell size factor if size_factor is false
@@ -56,8 +59,12 @@ generate_James_data <- function(effect_size, guide_sd, discovery_pairs,
 
   # Create and center effect size matrices
   es_mat <- create_effect_size_matrix(grna_pert_status, pert_guides = pert_guides,
-                                      gene_effect_sizes = effect_sizes, guide_sd = guide_sd)
-  es_mat <- center_effect_size_matrix(es_mat, pert_status = pert_status, gene_effect_sizes = effect_sizes)
+                                      gene_effect_sizes = effect_sizes, guide_sd_trt = guide_sd_trt, guide_sd_ctl = guide_sd_ctl)
+  # set negative guide effect sizes due to shift to 0
+  es_mat[es_mat < 0] <- 0
+
+  # disfunctioning the centering
+  # es_mat <- center_effect_size_matrix(es_mat, pert_status = pert_status, gene_effect_sizes = effect_sizes)
   es_mat_use <- es_mat[, colnames(SummarizedExperiment::assay(pert_object, "counts"))]
 
   # generate the gene count

@@ -150,15 +150,16 @@ convert_pert_mat_to_vector <- function(pert_mat) {
 # function to create an effect size matrix with added guide-guide variability in effect size
 
 #' @importFrom rlang rep_along
-create_effect_size_matrix <- function(grna_pert_status, pert_guides, gene_effect_sizes, guide_sd) {
+create_effect_size_matrix <- function(grna_pert_status, pert_guides,
+                                      gene_effect_sizes, guide_sd_trt, guide_sd_ctl = 1) {
 
   # randomly draw effect size variation of guides on every gene
   n_pert_guides <- length(pert_guides)
   n_ctrl_guides <- max(grna_pert_status) - n_pert_guides
   guide_effect_sizes_pert <- vapply(gene_effect_sizes, FUN = rnorm, n = n_pert_guides,
-                                    sd = guide_sd, FUN.VALUE = numeric(n_pert_guides))
+                                    sd = guide_sd_trt, FUN.VALUE = numeric(n_pert_guides))
   guide_effect_sizes_ctrl <- vapply(rlang::rep_along(gene_effect_sizes, 1), FUN = rnorm,
-                                    n = n_ctrl_guides, sd = guide_sd,
+                                    n = n_ctrl_guides, sd = guide_sd_ctl,
                                     FUN.VALUE = numeric(n_ctrl_guides))
   guide_effect_sizes <- rbind(guide_effect_sizes_pert, guide_effect_sizes_ctrl)
 
