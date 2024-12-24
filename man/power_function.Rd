@@ -24,10 +24,12 @@ power_function(
   QC = TRUE,
   n_thresh = 7,
   intermediate_outcome = FALSE,
+  effect_size_sd = NULL,
   size_factor_list = list(size_factor = matrix(1, nrow = nrow(target_cell_mat), ncol = 2,
     dimnames = list(element = NULL, group = c("trt", "ctl"))), size_factor_sq = matrix(1,
     nrow = nrow(target_cell_mat), ncol = 2, dimnames = list(element = NULL, group =
-    c("trt", "ctl"))))
+    c("trt", "ctl")))),
+  perturb_type = "CRISPRi"
 )
 }
 \arguments{
@@ -69,7 +71,11 @@ power_function(
 
 \item{intermediate_outcome}{A logic value indicating if only local mean and QC prob is output}
 
+\item{effect_size_sd}{Sd matrix for random effect size in treatment group (L by J dimension)}
+
 \item{size_factor_list}{List of size factor with two matrices}
+
+\item{perturb_type}{either CRISPRi or CRISPRko; default is CRISPRi}
 }
 \value{
 Either power list or power list and discovery size

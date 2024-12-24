@@ -21,7 +21,9 @@
 #' @param QC A logic value; if TRUE, then do quality control
 #' @param n_thresh QC threshold
 #' @param intermediate_outcome A logic value indicating if only local mean and QC prob is output
+#' @param effect_size_sd Sd matrix for random effect size in treatment group (L by J dimension)
 #' @param size_factor_list List of size factor with two matrices
+#' @param perturb_type either CRISPRi or CRISPRko; default is CRISPRi
 #'
 #' @return Either power list or power list and discovery size
 #' @importFrom dplyr if_else
@@ -34,26 +36,29 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
                            planned_read, mapping_efficiency,                           # Sequencing parameters
                            effect_size, sideness, correction = "BH", sig_level = 0.1,  # Test related parameters
                            QC = TRUE, n_thresh = 7, intermediate_outcome = FALSE,
+                           effect_size_sd = NULL,                                      # sd for random effect size in trt group
                            size_factor_list = list(size_factor = matrix(1, nrow = nrow(target_cell_mat), ncol = 2,
                                                                         dimnames = list(element = NULL,
                                                                                         group = c("trt", "ctl"))),
                                                    size_factor_sq = matrix(1, nrow = nrow(target_cell_mat), ncol = 2,
                                                                            dimnames = list(element = NULL,
-                                                                                           group = c("trt", "ctl"))))){
+                                                                                           group = c("trt", "ctl")))),
+                           perturb_type = "CRISPRi"){
 
   # either library size or UMI_s has to be provided
   if(all(is.null(library_size), is.null(UMI_s))){
     stop("One of library size or UMI per singlet has to be provided!")
   }
 
+  # if the effect_size_sd is NULL, we set it to be zero
+  if(is.null(effect_size_sd)){
+    effect_size_sd <- matrix(0, nrow = nrow(effect_size), ncol = ncol(effect_size))
+  }
+
   # compute the list of number of total planned cells
   target_cell_vec <- rowSums(target_cell_mat)
+  target_cell_vec_sq <- rowSums(target_cell_mat^2)
   planned_cell_list <- control_cell_vec + target_cell_vec
-
-  # tell if the element in planned_cell_list is all the same or not
-  if(length(unique(planned_cell_list)) > 1){
-    stop("Sum of number of control cell and treatment cell should be the same!")
-  }
 
   # compute the total number of cell
   total_cell <- planned_cell_list[1]
@@ -85,11 +90,6 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
                                         doublet_factor = doublet_factor)
   }
 
-  # compute the gRNA efficiency
-  gRNA_efficiency_list <- efficiency_computation(pi_mat = gRNA_efficiency_mat,
-                                                 cell_mat = target_cell_mat)
-  gRNA_mat <- matrix(rep(as.vector(gRNA_efficiency_list), times = num_gene), ncol = num_gene)
-
   # compute the gene expression related part in power formula
   gene_part <- gene_part_computation(expression_level_list = expression_level,
                                      library_size = library_size,
@@ -103,20 +103,25 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
   size_mat <- matrix(rep(size_parameter_list, num_element),
                      ncol = num_gene, byrow = TRUE)
 
-  # compute the different variance quantities
-  pooled_mean <- gene_part$pooled_mat
-  trt_mean <- gene_part$trt_mat
-  ctl_mean <- gene_part$ctl_mat
-  pooled_var <- var_nb(mean = pooled_mean, size = size_mat,
-                       size_factor = matrix(1, nrow = num_element, ncol = num_gene),
-                       size_factor_sq = matrix(1, nrow = num_element, ncol = num_gene))
-  trt_var <- var_nb(mean = trt_mean, size = size_mat,
-                    size_factor = size_factor_trt, size_factor_sq = size_factor_sq_trt)
-  ctl_var <- var_nb(mean = ctl_mean, size = size_mat,
-                    size_factor = size_factor_ctl, size_factor_sq = size_factor_sq_ctl)
-
   # compute the gene expression part depending if all gRNA is efficient or not
-  if(min(gRNA_efficiency_list) == 1){
+  if(perturb_type == "CRISPRi"){
+
+    # compute the different variance quantities
+    pooled_mean <- gene_part$pooled_mat
+    trt_mean <- gene_part$trt_mat
+    ctl_mean <- gene_part$ctl_mat
+    pooled_var <- var_nb(mean = pooled_mean, size = size_mat,
+                         size_factor = matrix(1, nrow = num_element, ncol = num_gene),
+                         size_factor_sq = matrix(1, nrow = num_element, ncol = num_gene))
+    ctl_var <- var_nb(mean = ctl_mean, size = size_mat,
+                      size_factor = size_factor_ctl, size_factor_sq = size_factor_sq_ctl)
+
+    ## compute the variance for treatment group (do not account for size factor for part2)
+    trt_var_part1 <- var_nb(mean = trt_mean, size = size_mat,
+                            size_factor = size_factor_trt, size_factor_sq = size_factor_sq_trt)
+    trt_var_part2 <- trt_mean^2 * effect_size_sd^2 / size_mat + sweep(trt_mean^2 * effect_size_sd^2, 1,
+                                                                      target_cell_vec_sq / target_cell_vec, "*")
+    trt_var <- trt_var_part1 + trt_var_part2
 
     # compute the denominator
     denominator <- sweep(pooled_var, 1,
@@ -132,7 +137,13 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
     asy_sd <- as.vector(sqrt(asy_var))
 
   }else{
-    stop("Code is not finished when gRNA efficiency is not 1!")
+
+    # compute the gRNA efficiency
+    gRNA_efficiency_list <- efficiency_computation(pi_mat = gRNA_efficiency_mat,
+                                                   cell_mat = target_cell_mat)
+    gRNA_mat <- matrix(rep(as.vector(gRNA_efficiency_list), times = num_gene), ncol = num_gene)
+
+    stop("Code is not finished for CRISPR perturbation beyond interference!")
   }
 
   # next step depends if QC_prob is used or not
