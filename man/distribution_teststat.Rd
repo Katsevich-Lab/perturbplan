@@ -16,11 +16,15 @@ distribution_teststat(
 )
 }
 \arguments{
-\item{control_cell_vec}{Vector including number of cell negative control group for each element}
+\item{control_cell_vec}{Control cell size for L elements (vector; length L)}
 
-\item{target_cell_mat}{Matrix including number of cell in group (l,k) (row: L genomic elements; column: K gRNA libraries)}
+\item{target_cell_mat}{Perturb cell size for L elements (matrix; row: L genomic elements; column: K gRNA libraries)}
 
-\item{effect_size_sd}{Sd matrix for random effect size in treatment group (L by J dimension)}
+\item{size_parameter}{Size parameter for J genes (vector; length J)}
+
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes)}
+
+\item{effect_size_sd}{Sd fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes))}
 
 \item{pooled_mean}{Pooled mean expression of treatment and control (vector; length J)}
 
@@ -29,7 +33,7 @@ distribution_teststat(
 \item{ctl_mean}{Control mean expression (vector; length J)}
 }
 \value{
-Mean and sd vector of length (L times J)
+Mean and sd vector of length (L x J)
 }
 \description{
 Compute the mean and sd approximation of the test statistic

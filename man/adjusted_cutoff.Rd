@@ -7,17 +7,17 @@
 adjusted_cutoff(mean_list, sd_list, sig_level, correction, sideness, QC_prob)
 }
 \arguments{
-\item{mean_list}{List of mean under local alternative}
+\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J)}
 
-\item{sd_list}{List of sd under local alternative}
+\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J)}
 
-\item{sig_level}{Significance level imposed by users}
+\item{sig_level}{Significance leve of interest (FDR of interest)}
 
-\item{correction}{Either BH or Bonferroni}
+\item{correction}{Multiplicity correction; default is BH}
 
-\item{sideness}{Sideness of the testing procedure}
+\item{sideness}{Left, right or both}
 
-\item{QC_prob}{QC probability}
+\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J)}
 }
 \value{
 The adjusted significance level

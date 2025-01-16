@@ -11,7 +11,7 @@ score_test(X, Y, size_parameter)
 
 \item{Y}{Outcome for two groups}
 
-\item{size_parameter}{Size parameter list}
+\item{size_parameter}{Size parameter}
 }
 \value{
 Score test statistic

@@ -2,147 +2,147 @@
 
 #' Power function for CRISPR screen experimental design
 #'
-#' @param control_cell_vec Vector including number of cell negative control group for each element
-#' @param target_cell_mat Matrix including number of cell in group (l,k) (row: L genomic elements; column: K gRNA libraries)
+#' @description
+#'  ss
+#'
+#'
+#' @param perturb_type either CRISPRi or CRISPRko; currently can only handle CRISPRi
+#'
+#' @param effect_size_mean Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes)
+#' @param effect_size_sd Sd fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes))
+#' @param control_cell_vec Control cell size for L elements (vector; length L)
+#' @param target_cell_mat Perturb cell size for L elements (matrix; row: L genomic elements; column: K gRNA libraries)
+#' @param library_size Averaged library size (scalar; positive valued)
+#' @param relative_expression Baseline relative expression level for J genes (scalar; valued between 0 and 1)
+#' @param size_parameter Size parameter for J genes (vector; length J)
+#'
+#' @param sideness Left, right or both
+#' @param correction Multiplicity correction; default is BH
+#' @param sig_level Significance leve of interest (FDR of interest)
+#'
+#' @param QC A logic value; if TRUE, then do quality control
+#' @param n_nonzero_trt QC threshold for treatment cell
+#' @param n_nonzero_ctl QC threshold for control cell
+#'
 #' @param UMI_s Estimate for UMI count per singlet for the underlying type of cell
-#' @param library_size Library size from pilot data or set as a parameter in simulation study
-#' @param expression_level Expression level for J genes (values between 0 and 1)
-#' @param size_parameter_list Size parameter list including for all J genes
-#' @param gRNA_efficiency_mat gRNA efficiency matrix of dimension L by K
 #' @param recovery_rate Recovery rate for cells surviving the library preparation
 #' @param doublet_rate Doublet rate for droplet containing more than one cell
-#' @param doublet_factor atio of averaged UMI count per doublet to UMI per singlet
+#' @param doublet_factor Ratio of averaged UMI count per doublet to UMI per singlet
 #' @param planned_read Planned total sequencing reads
 #' @param mapping_efficiency Mapping efficiency for sequenced reads
-#' @param effect_size Effect size matrix for each element l and gene j (L by J dimension)
-#' @param sideness Left, right or both
-#' @param correction Multiplicity correction, example including BH, bonferroni
-#' @param sig_level False discovery rate level
-#' @param QC A logic value; if TRUE, then do quality control
-#' @param n_thresh QC threshold
-#' @param intermediate_outcome A logic value indicating if only local mean and QC prob is output
-#' @param effect_size_sd Sd matrix for random effect size in treatment group (L by J dimension)
-#' @param size_factor_list List of size factor with two matrices
-#' @param perturb_type either CRISPRi or CRISPRko; default is CRISPRi
 #'
-#' @return Either power list or power list and discovery size
+#' @param intermediate_outcome A logic value indicating if only mean, sd of test statistics and QC are desired
+#'
+#' @return A vector of power estimated
 #' @importFrom dplyr if_else
 #' @export
 
-power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_size = NULL,  # cell-level parameter
-                           expression_level, size_parameter_list,                      # gene expression parameters
-                           gRNA_efficiency_mat,                                        # gRNA library parameters
-                           recovery_rate, doublet_rate, doublet_factor,                # Library prep parameters
-                           planned_read, mapping_efficiency,                           # Sequencing parameters
-                           effect_size, sideness, correction = "BH", sig_level = 0.1,  # Test related parameters
-                           QC = TRUE, n_thresh = 7, intermediate_outcome = FALSE,
-                           effect_size_sd = NULL,                                      # sd for random effect size in trt group
-                           size_factor_list = list(size_factor = matrix(1, nrow = nrow(target_cell_mat), ncol = 2,
-                                                                        dimnames = list(element = NULL,
-                                                                                        group = c("trt", "ctl"))),
-                                                   size_factor_sq = matrix(1, nrow = nrow(target_cell_mat), ncol = 2,
-                                                                           dimnames = list(element = NULL,
-                                                                                           group = c("trt", "ctl")))),
-                           perturb_type = "CRISPRi"){
+power_function <- function(
+    ######################## specify the type of perturb-seq experiment ########
+    perturb_type = "CRISPRi",                                          # currenly only support CRISPRi
+
+    ######################## specify the power-determining parameters ##########
+    control_cell_vec, target_cell_mat,
+    library_size = NULL, relative_expression, size_parameter,
+    effect_size_mean, effect_size_sd = matrix(0, nrow = nrow(effect_size_mean), ncol = ncol(effect_size_mean)),
+
+    ######################## specify sceptre-related parameters ################
+    QC = TRUE, n_nonzero_trt = 7, n_nonzero_ctl = 7,
+
+    ###################### specify experimental design parameters ##############
+    UMI_s = NULL,                                                      # cell-type specific parameter
+    recovery_rate = NULL, doublet_rate = NULL, doublet_factor = NULL,  # Library prep parameters
+    planned_read = NULL, mapping_efficiency = NULL,                    # Sequencing parameters
+
+    ###################### specify test-related parameters #####################
+    sideness, correction = "BH", sig_level = 0.1,
+
+    ###################### output asymptotic mean/sd if needed #################
+    intermediate_outcome = FALSE
+){
 
   # either library size or UMI_s has to be provided
   if(all(is.null(library_size), is.null(UMI_s))){
     stop("One of library size or UMI per singlet has to be provided!")
   }
 
-  # if the effect_size_sd is NULL, we set it to be zero
-  if(is.null(effect_size_sd)){
-    effect_size_sd <- matrix(0, nrow = nrow(effect_size), ncol = ncol(effect_size))
-  }
-
-  # compute the list of number of total planned cells
-  target_cell_vec <- rowSums(target_cell_mat)
-  target_cell_vec_sq <- rowSums(target_cell_mat^2)
-  planned_cell_list <- control_cell_vec + target_cell_vec
-
-  # compute the total number of cell
-  total_cell <- planned_cell_list[1]
-  num_element <- length(target_cell_vec)
-  num_gene <- length(expression_level)
-
-  # extract information
-  size_factor <- size_factor_list$size_factor
-  size_factor_sq <- size_factor_list$size_factor_sq
-
-  # impute the size factor matrices
-  size_factor_trt <- matrix(rep(size_factor[,"trt"], num_gene), ncol = num_gene)
-  size_factor_ctl <- matrix(rep(size_factor[,"ctl"], num_gene), ncol = num_gene)
-  size_factor_sq_trt <- matrix(rep(size_factor_sq[,"trt"], num_gene), ncol = num_gene)
-  size_factor_sq_ctl <- matrix(rep(size_factor_sq[,"ctl"], num_gene), ncol = num_gene)
-
-  # compute the gene expression related part in power formula
+  ########## compute library size with other power-determing parameters ########
   if(is.null(library_size)){
-    ## compute the reads per cell
+
+    # compute the total number of cell
+    target_cell_vec <- rowSums(target_cell_mat)
+    total_cell <- (control_cell_vec + target_cell_vec)[1]
+
+    # compute the reads per cell
     read_c <- read_per_cell(planned_read = planned_read,
                             mapping_efficiency = mapping_efficiency,
                             planned_cell = total_cell,
                             recovery_rate = recovery_rate)
 
-    ## compute the averaged library size with read per cell
+    # compute the averaged library size with read per cell
     library_size <- library_computation(UMI_s =  UMI_s,
                                         read_c = read_c,
                                         doublet_rate = doublet_rate,
                                         doublet_factor = doublet_factor)
   }
 
-  # compute the gene expression related part in power formula
-  gene_part <- gene_part_computation(expression_level_list = expression_level,
-                                     library_size = library_size,
-                                     effect_size = effect_size,
-                                     num_control = control_cell_vec,
-                                     num_trt = target_cell_vec,
-                                     size_factor_trt = size_factor_trt,
-                                     size_factor_ctl = size_factor_ctl)
+  ####### perform power calculation with power-determining parameters ##########
+  power_result <- compute_power(perturb_type,
+                                control_cell_vec, target_cell_mat,
+                                library_size, relative_expression, size_parameter,
+                                effect_size_mean, effect_size_sd,
+                                QC, n_nonzero_trt, n_nonzero_ctl,
+                                sideness, correction, sig_level,
+                                intermediate_outcome)
 
-  # compute the size parameter matrix
-  size_mat <- matrix(rep(size_parameter_list, num_element),
-                     ncol = num_gene, byrow = TRUE)
+  # return the power_result
+  return(power_result)
+}
+
+
+#' Computing power for each (element, gene) pair
+#'
+#' @inheritParams power_function
+#' @param cutoff Cutoff for p-values to reject the test
+#'
+#' @return A dataframe or a list epending on intermediate_outcome.
+#' @export
+compute_power <- function(perturb_type,
+                          control_cell_vec, target_cell_mat,
+                          library_size, relative_expression, size_parameter,
+                          effect_size_mean, effect_size_sd,
+                          QC, n_nonzero_trt, n_nonzero_ctl,
+                          sideness, correction = NULL, sig_level = NULL, cutoff = NULL,
+                          intermediate_outcome = FALSE){
+
+  # compute the number of total cells targeting certain element
+  target_cell_vec <- rowSums(target_cell_mat)
+
+  # compute the mean gene expression appearing in the power formula
+  mean_expression <- mean_expression_computation(relative_expression = relative_expression,
+                                                 library_size = library_size,
+                                                 effect_size_mean = effect_size_mean,
+                                                 num_control = control_cell_vec,
+                                                 num_trt = target_cell_vec)
 
   # compute the gene expression part depending if all gRNA is efficient or not
   if(perturb_type == "CRISPRi"){
 
     # compute the different variance quantities
-    pooled_mean <- gene_part$pooled_mat
-    trt_mean <- gene_part$trt_mat
-    ctl_mean <- gene_part$ctl_mat
-    pooled_var <- var_nb(mean = pooled_mean, size = size_mat,
-                         size_factor = matrix(1, nrow = num_element, ncol = num_gene),
-                         size_factor_sq = matrix(1, nrow = num_element, ncol = num_gene))
-    ctl_var <- var_nb(mean = ctl_mean, size = size_mat,
-                      size_factor = size_factor_ctl, size_factor_sq = size_factor_sq_ctl)
+    pooled_mean <- mean_expression$pooled_mat
+    trt_mean <- mean_expression$trt_mat
+    ctl_mean <- mean_expression$ctl_mat
 
-    ## compute the variance for treatment group (do not account for size factor for part2)
-    trt_var_part1 <- var_nb(mean = trt_mean, size = size_mat,
-                            size_factor = size_factor_trt, size_factor_sq = size_factor_sq_trt)
-    trt_var_part2 <- trt_mean^2 * effect_size_sd^2 / size_mat + sweep(trt_mean^2 * effect_size_sd^2, 1,
-                                                                      target_cell_vec_sq / target_cell_vec, "*")
-    trt_var <- trt_var_part1 + trt_var_part2
+    # compute asy_mean and asy_sd
+    asy_quantity <- distribution_teststat(control_cell_vec, target_cell_mat, size_parameter,
+                                          effect_size_mean, effect_size_sd,
+                                          pooled_mean, trt_mean, ctl_mean)
 
-    # compute the denominator
-    denominator <- sweep(pooled_var, 1,
-                         (1/control_cell_vec + 1/target_cell_vec), "*")
-
-    # compute the asymptotic mean
-    asy_mean <- as.vector(ctl_mean * (exp(effect_size) - 1) / sqrt(denominator))
-
-    # compute the asymptotic sd
-    asy_var_1 <- sweep(ctl_var, 1, 1 / control_cell_vec, "*")
-    asy_var_2 <- sweep(trt_var, 1, 1 / target_cell_vec, "*")
-    asy_var <- (asy_var_1 + asy_var_2) / denominator
-    asy_sd <- as.vector(sqrt(asy_var))
+    # obtain asy_mean and asy_sd
+    asy_mean <- asy_quantity$mean
+    asy_sd <- asy_quantity$sd
 
   }else{
-
-    # compute the gRNA efficiency
-    gRNA_efficiency_list <- efficiency_computation(pi_mat = gRNA_efficiency_mat,
-                                                   cell_mat = target_cell_mat)
-    gRNA_mat <- matrix(rep(as.vector(gRNA_efficiency_list), times = num_gene), ncol = num_gene)
-
     stop("Code is not finished for CRISPR perturbation beyond interference!")
   }
 
@@ -150,62 +150,56 @@ power_function <- function(control_cell_vec, target_cell_mat, UMI_s, library_siz
   if(QC){
 
     # compute the QC_prob
-    QC_prob <- QC_prob(effect_size = effect_size,
-                       baseline_expression = expression_level * library_size,
-                       size_parameter = size_parameter_list,
+    QC_prob <- QC_prob(effect_size_mean = effect_size_mean,
+                       baseline_expression = relative_expression * library_size,
+                       size_parameter = size_parameter,
                        num_control = control_cell_vec, num_trt = target_cell_vec,
-                       n_thresh = n_thresh)
+                       n_nonzero_trt = n_nonzero_trt, n_nonzero_ctl = n_nonzero_ctl)
 
-    # compute the adjusted power and discovery set with QC probability computed
-    adjusted_power_list <- adjusted_power(mean_list = asy_mean,
-                                          sd_list = asy_sd,
-                                          sig_level = sig_level,
-                                          correction = correction,
-                                          sideness = sideness,
-                                          QC_prob = QC_prob)
   }else{
 
     # add QC probability
     QC_prob <- rep(0, length(asy_mean))
 
-    # compute the adjusted power and discovery set with QC probability being 0
-    adjusted_power_list <- adjusted_power(mean_list = asy_mean,
-                                          sd_list = asy_sd,
-                                          sig_level = sig_level,
-                                          correction = correction,
-                                          sideness = sideness,
-                                          QC_prob = rep(0, length(asy_mean)))
   }
 
-  # extract gRNA and gene names
+  # extract gRNA and gene names and obtain Enhancer-Gene pair
   gRNA_name <- rownames(target_cell_mat)
-  gene_name <- names(expression_level)
+  gene_name <- names(relative_expression)
+  E2G_pair <- as.vector(outer(gRNA_name, gene_name, paste, sep = "_"))
 
   # output depending the intermediate outcome is required or not
   if(intermediate_outcome){
 
     # create a dataframe with outered names
     result_df <- data.frame(
-      pair = as.vector(outer(gRNA_name, gene_name, paste, sep = "_")),
+      pair = E2G_pair,
       asy_mean = asy_mean,
       asy_sd = asy_sd,
       QC_prob = QC_prob
     )
 
-    # return the dataframe
-    return(result_df)
-
   }else{
 
-    # create a dataframe with outered names
+    # compute the adjusted power and discovery set with QC probability
+    adjusted_power_list <- adjusted_power(mean_list = asy_mean,
+                                          sd_list = asy_sd,
+                                          sig_level = sig_level,
+                                          correction = correction,
+                                          sideness = sideness,
+                                          QC_prob = QC_prob,
+                                          cutoff = cutoff)
+
+    # create a dataframe with names
     result_df <- list(
       individual_power = data.frame(
-        pair = as.vector(outer(gRNA_name, gene_name, paste, sep = "_")),
+        pair = E2G_pair,
         adjusted_power = adjusted_power_list$adjusted_power
       ),
       num_discovery = adjusted_power_list$discovery_size_estimate
     )
-
-    return(result_df)
   }
+
+  # return the dataframe
+  return(result_df)
 }

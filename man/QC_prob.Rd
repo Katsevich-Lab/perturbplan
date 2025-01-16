@@ -5,26 +5,29 @@
 \title{QC probability computation}
 \usage{
 QC_prob(
-  effect_size,
+  effect_size_mean,
   baseline_expression,
   size_parameter,
   num_control,
   num_trt,
-  n_thresh
+  n_nonzero_trt,
+  n_nonzero_ctl
 )
 }
 \arguments{
-\item{effect_size}{Effect size matrix with L row and J column (element, gene)}
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes)}
 
-\item{baseline_expression}{Baseline gene expression vector of length J}
+\item{baseline_expression}{Baseline gene expression (vector; length J)}
 
-\item{size_parameter}{Size parameter for gene expression of length J}
+\item{size_parameter}{Size parameter for J genes (vector; length J)}
 
-\item{num_control}{Number of control cells}
+\item{num_control}{Number of control cells (vector; length L)}
 
-\item{num_trt}{Number of treatment cells (receiving perturbation)}
+\item{num_trt}{Number of treatment cells (vector; length L)}
 
-\item{n_thresh}{Cut off QC size}
+\item{n_nonzero_trt}{QC threshold for treatment cell}
+
+\item{n_nonzero_ctl}{QC threshold for control cell}
 }
 \value{
 QC probability

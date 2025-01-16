@@ -7,13 +7,13 @@
 rejection_computation(mean_list, sd_list, sideness, sig_level)
 }
 \arguments{
-\item{mean_list}{List of mean under local alternative}
+\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J)}
 
-\item{sd_list}{List of sd under local alternative}
+\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J)}
 
-\item{sideness}{Sideness of the testing procedure}
+\item{sideness}{Left, right or both}
 
-\item{sig_level}{Significance level imposed by users}
+\item{sig_level}{Significance leve of interest (FDR of interest)}
 }
 \value{
 The rejection probablity

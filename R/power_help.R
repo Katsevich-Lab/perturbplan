@@ -22,26 +22,6 @@ library_computation <- function(UMI_s, read_c, doublet_rate, doublet_factor){
   return(library_s)
 }
 
-#' Compute the weighted gRNA efficiency by the cell size
-#'
-#' @param pi_mat gRNA efficiency matrix of dim L by K (row: genomic elements, column: different gRNA)
-#' @param cell_mat Cell size matrix of dim L by K (row: genomic elements, column: different gRNA)
-#'
-#' @return A vector of weighted gRNA efficiency vector by cell size (of length L)
-#' @export
-
-efficiency_computation <- function(pi_mat, cell_mat){
-
-  # convert the cell_mat to a weight matrix
-  weight_mat <- cell_mat / rowSums(cell_mat)
-
-  # compute the weighted efficiency
-  weighted_pi_mat <- weight_mat * pi_mat
-
-  # return the efficiency vector
-  return(rowSums(weighted_pi_mat))
-}
-
 #' Compute averaged number of sequencing reads for each cell after mapping
 #'
 #' @param planned_read Number of reads planned before the experiment
@@ -67,32 +47,26 @@ read_per_cell <- function(planned_read, mapping_efficiency,
 
 #' Compute the gene expression related quantity in the power function
 #'
-#' @param expression_level_list List of relative gene expression level
-#' @param library_size Library size for each cell considered
-#' @param effect_size Effect size matrix (L by J)
-#' @param num_control Control cell vector (of length L)
-#' @param num_trt Treatment cell vector (of length L)
-#' @param size_factor_trt size factor matrix for treatment group
-#' @param size_facotr_ctl size factor matrix for control group
+#' @inheritParams compute_power
+#' @param num_control Number of control cell (vector; length L)
+#' @param num_trt Number of perturb cell (vector; length L)
 #'
 #' @return The gene expression related part in the power function
 #' @export
 
-gene_part_computation <- function(expression_level_list, library_size,
-                                  effect_size, num_control, num_trt,
-                                  size_factor_trt, size_factor_ctl){
+mean_expression_computation <- function(relative_expression, library_size,
+                                        effect_size_mean, num_control, num_trt){
 
   # extract information
   num_element <- length(num_trt)
-  num_gene <- length(expression_level_list)
+  num_gene <- length(relative_expression)
   num_cell <- num_trt + num_control
 
   # compute the gene expression related part in power formula
-  baseline_expression <- library_size * expression_level_list
-  baseline_mat <- matrix(rep(baseline_expression, num_element),
-                         ncol = num_gene, byrow = TRUE)
-  trt_mat <- baseline_mat * exp(effect_size) * size_factor_trt
-  ctl_mat <- baseline_mat * size_factor_ctl
+  baseline_expression <- library_size * relative_expression
+  baseline_mat <- matrix(rep(baseline_expression, num_element), ncol = num_gene, byrow = TRUE)
+  trt_mat <- baseline_mat * effect_size_mean
+  ctl_mat <- baseline_mat
   pooled_mat <- trt_mat * (num_trt / num_cell) + ctl_mat * (num_control / num_cell)
 
   # return the gene expression related part
@@ -109,44 +83,45 @@ gene_part_computation <- function(expression_level_list, library_size,
 #'
 #' @param mean mu
 #' @param size size parameter
-#' @param size_factor A size factor matrix (L by J dim)
-#' @param size_factor_sq A squared size factor matrix (L by J dim)
 #'
 #' @return variance of NB
 #' @export
 
-var_nb <- function(mean, size, size_factor, size_factor_sq){
+var_nb <- function(mean, size){
 
   # compute the variance
-  mean * size_factor + mean^2 * size_factor_sq / size
+  mean + mean^2 / size
 }
 
 #' Adjusted power based on adjusted significance level
 #'
-#' @param mean_list List of mean under local alternative
-#' @param sd_list List of sd under local alternative
-#' @param sig_level Significance level imposed by users
-#' @param correction Either BH or Bonferroni
-#' @param sideness Sideness of the testing procedure
-#' @param QC_prob QC probability
+#' @param mean_list Asymptotic mean of test statistic (vector; length L x J)
+#' @param sd_list Asymptotic sd of test statistic (vector; length L x J)
+#' @param QC_prob QC probability for each enhancer-gene pair (vector; length L x J)
+#' @inheritParams compute_power
 #'
 #' @return Adjusted power list including adjusted power and discovery size estimate
 #' @export
 
-adjusted_power <- function(mean_list, sd_list, sig_level, correction, sideness, QC_prob){
+adjusted_power <- function(mean_list, sd_list,
+                           sig_level = NULL, correction = NULL, sideness,
+                           QC_prob, cutoff = NULL){
 
-  # compute the adjusted cutoff
-  adjusted_cutoff <- adjusted_cutoff(mean_list = mean_list,
-                                     sd_list = sd_list,
-                                     sig_level = sig_level,
-                                     correction = correction,
-                                     sideness = sideness, QC_prob)
+  if(is.null(cutoff)){
+
+    # compute the adjusted cutoff
+    cutoff <- adjusted_cutoff(mean_list = mean_list,
+                              sd_list = sd_list,
+                              sig_level = sig_level,
+                              correction = correction,
+                              sideness = sideness, QC_prob)
+  }
 
   # compute the adjusted power
   adjusted_power <- rejection_computation(mean_list = mean_list,
                                           sd_list = sd_list,
                                           sideness = sideness,
-                                          sig_level = adjusted_cutoff)
+                                          sig_level = cutoff)
 
   # compute the discovery set
   discovery_size <- sum(adjusted_power * (1 - QC_prob))
@@ -160,12 +135,7 @@ adjusted_power <- function(mean_list, sd_list, sig_level, correction, sideness, 
 
 #' Compute the adjusted significance level with either BH or Bonferroni procedure
 #'
-#' @param mean_list List of mean under local alternative
-#' @param sd_list List of sd under local alternative
-#' @param sig_level Significance level imposed by users
-#' @param correction Either BH or Bonferroni
-#' @param sideness Sideness of the testing procedure
-#' @param QC_prob QC probability
+#' @inheritParams adjusted_power
 #'
 #' @return The adjusted significance level
 #' @export
@@ -193,11 +163,7 @@ adjusted_cutoff <- function(mean_list, sd_list, sig_level, correction, sideness,
 
 #' Compute the adjusted cutoff/significance level applying BH procedure
 #'
-#' @param mean_list List of mean under local alternative
-#' @param sd_list List of sd under local alternative
-#' @param sideness Sideness of the testing procedure
-#' @param sig_level Significance level imposed by users
-#' @param QC_prob QC probability
+#' @inheritParams adjusted_cutoff
 #'
 #' @return Adjusted cutoff/significance level
 #' @importFrom dplyr if_else
@@ -264,11 +230,7 @@ BH_cutoff <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
 
 #' FDP estimate based on rejection probability
 #'
-#' @param mean_list List of mean under local alternative
-#' @param sd_list List of sd under local alternative
-#' @param sideness Sideness of the testing procedure
-#' @param sig_level Significance level imposed by users
-#' @param QC_prob QC probability
+#' @inheritParams adjusted_cutoff
 #'
 #' @return FDP estimate
 #' @export
@@ -290,10 +252,7 @@ FDP_estimate <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
 
 #' Compute the rejection probability
 #'
-#' @param mean_list List of mean under local alternative
-#' @param sd_list List of sd under local alternative
-#' @param sideness Sideness of the testing procedure
-#' @param sig_level Significance level imposed by users
+#' @inheritParams adjusted_cutoff
 #'
 #' @return The rejection probablity
 #' @importFrom stats qnorm pnorm
@@ -327,7 +286,7 @@ rejection_computation <- function(mean_list, sd_list, sideness, sig_level){
 #'
 #' @param X Treatment/control indicator
 #' @param Y Outcome for two groups
-#' @param size_parameter Size parameter list
+#' @param size_parameter Size parameter
 #'
 #' @return Score test statistic
 #' @export
@@ -363,7 +322,7 @@ score_test <- function(X, Y, size_parameter){
 #' @param trt_mean Treatment mean expression (vector; length J)
 #' @param ctl_mean Control mean expression (vector; length J)
 #'
-#' @return Mean and sd vector of length (L times J)
+#' @return Mean and sd vector of length (L x J)
 #' @export
 distribution_teststat <- function(control_cell_vec, target_cell_mat, size_parameter,
                                   effect_size_mean, effect_size_sd,

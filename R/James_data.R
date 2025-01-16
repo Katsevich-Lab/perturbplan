@@ -15,6 +15,7 @@
 #' @return A lsit of information
 #' @importFrom dplyr filter pull
 #' @importFrom stats setNames
+#' @importFrom stats rnorm
 
 
 generate_James_data <- function(effect_size,
