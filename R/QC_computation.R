@@ -14,7 +14,7 @@ QC_prob <- function(effect_size_mean, baseline_expression, size_parameter,
                     num_control, num_trt, n_nonzero_trt, n_nonzero_ctl){
 
   # compute the nonzero probability for control group (of legnth num_gene)
-  prob_vec_ctl <- 1 - zero_prob(effect_size_mean = effect_size_mean * 0,
+  prob_vec_ctl <- 1 - zero_prob(effect_size_mean = matrix(1, nrow = nrow(effect_size_mean), ncol = ncol(effect_size_mean)),
                                 baseline_expression = baseline_expression,
                                 size_parameter = size_parameter)
 

@@ -329,7 +329,7 @@ distribution_teststat <- function(control_cell_vec, target_cell_mat, size_parame
                                   pooled_mean, trt_mean, ctl_mean){
 
   # compute the number of total elements and total genes
-  num_element <- ncol(target_cell_mat)
+  num_element <- nrow(target_cell_mat)
   num_gene <- length(size_parameter)
 
   # compute the number of perturbed cell for each element

@@ -87,13 +87,13 @@ power_function <- function(
   }
 
   ####### perform power calculation with power-determining parameters ##########
-  power_result <- compute_power(perturb_type,
-                                control_cell_vec, target_cell_mat,
-                                library_size, relative_expression, size_parameter,
-                                effect_size_mean, effect_size_sd,
-                                QC, n_nonzero_trt, n_nonzero_ctl,
-                                sideness, correction, sig_level,
-                                intermediate_outcome)
+  power_result <- compute_power(perturb_type = perturb_type,
+                                control_cell_vec = control_cell_vec, target_cell_mat = target_cell_mat,
+                                library_size = library_size, relative_expression = relative_expression, size_parameter = size_parameter,
+                                effect_size_mean = effect_size_mean, effect_size_sd = effect_size_sd,
+                                QC = QC, n_nonzero_trt = n_nonzero_trt, n_nonzero_ctl = n_nonzero_ctl,
+                                sideness = sideness, correction = correction, sig_level = sig_level,
+                                intermediate_outcome = intermediate_outcome)
 
   # return the power_result
   return(power_result)
