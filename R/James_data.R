@@ -13,7 +13,6 @@
 #' @param size_factor A logic value; if TRUE, use the one in sce; false, set to 1
 #'
 #' @return A lsit of information
-#' @export
 #' @importFrom dplyr filter pull
 #' @importFrom stats setNames
 

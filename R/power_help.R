@@ -355,3 +355,59 @@ score_test <- function(X, Y, size_parameter){
   # return the score test statistic
   return(test_stat)
 }
+
+#' Compute the mean and sd approximation of the test statistic
+#'
+#' @inheritParams power_function
+#' @param pooled_mean Pooled mean expression of treatment and control (vector; length J)
+#' @param trt_mean Treatment mean expression (vector; length J)
+#' @param ctl_mean Control mean expression (vector; length J)
+#'
+#' @return Mean and sd vector of length (L times J)
+#' @export
+distribution_teststat <- function(control_cell_vec, target_cell_mat, size_parameter,
+                                  effect_size_mean, effect_size_sd,
+                                  pooled_mean, trt_mean, ctl_mean){
+
+  # compute the number of total elements and total genes
+  num_element <- ncol(target_cell_mat)
+  num_gene <- length(size_parameter)
+
+  # compute the number of perturbed cell for each element
+  target_cell_vec <- rowSums(target_cell_mat)
+
+  # fill the size parameter matrix
+  size_mat <- matrix(rep(size_parameter, num_element), ncol = num_gene, byrow = TRUE)
+
+  # compute the square of the denominator in the score statistic
+  pooled_var <- var_nb(mean = pooled_mean, size = size_mat)
+  denominator_sq <- sweep(pooled_var, 1, (1 / control_cell_vec + 1 / target_cell_vec), "*")
+
+  ########################## compute the asymptotic sd of test stat ############
+  # compute the square number of perturbed cell
+  target_cell_vec_sq <- rowSums(target_cell_mat^2)
+
+  # compute the control group variance
+  ctl_var <- var_nb(mean = ctl_mean, size = size_mat)
+
+  # compute the treatment group variance
+  trt_var_part1 <- var_nb(mean = trt_mean, size = size_mat)
+  trt_var_part2 <- trt_mean^2 * effect_size_sd^2 / size_mat + sweep(trt_mean^2 * effect_size_sd^2, 1,
+                                                                    target_cell_vec_sq / target_cell_vec, "*")
+  trt_var <- trt_var_part1 + trt_var_part2
+
+  # compute the asymptotic sd
+  asy_var_1 <- sweep(ctl_var, 1, 1 / control_cell_vec, "*")
+  asy_var_2 <- sweep(trt_var, 1, 1 / target_cell_vec, "*")
+  asy_var <- (asy_var_1 + asy_var_2) / denominator_sq
+  asy_sd <- as.vector(sqrt(asy_var))
+
+  ################# compute the asymptotic mean of test stat ###################
+  asy_mean <- as.vector(ctl_mean * (effect_size_mean - 1) / sqrt(denominator_sq))
+
+  # return the mean and sd vector
+  return(list(
+    mean = asy_mean,
+    sd = asy_sd
+  ))
+}
