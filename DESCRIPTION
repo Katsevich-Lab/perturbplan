@@ -11,13 +11,8 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     dplyr,
-    Matrix,
-    rlang,
-    S4Vectors,
     shiny,
-    SingleCellExperiment,
-    stats,
-    SummarizedExperiment
+    stats
 Suggests: 
     knitr,
     rmarkdown

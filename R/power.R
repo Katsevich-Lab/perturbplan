@@ -33,6 +33,7 @@
 #'
 #' @return The output format is the same as [compute_power()].
 #' @importFrom dplyr if_else
+#' @importFrom stats setNames
 #' @export
 
 power_function <- function(
