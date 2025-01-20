@@ -2,30 +2,27 @@
 % Please edit documentation in R/power_help.R
 \name{mean_expression_computation}
 \alias{mean_expression_computation}
-\title{Compute the gene expression related quantity in the power function}
+\title{Compute the gene expression related quantity in the power function.}
 \usage{
 mean_expression_computation(
-  relative_expression,
-  library_size,
+  baseline_expression,
   effect_size_mean,
   num_control,
   num_trt
 )
 }
 \arguments{
-\item{relative_expression}{Baseline relative expression level for J genes (scalar; valued between 0 and 1)}
+\item{baseline_expression}{Baseline gene expression in the group of control cells.}
 
-\item{library_size}{Averaged library size (scalar; positive valued)}
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
 
-\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes)}
+\item{num_control}{Number of control cell (vector; length L).}
 
-\item{num_control}{Number of control cell (vector; length L)}
-
-\item{num_trt}{Number of perturb cell (vector; length L)}
+\item{num_trt}{Number of perturb cell (vector; length L).}
 }
 \value{
-The gene expression related part in the power function
+The gene expression related part in the power function.
 }
 \description{
-Compute the gene expression related quantity in the power function
+Compute the gene expression related quantity in the power function.
 }

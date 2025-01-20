@@ -2,7 +2,7 @@
 % Please edit documentation in R/power_help.R
 \name{adjusted_power}
 \alias{adjusted_power}
-\title{Adjusted power based on adjusted significance level}
+\title{Adjusted power based on adjusted significance level.}
 \usage{
 adjusted_power(
   mean_list,
@@ -15,23 +15,23 @@ adjusted_power(
 )
 }
 \arguments{
-\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J)}
+\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
 
-\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J)}
+\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
 
-\item{sig_level}{Significance leve of interest (FDR of interest)}
+\item{sig_level}{Significance leve of interest (FDR of interest).}
 
-\item{correction}{Multiplicity correction; default is BH}
+\item{correction}{Multiplicity correction; default is BH.}
 
-\item{sideness}{Left, right or both}
+\item{sideness}{Left, right or both.}
 
-\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J)}
+\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J).}
 
-\item{cutoff}{Cutoff for p-values to reject the test}
+\item{cutoff}{Cutoff for p-values to reject the test.}
 }
 \value{
-Adjusted power list including adjusted power and discovery size estimate
+Adjusted power list including adjusted power and discovery size estimate.
 }
 \description{
-Adjusted power based on adjusted significance level
+Adjusted power based on adjusted significance level.
 }

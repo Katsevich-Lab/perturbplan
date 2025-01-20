@@ -18,3 +18,7 @@ Imports:
     SingleCellExperiment,
     stats,
     SummarizedExperiment
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

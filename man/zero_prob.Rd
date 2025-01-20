@@ -7,11 +7,11 @@
 zero_prob(effect_size_mean, baseline_expression, size_parameter)
 }
 \arguments{
-\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes)}
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
 
 \item{baseline_expression}{Baseline gene expression (vector; length J)}
 
-\item{size_parameter}{Size parameter for J genes (vector; length J)}
+\item{size_parameter}{Size parameter for J genes (vector; length J).}
 }
 \value{
 The zero probability of length L x J

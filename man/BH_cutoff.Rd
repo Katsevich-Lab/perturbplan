@@ -2,24 +2,24 @@
 % Please edit documentation in R/power_help.R
 \name{BH_cutoff}
 \alias{BH_cutoff}
-\title{Compute the adjusted cutoff/significance level applying BH procedure}
+\title{Compute the adjusted cutoff/significance level applying BH procedure.}
 \usage{
 BH_cutoff(mean_list, sd_list, sideness, sig_level, QC_prob)
 }
 \arguments{
-\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J)}
+\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
 
-\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J)}
+\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
 
-\item{sideness}{Left, right or both}
+\item{sideness}{Left, right or both.}
 
-\item{sig_level}{Significance leve of interest (FDR of interest)}
+\item{sig_level}{Significance leve of interest (FDR of interest).}
 
-\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J)}
+\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J).}
 }
 \value{
-Adjusted cutoff/significance level
+Adjusted cutoff/significance level.
 }
 \description{
-Compute the adjusted cutoff/significance level applying BH procedure
+Compute the adjusted cutoff/significance level applying BH procedure.
 }

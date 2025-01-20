@@ -2,24 +2,24 @@
 % Please edit documentation in R/power_help.R
 \name{FDP_estimate}
 \alias{FDP_estimate}
-\title{FDP estimate based on rejection probability}
+\title{FDP estimate based on rejection probability.}
 \usage{
 FDP_estimate(mean_list, sd_list, sideness, sig_level, QC_prob)
 }
 \arguments{
-\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J)}
+\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
 
-\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J)}
+\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
 
-\item{sideness}{Left, right or both}
+\item{sideness}{Left, right or both.}
 
-\item{sig_level}{Significance leve of interest (FDR of interest)}
+\item{sig_level}{Significance leve of interest (FDR of interest).}
 
-\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J)}
+\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J).}
 }
 \value{
-FDP estimate
+FDP estimate.
 }
 \description{
-FDP estimate based on rejection probability
+FDP estimate based on rejection probability.
 }

@@ -7,12 +7,12 @@
 var_nb(mean, size)
 }
 \arguments{
-\item{mean}{mu}
+\item{mean}{mean gene expression.}
 
-\item{size}{size parameter}
+\item{size}{size parameter.}
 }
 \value{
-variance of NB
+variance of NB distribution.
 }
 \description{
 Variance of NB distribution

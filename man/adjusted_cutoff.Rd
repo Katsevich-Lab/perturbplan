@@ -2,26 +2,26 @@
 % Please edit documentation in R/power_help.R
 \name{adjusted_cutoff}
 \alias{adjusted_cutoff}
-\title{Compute the adjusted significance level with either BH or Bonferroni procedure}
+\title{Compute the adjusted significance level with either BH or Bonferroni procedure.}
 \usage{
 adjusted_cutoff(mean_list, sd_list, sig_level, correction, sideness, QC_prob)
 }
 \arguments{
-\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J)}
+\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
 
-\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J)}
+\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
 
-\item{sig_level}{Significance leve of interest (FDR of interest)}
+\item{sig_level}{Significance leve of interest (FDR of interest).}
 
-\item{correction}{Multiplicity correction; default is BH}
+\item{correction}{Multiplicity correction; default is BH.}
 
-\item{sideness}{Left, right or both}
+\item{sideness}{Left, right or both.}
 
-\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J)}
+\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J).}
 }
 \value{
-The adjusted significance level
+The adjusted significance level.
 }
 \description{
-Compute the adjusted significance level with either BH or Bonferroni procedure
+Compute the adjusted significance level with either BH or Bonferroni procedure.
 }

@@ -2,20 +2,20 @@
 % Please edit documentation in R/power_help.R
 \name{score_test}
 \alias{score_test}
-\title{Compute the score test statistic}
+\title{Compute the score test statistic.}
 \usage{
 score_test(X, Y, size_parameter)
 }
 \arguments{
-\item{X}{Treatment/control indicator}
+\item{X}{Treatment/control indicator.}
 
-\item{Y}{Outcome for two groups}
+\item{Y}{Outcome for two groups.}
 
-\item{size_parameter}{Size parameter}
+\item{size_parameter}{Size parameter.}
 }
 \value{
-Score test statistic
+Score test statistic.
 }
 \description{
-Compute the score test statistic
+Compute the score test statistic.
 }

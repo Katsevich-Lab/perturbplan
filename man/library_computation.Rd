@@ -2,22 +2,22 @@
 % Please edit documentation in R/power_help.R
 \name{library_computation}
 \alias{library_computation}
-\title{Compute the averaged library size per singlet}
+\title{Compute the averaged library size per singlet.}
 \usage{
 library_computation(UMI_s, read_c, doublet_rate, doublet_factor)
 }
 \arguments{
-\item{UMI_s}{Averaged UMI count per singlet (estimate from pilot data given cell-type)}
+\item{UMI_s}{Averaged UMI count per singlet (estimate from pilot data given cell-type).}
 
-\item{read_c}{Averaged read count per cell}
+\item{read_c}{Averaged read count per cell.}
 
-\item{doublet_rate}{The doublet fraction among cells}
+\item{doublet_rate}{The doublet fraction among cells.}
 
-\item{doublet_factor}{Ratio of averaged UMI count per doublet to UMI per singlet}
+\item{doublet_factor}{Ratio of averaged UMI count per doublet to UMI per singlet.}
 }
 \value{
-Averaged library size per singlet
+Averaged library size per singlet.
 }
 \description{
-Compute the averaged library size per singlet
+Compute the averaged library size per singlet.
 }

@@ -2,22 +2,22 @@
 % Please edit documentation in R/power_help.R
 \name{rejection_computation}
 \alias{rejection_computation}
-\title{Compute the rejection probability}
+\title{Compute the rejection probability.}
 \usage{
 rejection_computation(mean_list, sd_list, sideness, sig_level)
 }
 \arguments{
-\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J)}
+\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
 
-\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J)}
+\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
 
-\item{sideness}{Left, right or both}
+\item{sideness}{Left, right or both.}
 
-\item{sig_level}{Significance leve of interest (FDR of interest)}
+\item{sig_level}{Significance leve of interest (FDR of interest).}
 }
 \value{
-The rejection probablity
+The rejection probablity.
 }
 \description{
-Compute the rejection probability
+Compute the rejection probability.
 }

@@ -2,14 +2,13 @@
 % Please edit documentation in R/power.R
 \name{compute_power}
 \alias{compute_power}
-\title{Computing power for each (element, gene) pair}
+\title{Computing power for each (enhancer, gene) pair.}
 \usage{
 compute_power(
   perturb_type,
   control_cell_vec,
   target_cell_mat,
-  library_size,
-  relative_expression,
+  baseline_expression,
   size_parameter,
   effect_size_mean,
   effect_size_sd,
@@ -24,41 +23,49 @@ compute_power(
 )
 }
 \arguments{
-\item{perturb_type}{either CRISPRi or CRISPRko; currently can only handle CRISPRi}
+\item{perturb_type}{Either CRISPRi or CRISPRko; currently can only handle CRISPRi.}
 
-\item{control_cell_vec}{Control cell size for L elements (vector; length L)}
+\item{control_cell_vec}{Control cell size for L elements (vector; length L).}
 
-\item{target_cell_mat}{Perturb cell size for L elements (matrix; row: L genomic elements; column: K gRNA libraries)}
+\item{target_cell_mat}{Perturb cell size for L elements (matrix; row: L genomic elements; column: K gRNA libraries). Rownames should be specified for enhancer targets.}
 
-\item{library_size}{Averaged library size (scalar; positive valued)}
+\item{baseline_expression}{Baseline gene expression in the group of control cells.}
 
-\item{relative_expression}{Baseline relative expression level for J genes (scalar; valued between 0 and 1)}
+\item{size_parameter}{Size parameter for J genes (vector; length J).}
 
-\item{size_parameter}{Size parameter for J genes (vector; length J)}
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
 
-\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes)}
+\item{effect_size_sd}{Sd fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
 
-\item{effect_size_sd}{Sd fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes))}
+\item{QC}{A logic value; if TRUE, then do quality control.}
 
-\item{QC}{A logic value; if TRUE, then do quality control}
+\item{n_nonzero_trt}{QC threshold for treatment cell.}
 
-\item{n_nonzero_trt}{QC threshold for treatment cell}
+\item{n_nonzero_ctl}{QC threshold for control cell.}
 
-\item{n_nonzero_ctl}{QC threshold for control cell}
+\item{sideness}{Left, right or both.}
 
-\item{sideness}{Left, right or both}
+\item{correction}{Multiplicity correction; default is BH.}
 
-\item{correction}{Multiplicity correction; default is BH}
+\item{sig_level}{Significance leve of interest (FDR of interest).}
 
-\item{sig_level}{Significance leve of interest (FDR of interest)}
+\item{cutoff}{Cutoff for p-values to reject the test.}
 
-\item{cutoff}{Cutoff for p-values to reject the test}
-
-\item{intermediate_outcome}{A logic value indicating if only mean, sd of test statistics and QC are desired}
+\item{intermediate_outcome}{A logic value indicating if only mean, sd of test statistics and QC are desired.}
 }
 \value{
-A dataframe or a list epending on intermediate_outcome.
+A dataframe or a list depending on \code{intermediate_outcome}:
 }
 \description{
-Computing power for each (element, gene) pair
+This function have two functionalities: (1, intermediate goal) compute the mean
+and sd of the test statistic; (2, final goal) output the power for each enhancer-gene
+pair.
 }
+\section{Dataframe}{
+ if \code{intermediate_outcome} is TRUE, only mean, sd of the score tests and QC probability will be outputted.
+}
+
+\section{List}{
+ otherwise, the final power for each element-gene pair will be outputted, together with the estimated discovery set.
+}
+

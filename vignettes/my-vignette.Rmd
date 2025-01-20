@@ -1,0 +1,55 @@
+---
+title: "PerturbPlan: power analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{PerturbPlan: power analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette is meant to showcase the functionality of `compute_power()`. 
+
+We first load the `PerturbPlan` package and the gene expression data for illustration. 
+
+```{r setup}
+# load necessary packages
+library(perturbplan)
+# load gene expression data 
+gene_expression <- readRDS("gene_expression_summary.rds")
+```
+
+We define the treatment and control cells for each target element. Here we consider $2$ elements with $2$ gRNAs targeting each element. Each of these gRNAs is allocated respectively with $500$ cells. 
+
+```{r}
+# Define treatment cell matrix
+num_element <- 2
+gRNA_per_element <- 2
+target_cell_mat <- matrix(c(500, 500, 500, 500), 
+                          nrow = num_element,
+                          ncol = gRNA_per_element,
+                          dimnames = list(
+                            element = sprintf("enh%d", 1:num_element),
+                            gRNA = sprintf("gRNA%d", 1:gRNA_per_element)
+                          ))
+```
+
+We assume each cell receives only one gRNA so each element get $500\times 2=1000$ cells receiving the perturbation targeting on the element. The number of control cells in each enhancer-gene test pair is just $50000-1000=49000$, where $50000$ is the total number of cells.
+
+```{r}
+# Define the total number of cells
+num_total_cells <- 50000
+
+# Define control cell vector
+target_cell_vec <- apply(target_cell_mat, 1, sum)
+control_cell_vec <- num_total_cells - target_cell_vec
+
+```
+
+

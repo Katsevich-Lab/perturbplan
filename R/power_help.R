@@ -1,14 +1,13 @@
 # This is a Rscript implementing the help function for power/cost analysis
 
-#' Compute the averaged library size per singlet
+#' Compute the averaged library size per singlet.
 #'
-#' @param UMI_s Averaged UMI count per singlet (estimate from pilot data given cell-type)
-#' @param read_c Averaged read count per cell
-#' @param doublet_rate The doublet fraction among cells
-#' @param doublet_factor Ratio of averaged UMI count per doublet to UMI per singlet
+#' @param UMI_s Averaged UMI count per singlet (estimate from pilot data given cell-type).
+#' @param read_c Averaged read count per cell.
+#' @param doublet_rate The doublet fraction among cells.
+#' @param doublet_factor Ratio of averaged UMI count per doublet to UMI per singlet.
 #'
-#' @return Averaged library size per singlet
-#' @export
+#' @return Averaged library size per singlet.
 
 library_computation <- function(UMI_s, read_c, doublet_rate, doublet_factor){
 
@@ -22,15 +21,14 @@ library_computation <- function(UMI_s, read_c, doublet_rate, doublet_factor){
   return(library_s)
 }
 
-#' Compute averaged number of sequencing reads for each cell after mapping
+#' Compute averaged number of sequencing reads for each cell after mapping.
 #'
-#' @param planned_read Number of reads planned before the experiment
-#' @param mapping_efficiency Mapping efficiency for sequenced reads
-#' @param planned_cell Number of cells planned before the experiment
-#' @param recovery_rate Fraction of cells surviving after the library preparation
+#' @param planned_read Number of reads planned before the experiment.
+#' @param mapping_efficiency Mapping efficiency for sequenced reads.
+#' @param planned_cell Number of cells planned before the experiment.
+#' @param recovery_rate Fraction of cells surviving after the library preparation.
 #'
-#' @return Averaged number of sequencing reads for each cell
-#' @export
+#' @return Averaged number of sequencing reads for each cell.
 
 read_per_cell <- function(planned_read, mapping_efficiency,
                           planned_cell, recovery_rate){
@@ -45,25 +43,23 @@ read_per_cell <- function(planned_read, mapping_efficiency,
   return(mapped_reads / N_survive)
 }
 
-#' Compute the gene expression related quantity in the power function
+#' Compute the gene expression related quantity in the power function.
 #'
 #' @inheritParams compute_power
-#' @param num_control Number of control cell (vector; length L)
-#' @param num_trt Number of perturb cell (vector; length L)
+#' @param num_control Number of control cell (vector; length L).
+#' @param num_trt Number of perturb cell (vector; length L).
 #'
-#' @return The gene expression related part in the power function
-#' @export
+#' @return The gene expression related part in the power function.
 
-mean_expression_computation <- function(relative_expression, library_size,
+mean_expression_computation <- function(baseline_expression,
                                         effect_size_mean, num_control, num_trt){
 
   # extract information
   num_element <- length(num_trt)
-  num_gene <- length(relative_expression)
+  num_gene <- length(baseline_expression)
   num_cell <- num_trt + num_control
 
   # compute the gene expression related part in power formula
-  baseline_expression <- library_size * relative_expression
   baseline_mat <- matrix(rep(baseline_expression, num_element), ncol = num_gene, byrow = TRUE)
   trt_mat <- baseline_mat * effect_size_mean
   ctl_mat <- baseline_mat
@@ -81,11 +77,10 @@ mean_expression_computation <- function(relative_expression, library_size,
 
 #' Variance of NB distribution
 #'
-#' @param mean mu
-#' @param size size parameter
+#' @param mean mean gene expression.
+#' @param size size parameter.
 #'
-#' @return variance of NB
-#' @export
+#' @return variance of NB distribution.
 
 var_nb <- function(mean, size){
 
@@ -93,15 +88,14 @@ var_nb <- function(mean, size){
   mean + mean^2 / size
 }
 
-#' Adjusted power based on adjusted significance level
+#' Adjusted power based on adjusted significance level.
 #'
-#' @param mean_list Asymptotic mean of test statistic (vector; length L x J)
-#' @param sd_list Asymptotic sd of test statistic (vector; length L x J)
-#' @param QC_prob QC probability for each enhancer-gene pair (vector; length L x J)
+#' @param mean_list Asymptotic mean of test statistic (vector; length L x J).
+#' @param sd_list Asymptotic sd of test statistic (vector; length L x J).
+#' @param QC_prob QC probability for each enhancer-gene pair (vector; length L x J).
 #' @inheritParams compute_power
 #'
-#' @return Adjusted power list including adjusted power and discovery size estimate
-#' @export
+#' @return Adjusted power list including adjusted power and discovery size estimate.
 
 adjusted_power <- function(mean_list, sd_list,
                            sig_level = NULL, correction = NULL, sideness,
@@ -133,12 +127,11 @@ adjusted_power <- function(mean_list, sd_list,
   ))
 }
 
-#' Compute the adjusted significance level with either BH or Bonferroni procedure
+#' Compute the adjusted significance level with either BH or Bonferroni procedure.
 #'
 #' @inheritParams adjusted_power
 #'
-#' @return The adjusted significance level
-#' @export
+#' @return The adjusted significance level.
 
 adjusted_cutoff <- function(mean_list, sd_list, sig_level, correction, sideness, QC_prob){
 
@@ -161,13 +154,12 @@ adjusted_cutoff <- function(mean_list, sd_list, sig_level, correction, sideness,
   return(adjusted_sig_level)
 }
 
-#' Compute the adjusted cutoff/significance level applying BH procedure
+#' Compute the adjusted cutoff/significance level applying BH procedure.
 #'
 #' @inheritParams adjusted_cutoff
 #'
-#' @return Adjusted cutoff/significance level
+#' @return Adjusted cutoff/significance level.
 #' @importFrom dplyr if_else
-#' @export
 
 BH_cutoff <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
 
@@ -228,12 +220,11 @@ BH_cutoff <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
   return(t_hat)
 }
 
-#' FDP estimate based on rejection probability
+#' FDP estimate based on rejection probability.
 #'
 #' @inheritParams adjusted_cutoff
 #'
-#' @return FDP estimate
-#' @export
+#' @return FDP estimate.
 
 FDP_estimate <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
 
@@ -250,11 +241,11 @@ FDP_estimate <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
   return(num_hypo_adjusted * sig_level / rejection_size)
 }
 
-#' Compute the rejection probability
+#' Compute the rejection probability.
 #'
 #' @inheritParams adjusted_cutoff
 #'
-#' @return The rejection probablity
+#' @return The rejection probablity.
 #' @importFrom stats qnorm pnorm
 #' @export
 
@@ -282,13 +273,13 @@ rejection_computation <- function(mean_list, sd_list, sideness, sig_level){
 }
 
 
-#' Compute the score test statistic
+#' Compute the score test statistic.
 #'
-#' @param X Treatment/control indicator
-#' @param Y Outcome for two groups
-#' @param size_parameter Size parameter
+#' @param X Treatment/control indicator.
+#' @param Y Outcome for two groups.
+#' @param size_parameter Size parameter.
 #'
-#' @return Score test statistic
+#' @return Score test statistic.
 #' @export
 
 score_test <- function(X, Y, size_parameter){
@@ -315,15 +306,14 @@ score_test <- function(X, Y, size_parameter){
   return(test_stat)
 }
 
-#' Compute the mean and sd approximation of the test statistic
+#' Compute the mean and sd approximation of the test statistic.
 #'
 #' @inheritParams power_function
-#' @param pooled_mean Pooled mean expression of treatment and control (vector; length J)
-#' @param trt_mean Treatment mean expression (vector; length J)
-#' @param ctl_mean Control mean expression (vector; length J)
+#' @param pooled_mean Pooled mean expression of treatment and control (vector; length J).
+#' @param trt_mean Treatment mean expression (vector; length J).
+#' @param ctl_mean Control mean expression (vector; length J).
 #'
-#' @return Mean and sd vector of length (L x J)
-#' @export
+#' @return Mean and sd vector of length (L x J).
 distribution_teststat <- function(control_cell_vec, target_cell_mat, size_parameter,
                                   effect_size_mean, effect_size_sd,
                                   pooled_mean, trt_mean, ctl_mean){

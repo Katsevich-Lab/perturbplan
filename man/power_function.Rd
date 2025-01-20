@@ -2,7 +2,7 @@
 % Please edit documentation in R/power.R
 \name{power_function}
 \alias{power_function}
-\title{Power function for CRISPR screen experimental design}
+\title{Power function for CRISPR screen experimental design.}
 \usage{
 power_function(
   perturb_type = "CRISPRi",
@@ -30,51 +30,51 @@ power_function(
 )
 }
 \arguments{
-\item{perturb_type}{either CRISPRi or CRISPRko; currently can only handle CRISPRi}
+\item{perturb_type}{Either CRISPRi or CRISPRko; currently can only handle CRISPRi.}
 
-\item{control_cell_vec}{Control cell size for L elements (vector; length L)}
+\item{control_cell_vec}{Control cell size for L elements (vector; length L).}
 
-\item{target_cell_mat}{Perturb cell size for L elements (matrix; row: L genomic elements; column: K gRNA libraries)}
+\item{target_cell_mat}{Perturb cell size for L elements (matrix; row: L genomic elements; column: K gRNA libraries). Rownames should be specified for enhancer targets.}
 
-\item{library_size}{Averaged library size (scalar; positive valued)}
+\item{library_size}{Averaged library size (scalar; positive valued).}
 
-\item{relative_expression}{Baseline relative expression level for J genes (scalar; valued between 0 and 1)}
+\item{relative_expression}{Baseline relative expression level for J genes (named vector; of length J). Names of the vector should be different genes.}
 
-\item{size_parameter}{Size parameter for J genes (vector; length J)}
+\item{size_parameter}{Size parameter for J genes (vector; length J).}
 
-\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes)}
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
 
-\item{effect_size_sd}{Sd fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes))}
+\item{effect_size_sd}{Sd fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
 
-\item{QC}{A logic value; if TRUE, then do quality control}
+\item{QC}{A logic value; if TRUE, then do quality control.}
 
-\item{n_nonzero_trt}{QC threshold for treatment cell}
+\item{n_nonzero_trt}{QC threshold for treatment cell.}
 
-\item{n_nonzero_ctl}{QC threshold for control cell}
+\item{n_nonzero_ctl}{QC threshold for control cell.}
 
-\item{UMI_s}{Estimate for UMI count per singlet for the underlying type of cell}
+\item{UMI_s}{Estimate for UMI count per singlet for the underlying type of cell.}
 
-\item{recovery_rate}{Recovery rate for cells surviving the library preparation}
+\item{recovery_rate}{Recovery rate for cells surviving the library preparation.}
 
-\item{doublet_rate}{Doublet rate for droplet containing more than one cell}
+\item{doublet_rate}{Doublet rate for droplet containing more than one cell.}
 
-\item{doublet_factor}{Ratio of averaged UMI count per doublet to UMI per singlet}
+\item{doublet_factor}{Ratio of averaged UMI count per doublet to UMI per singlet.}
 
-\item{planned_read}{Planned total sequencing reads}
+\item{planned_read}{Planned total sequencing reads.}
 
-\item{mapping_efficiency}{Mapping efficiency for sequenced reads}
+\item{mapping_efficiency}{Mapping efficiency for sequenced reads.}
 
-\item{sideness}{Left, right or both}
+\item{sideness}{Left, right or both.}
 
-\item{correction}{Multiplicity correction; default is BH}
+\item{correction}{Multiplicity correction; default is BH.}
 
-\item{sig_level}{Significance leve of interest (FDR of interest)}
+\item{sig_level}{Significance leve of interest (FDR of interest).}
 
-\item{intermediate_outcome}{A logic value indicating if only mean, sd of test statistics and QC are desired}
+\item{intermediate_outcome}{A logic value indicating if only mean, sd of test statistics and QC are desired.}
 }
 \value{
-A vector of power estimated
+The output format is the same as \code{\link[=compute_power]{compute_power()}}.
 }
 \description{
-ss
+Power function for CRISPR screen experimental design.
 }

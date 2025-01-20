@@ -2,7 +2,7 @@
 % Please edit documentation in R/power_help.R
 \name{distribution_teststat}
 \alias{distribution_teststat}
-\title{Compute the mean and sd approximation of the test statistic}
+\title{Compute the mean and sd approximation of the test statistic.}
 \usage{
 distribution_teststat(
   control_cell_vec,
@@ -16,25 +16,25 @@ distribution_teststat(
 )
 }
 \arguments{
-\item{control_cell_vec}{Control cell size for L elements (vector; length L)}
+\item{control_cell_vec}{Control cell size for L elements (vector; length L).}
 
-\item{target_cell_mat}{Perturb cell size for L elements (matrix; row: L genomic elements; column: K gRNA libraries)}
+\item{target_cell_mat}{Perturb cell size for L elements (matrix; row: L genomic elements; column: K gRNA libraries). Rownames should be specified for enhancer targets.}
 
-\item{size_parameter}{Size parameter for J genes (vector; length J)}
+\item{size_parameter}{Size parameter for J genes (vector; length J).}
 
-\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes)}
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
 
-\item{effect_size_sd}{Sd fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes))}
+\item{effect_size_sd}{Sd fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
 
-\item{pooled_mean}{Pooled mean expression of treatment and control (vector; length J)}
+\item{pooled_mean}{Pooled mean expression of treatment and control (vector; length J).}
 
-\item{trt_mean}{Treatment mean expression (vector; length J)}
+\item{trt_mean}{Treatment mean expression (vector; length J).}
 
-\item{ctl_mean}{Control mean expression (vector; length J)}
+\item{ctl_mean}{Control mean expression (vector; length J).}
 }
 \value{
-Mean and sd vector of length (L x J)
+Mean and sd vector of length (L x J).
 }
 \description{
-Compute the mean and sd approximation of the test statistic
+Compute the mean and sd approximation of the test statistic.
 }

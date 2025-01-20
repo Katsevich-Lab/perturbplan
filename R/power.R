@@ -1,39 +1,37 @@
 # This is a Rscript computing the power function using score test
 
-#' Power function for CRISPR screen experimental design
-#'
-#' @description
-#'  ss
+#' Power function for CRISPR screen experimental design.
 #'
 #'
-#' @param perturb_type either CRISPRi or CRISPRko; currently can only handle CRISPRi
 #'
-#' @param effect_size_mean Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes)
-#' @param effect_size_sd Sd fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes))
-#' @param control_cell_vec Control cell size for L elements (vector; length L)
-#' @param target_cell_mat Perturb cell size for L elements (matrix; row: L genomic elements; column: K gRNA libraries)
-#' @param library_size Averaged library size (scalar; positive valued)
-#' @param relative_expression Baseline relative expression level for J genes (scalar; valued between 0 and 1)
-#' @param size_parameter Size parameter for J genes (vector; length J)
+#' @param perturb_type Either CRISPRi or CRISPRko; currently can only handle CRISPRi.
 #'
-#' @param sideness Left, right or both
-#' @param correction Multiplicity correction; default is BH
-#' @param sig_level Significance leve of interest (FDR of interest)
+#' @param effect_size_mean Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).
+#' @param effect_size_sd Sd fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).
+#' @param control_cell_vec Control cell size for L elements (vector; length L).
+#' @param target_cell_mat Perturb cell size for L elements (matrix; row: L genomic elements; column: K gRNA libraries). Rownames should be specified for enhancer targets.
+#' @param library_size Averaged library size (scalar; positive valued).
+#' @param relative_expression Baseline relative expression level for J genes (named vector; of length J). Names of the vector should be different genes.
+#' @param size_parameter Size parameter for J genes (vector; length J).
 #'
-#' @param QC A logic value; if TRUE, then do quality control
-#' @param n_nonzero_trt QC threshold for treatment cell
-#' @param n_nonzero_ctl QC threshold for control cell
+#' @param sideness Left, right or both.
+#' @param correction Multiplicity correction; default is BH.
+#' @param sig_level Significance leve of interest (FDR of interest).
 #'
-#' @param UMI_s Estimate for UMI count per singlet for the underlying type of cell
-#' @param recovery_rate Recovery rate for cells surviving the library preparation
-#' @param doublet_rate Doublet rate for droplet containing more than one cell
-#' @param doublet_factor Ratio of averaged UMI count per doublet to UMI per singlet
-#' @param planned_read Planned total sequencing reads
-#' @param mapping_efficiency Mapping efficiency for sequenced reads
+#' @param QC A logic value; if TRUE, then do quality control.
+#' @param n_nonzero_trt QC threshold for treatment cell.
+#' @param n_nonzero_ctl QC threshold for control cell.
 #'
-#' @param intermediate_outcome A logic value indicating if only mean, sd of test statistics and QC are desired
+#' @param UMI_s Estimate for UMI count per singlet for the underlying type of cell.
+#' @param recovery_rate Recovery rate for cells surviving the library preparation.
+#' @param doublet_rate Doublet rate for droplet containing more than one cell.
+#' @param doublet_factor Ratio of averaged UMI count per doublet to UMI per singlet.
+#' @param planned_read Planned total sequencing reads.
+#' @param mapping_efficiency Mapping efficiency for sequenced reads.
 #'
-#' @return A vector of power estimated
+#' @param intermediate_outcome A logic value indicating if only mean, sd of test statistics and QC are desired.
+#'
+#' @return The output format is the same as [compute_power()].
 #' @importFrom dplyr if_else
 #' @export
 
@@ -87,9 +85,14 @@ power_function <- function(
   }
 
   ####### perform power calculation with power-determining parameters ##########
+
+  # compute the baseline_expression
+  baseline_expression <- setNames(relative_expression * library_size, names(relative_expression))
+
+  # compute power using function compute_power
   power_result <- compute_power(perturb_type = perturb_type,
                                 control_cell_vec = control_cell_vec, target_cell_mat = target_cell_mat,
-                                library_size = library_size, relative_expression = relative_expression, size_parameter = size_parameter,
+                                baseline_expression = baseline_expression, size_parameter = size_parameter,
                                 effect_size_mean = effect_size_mean, effect_size_sd = effect_size_sd,
                                 QC = QC, n_nonzero_trt = n_nonzero_trt, n_nonzero_ctl = n_nonzero_ctl,
                                 sideness = sideness, correction = correction, sig_level = sig_level,
@@ -100,16 +103,25 @@ power_function <- function(
 }
 
 
-#' Computing power for each (element, gene) pair
+#' Computing power for each (enhancer, gene) pair.
+#' @description
+#'
+#' This function have two functionalities: (1, intermediate goal) compute the mean
+#' and sd of the test statistic; (2, final goal) output the power for each enhancer-gene
+#' pair.
 #'
 #' @inheritParams power_function
-#' @param cutoff Cutoff for p-values to reject the test
+#' @param cutoff Cutoff for p-values to reject the test.
+#' @param baseline_expression Baseline gene expression in the group of control cells.
 #'
-#' @return A dataframe or a list epending on intermediate_outcome.
+#' @return A dataframe or a list depending on `intermediate_outcome`:
+#' @section Dataframe: if `intermediate_outcome` is TRUE, only mean, sd of the score tests and QC probability will be outputted.
+#' @section List: otherwise, the final power for each element-gene pair will be outputted, together with the estimated discovery set.
+#'
 #' @export
 compute_power <- function(perturb_type,
                           control_cell_vec, target_cell_mat,
-                          library_size, relative_expression, size_parameter,
+                          baseline_expression, size_parameter,
                           effect_size_mean, effect_size_sd,
                           QC, n_nonzero_trt, n_nonzero_ctl,
                           sideness, correction = NULL, sig_level = NULL, cutoff = NULL,
@@ -119,13 +131,12 @@ compute_power <- function(perturb_type,
   target_cell_vec <- rowSums(target_cell_mat)
 
   # compute the mean gene expression appearing in the power formula
-  mean_expression <- mean_expression_computation(relative_expression = relative_expression,
-                                                 library_size = library_size,
+  mean_expression <- mean_expression_computation(baseline_expression = baseline_expression,
                                                  effect_size_mean = effect_size_mean,
                                                  num_control = control_cell_vec,
                                                  num_trt = target_cell_vec)
 
-  # compute the gene expression part depending if all gRNA is efficient or not
+  # divide the power computation depending on perturb_type
   if(perturb_type == "CRISPRi"){
 
     # compute the different variance quantities
@@ -151,7 +162,7 @@ compute_power <- function(perturb_type,
 
     # compute the QC_prob
     QC_prob <- QC_prob(effect_size_mean = effect_size_mean,
-                       baseline_expression = relative_expression * library_size,
+                       baseline_expression = baseline_expression,
                        size_parameter = size_parameter,
                        num_control = control_cell_vec, num_trt = target_cell_vec,
                        n_nonzero_trt = n_nonzero_trt, n_nonzero_ctl = n_nonzero_ctl)
@@ -165,7 +176,7 @@ compute_power <- function(perturb_type,
 
   # extract gRNA and gene names and obtain Enhancer-Gene pair
   gRNA_name <- rownames(target_cell_mat)
-  gene_name <- names(relative_expression)
+  gene_name <- names(baseline_expression)
   E2G_pair <- as.vector(outer(gRNA_name, gene_name, paste, sep = "_"))
 
   # output depending the intermediate outcome is required or not

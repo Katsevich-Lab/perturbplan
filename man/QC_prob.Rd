@@ -15,19 +15,19 @@ QC_prob(
 )
 }
 \arguments{
-\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes)}
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
 
 \item{baseline_expression}{Baseline gene expression (vector; length J)}
 
-\item{size_parameter}{Size parameter for J genes (vector; length J)}
+\item{size_parameter}{Size parameter for J genes (vector; length J).}
 
 \item{num_control}{Number of control cells (vector; length L)}
 
 \item{num_trt}{Number of treatment cells (vector; length L)}
 
-\item{n_nonzero_trt}{QC threshold for treatment cell}
+\item{n_nonzero_trt}{QC threshold for treatment cell.}
 
-\item{n_nonzero_ctl}{QC threshold for control cell}
+\item{n_nonzero_ctl}{QC threshold for control cell.}
 }
 \value{
 QC probability
