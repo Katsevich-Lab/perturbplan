@@ -51,8 +51,7 @@ We assume each cell receives only one gRNA so each element get $500\times 2=1000
 num_total_cells <- 50000
 
 # Define control cell vector
-target_cell_vec <- apply(target_cell_mat, 1, sum)
-control_cell_vec <- num_total_cells - target_cell_vec
+control_cell_vec <- num_total_cells - apply(target_cell_mat, 1, sum)
 
 ```
 
