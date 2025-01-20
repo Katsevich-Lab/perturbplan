@@ -16,7 +16,7 @@
 #'
 #' @param sideness Left, right or both.
 #' @param correction Multiplicity correction; default is BH.
-#' @param sig_level Significance leve of interest (FDR of interest).
+#' @param sig_level Significance level of interest (FDR of interest).
 #'
 #' @param QC A logic value; if TRUE, then do quality control.
 #' @param n_nonzero_trt QC threshold for treatment cell.

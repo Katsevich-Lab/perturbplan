@@ -40,6 +40,7 @@ target_cell_mat <- matrix(c(500, 500, 500, 500),
                             element = sprintf("enh%d", 1:num_element),
                             gRNA = sprintf("gRNA%d", 1:gRNA_per_element)
                           ))
+target_cell_mat
 ```
 
 ## Compute the number of control cells for each enhancer of interest
@@ -53,6 +54,7 @@ num_total_cells <- 50000
 # Define control cell vector
 control_cell_vec <- num_total_cells - apply(target_cell_mat, 1, sum)
 
+control_cell_vec
 ```
 
 ## Specify mean and size parameter for NB distribution in control cell group
@@ -60,12 +62,17 @@ control_cell_vec <- num_total_cells - apply(target_cell_mat, 1, sum)
 We will specify the mean expression and size parameter for each gene of interest from the gene_expression data.frame. 
 
 ```{r}
-# Specify gene expression related parameters
+# Specify mean expression
 baseline_expression <- setNames(gene_expression$mean, gene_expression$ensembl)
+head(baseline_expression)
+
+# Specify size paramter
 size_parameter <- setNames(1 / gene_expression$dispersion, gene_expression$ensembl)
+head(size_parameter)
 
 # compute the total number of genes of interest
 num_gene <- length(baseline_expression)
+num_gene
 
 ```
 
@@ -77,14 +84,16 @@ Specify the mean and sd of effect size for each enhancer-gene pair.
 # mean effect size matrix
 mean_fold_change <- 0.85
 effect_size_mean <- matrix(mean_fold_change, nrow = num_element, ncol = num_gene)
+effect_size_mean[1:2,1:2]
 
 # sd effect size matrix
 sd_fold_change <- 0.13
 effect_size_sd <- matrix(sd_fold_change, nrow = num_element, ncol = num_gene)
+effect_size_sd[1:2,1:2]
 
 ```
 
-## Specify QC-related parameters and p-value cutoff
+## Specify QC-related parameters
 
 Last, specify quality-control related parameters: `QC`, `n_nonzero_trt`, `n_nonzero_ctl` and p-value cutoff: `cutoff`.
 
@@ -99,7 +108,7 @@ n_nonzero_ctl <- 7
 
 ```
 
-## Specify test-related parameters
+## Specify test-related parameters and p-value cutoff
 
 ```{r}
 # specify the cutoff
