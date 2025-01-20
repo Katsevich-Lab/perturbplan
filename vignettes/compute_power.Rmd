@@ -1,0 +1,140 @@
+---
+title: "PerturbPlan: power analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{PerturbPlan: power analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette is meant to showcase the functionality of `compute_power()`. 
+
+We first load the `PerturbPlan` package and the gene expression data for illustration. 
+
+```{r setup}
+# load necessary packages
+library(perturbplan)
+# load gene expression data 
+gene_expression <- readRDS("gene_expression_summary.rds")
+```
+
+## Compute the perturbed cells for each gRNA in each gRNA group targeting for the same element
+
+We define the treatment and control cells for each target element. Here we consider $2$ elements with $2$ gRNAs targeting each element. Each of these gRNAs is allocated respectively with $500$ cells. 
+
+```{r}
+# Define treatment cell matrix
+num_element <- 2
+gRNA_per_element <- 2
+target_cell_mat <- matrix(c(500, 500, 500, 500), 
+                          nrow = num_element,
+                          ncol = gRNA_per_element,
+                          dimnames = list(
+                            element = sprintf("enh%d", 1:num_element),
+                            gRNA = sprintf("gRNA%d", 1:gRNA_per_element)
+                          ))
+```
+
+## Compute the number of control cells for each enhancer of interest
+
+We assume each cell receives only one gRNA so each element get $500\times 2=1000$ cells receiving the perturbation targeting on the element. The number of control cells in each enhancer-gene test pair is just $50000-1000=49000$, where $50000$ is the total number of cells.
+
+```{r}
+# Define the total number of cells
+num_total_cells <- 50000
+
+# Define control cell vector
+target_cell_vec <- apply(target_cell_mat, 1, sum)
+control_cell_vec <- num_total_cells - target_cell_vec
+
+```
+
+## Specify mean and size parameter for NB distribution in control cell group
+
+We will specify the mean expression and size parameter for each gene of interest from the gene_expression data.frame. 
+
+```{r}
+# Specify gene expression related parameters
+baseline_expression <- setNames(gene_expression$mean, gene_expression$ensembl)
+size_parameter <- setNames(1 / gene_expression$dispersion, gene_expression$ensembl)
+
+# compute the total number of genes of interest
+num_gene <- length(baseline_expression)
+
+```
+
+## Specify mean and sd effect size matrices
+
+Specify the mean and sd of effect size for each enhancer-gene pair.
+
+```{r}
+# mean effect size matrix
+mean_fold_change <- 0.85
+effect_size_mean <- matrix(mean_fold_change, nrow = num_element, ncol = num_gene)
+
+# sd effect size matrix
+sd_fold_change <- 0.13
+effect_size_sd <- matrix(sd_fold_change, nrow = num_element, ncol = num_gene)
+
+```
+
+## Specify QC-related parameters and p-value cutoff
+
+Last, specify quality-control related parameters: `QC`, `n_nonzero_trt`, `n_nonzero_ctl` and p-value cutoff: `cutoff`.
+
+
+```{r}
+# QC or not
+QC <- TRUE
+
+# n_nonzero_trt and n_nonzero_ctl
+n_nonzero_trt <- 7
+n_nonzero_ctl <- 7
+
+```
+
+## Specify test-related parameters
+
+```{r}
+# specify the cutoff
+cutoff <- 1e-3
+
+# sideness of the test
+sideness <- "both"
+
+```
+
+## Finally, compute power for each enhancer-gene pair
+
+```{r}
+# use compute_power()
+power_results <- compute_power(
+  perturb_type = "CRISPRi",
+  control_cell_vec = control_cell_vec,
+  target_cell_mat = target_cell_mat,
+  baseline_expression = baseline_expression,
+  size_parameter = size_parameter,
+  effect_size_mean = effect_size_mean,
+  effect_size_sd = effect_size_sd,
+  QC = QC,
+  n_nonzero_trt = n_nonzero_trt,
+  n_nonzero_ctl = n_nonzero_ctl,
+  sideness = sideness,
+  cutoff = cutoff,
+  intermediate_outcome = FALSE
+)
+
+# plot the histogram of computed power for each pair
+hist(power_results$individual_power$adjusted_power,
+     main = "Power histogram",
+     xlab = "Power")
+
+```
+
