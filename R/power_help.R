@@ -45,25 +45,28 @@ read_per_cell <- function(planned_read, mapping_efficiency,
 
 #' Compute the gene expression related quantity in the power function.
 #'
-#' @inheritParams compute_power
-#' @param num_control Number of control cell (vector; length L).
-#' @param num_trt Number of perturb cell (vector; length L).
+#' @inheritParams distribution_teststat
 #'
 #' @return The gene expression related part in the power function.
 
 mean_expression_computation <- function(baseline_expression,
-                                        effect_size_mean, num_control, num_trt){
+                                        effect_size_mean, control_cell_vec, target_cell_vec){
 
   # extract information
-  num_element <- length(num_trt)
+  num_element <- length(control_cell_vec)
   num_gene <- length(baseline_expression)
-  num_cell <- num_trt + num_control
+  num_cell <- target_cell_vec + control_cell_vec
 
   # compute the gene expression related part in power formula
-  baseline_mat <- matrix(rep(baseline_expression, num_element), ncol = num_gene, byrow = TRUE)
+  baseline_mat <- matrix(rep(baseline_expression, num_element),
+                         nrow = num_element, ncol = num_gene, byrow = TRUE,
+                         dimnames = list(
+                           gRNA_target = names(control_cell_vec),
+                           gene = names(baseline_expression)
+                         ))
   trt_mat <- baseline_mat * effect_size_mean
   ctl_mat <- baseline_mat
-  pooled_mat <- trt_mat * (num_trt / num_cell) + ctl_mat * (num_control / num_cell)
+  pooled_mat <- trt_mat * (target_cell_vec / num_cell) + ctl_mat * (control_cell_vec / num_cell)
 
   # return the gene expression related part
   return(list(
@@ -98,7 +101,7 @@ var_nb <- function(mean, size){
 #' @return Adjusted power list including adjusted power and discovery size estimate.
 
 adjusted_power <- function(mean_list, sd_list,
-                           sig_level = NULL, correction = NULL, sideness,
+                           multiple_testing_alpha = NULL, multiple_testing_method = NULL, side,
                            QC_prob, cutoff = NULL){
 
   if(is.null(cutoff)){
@@ -106,16 +109,16 @@ adjusted_power <- function(mean_list, sd_list,
     # compute the adjusted cutoff
     cutoff <- adjusted_cutoff(mean_list = mean_list,
                               sd_list = sd_list,
-                              sig_level = sig_level,
-                              correction = correction,
-                              sideness = sideness, QC_prob)
+                              multiple_testing_alpha = multiple_testing_alpha,
+                              multiple_testing_method = multiple_testing_method,
+                              side = side, QC_prob = QC_prob)
   }
 
   # compute the adjusted power
   adjusted_power <- rejection_computation(mean_list = mean_list,
                                           sd_list = sd_list,
-                                          sideness = sideness,
-                                          sig_level = cutoff)
+                                          side = side,
+                                          cutoff = cutoff)
 
   # compute the discovery set
   discovery_size <- sum(adjusted_power * (1 - QC_prob))
@@ -133,20 +136,20 @@ adjusted_power <- function(mean_list, sd_list,
 #'
 #' @return The adjusted significance level.
 
-adjusted_cutoff <- function(mean_list, sd_list, sig_level, correction, sideness, QC_prob){
+adjusted_cutoff <- function(mean_list, sd_list, multiple_testing_alpha, multiple_testing_method, side, QC_prob){
 
   # compute the adjusted cutoff/significance level
-  adjusted_sig_level <- switch (correction,
+  adjusted_sig_level <- switch (multiple_testing_method,
                                 BH = {
                                   BH_cutoff(mean_list = mean_list,
                                             sd_list = sd_list,
-                                            sig_level = sig_level,
-                                            sideness = sideness,
+                                            multiple_testing_alpha = multiple_testing_alpha,
+                                            side = side,
                                             QC_prob = QC_prob)
                                 },
                                 Bonferroni = {
                                   num_hypo_adjusted <- sum(1 - QC_prob)
-                                  sig_level / num_hypo_adjusted
+                                  multiple_testing_alpha / num_hypo_adjusted
                                 }
   )
 
@@ -161,20 +164,20 @@ adjusted_cutoff <- function(mean_list, sd_list, sig_level, correction, sideness,
 #' @return Adjusted cutoff/significance level.
 #' @importFrom dplyr if_else
 
-BH_cutoff <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
+BH_cutoff <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob){
 
   # compute the FDP estimate with the given significance level
   FDP <- function(t){FDP_estimate(mean_list = mean_list,
                                   sd_list = sd_list,
-                                  sideness = sideness,
-                                  sig_level = t, QC_prob = QC_prob)}
+                                  side = side,
+                                  cutoff = t, QC_prob = QC_prob)}
 
   # do a grid search to obtain the adjusted cutoff
   num_hypotheses <- length(mean_list)
-  t_vals <- seq(sig_level, sig_level / num_hypotheses,  length.out = num_hypotheses)
+  t_vals <- seq(multiple_testing_alpha, multiple_testing_alpha / num_hypotheses,  length.out = num_hypotheses)
 
   # if the grid search line is too long, we split it
-  if(length(t_vals) > 1e4){
+  if(num_hypotheses > 1e4){
 
     ## check in batches with 1e4 size
     t_hat <- NULL
@@ -192,11 +195,11 @@ BH_cutoff <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
       # grid search in next batch
       fdp_hat_vals <- sapply(cur_t_vals, FDP)
 
-      # if the above condition is not true than do the following
-      if(all(fdp_hat_vals > sig_level)){
+      # if the above condition is not true then do the following
+      if(all(fdp_hat_vals > multiple_testing_alpha)){
         next
       } else{
-        t_hat <- cur_t_vals[min(which(fdp_hat_vals <= sig_level))]
+        t_hat <- cur_t_vals[min(which(fdp_hat_vals <= multiple_testing_alpha))]
       }
 
       # if this is the last batch but sill no t_hat searched, specify zero
@@ -209,10 +212,10 @@ BH_cutoff <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
 
     # do not split
     fdp_hat_vals <- sapply(t_vals, FDP)
-    if(all(fdp_hat_vals > sig_level)){
+    if(all(fdp_hat_vals > multiple_testing_alpha)){
       t_hat <- 0
-    } else{
-      t_hat <- t_vals[max(which(fdp_hat_vals <= sig_level))]
+    }else{
+      t_hat <- t_vals[min(which(fdp_hat_vals <= multiple_testing_alpha))]
     }
   }
 
@@ -222,11 +225,11 @@ BH_cutoff <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
 
 #' FDP estimate based on rejection probability.
 #'
-#' @inheritParams adjusted_cutoff
+#' @inheritParams adjusted_power
 #'
 #' @return FDP estimate.
 
-FDP_estimate <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
+FDP_estimate <- function(mean_list, sd_list, side, cutoff, QC_prob){
 
   # adjust the number of hypothesis by taking QC probability into consideration
   num_hypo_adjusted <- sum(1 - QC_prob)
@@ -234,36 +237,36 @@ FDP_estimate <- function(mean_list, sd_list, sideness, sig_level, QC_prob){
   # define the function with cutoff
   rejection_size <- sum(rejection_computation(mean_list = mean_list,
                                               sd_list = sd_list,
-                                              sideness = sideness,
-                                              sig_level = sig_level) * (1 - QC_prob))
+                                              side = side,
+                                              cutoff = cutoff) * (1 - QC_prob))
 
   # return the FDP estimate
-  return(num_hypo_adjusted * sig_level / rejection_size)
+  return(num_hypo_adjusted * cutoff / rejection_size)
 }
 
 #' Compute the rejection probability.
 #'
-#' @inheritParams adjusted_cutoff
+#' @inheritParams adjusted_power
 #'
 #' @return The rejection probablity.
 #' @importFrom stats qnorm pnorm
 #' @export
 
-rejection_computation <- function(mean_list, sd_list, sideness, sig_level){
+rejection_computation <- function(mean_list, sd_list, side, cutoff){
 
-  # compute different rejection probability based on sideness
-  rejection_prob <- switch (sideness,
+  # compute different rejection probability based on sideness of the test
+  rejection_prob <- switch (side,
                             left = {
-                              stats::pnorm(stats::qnorm(sig_level), mean = mean_list, sd = sd_list)
+                              stats::pnorm(stats::qnorm(cutoff), mean = mean_list, sd = sd_list)
                             },
                             right = {
-                              stats::pnorm(stats::qnorm(1 - sig_level),
+                              stats::pnorm(stats::qnorm(1 - cutoff),
                                            mean = mean_list, sd = sd_list,
                                            lower.tail = FALSE)
                             },
                             both = {
-                              stats::pnorm(stats::qnorm(1 - sig_level / 2), mean = mean_list, sd = sd_list,
-                                           lower.tail = FALSE) + stats::pnorm(stats::qnorm(sig_level / 2),
+                              stats::pnorm(stats::qnorm(1 - cutoff / 2), mean = mean_list, sd = sd_list,
+                                           lower.tail = FALSE) + stats::pnorm(stats::qnorm(cutoff / 2),
                                                                               mean = mean_list, sd = sd_list)
                             }
   )
@@ -308,34 +311,43 @@ score_test <- function(X, Y, size_parameter){
 
 #' Compute the mean and sd approximation of the test statistic.
 #'
-#' @inheritParams power_function
-#' @param pooled_mean Pooled mean expression of treatment and control (vector; length J).
-#' @param trt_mean Treatment mean expression (vector; length J).
-#' @param ctl_mean Control mean expression (vector; length J).
+#' @inheritParams compute_power
+#' @param target_cell_vec Number of cell per element (vector; length J).
+#' @param target_cell_vec_sq Squared number of cell per element (vector; length J).
 #'
 #' @return Mean and sd vector of length (L x J).
-distribution_teststat <- function(control_cell_vec, target_cell_mat, size_parameter,
-                                  effect_size_mean, effect_size_sd,
-                                  pooled_mean, trt_mean, ctl_mean){
+distribution_teststat <- function(control_cell_vec, target_cell_vec, target_cell_vec_sq,
+                                  baseline_expression, size_parameter,
+                                  effect_size_mean, effect_size_sd){
+
+  # compute the mean gene expression appearing in the power formula
+  mean_expression <- mean_expression_computation(baseline_expression = baseline_expression,
+                                                 effect_size_mean = effect_size_mean,
+                                                 control_cell_vec = control_cell_vec,
+                                                 target_cell_vec = target_cell_vec)
+
+  # compute the different variance quantities
+  pooled_mean <- mean_expression$pooled_mat
+  trt_mean <- mean_expression$trt_mat
+  ctl_mean <- mean_expression$ctl_mat
 
   # compute the number of total elements and total genes
-  num_element <- nrow(target_cell_mat)
+  num_element <- length(control_cell_vec)
   num_gene <- length(size_parameter)
 
-  # compute the number of perturbed cell for each element
-  target_cell_vec <- rowSums(target_cell_mat)
-
   # fill the size parameter matrix
-  size_mat <- matrix(rep(size_parameter, num_element), ncol = num_gene, byrow = TRUE)
+  size_mat <- matrix(rep(size_parameter, num_element),
+                     nrow = num_element, ncol = num_gene, byrow = TRUE,
+                     dimnames = list(
+                       gRNA_target = names(control_cell_vec),
+                       gene = names(size_parameter)
+                     ))
 
   # compute the square of the denominator in the score statistic
   pooled_var <- var_nb(mean = pooled_mean, size = size_mat)
   denominator_sq <- sweep(pooled_var, 1, (1 / control_cell_vec + 1 / target_cell_vec), "*")
 
   ########################## compute the asymptotic sd of test stat ############
-  # compute the square number of perturbed cell
-  target_cell_vec_sq <- rowSums(target_cell_mat^2)
-
   # compute the control group variance
   ctl_var <- var_nb(mean = ctl_mean, size = size_mat)
 
@@ -349,10 +361,10 @@ distribution_teststat <- function(control_cell_vec, target_cell_mat, size_parame
   asy_var_1 <- sweep(ctl_var, 1, 1 / control_cell_vec, "*")
   asy_var_2 <- sweep(trt_var, 1, 1 / target_cell_vec, "*")
   asy_var <- (asy_var_1 + asy_var_2) / denominator_sq
-  asy_sd <- as.vector(sqrt(asy_var))
+  asy_sd <- sqrt(asy_var)
 
   ################# compute the asymptotic mean of test stat ###################
-  asy_mean <- as.vector(ctl_mean * (effect_size_mean - 1) / sqrt(denominator_sq))
+  asy_mean <- ctl_mean * (effect_size_mean - 1) / sqrt(denominator_sq)
 
   # return the mean and sd vector
   return(list(

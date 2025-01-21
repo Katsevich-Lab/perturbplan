@@ -4,16 +4,16 @@
 \alias{FDP_estimate}
 \title{FDP estimate based on rejection probability.}
 \usage{
-FDP_estimate(mean_list, sd_list, sideness, sig_level, QC_prob)
+FDP_estimate(mean_list, sd_list, side, cutoff, QC_prob)
 }
 \arguments{
 \item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
 
 \item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
 
-\item{sideness}{Left, right or both.}
+\item{side}{Left, right or both.}
 
-\item{sig_level}{Significance leve of interest (FDR of interest).}
+\item{cutoff}{Cutoff for p-values to reject the test.}
 
 \item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J).}
 }

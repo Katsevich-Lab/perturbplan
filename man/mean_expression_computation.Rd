@@ -7,18 +7,22 @@
 mean_expression_computation(
   baseline_expression,
   effect_size_mean,
-  num_control,
-  num_trt
+  control_cell_vec,
+  target_cell_vec
 )
 }
 \arguments{
-\item{baseline_expression}{Baseline gene expression in the group of control cells.}
+\item{baseline_expression}{Baseline mean expression in the group of control cells.}
 
-\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements;
+column: J genes). Rownames and colnames should be specified. The rowname should look like "enh1"
+and column name should be ensembl form or like "gene1". Alternatively, a scalar value can just be
+specified if all enhancer-gene pairs share the same effect size.}
 
-\item{num_control}{Number of control cell (vector; length L).}
+\item{control_cell_vec}{Control cell size for L elements (vector; length L). Vector should be named
+for grna_target.}
 
-\item{num_trt}{Number of perturb cell (vector; length L).}
+\item{target_cell_vec}{Number of cell per element (vector; length J).}
 }
 \value{
 The gene expression related part in the power function.

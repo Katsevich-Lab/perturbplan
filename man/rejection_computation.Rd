@@ -4,16 +4,16 @@
 \alias{rejection_computation}
 \title{Compute the rejection probability.}
 \usage{
-rejection_computation(mean_list, sd_list, sideness, sig_level)
+rejection_computation(mean_list, sd_list, side, cutoff)
 }
 \arguments{
 \item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
 
 \item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
 
-\item{sideness}{Left, right or both.}
+\item{side}{Left, right or both.}
 
-\item{sig_level}{Significance leve of interest (FDR of interest).}
+\item{cutoff}{Cutoff for p-values to reject the test.}
 }
 \value{
 The rejection probablity.

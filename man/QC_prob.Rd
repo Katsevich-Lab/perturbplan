@@ -8,26 +8,30 @@ QC_prob(
   effect_size_mean,
   baseline_expression,
   size_parameter,
-  num_control,
-  num_trt,
-  n_nonzero_trt,
-  n_nonzero_ctl
+  control_cell_vec,
+  target_cell_vec,
+  n_nonzero_trt_thresh,
+  n_nonzero_cntrl_thresh
 )
 }
 \arguments{
-\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements;
+column: J genes). Rownames and colnames should be specified. The rowname should look like "enh1"
+and column name should be ensembl form or like "gene1". Alternatively, a scalar value can just be
+specified if all enhancer-gene pairs share the same effect size.}
 
-\item{baseline_expression}{Baseline gene expression (vector; length J)}
+\item{baseline_expression}{Baseline mean expression in the group of control cells.}
 
-\item{size_parameter}{Size parameter for J genes (vector; length J).}
+\item{size_parameter}{Size parameter for J genes (vector; length J). Names should be same as \code{relative_expression}.}
 
-\item{num_control}{Number of control cells (vector; length L)}
+\item{control_cell_vec}{Control cell size for L elements (vector; length L). Vector should be named
+for grna_target.}
 
-\item{num_trt}{Number of treatment cells (vector; length L)}
+\item{target_cell_vec}{Number of cell per element (vector; length J).}
 
-\item{n_nonzero_trt}{QC threshold for treatment cell.}
+\item{n_nonzero_trt_thresh}{QC threshold for treatment cell.}
 
-\item{n_nonzero_ctl}{QC threshold for control cell.}
+\item{n_nonzero_cntrl_thresh}{QC threshold for control cell.}
 }
 \value{
 QC probability

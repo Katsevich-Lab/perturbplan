@@ -4,16 +4,16 @@
 \alias{BH_cutoff}
 \title{Compute the adjusted cutoff/significance level applying BH procedure.}
 \usage{
-BH_cutoff(mean_list, sd_list, sideness, sig_level, QC_prob)
+BH_cutoff(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 }
 \arguments{
 \item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
 
 \item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
 
-\item{sideness}{Left, right or both.}
+\item{side}{Left, right or both.}
 
-\item{sig_level}{Significance leve of interest (FDR of interest).}
+\item{multiple_testing_alpha}{Significance level of interest (FDR of interest).}
 
 \item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J).}
 }

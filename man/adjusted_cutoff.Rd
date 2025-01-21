@@ -4,18 +4,25 @@
 \alias{adjusted_cutoff}
 \title{Compute the adjusted significance level with either BH or Bonferroni procedure.}
 \usage{
-adjusted_cutoff(mean_list, sd_list, sig_level, correction, sideness, QC_prob)
+adjusted_cutoff(
+  mean_list,
+  sd_list,
+  multiple_testing_alpha,
+  multiple_testing_method,
+  side,
+  QC_prob
+)
 }
 \arguments{
 \item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
 
 \item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
 
-\item{sig_level}{Significance leve of interest (FDR of interest).}
+\item{multiple_testing_alpha}{Significance level of interest (FDR of interest).}
 
-\item{correction}{Multiplicity correction; default is BH.}
+\item{multiple_testing_method}{Multiplicity correction; default is BH.}
 
-\item{sideness}{Left, right or both.}
+\item{side}{Left, right or both.}
 
 \item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J).}
 }

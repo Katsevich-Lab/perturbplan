@@ -7,11 +7,14 @@
 zero_prob(effect_size_mean, baseline_expression, size_parameter)
 }
 \arguments{
-\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements;
+column: J genes). Rownames and colnames should be specified. The rowname should look like "enh1"
+and column name should be ensembl form or like "gene1". Alternatively, a scalar value can just be
+specified if all enhancer-gene pairs share the same effect size.}
 
-\item{baseline_expression}{Baseline gene expression (vector; length J)}
+\item{baseline_expression}{Baseline mean expression in the group of control cells.}
 
-\item{size_parameter}{Size parameter for J genes (vector; length J).}
+\item{size_parameter}{Size parameter for J genes (vector; length J). Names should be same as \code{relative_expression}.}
 }
 \value{
 The zero probability of length L x J

@@ -6,51 +6,56 @@
 \usage{
 power_function(
   perturb_type = "CRISPRi",
+  target_cell_df,
   control_cell_vec,
-  target_cell_mat,
   library_size = NULL,
   relative_expression,
   size_parameter,
-  effect_size_mean,
-  effect_size_sd = matrix(0, nrow = nrow(effect_size_mean), ncol =
-    ncol(effect_size_mean)),
-  QC = TRUE,
-  n_nonzero_trt = 7,
-  n_nonzero_ctl = 7,
+  effect_size_mean = 0.8,
+  effect_size_sd = 0,
+  n_nonzero_trt_thresh = 7,
+  n_nonzero_cntrl_thresh = 7,
   UMI_s = NULL,
   recovery_rate = NULL,
   doublet_rate = NULL,
   doublet_factor = NULL,
   planned_read = NULL,
   mapping_efficiency = NULL,
-  sideness,
-  correction = "BH",
-  sig_level = 0.1,
+  side,
+  multiple_testing_method = "BH",
+  multiple_testing_alpha = 0.1,
   intermediate_outcome = FALSE
 )
 }
 \arguments{
 \item{perturb_type}{Either CRISPRi or CRISPRko; currently can only handle CRISPRi.}
 
-\item{control_cell_vec}{Control cell size for L elements (vector; length L).}
+\item{target_cell_df}{Perturb cell size for L elements (dataframe). The data frame should include
+three columns: grna_id (value should be like "gRNAd" where d is an integer), grna_target (value should
+be like "enhl" where l is an integer) and num_cells (value should be integer). Thus each row of the data
+frame includes the number of cells for each (gRNA, element) pair.}
 
-\item{target_cell_mat}{Perturb cell size for L elements (matrix; row: L genomic elements; column: K gRNA libraries). Rownames should be specified for enhancer targets.}
+\item{control_cell_vec}{Control cell size for L elements (vector; length L). Vector should be named
+for grna_target.}
 
 \item{library_size}{Averaged library size (scalar; positive valued).}
 
-\item{relative_expression}{Baseline relative expression level for J genes (named vector; of length J). Names of the vector should be different genes.}
+\item{relative_expression}{Baseline relative expression level for J genes (named vector; of length J).
+Names of the vector should be different genes and the format should be consistent with the column names of
+\code{effect_size_mean} and \code{effect_size_sd}.}
 
-\item{size_parameter}{Size parameter for J genes (vector; length J).}
+\item{size_parameter}{Size parameter for J genes (vector; length J). Names should be same as \code{relative_expression}.}
 
-\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
+\item{effect_size_mean}{Mean fold change for each (element, gene) (matrix; row: L genomic elements;
+column: J genes). Rownames and colnames should be specified. The rowname should look like "enh1"
+and column name should be ensembl form or like "gene1". Alternatively, a scalar value can just be
+specified if all enhancer-gene pairs share the same effect size.}
 
-\item{effect_size_sd}{Sd fold change for each (element, gene) (matrix; row: L genomic elements; column: J genes).}
+\item{effect_size_sd}{Sd fold change for each (element, gene). Format should be the same as \code{effect_size_mean}.}
 
-\item{QC}{A logic value; if TRUE, then do quality control.}
+\item{n_nonzero_trt_thresh}{QC threshold for treatment cell.}
 
-\item{n_nonzero_trt}{QC threshold for treatment cell.}
-
-\item{n_nonzero_ctl}{QC threshold for control cell.}
+\item{n_nonzero_cntrl_thresh}{QC threshold for control cell.}
 
 \item{UMI_s}{Estimate for UMI count per singlet for the underlying type of cell.}
 
@@ -64,13 +69,13 @@ power_function(
 
 \item{mapping_efficiency}{Mapping efficiency for sequenced reads.}
 
-\item{sideness}{Left, right or both.}
+\item{side}{Left, right or both.}
 
-\item{correction}{Multiplicity correction; default is BH.}
+\item{multiple_testing_method}{Multiplicity correction; default is BH.}
 
-\item{sig_level}{Significance leve of interest (FDR of interest).}
+\item{multiple_testing_alpha}{Significance level of interest (FDR of interest).}
 
-\item{intermediate_outcome}{A logic value indicating if only mean, sd of test statistics and QC are desired.}
+\item{intermediate_outcome}{A logic value indicating if only mean, sd of test statistics and QC probability are desired.}
 }
 \value{
 The output format is the same as \code{\link[=compute_power]{compute_power()}}.
