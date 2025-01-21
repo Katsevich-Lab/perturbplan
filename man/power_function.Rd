@@ -5,7 +5,6 @@
 \title{Power function for CRISPR screen experimental design.}
 \usage{
 power_function(
-  perturb_type = "CRISPRi",
   target_cell_df,
   control_cell_vec,
   library_size = NULL,
@@ -28,8 +27,6 @@ power_function(
 )
 }
 \arguments{
-\item{perturb_type}{Either CRISPRi or CRISPRko; currently can only handle CRISPRi.}
-
 \item{target_cell_df}{Perturb cell size for L elements (dataframe). The data frame should include
 three columns: grna_id (value should be like "gRNAd" where d is an integer), grna_target (value should
 be like "enhl" where l is an integer) and num_cells (value should be integer). Thus each row of the data

@@ -147,7 +147,7 @@ adjusted_cutoff <- function(mean_list, sd_list, multiple_testing_alpha, multiple
                                             side = side,
                                             QC_prob = QC_prob)
                                 },
-                                Bonferroni = {
+                                bonferroni = {
                                   num_hypo_adjusted <- sum(1 - QC_prob)
                                   multiple_testing_alpha / num_hypo_adjusted
                                 }

@@ -5,7 +5,6 @@
 \title{Input checking function (currently only available for input_check)}
 \usage{
 input_check(
-  perturb_type = NULL,
   target_cell_df = NULL,
   control_cell_vec = NULL,
   size_parameter = NULL,
@@ -22,8 +21,6 @@ input_check(
 )
 }
 \arguments{
-\item{perturb_type}{Either CRISPRi or CRISPRko; currently can only handle CRISPRi.}
-
 \item{target_cell_df}{Perturb cell size for L elements (dataframe). The data frame should include
 three columns: grna_id (value should be like "gRNAd" where d is an integer), grna_target (value should
 be like "enhl" where l is an integer) and num_cells (value should be integer). Thus each row of the data

@@ -1,10 +1,12 @@
 Package: perturbplan
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Title: Experimental Design and Power Analysis for Perturb-Seq Experiments
+Version: 0.0.1
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
+    c(person("Ziang", "Niu", , "ziangniu@wharton.upenn.edu", role = c("aut", "cre")),
+      person("Yihui", "He", , "yihuihe@wharton.upenn.edu", role = c("aut")),
+      person("Eugene", "Katsevich", , "ekatsevi@wharton.upenn.edu", role = c("aut"))
+    )
+Description: Experimental design and power analysis for perturb-seq experiments.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

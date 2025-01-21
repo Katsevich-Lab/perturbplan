@@ -5,7 +5,6 @@
 \title{Computing power for each (enhancer, gene) pair.}
 \usage{
 compute_power(
-  perturb_type = "CRISPRi",
   control_cell_vec,
   target_cell_df,
   baseline_expression,
@@ -22,8 +21,6 @@ compute_power(
 )
 }
 \arguments{
-\item{perturb_type}{Either CRISPRi or CRISPRko; currently can only handle CRISPRi.}
-
 \item{control_cell_vec}{Control cell size for L elements (vector; length L). Vector should be named
 for grna_target.}
 

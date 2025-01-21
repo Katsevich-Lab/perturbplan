@@ -4,9 +4,6 @@
 #'
 #' @return NULL
 input_check <- function(
-    ######################## type of perturb-seq experiment ####################
-    perturb_type = NULL,
-
     ######################## power-determining parameters ######################
     target_cell_df = NULL, control_cell_vec = NULL,
     size_parameter = NULL, baseline_expression = NULL,
@@ -21,16 +18,6 @@ input_check <- function(
     ###################### output parameter ####################################
     intermediate_outcome = NULL
 ){
-  ########################## perturb_type ######################################
-  # argument missingness checking
-  if(is.null(perturb_type)){
-    stop("perturb_type should be specified!")
-  }
-  # now only CRISPRi can be considered
-  if(perturb_type != "CRISPRi"){
-    stop("Currently only CRISPRi experiments are supported.")
-  }
-
   ########################## target_cell_df ####################################
   # argument missingness checking
   if(is.null(target_cell_df)){
@@ -188,7 +175,7 @@ input_check <- function(
     }else{
       # multple testing method should be BH or Bonferroni
       if(!(multiple_testing_method %in% c("BH", "Bonferroni"))){
-        stop("Multple testing method should be either BH or Bonferroni!")
+        stop("Multple testing method should be either BH or bonferroni!")
       }
     }
   }else{

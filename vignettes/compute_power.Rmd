@@ -138,7 +138,6 @@ side <- "both"
 ```{r}
 # use compute_power()
 power_results <- compute_power(
-  perturb_type = "CRISPRi",
   control_cell_vec = control_cell_vec,
   target_cell_df = target_cell_df,
   baseline_expression = baseline_expression,
@@ -166,7 +165,6 @@ Sometimes, one would want to use the same scalar for the mean and sd fold change
 ```{r}
 # use compute_power()
 power_results <- compute_power(
-  perturb_type = "CRISPRi",
   control_cell_vec = control_cell_vec,
   target_cell_df = target_cell_df,
   baseline_expression = baseline_expression,
@@ -185,4 +183,23 @@ hist(power_results$individual_power$adjusted_power,
      main = "Power histogram",
      xlab = "Power")
 
+```
+
+```{r}
+discovery_pairs <- power_results$individual_power |> 
+  tidyr::separate(pair, into = c("grna_target", "response_id"), sep = "_") |>
+  dplyr::select(-adjusted_power)
+
+cells_per_grna <- target_cell_df |>
+  dplyr::rename(grna_id = gRNA_id, grna_target = gRNA_target)
+
+baseline_expression_stats <- gene_expression |>
+  dplyr::rename(response_id = ensembl, expression_mean = mean) |>
+  dplyr::mutate(expression_size = 1 / dispersion) |>
+  dplyr::select(response_id, expression_mean, expression_size)
+
+control_group <- "complement"
+
+effect_size_mean <- mean_fold_change
+effect_size_sd <- sd_fold_change
 ```
