@@ -159,3 +159,30 @@ hist(power_results$individual_power$adjusted_power,
 
 ```
 
+## Another way to specify the mean and sd of fold changes
+
+Sometimes, one would want to use the same scalar for the mean and sd fold changes of all enhancer-gene pairs (as we were in the previous example), we can just use the values `mean_fold_change` and `sd_fold_change` without creating a matrix with the same value in all entries.
+
+```{r}
+# use compute_power()
+power_results <- compute_power(
+  perturb_type = "CRISPRi",
+  control_cell_vec = control_cell_vec,
+  target_cell_df = target_cell_df,
+  baseline_expression = baseline_expression,
+  size_parameter = size_parameter,
+  effect_size_mean = mean_fold_change,
+  effect_size_sd = sd_fold_change,
+  n_nonzero_trt_thresh = n_nonzero_trt_thresh,
+  n_nonzero_cntrl_thresh = n_nonzero_cntrl_thresh,
+  side = side,
+  cutoff = cutoff,
+  intermediate_outcome = FALSE
+)
+
+# plot the histogram of computed power for each pair
+hist(power_results$individual_power$adjusted_power,
+     main = "Power histogram",
+     xlab = "Power")
+
+```
