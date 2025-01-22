@@ -102,7 +102,7 @@ var_nb <- function(mean, size){
 
 adjusted_power <- function(mean_list, sd_list,
                            multiple_testing_alpha = NULL, multiple_testing_method = NULL, side,
-                           QC_prob, cutoff = NULL){
+                           QC_prob, cutoff){
 
   if(is.null(cutoff)){
 
@@ -121,11 +121,12 @@ adjusted_power <- function(mean_list, sd_list,
                                           cutoff = cutoff)
 
   # compute the discovery set
-  discovery_size <- sum(adjusted_power * (1 - QC_prob))
+  final_power <- adjusted_power * (1 - QC_prob)
+  discovery_size <- sum(final_power)
 
   # compute the rejection probability with the adjusted cutoff
   return(output = list(
-    adjusted_power = adjusted_power,
+    adjusted_power = final_power,
     discovery_size_estimate = discovery_size
   ))
 }
@@ -353,7 +354,7 @@ distribution_teststat <- function(control_cell_vec, target_cell_vec, target_cell
 
   # compute the treatment group variance
   trt_var_part1 <- var_nb(mean = trt_mean, size = size_mat)
-  trt_var_part2 <- trt_mean^2 * effect_size_sd^2 / size_mat + sweep(trt_mean^2 * effect_size_sd^2, 1,
+  trt_var_part2 <- ctl_mean^2 * effect_size_sd^2 / size_mat + sweep(ctl_mean^2 * effect_size_sd^2, 1,
                                                                     target_cell_vec_sq / target_cell_vec, "*")
   trt_var <- trt_var_part1 + trt_var_part2
 
@@ -371,4 +372,53 @@ distribution_teststat <- function(control_cell_vec, target_cell_vec, target_cell
     mean = asy_mean,
     sd = asy_sd
   ))
+}
+
+#' Compute mean and sd of the score test statistic
+#'
+#' @inheritParams compute_power_posthoc
+#' @param num_trt_cells Number of treatment cells in score test
+#' @param num_cntrl_cells Number of control cells in score test
+#' @param num_trt_cells_sq Squared number of control cells in score test
+#' @param expression_mean Mean gene expression
+#' @param expression_size Size parameter in NB distribution
+#'
+#' @return A list including mean and sd of the test statistic
+compute_distribution_teststat <- function(num_trt_cells, num_cntrl_cells, num_trt_cells_sq,
+                                          expression_mean, expression_size,
+                                          fold_change_mean, fold_change_sd){
+
+  # compute treatment/control cells proportion
+  num_test_cells <- num_trt_cells + num_cntrl_cells
+  trt_test_prop <- num_trt_cells / num_test_cells
+  cntrl_test_prop <- 1 - trt_test_prop
+
+  # define treatment/control/pooled mean expression
+  trt_expression_mean <- expression_mean * fold_change_mean
+  cntrl_expression_mean <- expression_mean
+  pooled_expression_mean <- trt_expression_mean * trt_test_prop + cntrl_expression_mean * cntrl_test_prop
+
+  # compute the square of the denominator in the score statistic
+  pooled_var <- var_nb(mean = pooled_expression_mean, size = expression_size)
+  denominator_sq <- pooled_var * (1 / num_cntrl_cells + 1 / num_trt_cells)
+
+  ########################## compute the asymptotic sd of test stat ############
+  # compute the control group variance
+  cntrl_var <- var_nb(mean = cntrl_expression_mean, size = expression_size) / num_cntrl_cells
+
+  # compute the treatment group variance
+  trt_var_within <- (trt_expression_mean + (cntrl_expression_mean^2 * (fold_change_sd^2 + fold_change_mean^2) / expression_size)) / num_trt_cells
+  trt_var_across <- cntrl_expression_mean^2 * fold_change_sd^2 * num_trt_cells_sq / num_trt_cells^2
+  trt_var <- trt_var_within + trt_var_across
+
+  # compute the asymptotic sd
+  sd <- sqrt((cntrl_var + trt_var) / denominator_sq)
+
+  ################# compute the asymptotic mean of test stat ###################
+  mean <- cntrl_expression_mean * (fold_change_mean - 1) / sqrt(denominator_sq)
+
+  # return the mean and sd vector
+  return(
+    list(setNames(c(mean, sd), c("mean", "sd")))
+  )
 }

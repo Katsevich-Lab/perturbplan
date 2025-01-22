@@ -11,7 +11,7 @@ adjusted_power(
   multiple_testing_method = NULL,
   side,
   QC_prob,
-  cutoff = NULL
+  cutoff
 )
 }
 \arguments{

@@ -35,11 +35,11 @@ that received each gRNA:
 ``` r
 cells_per_grna
 #>      grna_id grna_target num_cells
-#> 1 enh1_grna1        enh1        82
-#> 2 enh2_grna1        enh2        96
-#> 3 enh3_grna1        enh3       111
-#> 4 enh1_grna2        enh1        91
-#> 5 enh2_grna2        enh2        96
+#> 1 enh1_grna1        enh1       106
+#> 2 enh2_grna1        enh2       111
+#> 3 enh3_grna1        enh3       102
+#> 4 enh1_grna2        enh1        87
+#> 5 enh2_grna2        enh2        92
 #> 6 enh3_grna2        enh3       104
 ```
 
@@ -49,10 +49,10 @@ baseline expression of each gene:
 ``` r
 baseline_expression_stats
 #>   response_id expression_mean expression_size
-#> 1       gene1       3.4572064       1.1149512
-#> 2       gene2       0.9844369       1.0459180
-#> 3       gene3       6.0907880       0.8618838
-#> 4       gene4      11.2144674       1.8466161
+#> 1       gene1        1.092652        2.778404
+#> 2       gene2       22.422441        5.242091
+#> 3       gene3        1.811014        4.575501
+#> 4       gene4        0.369937        2.390142
 ```
 
 ### Analysis choices
@@ -144,7 +144,7 @@ discoveries across all enhancer-gene pairs:
 
 ``` r
 power_results$expected_num_discoveries
-#> [1] 2.72412
+#> [1] 3.999514
 ```
 
 The field `individual_power` is a data frame containing the power for
@@ -152,17 +152,19 @@ each enhancer-gene pair:
 
 ``` r
 power_results$individual_power
-#>    grna_target response_id      power
-#> 1         enh1       gene1 0.18901830
-#> 2         enh2       gene1 0.21059777
-#> 3         enh3       gene1 0.23504563
-#> 4         enh1       gene2 0.09577739
-#> 5         enh2       gene2 0.10846972
-#> 6         enh3       gene2 0.12348878
-#> 7         enh1       gene3 0.16411573
-#> 8         enh2       gene3 0.18404622
-#> 9         enh3       gene3 0.20689380
-#> 10        enh1       gene4 0.37295510
-#> 11        enh2       gene4 0.40164825
-#> 12        enh3       gene4 0.43206303
+#> # A tibble: 12 × 3
+#>    grna_target response_id  power
+#>    <fct>       <chr>        <dbl>
+#>  1 enh1        gene1       0.213 
+#>  2 enh2        gene1       0.223 
+#>  3 enh3        gene1       0.226 
+#>  4 enh1        gene2       0.676 
+#>  5 enh2        gene2       0.684 
+#>  6 enh3        gene2       0.687 
+#>  7 enh1        gene3       0.350 
+#>  8 enh2        gene3       0.362 
+#>  9 enh3        gene3       0.365 
+#> 10 enh1        gene4       0.0677
+#> 11 enh2        gene4       0.0717
+#> 12 enh3        gene4       0.0726
 ```

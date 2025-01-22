@@ -124,6 +124,7 @@ power_function <- function(
 #' @return A dataframe or a list depending on `intermediate_outcome`:
 #' @section Dataframe: if `intermediate_outcome` is TRUE, only mean, sd of the score tests and QC probability will be outputted.
 #' @section List: otherwise, the final power for each element-gene pair will be outputted, together with the estimated discovery set.
+#' @export
 compute_power <- function(control_cell_vec,
                           target_cell_df,
                           baseline_expression,
@@ -294,59 +295,116 @@ compute_power_posthoc <- function(
     side = "both",
     multiple_testing_method = "BH",
     multiple_testing_alpha = 0.1) {
-  targets <- discovery_pairs |>
-    dplyr::filter(grna_target != "non-targeting") |>
-    dplyr::pull(grna_target) |>
-    unique()
 
+  ############################# create enhancer_gene df ########################
+  enhancer_gene <- discovery_pairs |>
+    # join grna df
+    dplyr::left_join(
+      cells_per_grna |>
+        dplyr::filter(grna_target != "non-targeting") |>
+        dplyr::group_by(grna_target) |>
+        dplyr::summarize(num_trt_cells = sum(num_cells),
+                         num_trt_cells_sq = sum(num_cells^2)) |>
+        dplyr::ungroup(),
+      "grna_target"
+    ) |>
+    # join gene expression df
+    dplyr::left_join(
+      baseline_expression_stats, "response_id"
+    )
+
+  ############################# obtain number of control cells #################
   if (control_group == "nt_cells") {
-    num_nt_cells <- cells_per_grna |>
+    num_cntrl_cells <- cells_per_grna |>
       dplyr::filter(grna_target == "non-targeting") |>
       dplyr::summarize(sum(num_cells)) |>
       dplyr::pull()
-    control_cell_vec <- rep(num_nt_cells, length(targets)) |>
-      stats::setNames(targets)
+    enhancer_gene <- enhancer_gene |> dplyr::mutate(
+      num_cntrl_cells = num_cntrl_cells
+      )
   } else { # control_group == "complement"
-    control_cell_vec <- cells_per_grna |>
-      dplyr::filter(grna_target != "non-targeting") |>
-      dplyr::group_by(grna_target) |>
-      dplyr::summarize(num_controls = num_total_cells - sum(num_cells)) |>
-      tibble::deframe()
+    enhancer_gene <- enhancer_gene |> dplyr::mutate(
+      num_cntrl_cells = num_total_cells - num_trt_cells
+    )
   }
 
-  target_cell_df <- cells_per_grna |>
-    dplyr::filter(grna_target != "non-targeting") |>
-    dplyr::rename(gRNA_target = grna_target, gRNA_id = grna_id)
+  ################## transform the scalar-valued effect size mean/sd ###########
+  if(is.numeric(fold_change_mean)){
+    # create the effect size matrices
+    enhancer_gene <- enhancer_gene |> dplyr::mutate(
+      fold_change_mean = fold_change_mean,
+      fold_change_sd = fold_change_sd
+    )
+  }else{
+    # join the enhancer_gene df and effect size mean(sd) data frames
+    enhancer_gene <- enhancer_gene |>
+      dplyr::left_join(
+        fold_change_mean,
+        c("grna_target", "response_id")
+      ) |>
+      dplyr::left_join(
+        fold_change_sd,
+        c("grna_target", "response_id")
+      )
+  }
 
-  baseline_expression <- baseline_expression_stats |>
-    dplyr::select(response_id, expression_mean) |>
-    tibble::deframe()
+  ########################### prepare for multiple testing #####################
+  enhancer_gene <- enhancer_gene |>
+    dplyr::group_by(grna_target, response_id) |>
+    dplyr::mutate(
+      # compute mean and sd of the test statistic for each pair
+      test_stat_distribution = compute_distribution_teststat(
+        num_trt_cells = num_trt_cells,
+        num_cntrl_cells = num_cntrl_cells,
+        num_trt_cells_sq = num_trt_cells_sq,
+        expression_mean = expression_mean,
+        expression_size = expression_size,
+        fold_change_mean = fold_change_mean,
+        fold_change_sd = fold_change_sd
+      ),
+      # extract mean and sd from test_stat_distribution
+      mean_test_stat = unlist(test_stat_distribution)["mean"],
+      sd_test_stat = unlist(test_stat_distribution)["sd"],
+      # compute QC probability
+      QC_prob = compute_QC(
+        fold_change_mean = fold_change_mean,
+        expression_mean = expression_mean,
+        expression_size = expression_size,
+        num_cntrl_cells = num_cntrl_cells,
+        num_trt_cells = num_trt_cells,
+        n_nonzero_trt_thresh = n_nonzero_trt_thresh,
+        n_nonzero_cntrl_thresh = n_nonzero_cntrl_thresh)
+    ) |>
+    dplyr::select(-test_stat_distribution) |>
+    dplyr::ungroup()
 
-  size_parameter <- baseline_expression_stats |>
-    dplyr::select(response_id, expression_size) |>
-    tibble::deframe()
+  ########################### correct multiplicity #############################
+  # compute cutoff if it is NULL
+  if(is.null(cutoff)){
+    cutoff <- enhancer_gene |>
+      dplyr::summarize(
+        cutoff = adjusted_cutoff(mean_list = mean_test_stat,
+                                 sd_list = sd_test_stat,
+                                 multiple_testing_alpha = multiple_testing_alpha,
+                                 multiple_testing_method = multiple_testing_method,
+                                 side = side, QC_prob = QC_prob)
+      ) |> dplyr::select(cutoff) |> dplyr::pull()
+  }
+  # compute the adjusted power
+  enhancer_gene <- enhancer_gene |>
+    dplyr::mutate(
+      cutoff = cutoff,
+      power = rejection_computation(mean_list = mean_test_stat,
+                                    sd_list = sd_test_stat,
+                                    side = side,
+                                    cutoff = cutoff) * (1 - QC_prob)
+    )
 
-  output <- compute_power(
-    control_cell_vec,
-    target_cell_df,
-    baseline_expression,
-    size_parameter,
-    fold_change_mean,
-    fold_change_sd,
-    n_nonzero_trt_thresh = n_nonzero_trt_thresh,
-    n_nonzero_cntrl_thresh = n_nonzero_cntrl_thresh,
-    side = side,
-    multiple_testing_method = multiple_testing_method,
-    multiple_testing_alpha = multiple_testing_alpha,
-    cutoff = cutoff
+  # store individual power and rejection size as the output
+  output <- list(
+    individual_power = enhancer_gene |> dplyr::select(grna_target, response_id, power),
+    expected_num_discoveries = sum(enhancer_gene$power)
   )
-
-  output$individual_power <- output$individual_power |>
-    tidyr::separate(pair, into = c("grna_target", "response_id"), sep = "_") |>
-    dplyr::rename(power = adjusted_power)
-
-  output$expected_num_discoveries <- output$num_discovery
-  output$num_discovery <- NULL
 
   return(output)
 }
