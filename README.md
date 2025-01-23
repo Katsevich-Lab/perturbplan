@@ -35,12 +35,12 @@ that received each gRNA:
 ``` r
 cells_per_grna
 #>      grna_id grna_target num_cells
-#> 1 enh1_grna1        enh1       106
-#> 2 enh2_grna1        enh2       111
-#> 3 enh3_grna1        enh3       102
-#> 4 enh1_grna2        enh1        87
-#> 5 enh2_grna2        enh2        92
-#> 6 enh3_grna2        enh3       104
+#> 1 enh1_grna1        enh1        92
+#> 2 enh2_grna1        enh2        96
+#> 3 enh3_grna1        enh3        85
+#> 4 enh1_grna2        enh1        91
+#> 5 enh2_grna2        enh2       104
+#> 6 enh3_grna2        enh3        91
 ```
 
 Furthermore, we have computed the mean and size parameters for the
@@ -49,10 +49,10 @@ baseline expression of each gene:
 ``` r
 baseline_expression_stats
 #>   response_id expression_mean expression_size
-#> 1       gene1        1.092652        2.778404
-#> 2       gene2       22.422441        5.242091
-#> 3       gene3        1.811014        4.575501
-#> 4       gene4        0.369937        2.390142
+#> 1       gene1        6.677385        6.157879
+#> 2       gene2        1.075534        9.396240
+#> 3       gene3        1.970892        3.000133
+#> 4       gene4        6.635279        3.321322
 ```
 
 ### Analysis choices
@@ -144,7 +144,7 @@ discoveries across all enhancer-gene pairs:
 
 ``` r
 power_results$expected_num_discoveries
-#> [1] 3.999514
+#> [1] 5.034662
 ```
 
 The field `individual_power` is a data frame containing the power for
@@ -153,18 +153,18 @@ each enhancer-gene pair:
 ``` r
 power_results$individual_power
 #> # A tibble: 12 × 3
-#>    grna_target response_id  power
-#>    <fct>       <chr>        <dbl>
-#>  1 enh1        gene1       0.213 
-#>  2 enh2        gene1       0.223 
-#>  3 enh3        gene1       0.226 
-#>  4 enh1        gene2       0.676 
-#>  5 enh2        gene2       0.684 
-#>  6 enh3        gene2       0.687 
-#>  7 enh1        gene3       0.350 
-#>  8 enh2        gene3       0.362 
-#>  9 enh3        gene3       0.365 
-#> 10 enh1        gene4       0.0677
-#> 11 enh2        gene4       0.0717
-#> 12 enh3        gene4       0.0726
+#>    grna_target response_id power
+#>    <fct>       <chr>       <dbl>
+#>  1 enh1        gene1       0.599
+#>  2 enh2        gene1       0.616
+#>  3 enh3        gene1       0.591
+#>  4 enh1        gene2       0.253
+#>  5 enh2        gene2       0.273
+#>  6 enh3        gene2       0.245
+#>  7 enh1        gene3       0.312
+#>  8 enh2        gene3       0.334
+#>  9 enh3        gene3       0.303
+#> 10 enh1        gene4       0.499
+#> 11 enh2        gene4       0.520
+#> 12 enh3        gene4       0.490
 ```

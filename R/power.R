@@ -296,6 +296,23 @@ compute_power_posthoc <- function(
     multiple_testing_method = "BH",
     multiple_testing_alpha = 0.1) {
 
+  ############################# perform input checks ###########################
+  input_check_posthoc(
+    discovery_pairs = discovery_pairs,
+    cells_per_grna = cells_per_grna,
+    baseline_expression_stats = baseline_expression_stats,
+    control_group = control_group,
+    fold_change_mean = fold_change_mean,
+    fold_change_sd = fold_change_sd,
+    num_total_cells = num_total_cells,
+    cutoff = cutoff,
+    n_nonzero_trt_thresh = n_nonzero_trt_thresh,
+    n_nonzero_cntrl_thresh = n_nonzero_cntrl_thresh,
+    side = side,
+    multiple_testing_method = multiple_testing_method,
+    multiple_testing_alpha = multiple_testing_alpha
+  )
+
   ############################# create enhancer_gene df ########################
   enhancer_gene <- discovery_pairs |>
     # join grna df
