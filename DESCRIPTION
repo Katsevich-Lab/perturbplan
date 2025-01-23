@@ -14,10 +14,10 @@ RoxygenNote: 7.3.2
 Imports: 
     dplyr,
     shiny,
-    stats,
-    tidyr
+    stats
 Suggests: 
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    tidyr
 Config/testthat/edition: 3
