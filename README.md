@@ -5,12 +5,7 @@
 
 <!-- badges: start -->
 
-<figure>
-<img
-src="https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main"
-alt="R-CMD-check" />
-<figcaption aria-hidden="true">R-CMD-check</figcaption>
-</figure>
+[![R-CMD-check](https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml)
 
 <!-- badges: end -->
 
@@ -43,12 +38,12 @@ that received each gRNA:
 ``` r
 cells_per_grna
 #>      grna_id grna_target num_cells
-#> 1 enh1_grna1        enh1        98
-#> 2 enh2_grna1        enh2        80
-#> 3 enh3_grna1        enh3        97
-#> 4 enh1_grna2        enh1       102
-#> 5 enh2_grna2        enh2        95
-#> 6 enh3_grna2        enh3       104
+#> 1 enh1_grna1        enh1       103
+#> 2 enh2_grna1        enh2       107
+#> 3 enh3_grna1        enh3       103
+#> 4 enh1_grna2        enh1        90
+#> 5 enh2_grna2        enh2       104
+#> 6 enh3_grna2        enh3       108
 ```
 
 Furthermore, we have computed the mean and size parameters for the
@@ -57,10 +52,10 @@ baseline expression of each gene:
 ``` r
 baseline_expression_stats
 #>   response_id expression_mean expression_size
-#> 1       gene1      10.4083737       5.9234747
-#> 2       gene2      44.3450947       1.4608942
-#> 3       gene3       0.8018614       0.7131178
-#> 4       gene4       1.3098677       0.4942096
+#> 1       gene1       1.6984628        3.860182
+#> 2       gene2       2.0741782        6.355185
+#> 3       gene3       1.1084734        2.426067
+#> 4       gene4       0.9065848        2.429285
 ```
 
 ### Analysis choices
@@ -152,7 +147,7 @@ discoveries across all enhancer-gene pairs:
 
 ``` r
 power_results$expected_num_discoveries
-#> [1] 3.49915
+#> [1] 3.273329
 ```
 
 The field `individual_power` is a data frame containing the power for
@@ -160,17 +155,17 @@ each enhancer-gene pair:
 
 ``` r
 power_results$individual_power
-#>    grna_target response_id      power
-#> 1         enh1       gene1 0.67365737
-#> 2         enh2       gene1 0.64538464
-#> 3         enh3       gene1 0.67459237
-#> 4         enh1       gene2 0.37586634
-#> 5         enh2       gene2 0.33980732
-#> 6         enh3       gene2 0.37724269
-#> 7         enh1       gene3 0.07518669
-#> 8         enh2       gene3 0.06378645
-#> 9         enh3       gene3 0.07567233
-#> 10        enh1       gene4 0.06945047
-#> 11        enh2       gene4 0.05858884
-#> 12        enh3       gene4 0.06991472
+#>    grna_target response_id     power
+#> 1         enh1       gene1 0.3044501
+#> 2         enh2       gene1 0.3261628
+#> 3         enh3       gene1 0.3261803
+#> 4         enh1       gene2 0.3936763
+#> 5         enh2       gene2 0.4166631
+#> 6         enh3       gene2 0.4166734
+#> 7         enh1       gene3 0.1862971
+#> 8         enh2       gene3 0.2031287
+#> 9         enh3       gene3 0.2031491
+#> 10        enh1       gene4 0.1557557
+#> 11        enh2       gene4 0.1705867
+#> 12        enh3       gene4 0.1706060
 ```

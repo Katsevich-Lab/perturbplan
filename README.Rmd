@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 
-![R-CMD-check](https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)
+[![R-CMD-check](https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml)
 
 <!-- badges: end -->
 
