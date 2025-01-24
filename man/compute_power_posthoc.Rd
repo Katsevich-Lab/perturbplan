@@ -2,7 +2,7 @@
 % Please edit documentation in R/power.R
 \name{compute_power_posthoc}
 \alias{compute_power_posthoc}
-\title{Compute power for each perturbation-gene pair.}
+\title{Compute power for each perturbation-gene pair}
 \usage{
 compute_power_posthoc(
   discovery_pairs,
@@ -51,5 +51,5 @@ compute_power_posthoc(
 A list with two elements: \code{individual_power} (a data frame with columns \code{grna_target}, \code{response_id}, and \code{power}) and \code{expected_num_discoveries} (a numeric value)
 }
 \description{
-Compute power for each perturbation-gene pair.
+Compute power for each perturbation-gene pair
 }

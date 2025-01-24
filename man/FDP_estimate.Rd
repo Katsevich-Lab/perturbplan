@@ -7,15 +7,11 @@
 FDP_estimate(mean_list, sd_list, side, cutoff, QC_prob)
 }
 \arguments{
-\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
+\item{mean_list}{Asymptotic mean of test statistic}
 
-\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
+\item{sd_list}{Asymptotic sd of test statistic}
 
-\item{side}{Left, right or both.}
-
-\item{cutoff}{Cutoff for p-values to reject the test.}
-
-\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J).}
+\item{side}{(Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"}
 }
 \value{
 FDP estimate.

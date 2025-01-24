@@ -14,17 +14,15 @@ adjusted_cutoff(
 )
 }
 \arguments{
-\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
+\item{mean_list}{Asymptotic mean of test statistic}
 
-\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
+\item{sd_list}{Asymptotic sd of test statistic}
 
-\item{multiple_testing_alpha}{Significance level of interest (FDR of interest).}
+\item{multiple_testing_alpha}{(Optional) A numeric value between 0 and 1 specifying the alpha level for multiple testing correction; defaults to 0.1}
 
-\item{multiple_testing_method}{Multiplicity correction; default is BH.}
+\item{multiple_testing_method}{(Optional) A character string specifying the multiple testing correction method to use, either "BH" or "bonferroni"; defaults to "BH"}
 
-\item{side}{Left, right or both.}
-
-\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J).}
+\item{side}{(Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"}
 }
 \value{
 The adjusted significance level.

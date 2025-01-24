@@ -7,15 +7,13 @@
 BH_cutoff(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 }
 \arguments{
-\item{mean_list}{Asymptotic mean of test statistic (vector; length L x J).}
+\item{mean_list}{Asymptotic mean of test statistic}
 
-\item{sd_list}{Asymptotic sd of test statistic (vector; length L x J).}
+\item{sd_list}{Asymptotic sd of test statistic}
 
-\item{side}{Left, right or both.}
+\item{side}{(Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"}
 
-\item{multiple_testing_alpha}{Significance level of interest (FDR of interest).}
-
-\item{QC_prob}{QC probability for each enhancer-gene pair (vector; length L x J).}
+\item{multiple_testing_alpha}{(Optional) A numeric value between 0 and 1 specifying the alpha level for multiple testing correction; defaults to 0.1}
 }
 \value{
 Adjusted cutoff/significance level.
