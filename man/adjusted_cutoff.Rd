@@ -23,6 +23,8 @@ adjusted_cutoff(
 \item{multiple_testing_method}{(Optional) A character string specifying the multiple testing correction method to use, either "BH" or "bonferroni"; defaults to "BH"}
 
 \item{side}{(Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"}
+
+\item{QC_prob}{The probability of failing QC}
 }
 \value{
 The adjusted significance level.

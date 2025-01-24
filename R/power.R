@@ -163,47 +163,47 @@ compute_power_posthoc <- function(
   return(output)
 }
 
-#' Power function for CRISPR screen experimental design.
-#'
-#'
-#' @param effect_size_mean Mean fold change for each (element, gene) (matrix; row: L genomic elements;
-#' column: J genes). Rownames and colnames should be specified. The rowname should look like "enh1"
-#' and column name should be ensembl form or like "gene1". Alternatively, a scalar value can just be
-#' specified if all enhancer-gene pairs share the same effect size.
-#' @param effect_size_sd Sd fold change for each (element, gene). Format should be the same as `effect_size_mean`.
-#'
-#' @param target_cell_df Perturb cell size for L elements (dataframe). The data frame should include
-#' three columns: grna_id (value should be like "gRNAd" where d is an integer), grna_target (value should
-#' be like "enhl" where l is an integer) and num_cells (value should be integer). Thus each row of the data
-#' frame includes the number of cells for each (gRNA, element) pair.
-#' @param control_cell_vec Control cell size for L elements (vector; length L). Vector should be named
-#' for grna_target.
-#'
-#' @param library_size Averaged library size (scalar; positive valued).
-#' @param relative_expression Baseline relative expression level for J genes (named vector; of length J).
-#' Names of the vector should be different genes and the format should be consistent with the column names of
-#' `effect_size_mean` and `effect_size_sd`.
-#' @param size_parameter Size parameter for J genes (vector; length J). Names should be same as `relative_expression`.
-#'
-#' @param side Left, right or both.
-#' @param multiple_testing_method Multiplicity correction; default is BH.
-#' @param multiple_testing_alpha Significance level of interest (FDR of interest).
-#' @param n_nonzero_trt_thresh QC threshold for treatment cell.
-#' @param n_nonzero_cntrl_thresh QC threshold for control cell.
-#'
-#' @param UMI_s Estimate for UMI count per singlet for the underlying type of cell.
-#' @param recovery_rate Recovery rate for cells surviving the library preparation.
-#' @param doublet_rate Doublet rate for droplet containing more than one cell.
-#' @param doublet_factor Ratio of averaged UMI count per doublet to UMI per singlet.
-#' @param planned_read Planned total sequencing reads.
-#' @param mapping_efficiency Mapping efficiency for sequenced reads.
-#'
-#' @param intermediate_outcome A logic value indicating if only mean, sd of test statistics and QC probability are desired.
-#'
-#' @return The output format is the same as [compute_power()].
-#' @importFrom dplyr if_else group_by ungroup summarise
-#' @importFrom stats setNames
-#' @export
+# #' Power function for CRISPR screen experimental design.
+# #'
+# #'
+# #' @param effect_size_mean Mean fold change for each (element, gene) (matrix; row: L genomic elements;
+# #' column: J genes). Rownames and colnames should be specified. The rowname should look like "enh1"
+# #' and column name should be ensembl form or like "gene1". Alternatively, a scalar value can just be
+# #' specified if all enhancer-gene pairs share the same effect size.
+# #' @param effect_size_sd Sd fold change for each (element, gene). Format should be the same as `effect_size_mean`.
+# #'
+# #' @param target_cell_df Perturb cell size for L elements (dataframe). The data frame should include
+# #' three columns: grna_id (value should be like "gRNAd" where d is an integer), grna_target (value should
+# #' be like "enhl" where l is an integer) and num_cells (value should be integer). Thus each row of the data
+# #' frame includes the number of cells for each (gRNA, element) pair.
+# #' @param control_cell_vec Control cell size for L elements (vector; length L). Vector should be named
+# #' for grna_target.
+# #'
+# #' @param library_size Averaged library size (scalar; positive valued).
+# #' @param relative_expression Baseline relative expression level for J genes (named vector; of length J).
+# #' Names of the vector should be different genes and the format should be consistent with the column names of
+# #' `effect_size_mean` and `effect_size_sd`.
+# #' @param size_parameter Size parameter for J genes (vector; length J). Names should be same as `relative_expression`.
+# #'
+# #' @param side Left, right or both.
+# #' @param multiple_testing_method Multiplicity correction; default is BH.
+# #' @param multiple_testing_alpha Significance level of interest (FDR of interest).
+# #' @param n_nonzero_trt_thresh QC threshold for treatment cell.
+# #' @param n_nonzero_cntrl_thresh QC threshold for control cell.
+# #'
+# #' @param UMI_s Estimate for UMI count per singlet for the underlying type of cell.
+# #' @param recovery_rate Recovery rate for cells surviving the library preparation.
+# #' @param doublet_rate Doublet rate for droplet containing more than one cell.
+# #' @param doublet_factor Ratio of averaged UMI count per doublet to UMI per singlet.
+# #' @param planned_read Planned total sequencing reads.
+# #' @param mapping_efficiency Mapping efficiency for sequenced reads.
+# #'
+# #' @param intermediate_outcome A logic value indicating if only mean, sd of test statistics and QC probability are desired.
+# #'
+# #' @return The output format is the same as [compute_power()].
+# #' @importFrom dplyr if_else group_by ungroup summarise
+# #' @importFrom stats setNames
+# #' @export
 
 # power_function <- function(
     #     ######################## specify the power-determining parameters ##########

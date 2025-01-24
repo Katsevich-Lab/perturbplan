@@ -2,7 +2,4 @@
 
 export(compute_power_posthoc)
 export(rejection_computation)
-importFrom(dplyr,if_else)
 importFrom(stats,pbinom)
-importFrom(stats,pnorm)
-importFrom(stats,qnorm)

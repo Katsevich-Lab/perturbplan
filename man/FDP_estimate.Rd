@@ -12,6 +12,10 @@ FDP_estimate(mean_list, sd_list, side, cutoff, QC_prob)
 \item{sd_list}{Asymptotic sd of test statistic}
 
 \item{side}{(Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"}
+
+\item{cutoff}{(Optional) A numeric value between 0 and 1 to use as the p-value cutoff}
+
+\item{QC_prob}{The probability of failing QC}
 }
 \value{
 FDP estimate.

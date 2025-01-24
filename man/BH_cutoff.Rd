@@ -14,6 +14,8 @@ BH_cutoff(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 \item{side}{(Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"}
 
 \item{multiple_testing_alpha}{(Optional) A numeric value between 0 and 1 specifying the alpha level for multiple testing correction; defaults to 0.1}
+
+\item{QC_prob}{The probability of failing QC}
 }
 \value{
 Adjusted cutoff/significance level.

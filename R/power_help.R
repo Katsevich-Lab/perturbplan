@@ -60,6 +60,7 @@ var_nb <- function(mean, size){
 #'
 #' @param mean_list Asymptotic mean of test statistic
 #' @param sd_list Asymptotic sd of test statistic
+#' @param QC_prob The probability of failing QC
 #' @inheritParams compute_power_posthoc
 #'
 #' @return The adjusted significance level.
@@ -90,7 +91,6 @@ adjusted_cutoff <- function(mean_list, sd_list, multiple_testing_alpha, multiple
 #' @inheritParams adjusted_cutoff
 #'
 #' @return Adjusted cutoff/significance level.
-#' @importFrom dplyr if_else
 
 BH_cutoff <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob){
 
@@ -154,6 +154,7 @@ BH_cutoff <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 #' FDP estimate based on rejection probability.
 #'
 #' @inheritParams adjusted_cutoff
+#' @inheritParams compute_power_posthoc
 #'
 #' @return FDP estimate.
 
@@ -175,9 +176,9 @@ FDP_estimate <- function(mean_list, sd_list, side, cutoff, QC_prob){
 #' Compute the rejection probability.
 #'
 #' @inheritParams adjusted_cutoff
+#' @inheritParams compute_power_posthoc
 #'
 #' @return The rejection probablity.
-#' @importFrom stats qnorm pnorm
 #' @export
 
 rejection_computation <- function(mean_list, sd_list, side, cutoff){
@@ -282,6 +283,6 @@ compute_distribution_teststat <- function(num_trt_cells, num_cntrl_cells, num_tr
 
   # return the mean and sd vector
   return(
-    list(setNames(c(mean, sd), c("mean", "sd")))
+    list(stats::setNames(c(mean, sd), c("mean", "sd")))
   )
 }
