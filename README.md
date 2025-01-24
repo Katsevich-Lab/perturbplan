@@ -5,9 +5,13 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://img.shields.io/github/actions/workflow/status/Katsevich-Lab/perturbplan/R-CMD-check.yaml?branch=main&cacheSeconds=30)](https://github.com/Katsevich-Lab/perturbplan/actions?query=workflow%3AR-CMD-check+branch%3Amain)
-[![Codecov test
-coverage](https://codecov.io/gh/Katsevich-Lab/perturbplan/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Katsevich-Lab/perturbplan?branch=main)
+<figure>
+<img
+src="https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main"
+alt="R-CMD-check" />
+<figcaption aria-hidden="true">R-CMD-check</figcaption>
+</figure>
+
 <!-- badges: end -->
 
 The goal of PerturbPlan is to facilitate experimental design and power
@@ -39,12 +43,12 @@ that received each gRNA:
 ``` r
 cells_per_grna
 #>      grna_id grna_target num_cells
-#> 1 enh1_grna1        enh1        83
-#> 2 enh2_grna1        enh2        95
-#> 3 enh3_grna1        enh3        82
-#> 4 enh1_grna2        enh1        98
-#> 5 enh2_grna2        enh2        91
-#> 6 enh3_grna2        enh3        91
+#> 1 enh1_grna1        enh1        98
+#> 2 enh2_grna1        enh2        80
+#> 3 enh3_grna1        enh3        97
+#> 4 enh1_grna2        enh1       102
+#> 5 enh2_grna2        enh2        95
+#> 6 enh3_grna2        enh3       104
 ```
 
 Furthermore, we have computed the mean and size parameters for the
@@ -53,10 +57,10 @@ baseline expression of each gene:
 ``` r
 baseline_expression_stats
 #>   response_id expression_mean expression_size
-#> 1       gene1       0.8434474       10.812085
-#> 2       gene2       5.1641762        1.239803
-#> 3       gene3       4.1943680        1.675521
-#> 4       gene4       0.9135421        2.617265
+#> 1       gene1      10.4083737       5.9234747
+#> 2       gene2      44.3450947       1.4608942
+#> 3       gene3       0.8018614       0.7131178
+#> 4       gene4       1.3098677       0.4942096
 ```
 
 ### Analysis choices
@@ -148,7 +152,7 @@ discoveries across all enhancer-gene pairs:
 
 ``` r
 power_results$expected_num_discoveries
-#> [1] 2.590331
+#> [1] 3.49915
 ```
 
 The field `individual_power` is a data frame containing the power for
@@ -156,17 +160,17 @@ each enhancer-gene pair:
 
 ``` r
 power_results$individual_power
-#>    grna_target response_id     power
-#> 1         enh1       gene1 0.1805161
-#> 2         enh2       gene1 0.1852175
-#> 3         enh3       gene1 0.1720381
-#> 4         enh1       gene2 0.2431202
-#> 5         enh2       gene2 0.2491651
-#> 6         enh3       gene2 0.2323214
-#> 7         enh1       gene3 0.2951698
-#> 8         enh2       gene3 0.3017845
-#> 9         enh3       gene3 0.2834301
-#> 10        enh1       gene4 0.1503101
-#> 11        enh2       gene4 0.1544869
-#> 12        enh3       gene4 0.1427716
+#>    grna_target response_id      power
+#> 1         enh1       gene1 0.67365737
+#> 2         enh2       gene1 0.64538464
+#> 3         enh3       gene1 0.67459237
+#> 4         enh1       gene2 0.37586634
+#> 5         enh2       gene2 0.33980732
+#> 6         enh3       gene2 0.37724269
+#> 7         enh1       gene3 0.07518669
+#> 8         enh2       gene3 0.06378645
+#> 9         enh3       gene3 0.07567233
+#> 10        enh1       gene4 0.06945047
+#> 11        enh2       gene4 0.05858884
+#> 12        enh3       gene4 0.06991472
 ```
