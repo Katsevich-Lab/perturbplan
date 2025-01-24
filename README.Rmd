@@ -17,8 +17,8 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://img.shields.io/github/actions/workflow/status/Katsevich-Lab/perturbpln/R-CMD-check.yaml?branch=main&cacheSeconds=30)](https://github.com/Katsevich-Lab/perturbplan/actions?query=workflow%3AR-CMD-check+branch%3Amain)
-
+[![R-CMD-check](https://img.shields.io/github/actions/workflow/status/Katsevich-Lab/perturbplan/R-CMD-check.yaml?branch=main&cacheSeconds=30)](https://github.com/Katsevich-Lab/perturbplan/actions?query=workflow%3AR-CMD-check+branch%3Amain)
+[![Codecov test coverage](https://codecov.io/gh/Katsevich-Lab/perturbplan/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Katsevich-Lab/perturbplan?branch=main)
 <!-- badges: end -->
 
 The goal of PerturbPlan is to facilitate experimental design and power analysis for perturb-seq experiments. 
