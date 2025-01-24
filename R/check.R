@@ -268,6 +268,10 @@ input_check_posthoc <- function(
   valid_control_groups <- c("complement", "nt_cells")
   if (!control_group %in% valid_control_groups) {
     stop("`control_group` must be either 'complement' or 'nt_cells'!")
+  }else{
+    if((control_group == "nt_cells") && !"nt_cells" %in% cells_per_grna$grna_target){
+      stop("Non-targeting cells should appear in the grna_target of `cells_per_grna`!")
+    }
   }
 
   ############################## fold_change_mean ############################
