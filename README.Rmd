@@ -29,18 +29,21 @@ library(perturbplan)
 In the example below, we will demonstrate how to use `compute_power_posthoc()` to compute power after an experiment is conducted (as opposed to prospectively).
 
 ```{r, echo = FALSE}
+set.seed(1)
+
 num_enhancers <- 3
 grnas_per_enhancer <- 2
 num_genes <- 4
 
-enhancers <- paste0("enh", 1:num_enhancers)
+enhancers <- c(paste0("enh", 1:num_enhancers), "nt")
 grnas <- paste0("grna", 1:grnas_per_enhancer)
 genes <- paste0("gene", 1:num_genes)
 cells_per_grna <- expand.grid(enhancer = enhancers, grna = grnas) |>
   dplyr::mutate(grna_id = paste0(enhancer, "_", grna)) |>
   dplyr::rename(grna_target = enhancer) |> 
   dplyr::select(grna_id, grna_target) |>
-  dplyr::mutate(num_cells = rpois(dplyr::n(), lambda = 100))
+  dplyr::mutate(num_cells = rpois(dplyr::n(), lambda = 100),
+                grna_target = dplyr::if_else(grna_target == "nt", "non-targeting", grna_target))
   
 discovery_pairs <- expand.grid(grna_target = enhancers, response_id = genes)
 
@@ -55,7 +58,7 @@ baseline_expression_stats <- data.frame(
 
 ### 1. Dataset summaries
 
-Let us consider a toy perturb-seq dataset with 3 enhancers, each targeted by two gRNAs, and 4 genes. Suppose there are 1000 total cells in the experiment:
+Let us consider a toy perturb-seq dataset with 3 enhancers, each targeted by 2 gRNAs, 2 non-targeting gRNAs, and 4 genes. Suppose there are 1000 total cells in the experiment:
 ```{r}
 num_total_cells <- 1000
 ```

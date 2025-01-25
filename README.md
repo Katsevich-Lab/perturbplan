@@ -25,8 +25,8 @@ conducted (as opposed to prospectively).
 ### 1. Dataset summaries
 
 Let us consider a toy perturb-seq dataset with 3 enhancers, each
-targeted by two gRNAs, and 4 genes. Suppose there are 1000 total cells
-in the experiment:
+targeted by 2 gRNAs, 2 non-targeting gRNAs, and 4 genes. Suppose there
+are 1000 total cells in the experiment:
 
 ``` r
 num_total_cells <- 1000
@@ -37,13 +37,15 @@ that received each gRNA:
 
 ``` r
 cells_per_grna
-#>      grna_id grna_target num_cells
-#> 1 enh1_grna1        enh1       103
-#> 2 enh2_grna1        enh2       107
-#> 3 enh3_grna1        enh3       103
-#> 4 enh1_grna2        enh1        90
-#> 5 enh2_grna2        enh2       104
-#> 6 enh3_grna2        enh3       108
+#>      grna_id   grna_target num_cells
+#> 1 enh1_grna1          enh1        93
+#> 2 enh2_grna1          enh2       113
+#> 3 enh3_grna1          enh3       112
+#> 4   nt_grna1 non-targeting       104
+#> 5 enh1_grna2          enh1        84
+#> 6 enh2_grna2          enh2       104
+#> 7 enh3_grna2          enh3       107
+#> 8   nt_grna2 non-targeting       105
 ```
 
 Furthermore, we have computed the mean and size parameters for the
@@ -52,10 +54,10 @@ baseline expression of each gene:
 ``` r
 baseline_expression_stats
 #>   response_id expression_mean expression_size
-#> 1       gene1       1.6984628        3.860182
-#> 2       gene2       2.0741782        6.355185
-#> 3       gene3       1.1084734        2.426067
-#> 4       gene4       0.9065848        2.429285
+#> 1       gene1        2.002931       0.2967991
+#> 2       gene2       12.326867       8.3723191
+#> 3       gene3        4.014221       2.5988431
+#> 4       gene4        1.460472       2.6746265
 ```
 
 ### Analysis choices
@@ -69,15 +71,19 @@ discovery_pairs
 #> 1         enh1       gene1
 #> 2         enh2       gene1
 #> 3         enh3       gene1
-#> 4         enh1       gene2
-#> 5         enh2       gene2
-#> 6         enh3       gene2
-#> 7         enh1       gene3
-#> 8         enh2       gene3
-#> 9         enh3       gene3
-#> 10        enh1       gene4
-#> 11        enh2       gene4
-#> 12        enh3       gene4
+#> 4           nt       gene1
+#> 5         enh1       gene2
+#> 6         enh2       gene2
+#> 7         enh3       gene2
+#> 8           nt       gene2
+#> 9         enh1       gene3
+#> 10        enh2       gene3
+#> 11        enh3       gene3
+#> 12          nt       gene3
+#> 13        enh1       gene4
+#> 14        enh2       gene4
+#> 15        enh3       gene4
+#> 16          nt       gene4
 ```
 
 We have analyzed the data using the complement control group, left-sided
@@ -147,7 +153,7 @@ discoveries across all enhancer-gene pairs:
 
 ``` r
 power_results$expected_num_discoveries
-#> [1] 3.273329
+#> [1] 4.343107
 ```
 
 The field `individual_power` is a data frame containing the power for
@@ -155,17 +161,17 @@ each enhancer-gene pair:
 
 ``` r
 power_results$individual_power
-#>    grna_target response_id     power
-#> 1         enh1       gene1 0.3044501
-#> 2         enh2       gene1 0.3261628
-#> 3         enh3       gene1 0.3261803
-#> 4         enh1       gene2 0.3936763
-#> 5         enh2       gene2 0.4166631
-#> 6         enh3       gene2 0.4166734
-#> 7         enh1       gene3 0.1862971
-#> 8         enh2       gene3 0.2031287
-#> 9         enh3       gene3 0.2031491
-#> 10        enh1       gene4 0.1557557
-#> 11        enh2       gene4 0.1705867
-#> 12        enh3       gene4 0.1706060
+#>    grna_target response_id      power
+#> 1         enh1       gene1 0.03647046
+#> 2         enh2       gene1 0.04782216
+#> 3         enh3       gene1 0.04836715
+#> 4         enh1       gene2 0.71527741
+#> 5         enh2       gene2 0.74907166
+#> 6         enh3       gene2 0.75054229
+#> 7         enh1       gene3 0.37592084
+#> 8         enh2       gene3 0.43029065
+#> 9         enh3       gene3 0.43262595
+#> 10        enh1       gene4 0.22152068
+#> 11        enh2       gene4 0.26660485
+#> 12        enh3       gene4 0.26859268
 ```
