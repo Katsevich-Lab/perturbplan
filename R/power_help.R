@@ -286,3 +286,56 @@ compute_distribution_teststat <- function(num_trt_cells, num_cntrl_cells, num_tr
     list(stats::setNames(c(mean, sd), c("mean", "sd")))
   )
 }
+
+#' Compute the mean and sd of the score test statistic with fixed effect size
+#'
+#' @inheritParams compute_distribution_teststat
+#' @param fold_change A vector consisting of the fold changes for each gRNA-gene pair
+#' @param num_cells A vector consisting of the number of cells for each guide RNA
+#'
+#' @return A list including mean and sd of the test statistic
+compute_distribution_teststat_fixed_es <- function(
+    fold_change,
+    expression_mean, expression_size,
+    num_trt_cells, num_cntrl_cells, num_cells
+){
+
+  # obtain the unique value for variables except for fold_change and num_cells
+  expression_mean <- unique(expression_mean)
+  expression_size <- unique(expression_size)
+  num_trt_cells <- unique(num_trt_cells)
+  num_cntrl_cells <- unique(num_cntrl_cells)
+
+  # compute treatment/control cells proportion
+  num_test_cells <- num_trt_cells + num_cntrl_cells
+  trt_test_prop <- num_trt_cells / num_test_cells
+  cntrl_test_prop <- 1 - trt_test_prop
+
+  # define treatment/control/pooled mean expression
+  trt_expression_mean_per_guide <-  expression_mean * fold_change
+  trt_expression_mean <- sum(trt_expression_mean_per_guide * num_cells / num_trt_cells)
+  cntrl_expression_mean <- expression_mean
+  pooled_expression_mean <- trt_test_prop * trt_expression_mean +  cntrl_test_prop * cntrl_expression_mean
+
+  # compute the square of the denominator in the score statistic
+  pooled_var <- var_nb(mean = pooled_expression_mean, size = expression_size)
+  denominator_sq <- pooled_var * (1 / num_cntrl_cells + 1 / num_trt_cells)
+
+  ########################## compute the asymptotic sd of test stat ############
+  # compute the control group variance
+  cntrl_var <- var_nb(mean = cntrl_expression_mean, size = expression_size) / num_cntrl_cells
+
+  # compute the treatment group variance
+  trt_var <- sum(var_nb(mean = trt_expression_mean_per_guide, size = expression_size) * num_cells^2 / num_trt_cells)
+
+  # compute the asymptotic sd
+  sd <- sqrt((cntrl_var + trt_var) / denominator_sq)
+
+  ################# compute the asymptotic mean of test stat ###################
+  mean <- (trt_expression_mean - cntrl_expression_mean) / sqrt(denominator_sq)
+
+  # return the mean and sd vector
+  return(
+    list(stats::setNames(c(mean, sd), c("mean", "sd")))
+  )
+}
