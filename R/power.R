@@ -163,111 +163,56 @@ compute_power_posthoc <- function(
   return(output)
 }
 
-# #' Power function for CRISPR screen experimental design.
-# #'
-# #'
-# #' @param effect_size_mean Mean fold change for each (element, gene) (matrix; row: L genomic elements;
-# #' column: J genes). Rownames and colnames should be specified. The rowname should look like "enh1"
-# #' and column name should be ensembl form or like "gene1". Alternatively, a scalar value can just be
-# #' specified if all enhancer-gene pairs share the same effect size.
-# #' @param effect_size_sd Sd fold change for each (element, gene). Format should be the same as `effect_size_mean`.
-# #'
-# #' @param target_cell_df Perturb cell size for L elements (dataframe). The data frame should include
-# #' three columns: grna_id (value should be like "gRNAd" where d is an integer), grna_target (value should
-# #' be like "enhl" where l is an integer) and num_cells (value should be integer). Thus each row of the data
-# #' frame includes the number of cells for each (gRNA, element) pair.
-# #' @param control_cell_vec Control cell size for L elements (vector; length L). Vector should be named
-# #' for grna_target.
-# #'
-# #' @param library_size Averaged library size (scalar; positive valued).
-# #' @param relative_expression Baseline relative expression level for J genes (named vector; of length J).
-# #' Names of the vector should be different genes and the format should be consistent with the column names of
-# #' `effect_size_mean` and `effect_size_sd`.
-# #' @param size_parameter Size parameter for J genes (vector; length J). Names should be same as `relative_expression`.
-# #'
-# #' @param side Left, right or both.
-# #' @param multiple_testing_method Multiplicity correction; default is BH.
-# #' @param multiple_testing_alpha Significance level of interest (FDR of interest).
-# #' @param n_nonzero_trt_thresh QC threshold for treatment cell.
-# #' @param n_nonzero_cntrl_thresh QC threshold for control cell.
-# #'
-# #' @param UMI_s Estimate for UMI count per singlet for the underlying type of cell.
-# #' @param recovery_rate Recovery rate for cells surviving the library preparation.
-# #' @param doublet_rate Doublet rate for droplet containing more than one cell.
-# #' @param doublet_factor Ratio of averaged UMI count per doublet to UMI per singlet.
-# #' @param planned_read Planned total sequencing reads.
-# #' @param mapping_efficiency Mapping efficiency for sequenced reads.
-# #'
-# #' @param intermediate_outcome A logic value indicating if only mean, sd of test statistics and QC probability are desired.
-# #'
-# #' @return The output format is the same as [compute_power()].
-# #' @importFrom dplyr if_else group_by ungroup summarise
-# #' @importFrom stats setNames
-# #' @export
 
-# power_function <- function(
-    #     ######################## specify the power-determining parameters ##########
-#     target_cell_df, control_cell_vec,
-#     library_size = NULL, relative_expression, size_parameter,
-#     effect_size_mean = 0.8, effect_size_sd = 0,
-#
-#     ######################## specify QC-related parameters ################
-#     n_nonzero_trt_thresh = 7, n_nonzero_cntrl_thresh = 7,
-#
-#     ###################### specify experimental design parameters ##############
-#     UMI_s = NULL,                                                      # cell-type specific parameter
-#     recovery_rate = NULL, doublet_rate = NULL, doublet_factor = NULL,  # Library prep parameters
-#     planned_read = NULL, mapping_efficiency = NULL,                    # Sequencing parameters
-#
-#     ###################### specify test-related parameters #####################
-#     side, multiple_testing_method = "BH", multiple_testing_alpha = 0.1,
-#
-#     ###################### output asymptotic mean/sd if needed #################
-#     intermediate_outcome = FALSE
-# ){
-#
-#   # either library size or UMI_s has to be provided
-#   if(all(is.null(library_size), is.null(UMI_s))){
-#     stop("One of library size or UMI per singlet has to be provided!")
-#   }
-#
-#   ########## compute library size with other power-determing parameters ########
-#   if(is.null(library_size)){
-#
-#     # compute the total number of cell
-#     cell_per_element <- target_cell_df |>
-#       dplyr::group_by(gRNA_target) |>
-#       dplyr::summarise(cell_per_element = sum(num_cells)) |>
-#       dplyr::ungroup()
-#     target_cell_vec <- setNames(cell_per_element$cell_per_element, cell_per_element$element)
-#     total_cell <- (control_cell_vec + target_cell_vec)[1]
-#
-#     # compute the reads per cell
-#     read_c <- read_per_cell(planned_read = planned_read,
-#                             mapping_efficiency = mapping_efficiency,
-#                             planned_cell = total_cell,
-#                             recovery_rate = recovery_rate)
-#
-#     # compute the averaged library size with read per cell
-#     library_size <- library_computation(UMI_s =  UMI_s,
-#                                         read_c = read_c,
-#                                         doublet_rate = doublet_rate,
-#                                         doublet_factor = doublet_factor)
-#   }
-#
-#   ####### perform power calculation with power-determining parameters ##########
-#
-#   # compute the baseline_expression
-#   baseline_expression <- setNames(relative_expression * library_size, names(relative_expression))
-#
-#   # compute power using function compute_power
-#   power_result <- compute_power(control_cell_vec = control_cell_vec, target_cell_df = target_cell_df,
-#                                 baseline_expression = baseline_expression, size_parameter = size_parameter,
-#                                 effect_size_mean = effect_size_mean, effect_size_sd = effect_size_sd,
-#                                 n_nonzero_trt_thresh = n_nonzero_trt_thresh, n_nonzero_cntrl_thresh = n_nonzero_cntrl_thresh,
-#                                 side = side, multiple_testing_method = multiple_testing_method, multiple_testing_alpha = multiple_testing_alpha,
-#                                 intermediate_outcome = intermediate_outcome)
-#
-#   # return the power_result
-#   return(power_result)
-# }
+
+power_function <- function(
+
+    ###################### specify experimental design parameters ##############
+    recovery_rate = NULL,                                              # Library prep parameters
+    num_total_reads = NULL, mapping_efficiency = NULL,                 # Sequencing parameters
+
+    ######################## specify the power-determining parameters ##########
+    cell_per_grna, baseline_relative_expression_stats,
+    fold_change_mean, fold_change_sd, num_planned_cells, control_group,
+
+    ###################### specify test-related parameters #####################
+    side = "both", multiple_testing_method = "BH", multiple_testing_alpha = 0.1,
+    cutoff = NULL, discovery_pairs,
+
+    ######################## specify QC-related parameters ################
+    n_nonzero_trt_thresh = 7L, n_nonzero_cntrl_thresh = 7L
+){
+
+  # either library size or UMI_s has to be provided
+  if(is.null(library_size)){
+    stop("Library size has to be provided!")
+  }
+
+  ########## compute library size with other power-determing parameters ########
+  if(is.null(library_size)){
+
+    # compute the number of total cells (singletons) surviving from library preparation
+    num_total_cells <- num_planned_cells * recovery_rate
+
+    # compute the reads per cell
+    reads_per_cell <- read_per_cell_after_QC(num_total_reads = num_total_reads,
+                                             mapping_efficiency = mapping_efficiency,
+                                             num_total_cells = num_total_cells)
+
+    # compute the averaged library size with read per cell
+    avg_library_size <- library_computation(reads_per_cell = reads_per_cell,
+                                            h5_path = h5_path)
+  }
+
+  ####### perform power calculation with power-determining parameters ##########
+  # compute the baseline_expression
+  baseline_expression_stats <- baseline_relative_expression_stats |>
+    dplyr::mutate(expression_mean = avg_library_size * relative_expression) |>
+    dplyr::select(-relative_expression)
+
+  # compute power using function compute_power
+  power_result <- compute_power_posthoc()
+
+  # return the power_result
+  return(power_result)
+}

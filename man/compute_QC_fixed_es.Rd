@@ -2,7 +2,7 @@
 % Please edit documentation in R/QC_computation.R
 \name{compute_QC_fixed_es}
 \alias{compute_QC_fixed_es}
-\title{Title}
+\title{Compute QC probability when fixed effect size is used}
 \usage{
 compute_QC_fixed_es(
   fold_change,
@@ -33,5 +33,5 @@ compute_QC_fixed_es(
 Probability of a enhancer-gene pair being filtered due to QC
 }
 \description{
-Title
+Compute QC probability when fixed effect size is used
 }

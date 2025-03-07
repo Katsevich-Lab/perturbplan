@@ -38,7 +38,7 @@ compute_QC <- function(fold_change_mean, expression_mean, expression_size,
 }
 
 
-#' Title
+#' Compute QC probability when fixed effect size is used
 #' @inheritParams compute_distribution_teststat_fixed_es
 #' @param n_nonzero_trt_thresh (Optional) An integer specifying the sceptre QC parameter of the same name; defaults to 7
 #' @param n_nonzero_cntrl_thresh (Optional) An integer specifying the sceptre QC parameter of the same name; defaults to 7
@@ -49,6 +49,11 @@ compute_QC_fixed_es <- function(
     expression_mean, expression_size,
     num_cntrl_cells, num_cells,
     n_nonzero_trt_thresh = 7, n_nonzero_cntrl_thresh = 7){
+
+  # unique the value
+  n_nonzero_trt_thresh <- unique(n_nonzero_trt_thresh)
+  n_nonzero_cntrl_thresh <- unique(n_nonzero_trt_thresh)
+  num_cntrl_cells <- unique(num_cntrl_cells)
 
   # compute the nonzero probability for control group (of legnth num_gene)
   cntrl_nonzero_prob <- 1 - compute_zero_prob(fold_change_mean = 1,

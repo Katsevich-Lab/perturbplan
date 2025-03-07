@@ -1,48 +1,5 @@
 # This is a Rscript implementing the help function for power/cost analysis
 
-# #' Compute the averaged library size per singlet.
-# #'
-# #' @param UMI_s Averaged UMI count per singlet (estimate from pilot data given cell-type).
-# #' @param read_c Averaged read count per cell.
-# #' @param doublet_rate The doublet fraction among cells.
-# #' @param doublet_factor Ratio of averaged UMI count per doublet to UMI per singlet.
-# #'
-# #' @return Averaged library size per singlet.
-
-# library_computation <- function(UMI_s, read_c, doublet_rate, doublet_factor){
-#
-#   # compute the averaged UMI count per cell
-#   UMI_c <- UMI_s * (1 + doublet_rate * (doublet_factor - 1))
-#
-#   # apply the Geometric random variable formula
-#   library_s <- UMI_s * (1 - exp(- read_c / UMI_c))
-#
-#   # return the library size value per singlet
-#   return(library_s)
-# }
-
-# #' Compute averaged number of sequencing reads for each cell after mapping.
-# #'
-# #' @param planned_read Number of reads planned before the experiment.
-# #' @param mapping_efficiency Mapping efficiency for sequenced reads.
-# #' @param planned_cell Number of cells planned before the experiment.
-# #' @param recovery_rate Fraction of cells surviving after the library preparation.
-# #'
-# #' @return Averaged number of sequencing reads for each cell.
-
-# read_per_cell <- function(planned_read, mapping_efficiency,
-#                           planned_cell, recovery_rate){
-#
-#   # compute the number of cell surviving the library preparation step
-#   N_survive <-  planned_cell * recovery_rate
-#
-#   # compute the number of mapped reads
-#   mapped_reads <- planned_read * mapping_efficiency
-#
-#   # return the reads per cell after accounting for mapping and library preparation
-#   return(mapped_reads / N_survive)
-# }
-
 #' Variance of NB distribution
 #'
 #' @param mean mean gene expression.
@@ -326,7 +283,7 @@ compute_distribution_teststat_fixed_es <- function(
   cntrl_var <- var_nb(mean = cntrl_expression_mean, size = expression_size) / num_cntrl_cells
 
   # compute the treatment group variance
-  trt_var <- sum(var_nb(mean = trt_expression_mean_per_guide, size = expression_size) * num_cells^2 / num_trt_cells)
+  trt_var <- sum(var_nb(mean = trt_expression_mean_per_guide, size = expression_size) * num_cells / num_trt_cells^2)
 
   # compute the asymptotic sd
   sd <- sqrt((cntrl_var + trt_var) / denominator_sq)
