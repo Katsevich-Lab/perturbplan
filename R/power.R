@@ -183,26 +183,18 @@ power_function <- function(
     n_nonzero_trt_thresh = 7L, n_nonzero_cntrl_thresh = 7L
 ){
 
-  # either library size or UMI_s has to be provided
-  if(is.null(library_size)){
-    stop("Library size has to be provided!")
-  }
-
   ########## compute library size with other power-determing parameters ########
-  if(is.null(library_size)){
+  # compute the number of total cells (singletons) surviving from library preparation
+  num_total_cells <- num_planned_cells * recovery_rate
 
-    # compute the number of total cells (singletons) surviving from library preparation
-    num_total_cells <- num_planned_cells * recovery_rate
+  # compute the reads per cell
+  reads_per_cell <- read_per_cell_after_QC(num_total_reads = num_total_reads,
+                                           mapping_efficiency = mapping_efficiency,
+                                           num_total_cells = num_total_cells)
 
-    # compute the reads per cell
-    reads_per_cell <- read_per_cell_after_QC(num_total_reads = num_total_reads,
-                                             mapping_efficiency = mapping_efficiency,
-                                             num_total_cells = num_total_cells)
-
-    # compute the averaged library size with read per cell
-    avg_library_size <- library_computation(reads_per_cell = reads_per_cell,
-                                            h5_path = h5_path)
-  }
+  # compute the averaged library size with read per cell
+  avg_library_size <- library_computation(reads_per_cell = reads_per_cell,
+                                          h5_path = h5_path)
 
   ####### perform power calculation with power-determining parameters ##########
   # compute the baseline_expression
