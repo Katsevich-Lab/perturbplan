@@ -15,7 +15,7 @@ Imports:
     dplyr,
     PoissonBinomial,
     stats,
-    minpack.lm
+    rhdf5
 Suggests: 
     knitr,
     rmarkdown,
