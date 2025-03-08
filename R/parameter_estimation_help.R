@@ -62,7 +62,7 @@ summary_data <- function(QC_data){
 
   # output the summary statistics
   return(
-    setNames(c(num_cells, num_reads_per_cell), c("num_cells", "avg_reads"))
+    stats::setNames(c(num_cells, num_reads_per_cell), c("num_cells", "avg_reads"))
   )
 }
 
