@@ -14,7 +14,8 @@ RoxygenNote: 7.3.2
 Imports: 
     dplyr,
     PoissonBinomial,
-    stats
+    stats,
+    minpack.lm
 Suggests: 
     knitr,
     rmarkdown,

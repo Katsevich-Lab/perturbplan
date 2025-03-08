@@ -101,7 +101,7 @@ library_computation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
   fitted_output <- lapply(inital_num_UMIs_vec, function(initial_UMIs){
     
     # do the model fitting
-    nlm_fitting <- nlsLM(
+    nlm_fitting <- minpack.lm::nlsLM(
       num_UMIs ~ total_UMIs * (1 - exp(-num_reads / total_UMIs) * (1 + D2 * num_reads^2 / (2 * num_reads^2))),
       data = down_sample_df,
       start = list(total_UMIs = initial_UMIs, D2 = D2_rough), 
