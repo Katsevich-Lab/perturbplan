@@ -6,12 +6,12 @@
 #' @return Named vector of average total UMI per cell and UMI variation.
 
 library_estimation <- function(QC_data, library_model){
-  
-  umi_per_cell <- coef(library_model)["total_UMIs"] / length(unique(QC_data$cell_id))
-  umi_variation <- coef(nlm)["D2"] / length(unique(QC_data$cell_id))
-  
+
+  umi_per_cell <- stats::coef(library_model)["total_UMIs"] / length(unique(QC_data$cell_id))
+  umi_variation <- stats::coef(library_model)["D2"] / length(unique(QC_data$cell_id))
+
   return(
-    setNames(c(umi_per_cell, umi_variation), c("umi_per_cell", "umi_variation"))
+    stats::setNames(c(umi_per_cell, umi_variation), c("umi_per_cell", "umi_variation"))
   )
 }
 
