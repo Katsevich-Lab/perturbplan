@@ -4,12 +4,14 @@
 \alias{library_estimation}
 \title{Compute the average total UMI per cell and UMI variation parameters.}
 \usage{
-library_estimation(QC_data, library_model)
+library_estimation(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 }
 \arguments{
-\item{QC_data}{QC'd data coming from the function obtain_qc_data in parameter_estimation_help.R}
+\item{QC_data}{The QC'd data coming from the function obtain_qc_data.}
 
-\item{library_model}{S-M curve model fitted by the function model_fit in helper-S-M-curve.R}
+\item{downsample_ratio}{The ratio of the size of the downsampled dataset to the one of the original dataset.}
+
+\item{D2_rough}{The rough estimate of D2 in the S-M curve model.}
 }
 \value{
 Named vector of average total UMI per cell and UMI variation.

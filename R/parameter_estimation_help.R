@@ -78,6 +78,7 @@ library_computation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 
   ########################### downsample the data ##############################
   # obtain the observed reads vector
+  cell_num <- length(unique(QC_data$cell_id))
   num_observed_reads <- sum(QC_data$num_reads)
   reads_vec <- rep(seq_along(QC_data$num_reads), QC_data$num_reads)
 
@@ -87,11 +88,10 @@ library_computation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
   # perform downsampling and append the results together with observed reads-UMIs
   num_downsampled_reads <- round(num_observed_reads * downsample_ratio)
   num_downsampled_UMIs <- sapply(num_downsampled_reads, function(reads) length(unique(sample(reads_vec, reads))))
-  down_sample_added <- data.frame(num_reads = num_downsampled_reads, num_UMIs = num_downsampled_UMIs)
+  down_sample_added <- data.frame(num_reads = num_downsampled_reads/cell_num, num_UMIs = num_downsampled_UMIs/cell_num)
   down_sample_df <- down_sample_added |>
-    dplyr::bind_rows(data.frame(num_reads = num_observed_reads, num_UMIs = num_observed_umis)) |>
+    dplyr::bind_rows(data.frame(num_reads = num_observed_reads/cell_num, num_UMIs = num_observed_umis/cell_num)) |>
     dplyr::arrange(num_reads, num_UMIs)
-
   ####################### fit nonlinear model ##################################
   delicate_initial <- (1+D2_rough) * num_observed_reads^2 / (2 * (num_observed_reads - num_observed_umis))
   rough_initial <- num_observed_umis
@@ -108,14 +108,12 @@ library_computation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
       upper = c(Inf, 1),
       lower = c(0, 0)
     )
-
     # return the model and in-sample relative loss
-    relative_loss <- sum((stats::predict(nlm_fitting) / QC_data$umi_UMIs - 1)^2)
+    relative_loss <- sum((stats::predict(nlm_fitting) / (QC_data$umi_UMIs/cell_num) - 1)^2)
     output_list <- list(nlm_fitting, relative_loss)
     names(output_list) <- c("fitted_model", "relative_error")
     return(output_list)
   })
-
   # choose the model with lower relative error
   if(fitted_output$delicate$relative_error > fitted_output$rough$relative_error){
     final_model <- fitted_output$rough$fitted_model

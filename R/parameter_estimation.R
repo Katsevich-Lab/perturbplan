@@ -1,14 +1,14 @@
 #' Compute the average total UMI per cell and UMI variation parameters.
 #'
-#' @param QC_data QC'd data coming from the function obtain_qc_data in parameter_estimation_help.R
-#' @param library_model S-M curve model fitted by the function model_fit in helper-S-M-curve.R
+#' @inheritParams library_computation
 #'
 #' @return Named vector of average total UMI per cell and UMI variation.
 
-library_estimation <- function(QC_data, library_model){
+library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 
-  umi_per_cell <- stats::coef(library_model)["total_UMIs"] / length(unique(QC_data$cell_id))
-  umi_variation <- stats::coef(library_model)["D2"] / length(unique(QC_data$cell_id))
+  library_model <- library_computation(QC_data, downsample_ratio, D2_rough)
+  umi_per_cell <- stats::coef(library_model)["total_UMIs"]
+  umi_variation <- stats::coef(library_model)["D2"]
 
   return(
     stats::setNames(c(umi_per_cell, umi_variation), c("umi_per_cell", "umi_variation"))
