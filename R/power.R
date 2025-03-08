@@ -223,29 +223,6 @@ compute_power_posthoc <- function(
 #'         number of discoveries.
 #' }
 #'
-#' @examples
-#' # Example usage:
-#' power_result <- power_function(
-#'   recovery_rate = 0.8,
-#'   num_total_reads = 1000000,
-#'   mapping_efficiency = 0.9,
-#'   cells_per_grna = data.frame(grna_id = 1:5, grna_target = letters[1:5], num_cells = sample(10:50, 5)),
-#'   baseline_relative_expression_stats = data.frame(response_id = letters[1:5], relative_expression = runif(5, 0.1, 1)),
-#'   fold_change_mean = 1.5,
-#'   fold_change_sd = 0.5,
-#'   num_planned_cells = 5000,
-#'   control_group = "nt_cells",
-#'   umi_per_cell = 1000,
-#'   umi_variation = 0.2,
-#'   side = "both",
-#'   multiple_testing_method = "BH",
-#'   multiple_testing_alpha = 0.1,
-#'   cutoff = NULL,
-#'   discovery_pairs = data.frame(grna_target = letters[1:5], response_id = letters[1:5]),
-#'   n_nonzero_trt_thresh = 7,
-#'   n_nonzero_cntrl_thresh = 7
-#' )
-#'
 #' @export
 power_function <- function(
 
@@ -255,7 +232,7 @@ power_function <- function(
 
     ######################## specify the power-determining parameters ##########
     cells_per_grna, baseline_relative_expression_stats,
-    fold_change_mean, fold_change_sd, num_planned_cells, control_group, 
+    fold_change_mean, fold_change_sd, num_planned_cells, control_group,
     umi_per_cell, umi_variation,
 
     ###################### specify test-related parameters #####################
@@ -274,11 +251,11 @@ power_function <- function(
   reads_per_cell <- num_total_reads*mapping_efficiency/num_total_cells
 
   # compute the averaged library size with read per cell
-  avg_library_size <- umi_per_cell * (1 - exp(-reads_per_cell / umi_per_cell) * 
+  avg_library_size <- umi_per_cell * (1 - exp(-reads_per_cell / umi_per_cell) *
                                         (1 + umi_variation * reads_per_cell^2 / (2*umi_per_cell^2)))
 
   ####### perform power calculation with power-determining parameters ##########
-  
+
   # compute the baseline_expression
   baseline_expression_stats <- baseline_relative_expression_stats |>
     dplyr::mutate(expression_mean = avg_library_size * relative_expression) |>

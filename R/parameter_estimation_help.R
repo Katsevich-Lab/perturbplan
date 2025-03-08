@@ -1,70 +1,70 @@
-#' #' Obtain a data frame with information of all QC'd reads.
-#' #'
-#' #' @param path_to_outs_folder The path to the outs folder of the cellranger output.
-#' #'
-#' #' @return A data frame with columns `num_reads`, `UMI_id`, `cell_id`, and `response_id`
-#' obtain_qc_data <- function(path_to_outs_folder){
+#' Obtain a data frame with information of all QC'd reads.
 #'
-#'   # specify the particular h5 file of interest
-#'   raw_count_file_path <- sprintf("%s/molecule_info.h5", path_to_outs_folder)
-#'   qc_info_file_path <- sprintf("%s/filtered_feature_bc_matrix.h5", path_to_outs_folder)
+#' @param path_to_outs_folder The path to the outs folder of the cellranger output.
 #'
-#'   ###################### construct the raw data frame ##########################
-#'   raw_count_file <- rhdf5::h5read(raw_count_file_path, "count")
-#'   umi_idx <- rhdf5::h5read(raw_count_file_path, "umi")
+#' @return A data frame with columns `num_reads`, `UMI_id`, `cell_id`, and `response_id`
+obtain_qc_data <- function(path_to_outs_folder){
+
+  # specify the particular h5 file of interest
+  raw_count_file_path <- sprintf("%s/molecule_info.h5", path_to_outs_folder)
+  qc_info_file_path <- sprintf("%s/filtered_feature_bc_matrix.h5", path_to_outs_folder)
+
+  ###################### construct the raw data frame ##########################
+  raw_count_file <- rhdf5::h5read(raw_count_file_path, "count")
+  umi_idx <- rhdf5::h5read(raw_count_file_path, "umi")
+
+  # obtain cell index
+  barcode_idx <- rhdf5::h5read(raw_count_file_path, "barcode_idx")
+  cell_barcodes <- rhdf5::h5read(raw_count_file_path, "barcodes")
+  cell_idx <- cell_barcodes[barcode_idx + 1]
+
+  # append the gem_group
+  gem_group <- rhdf5::h5read(raw_count_file_path, "gem_group")
+  cell_id_with_gem <- paste(cell_idx, gem_group, sep = "-")
+
+  # obtain gene index for each RNA
+  RNA_idx <- rhdf5::h5read(raw_count_file_path, "feature_idx")
+  gene_reference <- rhdf5::h5read(raw_count_file_path, "features")
+  gene_idx <- gene_reference$id[RNA_idx + 1]
+
+  # store the data frame
+  raw_data_frame <- data.frame(
+    num_reads = raw_count_file,
+    UMI_id = umi_idx + 1,
+    cell_id = cell_id_with_gem,
+    response_id = gene_idx
+  )
+
+  ############################ QC the raw data #################################
+  qc_cell <- rhdf5::h5read(qc_info_file_path, "matrix/barcodes")
+
+  # QC the raw data
+  qc_df <- raw_data_frame |> dplyr::filter(cell_id %in% qc_cell)
+
+  # return the reads vector
+  return(qc_df)
+}
+
+
+#' Obtain the summary statistics of the QC'd data.
 #'
-#'   # obtain cell index
-#'   barcode_idx <- rhdf5::h5read(raw_count_file_path, "barcode_idx")
-#'   cell_barcodes <- rhdf5::h5read(raw_count_file_path, "barcodes")
-#'   cell_idx <- cell_barcodes[barcode_idx + 1]
+#' @param QC_data The QC'd data coming from the function obtain_qc_data
 #'
-#'   # append the gem_group
-#'   gem_group <- rhdf5::h5read(raw_count_file_path, "gem_group")
-#'   cell_id_with_gem <- paste(cell_idx, gem_group, sep = "-")
-#'
-#'   # obtain gene index for each RNA
-#'   RNA_idx <- rhdf5::h5read(raw_count_file_path, "feature_idx")
-#'   gene_reference <- rhdf5::h5read(raw_count_file_path, "features")
-#'   gene_idx <- gene_reference$id[RNA_idx + 1]
-#'
-#'   # store the data frame
-#'   raw_data_frame <- data.frame(
-#'     num_reads = raw_count_file,
-#'     UMI_id = umi_idx + 1,
-#'     cell_id = cell_id_with_gem,
-#'     response_id = gene_idx
-#'   )
-#'
-#'   ############################ QC the raw data #################################
-#'   qc_cell <- rhdf5::h5read(qc_info_file_path, "matrix/barcodes")
-#'
-#'   # QC the raw data
-#'   qc_df <- raw_data_frame |> dplyr::filter(cell_id %in% qc_cell)
-#'
-#'   # return the reads vector
-#'   return(qc_df)
-#' }
-#'
-#'
-#' #' Obtain the summary statistics of the QC'd data.
-#' #'
-#' #' @param QC_data The QC'd data coming from the function obtain_qc_data
-#' #'
-#' #' @return A named vector with the number of cells and average reads per cell.
-#' summary_data <- function(QC_data){
-#'
-#'   # extract the number of total cells
-#'   num_cells <- length(unique(QC_data$cell_id))
-#'
-#'   # extract the number of reads per cell
-#'   total_reads <- sum(QC_data$num_reads)
-#'   num_reads_per_cell <- total_reads / num_cells
-#'
-#'   # output the summary statistics
-#'   return(
-#'     setNames(c(num_cells, num_reads_per_cell), c("num_cells", "avg_reads"))
-#'   )
-#' }
+#' @return A named vector with the number of cells and average reads per cell.
+summary_data <- function(QC_data){
+
+  # extract the number of total cells
+  num_cells <- length(unique(QC_data$cell_id))
+
+  # extract the number of reads per cell
+  total_reads <- sum(QC_data$num_reads)
+  num_reads_per_cell <- total_reads / num_cells
+
+  # output the summary statistics
+  return(
+    setNames(c(num_cells, num_reads_per_cell), c("num_cells", "avg_reads"))
+  )
+}
 
 
 #' Fit the S-M curve between # mapped reads and # ovserved UMIs.
