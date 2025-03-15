@@ -20,7 +20,7 @@ compute_power_posthoc_fixed_es(
 )
 }
 \arguments{
-\item{discovery_pairs}{A data frame specifying which element-gene pairs to consider, with columns \code{grna_target} and \code{response_id}}
+\item{discovery_pairs}{A data frame specifying which element-gene pairs to consider, with columns \code{grna_target} and \code{response_id}; it can also have \code{grna_id} as a column but this is optional}
 
 \item{cells_per_grna}{A data frame specifying how many cells contain each gRNA, with columns \code{grna_id}, \code{grna_target}, and \code{num_cells}}
 

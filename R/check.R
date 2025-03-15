@@ -30,6 +30,10 @@ input_check_posthoc <- function(
     stop("`discovery_pairs` must contain columns: ",
          paste(needed_cols_dp, collapse = ", "), "!")
   }
+  distinct_discovery_pairs <- discovery_pairs |> dplyr::distinct()
+  if(nrow(distinct_discovery_pairs) != nrow(discovery_pairs)){
+    stop("There are duplicate rows in `discovery_pairs`!")
+  }
   discovered_targets <- unique(discovery_pairs$grna_target)
   discovered_genes   <- unique(discovery_pairs$response_id)
 
@@ -260,7 +264,7 @@ input_check_power_function <- function(
   if (is.null(mapping_efficiency) || !is.numeric(mapping_efficiency) || mapping_efficiency <= 0 || mapping_efficiency > 1) {
     stop("`mapping_efficiency` must be a numeric value in (0,1].")
   }
-  
+
   ###################### Power-Determining Parameter Checks ######################
   if (is.null(cells_per_grna) || !is.data.frame(cells_per_grna)) {
     stop("`cells_per_grna` must be a specified data frame.")
@@ -277,7 +281,7 @@ input_check_power_function <- function(
   if (is.null(umi_variation) || !is.numeric(umi_variation) || umi_variation < 0 || umi_variation > 1) {
     stop("`umi_variation` must be a numeric value in [0,1].")
   }
-  
+
   ###################### Effect Sizes Checks ######################
   if (is.null(fold_change_mean)) {
     stop("`fold_change_mean` must be provided (numeric or data frame).")
@@ -285,13 +289,13 @@ input_check_power_function <- function(
   if (is.null(fold_change_sd)) {
     stop("`fold_change_sd` must be provided (numeric or data frame).")
   }
-  
+
   ###################### Control Group Checks ######################
   valid_control_groups <- c("complement", "nt_cells")
   if (is.null(control_group) || !control_group %in% valid_control_groups) {
     stop("`control_group` must be either 'complement' or 'nt_cells'.")
   }
-  
+
   ###################### Multiple Testing & Side Checks ######################
   valid_methods <- c("BH", "bonferroni")
   if (!is.null(multiple_testing_method) && !multiple_testing_method %in% valid_methods) {
@@ -304,7 +308,7 @@ input_check_power_function <- function(
   if (is.null(side) || !side %in% valid_sides) {
     stop("`side` must be one of 'left', 'right', or 'both'.")
   }
-  
+
   ###################### QC Thresholds ######################
   if (!is.numeric(n_nonzero_trt_thresh) || length(n_nonzero_trt_thresh) != 1 || n_nonzero_trt_thresh < 0 || n_nonzero_trt_thresh %% 1 != 0) {
     stop("`n_nonzero_trt_thresh` must be a nonnegative integer.")
@@ -312,12 +316,12 @@ input_check_power_function <- function(
   if (!is.numeric(n_nonzero_cntrl_thresh) || length(n_nonzero_cntrl_thresh) != 1 || n_nonzero_cntrl_thresh < 0 || n_nonzero_cntrl_thresh %% 1 != 0) {
     stop("`n_nonzero_cntrl_thresh` must be a nonnegative integer.")
   }
-  
+
   ###################### Discovery Pairs Check ######################
   if (is.null(discovery_pairs) || !is.data.frame(discovery_pairs)) {
     stop("`discovery_pairs` must be a specified data frame.")
   }
-  
+
   invisible(NULL)
 }
 
@@ -328,8 +332,8 @@ input_check_power_function <- function(
 #'
 #' @return NULL
 input_check_library_computation <- function(
-    QC_data = NULL, 
-    downsample_ratio = NULL, 
+    QC_data = NULL,
+    downsample_ratio = NULL,
     D2_rough = NULL
 ) {
   ###################### QC_data Check ######################
@@ -351,17 +355,17 @@ input_check_library_computation <- function(
   if (nrow(QC_data) == 0) {
     stop("`QC_data` cannot be empty.")
   }
-  
+
   ###################### downsample_ratio Check ######################
   if (is.null(downsample_ratio) || !is.numeric(downsample_ratio) || downsample_ratio <= 0 || downsample_ratio > 1) {
     stop("`downsample_ratio` must be a numeric value in (0,1].")
   }
-  
+
   ###################### D2_rough Check ######################
   if (is.null(D2_rough) || !is.numeric(D2_rough) || D2_rough < 0 || D2_rough > 1) {
     stop("`D2_rough` must be a numeric value in [0,1].")
   }
-  
+
   invisible(NULL)
 }
 

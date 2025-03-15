@@ -2,7 +2,7 @@
 
 #' Compute power for each perturbation-gene pair
 #'
-#' @param discovery_pairs A data frame specifying which element-gene pairs to consider, with columns `grna_target` and `response_id`
+#' @param discovery_pairs A data frame specifying which element-gene pairs to consider, with columns `grna_target` and `response_id`; it can also have `grna_id` as a column but this is optional
 #' @param cells_per_grna A data frame specifying how many cells contain each gRNA, with columns `grna_id`, `grna_target`, and `num_cells`
 #' @param baseline_expression_stats A data frame specifying the baseline expression statistics for each gene, with columns `response_id`, `expression_mean`, and `expression_size`
 #' @param control_group A character string specifying the control group, either "complement" or "nt_cells"
@@ -51,19 +51,17 @@ compute_power_posthoc_fixed_es <- function(
     # exclude the non-targeting gRNAs
     dplyr::filter(grna_target != "non-targeting") |>
     # join discovery pairs
-    dplyr::left_join(discovery_pairs, "grna_target") |>
+    dplyr::left_join(discovery_pairs,
+                     unlist(ifelse("grna_id" %in% colnames(discovery_pairs), list(c("grna_id", "grna_target")), "grna_target"))) |>
     # join gene expression df
     dplyr::left_join(baseline_expression_stats, "response_id")
 
   ################### obtain number of treatment and control cells #############
-  # compute the treatment cells
-  trt_cells_df <- cells_per_grna |>
-    dplyr::group_by(grna_target) |>
-    dplyr::summarize(num_trt_cells = sum(num_cells)) |>
+  # compute the number of treatment cells by grouping grna_target and response_id
+  grna_gene <- grna_gene |>
+    dplyr::group_by(grna_target, response_id) |>
+    dplyr::mutate(num_trt_cells = sum(num_cells)) |>
     dplyr::ungroup()
-
-  # join the trt_cells_df to append the number of treatment cells
-  grna_gene <- grna_gene |> dplyr::left_join(trt_cells_df, "grna_target")
 
   # define the control cells based on control_group
   if (control_group == "nt_cells") {

@@ -2,6 +2,7 @@
 
 export(compute_power_posthoc)
 export(compute_power_posthoc_fixed_es)
+export(library_estimation)
 export(power_function)
 export(rejection_computation)
 importFrom(PoissonBinomial,ppbinom)
