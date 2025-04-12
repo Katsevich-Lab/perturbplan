@@ -14,6 +14,7 @@
 #' @param side (Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"
 #' @param multiple_testing_method (Optional) A character string specifying the multiple testing correction method to use, either "BH" or "bonferroni"; defaults to "BH"
 #' @param multiple_testing_alpha (Optional) A numeric value between 0 and 1 specifying the alpha level for multiple testing correction; defaults to 0.1
+#' @param random_assignment (Optional) A logical value specifying if random gRNA assignment is used or not
 #'
 #' @return A list with two elements: `individual_power` (a data frame with columns `grna_target`, `response_id`, and `power`) and `expected_num_discoveries` (a numeric value)
 #' @export
@@ -29,7 +30,8 @@ compute_power_posthoc_fixed_es <- function(
     n_nonzero_cntrl_thresh = 7L,
     side = "both",
     multiple_testing_method = "BH",
-    multiple_testing_alpha = 0.1) {
+    multiple_testing_alpha = 0.1,
+    random_assignment = FALSE) {
 
   # ############################# perform input checks ###########################
   # input_check_posthoc_fixed_es(
@@ -58,18 +60,28 @@ compute_power_posthoc_fixed_es <- function(
 
   ################### obtain number of treatment and control cells #############
   # compute the number of treatment cells by grouping grna_target and response_id
-  grna_gene <- grna_gene |>
-    dplyr::group_by(grna_target, response_id) |>
-    dplyr::mutate(num_trt_cells = sum(num_cells)) |>
-    dplyr::ungroup()
+  if(!random_assignment){
+    grna_gene <- grna_gene |>
+      dplyr::rename(mean_num_cells = num_cells) |>
+      dplyr::group_by(grna_target, response_id) |>
+      dplyr::mutate(num_trt_cells = sum(mean_num_cells),
+                    sd_num_cells = 0) |>
+      dplyr::ungroup()
+  }else{
+    grna_gene <- grna_gene |>
+      dplyr::group_by(grna_target, response_id) |>
+      dplyr::mutate(num_trt_cells = sum(mean_num_cells)) |>
+      dplyr::ungroup()
+  }
 
   # define the control cells based on control_group
   if (control_group == "nt_cells") {
     # compute the number of control cells using cells receiving non-targeting gRNAs
     num_cntrl_cells <- cells_per_grna |>
       dplyr::filter(grna_target == "non-targeting") |>
-      dplyr::summarize(sum(num_cells)) |>
+      dplyr::summarize(sum(mean_num_cells)) |>
       dplyr::pull()
+
     grna_gene <- grna_gene |> dplyr::mutate(num_cntrl_cells = num_cntrl_cells)
   } else { # control_group == "complement"
     grna_gene <- grna_gene |> dplyr::mutate(num_cntrl_cells = num_total_cells - num_trt_cells)
@@ -89,14 +101,23 @@ compute_power_posthoc_fixed_es <- function(
     dplyr::group_by(grna_target, response_id) |>
     dplyr::summarise(
       # compute mean and sd of the test statistic for each pair
-      test_stat_distribution = compute_distribution_teststat_fixed_es(
-        num_trt_cells = num_trt_cells,
-        num_cntrl_cells = num_cntrl_cells,
-        num_cells = num_cells,
-        expression_mean = expression_mean,
-        expression_size = expression_size,
-        fold_change = fold_change
-      ),
+      test_stat_distribution = ifelse(random_assignment,
+                                      compute_distribution_teststat_fixed_es_random_assignment(
+                                        mean_num_cells = mean_num_cells,
+                                        sd_num_cells = sd_num_cells,
+                                        num_cntrl_cells = num_cntrl_cells,
+                                        expression_mean = expression_mean,
+                                        expression_size = expression_size,
+                                        fold_change = fold_change
+                                      ),
+                                      compute_distribution_teststat_fixed_es(
+                                        num_trt_cells = num_trt_cells,
+                                        num_cntrl_cells = num_cntrl_cells,
+                                        num_cells = mean_num_cells,
+                                        expression_mean = expression_mean,
+                                        expression_size = expression_size,
+                                        fold_change = fold_change
+                                      )),
 
       # extract mean and sd from test_stat_distribution
       mean_test_stat = unlist(test_stat_distribution)["mean"],
@@ -108,7 +129,7 @@ compute_power_posthoc_fixed_es <- function(
         expression_mean = expression_mean,
         expression_size = expression_size,
         num_cntrl_cells = num_cntrl_cells,
-        num_cells = num_cells,
+        num_cells = mean_num_cells,
         n_nonzero_trt_thresh = n_nonzero_trt_thresh,
         n_nonzero_cntrl_thresh = n_nonzero_cntrl_thresh)
     ) |>

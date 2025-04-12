@@ -16,7 +16,8 @@ compute_power_posthoc_fixed_es(
   n_nonzero_cntrl_thresh = 7L,
   side = "both",
   multiple_testing_method = "BH",
-  multiple_testing_alpha = 0.1
+  multiple_testing_alpha = 0.1,
+  random_assignment = FALSE
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ compute_power_posthoc_fixed_es(
 \item{multiple_testing_method}{(Optional) A character string specifying the multiple testing correction method to use, either "BH" or "bonferroni"; defaults to "BH"}
 
 \item{multiple_testing_alpha}{(Optional) A numeric value between 0 and 1 specifying the alpha level for multiple testing correction; defaults to 0.1}
+
+\item{random_assignment}{(Optional) A logical value specifying if random gRNA assignment is used or not}
 }
 \value{
 A list with two elements: \code{individual_power} (a data frame with columns \code{grna_target}, \code{response_id}, and \code{power}) and \code{expected_num_discoveries} (a numeric value)

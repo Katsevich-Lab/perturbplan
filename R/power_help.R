@@ -296,3 +296,66 @@ compute_distribution_teststat_fixed_es <- function(
     list(stats::setNames(c(mean, sd), c("mean", "sd")))
   )
 }
+
+#' Compute the mean and sd of the score test statistic with fixed effect size and random gRNA assignment
+#'
+#' @inheritParams compute_distribution_teststat_fixed_es
+#' @param mean_num_cells Mean of number of treatment cells
+#' @param sd_num_cells Standard deviation of number of treatment cells
+#' @param B Number of Monte Carlo replications to estiamte variance
+#'
+#' @return A list including mean and sd of the test statistic
+compute_distribution_teststat_fixed_es_random_assignment <- function(
+    fold_change,
+    expression_mean, expression_size,
+    num_cntrl_cells, mean_num_cells, sd_num_cells, B = 1000
+){
+
+  # obtian the number of gRNAs
+  num_grna <- length(fold_change)
+
+  # obtain the unique value for variables except for fold_change and num_cells
+  mean_num_cells <- unique(mean_num_cells)
+  expression_mean <- unique(expression_mean)
+  expression_size <- unique(expression_size)
+  total_num_trt_cells <- mean_num_cells * num_grna
+  num_cntrl_cells <- unique(num_cntrl_cells)
+
+  # compute treatment/control cells proportion
+  num_test_cells <- total_num_trt_cells + num_cntrl_cells
+  trt_test_prop <- total_num_trt_cells / num_test_cells
+  cntrl_test_prop <- 1 - trt_test_prop
+
+  # define treatment/control/pooled mean expression
+  trt_expression_mean_per_guide <- expression_mean * fold_change
+  trt_expression_mean <- mean(trt_expression_mean_per_guide)
+  cntrl_expression_mean <- expression_mean
+  pooled_expression_mean <- trt_test_prop * trt_expression_mean +  cntrl_test_prop * cntrl_expression_mean
+
+  # compute the square of the denominator in the score statistic
+  pooled_var <- var_nb(mean = pooled_expression_mean, size = expression_size)
+  denominator_sq <- pooled_var * (total_num_trt_cells / num_cntrl_cells + 1)
+
+  ########################## compute the asymptotic sd of test stat ############
+  # compute the across gRNA variance
+  simulated_trt_assignment <- stats::rnorm(n = B, mean = total_num_trt_cells, sd = sqrt(num_grna) * sd_num_cells)
+  simulated_trt_assignment[simulated_trt_assignment < 0] <- 0
+  var_sqrt_trt_assignment <- mean(simulated_trt_assignment) - (mean(sqrt(simulated_trt_assignment)))^2
+  across_across_var <- var_sqrt_trt_assignment * (cntrl_expression_mean - trt_expression_mean)^2
+  across_within_var <- total_num_trt_cells * (mean(trt_expression_mean_per_guide^2) - mean(trt_expression_mean_per_guide)^2) / 2
+  across_var <- across_across_var + across_within_var
+
+  # compute the within gRNA variance
+  within_var <- mean(var_nb(mean = trt_expression_mean_per_guide, size = rep(expression_size, num_grna)))
+
+  # compute the asymptotic sd
+  sd <- sqrt((across_var + within_var) / denominator_sq)
+
+  ################# compute the asymptotic mean of test stat ###################
+  mean <- sqrt(total_num_trt_cells) * (trt_expression_mean - cntrl_expression_mean) / sqrt(denominator_sq)
+
+  # return the mean and sd vector
+  return(
+    list(stats::setNames(c(mean, sd), c("mean", "sd")))
+  )
+}
