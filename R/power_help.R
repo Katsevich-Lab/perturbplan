@@ -36,6 +36,13 @@ adjusted_cutoff <- function(mean_list, sd_list, multiple_testing_alpha, multiple
                                 bonferroni = {
                                   num_hypo_adjusted <- sum(1 - QC_prob)
                                   multiple_testing_alpha / num_hypo_adjusted
+                                },
+                                BH_cpp = {
+                                  BH_cutoff_efficient(mean_list = mean_list,
+                                                      sd_list = sd_list,
+                                                      multiple_testing_alpha = multiple_testing_alpha,
+                                                      side = side,
+                                                      QC_prob = QC_prob)
                                 }
   )
 
@@ -106,6 +113,18 @@ BH_cutoff <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 
   # return the adjusted cutoff/significance level
   return(t_hat)
+}
+
+#' Benjamini–Hochberg cutoff (C++ back-end)
+#'
+#' Thin wrapper that validates inputs and forwards to the compiled routine.
+#'
+#' @inheritParams adjusted_cutoff
+#'
+#' @return Adjusted cutoff/significance level.
+BH_cutoff_efficient <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
+{
+  BH_cutoff_cpp(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 }
 
 #' FDP estimate based on rejection probability.
