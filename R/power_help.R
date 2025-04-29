@@ -43,6 +43,13 @@ adjusted_cutoff <- function(mean_list, sd_list, multiple_testing_alpha, multiple
                                                       multiple_testing_alpha = multiple_testing_alpha,
                                                       side = side,
                                                       QC_prob = QC_prob)
+                                },
+                                BH_bisection = {
+                                  BH_cutoff_bisection(mean_list = mean_list,
+                                                      sd_list = sd_list,
+                                                      multiple_testing_alpha = multiple_testing_alpha,
+                                                      side = side,
+                                                      QC_prob = QC_prob)
                                 }
   )
 
@@ -125,6 +132,23 @@ BH_cutoff <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 BH_cutoff_efficient <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 {
   BH_cutoff_cpp(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
+}
+
+
+#' @useDynLib perturbplan, .registration = TRUE
+#' @importFrom Rcpp evalCpp
+NULL
+
+#' Benjamini–Hochberg cutoff with bisection search (C++ back-end)
+#'
+#' Thin wrapper that validates inputs and forwards to the compiled routine.
+#'
+#' @inheritParams adjusted_cutoff
+#'
+#' @return Adjusted cutoff/significance level.
+BH_cutoff_bisection <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
+{
+  BH_cutoff_bi(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 }
 
 #' FDP estimate based on rejection probability.

@@ -10,7 +10,3 @@
 #   shiny::runApp(app_dir)
 # }
 
-
-#' @useDynLib perturbplan, .registration = TRUE
-#' @importFrom Rcpp evalCpp
-NULL

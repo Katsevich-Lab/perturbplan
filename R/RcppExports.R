@@ -17,3 +17,7 @@ BH_cutoff_cpp <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_p
     .Call(`_perturbplan_BH_cutoff_cpp`, mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 }
 
+BH_cutoff_bi <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob) {
+    .Call(`_perturbplan_BH_cutoff_bi`, mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
+}
+

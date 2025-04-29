@@ -69,12 +69,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// BH_cutoff_bi
+double BH_cutoff_bi(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double multiple_testing_alpha, const NumericVector& QC_prob);
+RcppExport SEXP _perturbplan_BH_cutoff_bi(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP multiple_testing_alphaSEXP, SEXP QC_probSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type mean_list(mean_listSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sd_list(sd_listSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type side(sideSEXP);
+    Rcpp::traits::input_parameter< double >::type multiple_testing_alpha(multiple_testing_alphaSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type QC_prob(QC_probSEXP);
+    rcpp_result_gen = Rcpp::wrap(BH_cutoff_bi(mean_list, sd_list, side, multiple_testing_alpha, QC_prob));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_rejection_computation_cpp", (DL_FUNC) &_perturbplan_rejection_computation_cpp, 4},
     {"_perturbplan_FDP_estimate_cpp", (DL_FUNC) &_perturbplan_FDP_estimate_cpp, 5},
     {"_perturbplan_fdp_hat_cpp", (DL_FUNC) &_perturbplan_fdp_hat_cpp, 5},
     {"_perturbplan_BH_cutoff_cpp", (DL_FUNC) &_perturbplan_BH_cutoff_cpp, 5},
+    {"_perturbplan_BH_cutoff_bi", (DL_FUNC) &_perturbplan_BH_cutoff_bi, 5},
     {NULL, NULL, 0}
 };
 

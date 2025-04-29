@@ -46,7 +46,28 @@ test_that("BH Cpp implementatio works!", {
     random_assignment = FALSE
   )
 
+  # compute analytic power with BH cutoff search in R
+  compute_power_bisection <- compute_power_posthoc_fixed_es(
+    discovery_pairs = discovery_pairs,
+    cells_per_grna = cells_per_grna,
+    baseline_expression_stats = baseline_expression_stats,
+    control_group = "complement",
+    fold_change = effect_size_mean,
+    num_total_cells = num_total_cell,
+    n_nonzero_trt_thresh = 7,
+    n_nonzero_cntrl_thresh = 7,
+    side = "left",
+    multiple_testing_method = "BH_bisection",
+    multiple_testing_alpha = alpha,
+    random_assignment = FALSE
+  )
+
   # compute the difference
-  discovery_diff <- compute_power_Cpp_BH$expected_num_discoveries - compute_power_R_BH$expected_num_discoveries
-  expect_equal(discovery_diff, 0)
+  num_total_discovery_cpp <- compute_power_Cpp_BH$expected_num_discoveries
+  num_total_discovery_R <- compute_power_R_BH$expected_num_discoveries
+  num_total_discovery_bisection <- compute_power_bisection$expected_num_discoveries
+  discovery_diff_cpp_naive <- num_total_discovery_cpp - num_total_discovery_R
+  discovery_diff_cpp_bisection <- num_total_discovery_cpp - num_total_discovery_bisection
+  expect_equal(discovery_diff_cpp_naive, 0)
+  expect_lt(abs(discovery_diff_cpp_bisection), 0.1)
 })
