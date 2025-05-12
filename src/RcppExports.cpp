@@ -84,6 +84,56 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_QC_fixed_es_cpp
+double compute_QC_fixed_es_cpp(NumericVector fold_change, NumericVector expression_mean, NumericVector expression_size, NumericVector num_cntrl_cells, NumericVector num_cells, int n_nonzero_trt_thresh, int n_nonzero_cntrl_thresh);
+RcppExport SEXP _perturbplan_compute_QC_fixed_es_cpp(SEXP fold_changeSEXP, SEXP expression_meanSEXP, SEXP expression_sizeSEXP, SEXP num_cntrl_cellsSEXP, SEXP num_cellsSEXP, SEXP n_nonzero_trt_threshSEXP, SEXP n_nonzero_cntrl_threshSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type fold_change(fold_changeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type expression_mean(expression_meanSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type expression_size(expression_sizeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type num_cntrl_cells(num_cntrl_cellsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type num_cells(num_cellsSEXP);
+    Rcpp::traits::input_parameter< int >::type n_nonzero_trt_thresh(n_nonzero_trt_threshSEXP);
+    Rcpp::traits::input_parameter< int >::type n_nonzero_cntrl_thresh(n_nonzero_cntrl_threshSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_QC_fixed_es_cpp(fold_change, expression_mean, expression_size, num_cntrl_cells, num_cells, n_nonzero_trt_thresh, n_nonzero_cntrl_thresh));
+    return rcpp_result_gen;
+END_RCPP
+}
+// compute_distribution_teststat_fixed_es_cpp
+List compute_distribution_teststat_fixed_es_cpp(NumericVector fold_change, NumericVector expression_mean, NumericVector expression_size, NumericVector num_trt_cells, NumericVector num_cntrl_cells, NumericVector num_cells);
+RcppExport SEXP _perturbplan_compute_distribution_teststat_fixed_es_cpp(SEXP fold_changeSEXP, SEXP expression_meanSEXP, SEXP expression_sizeSEXP, SEXP num_trt_cellsSEXP, SEXP num_cntrl_cellsSEXP, SEXP num_cellsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type fold_change(fold_changeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type expression_mean(expression_meanSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type expression_size(expression_sizeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type num_trt_cells(num_trt_cellsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type num_cntrl_cells(num_cntrl_cellsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type num_cells(num_cellsSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_distribution_teststat_fixed_es_cpp(fold_change, expression_mean, expression_size, num_trt_cells, num_cntrl_cells, num_cells));
+    return rcpp_result_gen;
+END_RCPP
+}
+// compute_distribution_teststat_fixed_es_random_assignment_cpp
+List compute_distribution_teststat_fixed_es_random_assignment_cpp(NumericVector fold_change, NumericVector expression_mean, NumericVector expression_size, NumericVector num_cntrl_cells, NumericVector mean_num_cells, NumericVector sd_num_cells, int B);
+RcppExport SEXP _perturbplan_compute_distribution_teststat_fixed_es_random_assignment_cpp(SEXP fold_changeSEXP, SEXP expression_meanSEXP, SEXP expression_sizeSEXP, SEXP num_cntrl_cellsSEXP, SEXP mean_num_cellsSEXP, SEXP sd_num_cellsSEXP, SEXP BSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type fold_change(fold_changeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type expression_mean(expression_meanSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type expression_size(expression_sizeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type num_cntrl_cells(num_cntrl_cellsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mean_num_cells(mean_num_cellsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type sd_num_cells(sd_num_cellsSEXP);
+    Rcpp::traits::input_parameter< int >::type B(BSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_distribution_teststat_fixed_es_random_assignment_cpp(fold_change, expression_mean, expression_size, num_cntrl_cells, mean_num_cells, sd_num_cells, B));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_rejection_computation_cpp", (DL_FUNC) &_perturbplan_rejection_computation_cpp, 4},
@@ -91,6 +141,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_fdp_hat_cpp", (DL_FUNC) &_perturbplan_fdp_hat_cpp, 5},
     {"_perturbplan_BH_cutoff_cpp", (DL_FUNC) &_perturbplan_BH_cutoff_cpp, 5},
     {"_perturbplan_BH_cutoff_bi", (DL_FUNC) &_perturbplan_BH_cutoff_bi, 5},
+    {"_perturbplan_compute_QC_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_QC_fixed_es_cpp, 7},
+    {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
+    {"_perturbplan_compute_distribution_teststat_fixed_es_random_assignment_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_random_assignment_cpp, 7},
     {NULL, NULL, 0}
 };
 

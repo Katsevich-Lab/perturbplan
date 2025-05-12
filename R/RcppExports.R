@@ -21,3 +21,15 @@ BH_cutoff_bi <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_pr
     .Call(`_perturbplan_BH_cutoff_bi`, mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 }
 
+compute_QC_fixed_es_cpp <- function(fold_change, expression_mean, expression_size, num_cntrl_cells, num_cells, n_nonzero_trt_thresh = 7L, n_nonzero_cntrl_thresh = 7L) {
+    .Call(`_perturbplan_compute_QC_fixed_es_cpp`, fold_change, expression_mean, expression_size, num_cntrl_cells, num_cells, n_nonzero_trt_thresh, n_nonzero_cntrl_thresh)
+}
+
+compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_mean, expression_size, num_trt_cells, num_cntrl_cells, num_cells) {
+    .Call(`_perturbplan_compute_distribution_teststat_fixed_es_cpp`, fold_change, expression_mean, expression_size, num_trt_cells, num_cntrl_cells, num_cells)
+}
+
+compute_distribution_teststat_fixed_es_random_assignment_cpp <- function(fold_change, expression_mean, expression_size, num_cntrl_cells, mean_num_cells, sd_num_cells, B = 1000L) {
+    .Call(`_perturbplan_compute_distribution_teststat_fixed_es_random_assignment_cpp`, fold_change, expression_mean, expression_size, num_cntrl_cells, mean_num_cells, sd_num_cells, B)
+}
+

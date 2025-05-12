@@ -25,4 +25,5 @@ Suggests:
     tidyr
 Config/testthat/edition: 3
 LinkingTo: 
+    PoissonBinomial,
     Rcpp
