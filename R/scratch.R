@@ -270,7 +270,9 @@ compute_power_posthoc_cpp <- function(
   }
 
   ########################### prepare for multiple testing #####################
-  enhancer_gene <- grna_gene |>
+  # 1) Collect the list-column version
+  enhancer_gene_dt <- grna_gene |>
+    dtplyr::lazy_dt() |>
     dplyr::group_by(grna_target, response_id) |>
     dplyr::summarise(
       # compute mean and sd of the test statistic for each pair
@@ -296,10 +298,6 @@ compute_power_posthoc_cpp <- function(
         }
       }),
 
-      # extract mean and sd from test_stat_distribution
-      mean_test_stat = unlist(test_stat_distribution)["mean"],
-      sd_test_stat = unlist(test_stat_distribution)["sd"],
-
       # compute QC probability
       QC_prob = compute_QC_fixed_es_cpp(
         fold_change = fold_change,
@@ -311,7 +309,21 @@ compute_power_posthoc_cpp <- function(
         n_nonzero_cntrl_thresh = n_nonzero_cntrl_thresh)
     ) |>
     dplyr::ungroup() |>
-    dplyr::select(-test_stat_distribution)
+    dplyr::collect()
+
+  # 2) Expand the list‐column
+  data.table::setDT(enhancer_gene_dt)
+  dist_dt <- data.table::rbindlist(enhancer_gene_dt$test_stat_distribution)
+
+  # 3) Rename those two cols
+  data.table::setnames(
+    dist_dt,
+    old = c("mean", "sd"),
+    new = c("mean_test_stat", "sd_test_stat")
+  )
+
+  # 4) Stick them back on
+  enhancer_gene <- cbind(enhancer_gene_dt[, !"test_stat_distribution"], dist_dt) |> tibble::as_tibble()
 
   ########################### correct multiplicity #############################
   # compute cutoff if it is NULL

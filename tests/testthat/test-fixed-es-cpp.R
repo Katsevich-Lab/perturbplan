@@ -1,6 +1,5 @@
 library(dplyr)
 library(testthat)
-library(tidyr)
 
 # load simulation results
 file_path_cutoff <- system.file("extdata", "simulation_power_cutoff.rds", package = "perturbplan")
