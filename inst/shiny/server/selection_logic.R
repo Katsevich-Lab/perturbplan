@@ -21,8 +21,10 @@ output$overall_box_ui <- renderUI({
   }
 })
 
-# Parse overall_points edits
+# Parse overall_points edits  
+updating_from_click <- reactiveVal(FALSE)
 observeEvent(input$overall_points, ignoreInit=TRUE, {
+  if (updating_from_click()) return()
   req(planned())
   txt <- gsub("\\s","", input$overall_points)
   if (input$mode=="cells") {
@@ -56,6 +58,8 @@ observeEvent(input$overall_points, ignoreInit=TRUE, {
 # Heatmap clicks
 observeEvent(input$heat_click, {
   req(planned())
+  updating_from_click(TRUE)
+  
   r <- which.min(abs(cells_seq() - input$heat_click$y))
   c <- which.min(abs(reads_seq() - input$heat_click$x))
   if (input$mode=="cells") {
@@ -79,6 +83,10 @@ observeEvent(input$heat_click, {
     } else ""
     updateTextInput(session,"overall_points",value=txt)
   }
+  
+  # Reset flag after a short delay  
+  Sys.sleep(0.01)
+  updating_from_click(FALSE)
 })
 
 # Enable Go button
@@ -107,8 +115,11 @@ output$slice_box_ui <- renderUI({
 })
 
 # Slice interactions - now supports multiple selections
+updating_slice_from_click <- reactiveVal(FALSE)
 observeEvent(input$slice_click,{
   req(slice_mode()%in%c("row","col"))
+  updating_slice_from_click(TRUE)
+  
   x <- if (slice_mode()=="row")
     reads_seq()[which.min(abs(reads_seq()-input$slice_click$x))]
   else
@@ -124,9 +135,14 @@ observeEvent(input$slice_click,{
   
   slice_x(new_vals)
   updateTextInput(session,"slice_points",value=paste(new_vals, collapse=", "))
+  
+  # Reset flag after a short delay
+  Sys.sleep(0.01)
+  updating_slice_from_click(FALSE)
 })
 
 observeEvent(input$slice_points,ignoreInit=TRUE,{
+  if (updating_slice_from_click()) return()
   txt <- gsub("\\s","", input$slice_points)
   if (nzchar(txt)) {
     v <- as.numeric(strsplit(txt,",")[[1]])

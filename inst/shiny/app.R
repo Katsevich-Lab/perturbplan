@@ -2,6 +2,7 @@
 # Loads modular components and launches the app
 
 library(shiny)
+library(shinydashboard)
 library(shinyBS)
 library(shinyjs)
 library(ggplot2)

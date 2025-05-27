@@ -32,6 +32,48 @@ server <- function(input, output, session) {
     updateTextInput(session,"slice_points","")
   })
   
+  # Download handler for power grid data with parameters
+  output$download_data <- downloadHandler(
+    filename = function() {
+      paste0("perturbplan_results_", Sys.Date(), ".tsv")
+    },
+    content = function(file) {
+      req(planned())
+      
+      # Get power results and grid data
+      results <- power_results()
+      grid_data <- results$power_grid
+      params <- results$parameters
+      
+      # Create header with parameters as comments
+      header_lines <- c(
+        "# PerturbPlan Power Analysis Results",
+        paste("# Generated on:", Sys.time()),
+        "# ",
+        "# Experimental Parameters:",
+        paste("# Number of targets:", params$num_targets),
+        paste("# gRNAs per target:", params$gRNAs_per_target),
+        paste("# Non-targeting gRNAs:", params$non_targeting_gRNAs),
+        paste("# Number of pairs analyzed:", params$num_pairs),
+        paste("# TPM threshold:", params$tpm_threshold),
+        paste("# FDR target level:", params$fdr_target),
+        paste("# Fold-change mean:", params$fc_mean),
+        paste("# Fold-change SD:", params$fc_sd),
+        paste("# Proportion of non-null pairs:", params$prop_non_null),
+        paste("# MOI:", params$MOI),
+        paste("# Biological system:", params$biological_system),
+        paste("# Experimental platform:", params$experimental_platform),
+        "# ",
+        "# Data columns: cells, reads, power"
+      )
+      
+      # Write header and data
+      writeLines(header_lines, file)
+      write.table(grid_data, file, append = TRUE, sep = "\t", 
+                  row.names = FALSE, col.names = TRUE, quote = FALSE)
+    }
+  )
+  
   # Make reactive values available to other modules
   values <- reactiveValues(
     sel = sel,
