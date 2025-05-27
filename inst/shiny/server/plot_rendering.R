@@ -61,22 +61,32 @@ output$slice_plot <- renderPlot({
   df <- gridDF()
   if (slice_mode()=="row") {
     sub <- subset(df, cells %in% cells_seq()[sel$idx])
-    ggplot(sub,aes(reads,power,colour=factor(cells)))+
+    p <- ggplot(sub,aes(reads,power,colour=factor(cells)))+
       geom_line()+
       geom_hline(yintercept=0.8,linetype="dashed",colour="grey") +
-      geom_vline(xintercept=slice_x(),colour="red")+
       theme_bw(base_size = 16)+
       theme(aspect.ratio = 1) +
       labs(x="Reads per cell",y="Power",colour="Cells")
+    
+    # Add vertical lines for all selected points
+    if (length(slice_x()) > 0) {
+      p <- p + geom_vline(xintercept=slice_x(),colour="red")
+    }
+    p
   } else {
     sub <- subset(df, reads %in% reads_seq()[sel$idx])
-    ggplot(sub,aes(cells,power,colour=factor(reads)))+
+    p <- ggplot(sub,aes(cells,power,colour=factor(reads)))+
       geom_line()+
       geom_hline(yintercept=0.8,linetype="dashed",colour="grey") +
-      geom_vline(xintercept=slice_x(),colour="red")+
       theme_bw(base_size = 16)+
       theme(aspect.ratio = 1) +
       labs(x="Number of cells",y="Power",colour="Reads")
+    
+    # Add vertical lines for all selected points
+    if (length(slice_x()) > 0) {
+      p <- p + geom_vline(xintercept=slice_x(),colour="red")
+    }
+    p
   }
 })
 
@@ -94,37 +104,42 @@ output$pp_combined <- renderPlot({
   # Get max power for scaling (from placeholder function)
   max_pow <- max(log10(cells_seq()) * log10(reads_seq()))
 
+  # Create data with consistent color/linetype mapping
+  # Color = cell number, Linetype = reads per cell
+  create_plot_data <- function(x_vals, power_fun) {
+    dfs <- Map(function(r, c){
+      base <- log10(cells_seq()[r] * reads_seq()[c])
+      data.frame(
+        x = x_vals,
+        Power = power_fun(x_vals, base),
+        cells = factor(cells_seq()[r]),
+        reads = factor(reads_seq()[c])
+      )
+    }, sel$tiles$row, sel$tiles$col)
+    do.call(rbind, dfs)
+  }
+
   # First plot: Power vs TPM
   tpm  <- seq(0, 10, length.out = 100)
-  dfs1 <- Map(function(r, c){
-    base <- log10(cells_seq()[r] * reads_seq()[c])
-    make_curve(tpm, base,
-               function(v, b) 1 - exp(-((v/5)^1.8) * (b/max_pow)^10 * 5000),
-               sprintf("%d × %d", cells_seq()[r], reads_seq()[c]))
-  }, sel$tiles$row, sel$tiles$col)
-  p1 <- ggplot(do.call(rbind, dfs1), aes(x, Power, colour = label)) +
+  df1 <- create_plot_data(tpm, function(v, b) 1 - exp(-((v/5)^1.8) * (b/max_pow)^10 * 5000))
+  
+  p1 <- ggplot(df1, aes(x, Power, colour = cells, linetype = reads)) +
     geom_line() +
     geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
     theme_bw(base_size = 16) +
     theme(aspect.ratio = 1) +
-    labs(x = "TPM", y = "Power", colour = "Design (cells × reads/cell)")
+    labs(x = "TPM", y = "Power", colour = "Cells", linetype = "Reads/cell")
 
-  # Second plot: Power vs Fold‐change
+  # Second plot: Power vs Fold-change
   fc   <- seq(0, 50, length.out = 100)
-  dfs2 <- Map(function(r, c){
-    base <- log10(cells_seq()[r] * reads_seq()[c])
-    make_curve(fc, base,
-               function(v, b) 1 - exp(-(((v*4/50)/2)^1.8) * (b/max_pow)^8 * 2000),
-               sprintf("%d × %d", cells_seq()[r], reads_seq()[c]))
-  }, sel$tiles$row, sel$tiles$col)
-  p2 <- ggplot(do.call(rbind, dfs2), aes(x, Power, colour = label)) +
+  df2 <- create_plot_data(fc, function(v, b) 1 - exp(-(((v*4/50)/2)^1.8) * (b/max_pow)^8 * 2000))
+  
+  p2 <- ggplot(df2, aes(x, Power, colour = cells, linetype = reads)) +
     geom_line() +
     geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
     theme_bw(base_size = 16) +
     theme(aspect.ratio = 1) +
-    labs(x = "Fold-change (percent)",
-         y = "Power",
-         colour = "Design (cells × reads/cell)")
+    labs(x = "Fold-change (percent)", y = "Power", colour = "Cells", linetype = "Reads/cell")
 
   # Combine with shared legend below
   (p1 + p2) +

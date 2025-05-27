@@ -100,29 +100,45 @@ observeEvent(input$go_overall, {
 output$slice_box_ui <- renderUI({
   req(planned(), !is.null(slice_mode()))
   lab <- if (identical(slice_mode(),"row"))
-    "Drill down by number of reads / cell:<br/>(click the plot)"
-  else "Drill down by number of cells:<br/>(click the plot)"
+    "Drill down by number of reads / cell:<br/>(click to select multiple points)"
+  else "Drill down by number of cells:<br/>(click to select multiple points)"
   textInput("slice_points", HTML(lab),
-            if (length(slice_x())) slice_x() else "")
+            if (length(slice_x())) paste(slice_x(), collapse=", ") else "")
 })
 
-# Slice interactions
+# Slice interactions - now supports multiple selections
 observeEvent(input$slice_click,{
   req(slice_mode()%in%c("row","col"))
   x <- if (slice_mode()=="row")
     reads_seq()[which.min(abs(reads_seq()-input$slice_click$x))]
   else
     cells_seq()[which.min(abs(cells_seq()-input$slice_click$x))]
-  slice_x(x); updateTextInput(session,"slice_points",value=x)
+  
+  # Toggle selection - add if not present, remove if already selected
+  current_vals <- slice_x()
+  if (x %in% current_vals) {
+    new_vals <- setdiff(current_vals, x)
+  } else {
+    new_vals <- c(current_vals, x)
+  }
+  
+  slice_x(new_vals)
+  updateTextInput(session,"slice_points",value=paste(new_vals, collapse=", "))
 })
 
 observeEvent(input$slice_points,ignoreInit=TRUE,{
-  v <- as.numeric(strsplit(input$slice_points,",")[[1]])
-  if (!is.na(v[1])) slice_x(v[1])
+  txt <- gsub("\\s","", input$slice_points)
+  if (nzchar(txt)) {
+    v <- as.numeric(strsplit(txt,",")[[1]])
+    v <- v[!is.na(v)]  # Remove any NAs
+    slice_x(v)
+  } else {
+    slice_x(numeric(0))
+  }
 })
 
 observe({
-  toggleState("go_slice", length(slice_x())==1)
+  toggleState("go_slice", length(slice_x())>=1)
 })
 
 observeEvent(input$slice_clear,{
@@ -131,13 +147,16 @@ observeEvent(input$slice_clear,{
 
 # Slice -> Per-pair
 observeEvent(input$go_slice,{
-  req(length(slice_x())==1)
-  if (slice_mode()=="row")
+  req(length(slice_x())>=1)
+  if (slice_mode()=="row") {
+    # slice_x contains reads_per_cell values, sel$idx contains row indices (cell counts)
     sel$tiles <- expand.grid(row=sel$idx,
                              col=match(slice_x(),reads_seq()))
-  else
+  } else {
+    # slice_x contains cell values, sel$idx contains col indices (reads_per_cell)  
     sel$tiles <- expand.grid(row=match(slice_x(),cells_seq()),
                              col=sel$idx)
+  }
   sel$type <- "tile"
   updateTabsetPanel(session,"tabs",selected="Per-pair power")
 })
