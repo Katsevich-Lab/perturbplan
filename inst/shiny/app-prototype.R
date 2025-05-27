@@ -43,7 +43,8 @@ ui <- fluidPage(
           bsCollapsePanel(
             "Assumed effect sizes",
             numericInput("fc_mean", "Fold-change mean:", 0.85, 1.1, 10, 0.05),
-            numericInput("fc_sd",   "Fold-change SD:",   0.15, 0.1,  5, 0.05)
+            numericInput("fc_sd",   "Fold-change SD:",   0.15, 0.1,  5, 0.05),
+            numericInput("prop_non_null", "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
           )
         ),
 
@@ -335,7 +336,9 @@ server <- function(input, output, session) {
     if (slice_mode()=="row") {
       sub <- subset(df, cells %in% cells_seq[sel$idx])
       ggplot(sub,aes(reads,power,colour=factor(cells)))+
-        geom_line()+geom_vline(xintercept=slice_x(),colour="red")+
+        geom_line()+
+        geom_hline(yintercept=0.8,linetype="dashed",colour="grey") +
+        geom_vline(xintercept=slice_x(),colour="red")+
         theme_bw(base_size = 16)+
         theme(aspect.ratio = 1) +
         labs(x="Reads per cell",y="Power",colour="Cells")
