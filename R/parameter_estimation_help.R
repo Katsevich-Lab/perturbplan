@@ -1,20 +1,24 @@
 #' Obtain gene-level expression and filtering information based on TPM.
 #'
 #' @param TPM_thres TPM threshold for gene filtering (default = 10).
-#' @param response_matrix Optional expression matrix (genes × cells). If NULL, it will be read from file.
-#' @param file_type Either "mtx" (default) or "odm", indicating the file format.
-#' @param path_to_gene_expression Path to the folder containing expression matrix files.
-#' @param cell_covariates A data frame of cell-level covariates (used in precomputation).
+#' @param response_matrix Optional expression matrix (genes × cells). If NULL, will be loaded from file.
+#' @param file_type Either "mtx" or "odm", indicating matrix format.
+#' @param path_to_gene_expression Path to matrix and metadata files.
+#' @param cell_covariates Optional cell-level covariates. If NULL, uses log-library size.
 #'
-#' @return A data frame with genes passing the TPM threshold, with relative expression and size parameter.
+#' @return A data frame of genes with relative expression and estimated size (theta).
+#' @export
 obtain_expression_information <- function(TPM_thres = 10, response_matrix = NULL,
                                           file_type = "mtx", path_to_gene_expression,
                                           cell_covariates = NULL) {
+  # Load expression matrix if not provided
   if (is.null(response_matrix)) {
     if (file_type == "odm") {
-      gene_odm <- ondisc::read_odm(odm_fp = paste0(path_to_gene_expression, "/matrix.odm"),
-                                   metadata_fp = paste0(path_to_gene_expression, "/metadata.rds"))
-      ok_cells_gene <- (ondisc::get_cell_covariates(gene_odm)$n_umis) != 0L
+      gene_odm <- ondisc::read_odm(
+        odm_fp = paste0(path_to_gene_expression, "/matrix.odm"),
+        metadata_fp = paste0(path_to_gene_expression, "/metadata.rds")
+      )
+      ok_cells_gene <- ondisc::get_cell_covariates(gene_odm)$n_umis != 0L
       response_matrix <- gene_odm[, ok_cells_gene]
       rownames(response_matrix) <- ondisc::get_feature_ids(gene_odm)
     }
@@ -28,31 +32,43 @@ obtain_expression_information <- function(TPM_thres = 10, response_matrix = NULL
     }
   }
 
+  # Construct default covariate if it's null
+  if (is.null(cell_covariates)) {
+    cell_covariates <- data.frame(
+      log_sum_expression = log(Matrix::colSums(response_matrix) + 1),
+      stringsAsFactors = FALSE
+    )
+  }
+
+  # Compute gene-level expression in chunks
   cell_id <- 1:ncol(response_matrix)
-  chunk_list <- split(cell_id, cut(seq_along(cell_id), breaks = 10, labels = FALSE))
+  chunk_list <- split(cell_id, cut(cell_id, breaks = 10))
   sum_expression <- setNames(numeric(nrow(response_matrix)), rownames(response_matrix))
 
   for (chunk in chunk_list) {
     sum_expression <- Matrix::rowSums(response_matrix[, chunk]) + sum_expression
   }
 
+  # Compute TPM and filter genes
   relative_expression <- sum_expression / sum(sum_expression)
   TPM <- relative_expression * 1e6
-
   tpm_filtered_genes <- rownames(response_matrix)[TPM >= TPM_thres]
 
+  # Compute expression size (theta) for filtered genes
   gene_info <- data.frame(
     response_id = tpm_filtered_genes,
     stringsAsFactors = FALSE
   ) |> dplyr::mutate(
-    relative_expression_at_scale = relative_expression[response_id],
-    expression_size_at_scale = unlist(sapply(
-      rownames(response_matrix),
+    relative_expression = relative_expression[response_id],
+    expression_size = unlist(sapply(
+      setNames(tpm_filtered_genes, tpm_filtered_genes),
       function(response_id) {
-        sceptre:::perform_response_precomputation(response_matrix[response_id, ],
-                                                  covariate_matrix = cell_covariates)$theta
+        sceptre:::perform_response_precomputation(
+          response_matrix[response_id, ],
+          covariate_matrix = cell_covariates
+        )$theta
       }
-    ))[response_id]
+    ))
   )
 
   return(gene_info)

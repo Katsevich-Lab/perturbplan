@@ -15,16 +15,16 @@ obtain_expression_information(
 \arguments{
 \item{TPM_thres}{TPM threshold for gene filtering (default = 10).}
 
-\item{response_matrix}{Optional expression matrix (genes × cells). If NULL, it will be read from file.}
+\item{response_matrix}{Optional expression matrix (genes × cells). If NULL, will be loaded from file.}
 
-\item{file_type}{Either "mtx" (default) or "odm", indicating the file format.}
+\item{file_type}{Either "mtx" or "odm", indicating matrix format.}
 
-\item{path_to_gene_expression}{Path to the folder containing expression matrix files.}
+\item{path_to_gene_expression}{Path to matrix and metadata files.}
 
-\item{cell_covariates}{A data frame of cell-level covariates (used in precomputation).}
+\item{cell_covariates}{Optional cell-level covariates. If NULL, uses log-library size.}
 }
 \value{
-A data frame with genes passing the TPM threshold, with relative expression and size parameter.
+A data frame of genes with relative expression and estimated size (theta).
 }
 \description{
 Obtain gene-level expression and filtering information based on TPM.
