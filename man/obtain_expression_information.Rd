@@ -6,20 +6,14 @@
 \usage{
 obtain_expression_information(
   TPM_thres = 10,
-  response_matrix = NULL,
-  file_type = "mtx",
-  path_to_gene_expression,
+  response_matrix,
   cell_covariates = NULL
 )
 }
 \arguments{
 \item{TPM_thres}{TPM threshold for gene filtering (default = 10).}
 
-\item{response_matrix}{Optional expression matrix (genes × cells). If NULL, will be loaded from file.}
-
-\item{file_type}{Either "mtx" or "odm", indicating matrix format.}
-
-\item{path_to_gene_expression}{Path to matrix and metadata files.}
+\item{response_matrix}{Expression matrix (genes × cells).}
 
 \item{cell_covariates}{Optional cell-level covariates. If NULL, uses log-library size.}
 }

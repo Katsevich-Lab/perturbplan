@@ -1,58 +1,68 @@
+#' Load and QC gene expression matrix from Cell Ranger .mtx format.
+#'
+#' @description
+#' This function reads a sparse expression matrix from a Cell Ranger output directory
+#' (in `.mtx` format) and performs quality control by removing genes with missing,
+#' empty, or duplicated names.
+#'
+#' @param path_to_gene_expression Character. Path to the folder containing
+#' `matrix.mtx.gz`, `features.tsv.gz`, and `barcodes.tsv.gz`.
+#'
+#' @return A sparse gene-by-cell expression matrix of class `dgCMatrix`, where
+#' only genes with valid and unique names are retained. Row names are set to gene symbols.
+#'
+#' @export
+obtain_qc_response_data <- function(path_to_gene_expression) {
+  # Read sparse matrix (.mtx) and convert to efficient format
+  response_matrix <- as(Matrix::readMM(file.path(path_to_gene_expression, "/matrix.mtx.gz")), "dgCMatrix")
+
+  # Read features (gene names)
+  genes <- data.table::fread(file.path(path_to_gene_expression, "/features.tsv.gz"), header = FALSE)
+  gene_names <- genes$V2
+
+  # Apply QC: remove empty, NA, or duplicated gene names
+  valid_idx <- which(!is.na(gene_names) & gene_names != "" & !duplicated(gene_names))
+
+  # Subset response_matrix and gene_names
+  gene_names <- gene_names[valid_idx]
+  response_matrix <- response_matrix[valid_idx, , drop = FALSE]
+
+  # Assign cleaned gene names to matrix
+  rownames(response_matrix) <- gene_names
+
+  return(response_matrix)
+}
+
+
 #' Obtain gene-level expression and filtering information based on TPM.
 #'
 #' @param TPM_thres TPM threshold for gene filtering (default = 10).
-#' @param response_matrix Optional expression matrix (genes × cells). If NULL, will be loaded from file.
-#' @param file_type Either "mtx" or "odm", indicating matrix format.
-#' @param path_to_gene_expression Path to matrix and metadata files.
+#' @param response_matrix Expression matrix (genes × cells).
 #' @param cell_covariates Optional cell-level covariates. If NULL, uses log-library size.
 #'
 #' @return A data frame of genes with relative expression and estimated size (theta).
 #' @export
-obtain_expression_information <- function(TPM_thres = 10, response_matrix = NULL,
-                                          file_type = "mtx", path_to_gene_expression,
+obtain_expression_information <- function(TPM_thres = 10, response_matrix,
                                           cell_covariates = NULL) {
-  # Load expression matrix if not provided
-  if (is.null(response_matrix)) {
-    if (file_type == "odm") {
-      gene_odm <- ondisc::read_odm(
-        odm_fp = paste0(path_to_gene_expression, "/matrix.odm"),
-        metadata_fp = paste0(path_to_gene_expression, "/metadata.rds")
-      )
-      ok_cells_gene <- ondisc::get_cell_covariates(gene_odm)$n_umis != 0L
-      response_matrix <- gene_odm[, ok_cells_gene]
-      rownames(response_matrix) <- ondisc::get_feature_ids(gene_odm)
-    }
 
-    if (file_type == "mtx") {
-      response_matrix <- Matrix::readMM(file.path(path_to_gene_expression, "/matrix.mtx.gz"))
-      genes <- data.table::fread(file.path(path_to_gene_expression, "/features.tsv.gz"), header = FALSE)
-      barcodes <- data.table::fread(file.path(path_to_gene_expression, "/barcodes.tsv.gz"), header = FALSE)
-      rownames(response_matrix) <- genes$V2
-      colnames(response_matrix) <- barcodes$V1
-    }
-  }
-
-  # Construct default covariate if it's null
+  # Construct default covariates if missing
   if (is.null(cell_covariates)) {
     cell_covariates <- data.frame(
+      intercept = 1,  # required by sceptre
       log_sum_expression = log(Matrix::colSums(response_matrix) + 1),
       stringsAsFactors = FALSE
     )
   }
 
-  # Compute gene-level expression in chunks
-  cell_id <- 1:ncol(response_matrix)
-  chunk_list <- split(cell_id, cut(cell_id, breaks = 10))
-  sum_expression <- setNames(numeric(nrow(response_matrix)), rownames(response_matrix))
+  # Compute gene-level expression (no chunking needed)
+  sum_expression <- Matrix::rowSums(response_matrix)
 
-  for (chunk in chunk_list) {
-    sum_expression <- Matrix::rowSums(response_matrix[, chunk]) + sum_expression
-  }
-
-  # Compute TPM and filter genes
+  # Normalize to TPM
   relative_expression <- sum_expression / sum(sum_expression)
   TPM <- relative_expression * 1e6
-  tpm_filtered_genes <- rownames(response_matrix)[TPM >= TPM_thres]
+
+  # Filter genes by TPM threshold
+  tpm_filtered_genes <- names(TPM)[TPM >= TPM_thres]
 
   # Compute expression size (theta) for filtered genes
   gene_info <- data.frame(
@@ -65,7 +75,7 @@ obtain_expression_information <- function(TPM_thres = 10, response_matrix = NULL
       function(response_id) {
         sceptre:::perform_response_precomputation(
           response_matrix[response_id, ],
-          covariate_matrix = cell_covariates
+          covariate_matrix = as.matrix(cell_covariates)
         )$theta
       }
     ))
@@ -73,6 +83,8 @@ obtain_expression_information <- function(TPM_thres = 10, response_matrix = NULL
 
   return(gene_info)
 }
+
+
 
 #' Generate random gRNA–gene discovery pairs for control or simulation.
 #'
@@ -181,7 +193,7 @@ obtain_mapping_efficiency <- function(QC_data, path_to_metrics_summary) {
   }
 
   # Read metrics_summary.csv and extract total read count
-  metrics_summary <- read.csv(file.path(path_to_metrics_summary, "metrics_summary.csv"),
+  metrics_summary <- read.csv(file.path(path_to_metrics_summary, "/metrics_summary.csv"),
                               check.names = FALSE)
 
   if (!"Number of Reads" %in% colnames(metrics_summary)) {
