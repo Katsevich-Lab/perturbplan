@@ -11,7 +11,7 @@ input_check_library_computation(
 )
 }
 \arguments{
-\item{QC_data}{The QC'd data coming from the function obtain_qc_data.}
+\item{QC_data}{The QC'd data coming from the function obtain_qc_h5_data.}
 
 \item{downsample_ratio}{The ratio of the size of the downsampled dataset to the one of the original dataset.}
 

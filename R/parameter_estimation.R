@@ -6,7 +6,6 @@
 #' @export
 
 library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
-
   library_model <- library_computation(QC_data, downsample_ratio, D2_rough)
   total_UMIs <- stats::coef(library_model)["total_UMIs"]
   umi_variation <- stats::coef(library_model)["D2"]

@@ -7,7 +7,7 @@
 library_computation(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 }
 \arguments{
-\item{QC_data}{The QC'd data coming from the function obtain_qc_data.}
+\item{QC_data}{The QC'd data coming from the function obtain_qc_h5_data.}
 
 \item{downsample_ratio}{The ratio of the size of the downsampled dataset to the one of the original dataset.}
 
