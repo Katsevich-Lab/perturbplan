@@ -9,13 +9,13 @@ compute_underspecified_power <- function(
 
   ################ compute the treatment and control cells #####################
   num_trt_cells <- gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
-  num_cntrl_cells <- switch(control_group,
-                            complement = {
-                              num_total_cells - num_trt_cells
-                            },
-                            nt_cells = {
-                              non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
-                            })
+  num_cntrl_cells <- round(switch(control_group,
+                                  complement = {
+                                    num_total_cells - num_trt_cells
+                                  },
+                                  nt_cells = {
+                                    non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+                                  }))
 
   ##############################################################################
   ########################## compute overall power #############################
@@ -28,7 +28,7 @@ compute_underspecified_power <- function(
   ########################## compute the cutoff ################################
   sig_cutoff <- switch(multiple_testing_method,
                        BH = {
-                         compute_underspecified_BH_cutoff(power_function = power_df$marginal_power_function,
+                         compute_underspecified_BH_cutoff(power_f = power_df$marginal_power_function,
                                                           multiple_testing_alpha = multiple_testing_alpha,
                                                           prop_non_null = prop_non_null, num_pairs = num_pairs)
                        })
@@ -40,21 +40,23 @@ compute_underspecified_power <- function(
   #################### compute intra-experiment curves #########################
 
   ##################### compute the power on fold change #######################
-  power_on_fc <- power_df$power_on_fc(cutoff = sig_cutoff)
+  power_on_fc <- function(fold_change){
+    power_df$power_on_fc(cutoff = sig_cutoff, fold_change = fold_change)
+  }
 
   ################## compute the power on relative expression ##################
   power_on_pi <- function(TPM){
 
     # extract relative expression and dispersion
     relative_expression <- TPM / 1e6
-    expression_size <- expression_dispersion_curve(relative_expression = relative_expression)
+    expression_size <- expression_dispersion_curve(relative_expression)
 
     # return the power curve
     return(mean(sapply(fc_expression_df$fold_change, function(fold_change){
-      sufficient_stats_df$conditional_power_function(relative_expression = relative_expression,
-                                                     expression_size = expression_size,
-                                                     cutoff = sig_cutoff,
-                                                     fold_change = fold_change)
+      power_df$conditional_power_function(relative_expression = relative_expression,
+                                          expression_size = expression_size,
+                                          cutoff = sig_cutoff,
+                                          fold_change = fold_change)
     })))
   }
 
@@ -74,7 +76,7 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
   ############## combine expression and effect size information ################
   baseline_expression_stats <- extract_baseline_expression(biological_system = biological_system)
   fc_expression_df <- data.frame(
-    fold_change = rnorm(n = B, mean = fold_change_mean, sd = fold_change_sd)
+    fold_change = stats::rnorm(n = B, mean = fold_change_mean, sd = fold_change_sd)
   ) |>
     dplyr::bind_cols(baseline_expression_stats$baseline_expression |> dplyr::slice_sample(n = B))
 
@@ -95,7 +97,7 @@ extract_baseline_expression <- function(biological_system = "K562"){
          K562 = {
 
            # load the Gasperini baseline expression list
-           rds_path <- system.file("inst/extdata/baseline_expression", "Gasperini.rds", package = "perturbplan", mustWork = TRUE)
+           rds_path <- system.file("extdata/baseline_expression", "Gasperini.rds", package = "perturbplan", mustWork = TRUE)
            baseline_expression_list <- readRDS(rds_path)
 
          })
@@ -118,8 +120,8 @@ compute_power_function <- function(fc_expression_df, library_size, num_trt_cells
                                                   expression_size = expression_size, fold_change_mean = fold_change, fold_change_sd = 0)
 
     # compute the rejection rate
-    rejection_computation(mean_list = mean_sd_list[["mean"]],
-                          sd_list = mean_sd_list[["sd"]],
+    rejection_computation(mean_list = mean_sd_list[[1]]["mean"],
+                          sd_list = mean_sd_list[[1]]["sd"],
                           side = side_use,
                           cutoff = cutoff)
   }
@@ -131,10 +133,11 @@ compute_power_function <- function(fc_expression_df, library_size, num_trt_cells
     conditional_power_df <- fc_expression_df |>
       dplyr::rowwise() |>
       dplyr::mutate(conditional_power = conditional_power_function(
-        relative_expression,
-        expression_size,
+        relative_expression = relative_expression,
+        expression_size = expression_size,
         cutoff = cutoff,
-        fold_change
+        fold_change = fold_change,
+        side_use = side
       ))
     return(mean(conditional_power_df$conditional_power))
   }
@@ -145,11 +148,13 @@ compute_power_function <- function(fc_expression_df, library_size, num_trt_cells
     # obtain conditional_power_df
     conditional_power_df <- fc_expression_df |>
       dplyr::select(relative_expression, expression_size) |>
+      dplyr::rowwise() |>
       dplyr::mutate(conditional_power = conditional_power_function(
-        relative_expression,
-        expression_size,
+        relative_expression = relative_expression,
+        expression_size = expression_size,
         cutoff = cutoff,
-        fold_change = fold_change
+        fold_change = fold_change,
+        side_use = side
       ))
     return(mean(conditional_power_df$conditional_power))
   }
@@ -162,7 +167,7 @@ compute_power_function <- function(fc_expression_df, library_size, num_trt_cells
   ))
 }
 
-compute_underspecified_BH_cutoff <- function(power_function,
+compute_underspecified_BH_cutoff <- function(power_f,
                                              multiple_testing_alpha,
                                              prop_non_null,
                                              num_pairs){
@@ -170,7 +175,7 @@ compute_underspecified_BH_cutoff <- function(power_function,
   ##################### Bisection to find cutoff ###############################
   # Helper: FDP(t) – multiple_testing_alpha  (monotone in t)
   f <- function(t) {
-    t / (1 - prop_non_null + prop_non_null * power_function(t)) - multiple_testing_alpha
+    t / (1 - prop_non_null + prop_non_null * power_f(cutoff = t)) - multiple_testing_alpha
   }
 
   # define lower and upper end

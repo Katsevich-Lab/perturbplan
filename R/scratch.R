@@ -355,3 +355,62 @@ compute_power_posthoc_cpp <- function(
 
   return(output)
 }
+
+
+#' Compute power in underspecified setup
+#'
+#' @inheritParams calculate_power_grid
+#' @param cells_reads_df A dataframe including columns num_total_cells and reads_per_cell
+#' @param side (Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"
+#' @param control_group A character string specifying the control group, either "complement" or "nt_cells"
+#' @param B (Optional) A scalar specifying how many Monte Carlo samples used
+#'
+#' @return A dataframe concatenating the overall_power, power_on_fc and power_on_pi
+compute_power_grid <- function(
+    cells_reads_df,
+    num_targets = 100,
+    gRNAs_per_target = 4,
+    non_targeting_gRNAs = 10,
+    num_pairs = 1000,
+    tpm_threshold = 10,
+    fdr_target = 0.05,
+    fc_mean = 0.85,
+    fc_sd = 0.15,
+    prop_non_null = 0.1,
+    MOI = 10,
+    biological_system = "K562",
+    experimental_platform = "10x Chromium v3",
+    side = "left",
+    control_group = "complement",
+    B = 500
+){
+
+  ############### extract the baseline expression information ##################
+  fc_expression_info <- extract_fc_expression_info(fold_change_mean = fc_mean, fold_change_sd = fc_sd,
+                                                   biological_system = biological_system, B = B)
+
+  ################## compute the library size information ######################
+  # TBD
+
+  ############### compute the power for the cells-reads grid ###################
+  power_df <- cells_reads_df |>
+    dplyr::rowwise() |>
+    dplyr::mutate(
+      power_output = list(
+        compute_underspecified_power(
+          # experimental information
+          num_total_cells = num_total_cells, library_size = reads_per_cell, MOI = MOI, num_targets = num_targets, gRNAs_per_target = gRNAs_per_target, non_targeting_gRNAs = non_targeting_gRNAs,
+          # analysis information
+          multiple_testing_alpha = fdr_target, multiple_testing_method = "BH", control_group = control_group, side = side, num_pairs = num_pairs,
+          # effect size and baseline expression information
+          fc_expression_df = fc_expression_info$fc_expression_df, expression_dispersion_curve = fc_expression_info$expression_dispersion_curve, prop_non_null = prop_non_null)
+      ),
+      overall_power = power_output$overall_power,
+      power_on_fc = list(power_output$power_on_fc),
+      power_on_pi = list(power_output$power_on_pi)
+    ) |>
+    dplyr::select(-power_output)
+
+  # return the output dataframe
+  return(power_df)
+}
