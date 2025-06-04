@@ -133,23 +133,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_distribution_teststat_fixed_es_random_assignment_cpp
-List compute_distribution_teststat_fixed_es_random_assignment_cpp(NumericVector fold_change, NumericVector expression_mean, NumericVector expression_size, NumericVector num_cntrl_cells, NumericVector mean_num_cells, NumericVector sd_num_cells, int B);
-RcppExport SEXP _perturbplan_compute_distribution_teststat_fixed_es_random_assignment_cpp(SEXP fold_changeSEXP, SEXP expression_meanSEXP, SEXP expression_sizeSEXP, SEXP num_cntrl_cellsSEXP, SEXP mean_num_cellsSEXP, SEXP sd_num_cellsSEXP, SEXP BSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type fold_change(fold_changeSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type expression_mean(expression_meanSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type expression_size(expression_sizeSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type num_cntrl_cells(num_cntrl_cellsSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type mean_num_cells(mean_num_cellsSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type sd_num_cells(sd_num_cellsSEXP);
-    Rcpp::traits::input_parameter< int >::type B(BSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_distribution_teststat_fixed_es_random_assignment_cpp(fold_change, expression_mean, expression_size, num_cntrl_cells, mean_num_cells, sd_num_cells, B));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_rejection_computation_cpp", (DL_FUNC) &_perturbplan_rejection_computation_cpp, 4},
@@ -160,7 +143,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_compute_underspecified_BH_cutoff_cpp", (DL_FUNC) &_perturbplan_compute_underspecified_BH_cutoff_cpp, 6},
     {"_perturbplan_compute_QC_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_QC_fixed_es_cpp, 7},
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
-    {"_perturbplan_compute_distribution_teststat_fixed_es_random_assignment_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_random_assignment_cpp, 7},
     {NULL, NULL, 0}
 };
 
