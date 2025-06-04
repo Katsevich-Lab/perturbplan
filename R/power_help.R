@@ -290,7 +290,10 @@ compute_distribution_teststat <- function(num_trt_cells, num_cntrl_cells, num_tr
 
 #' Compute the mean and sd of the score test statistic with fixed effect size and random gRNA assignment
 #'
-#' @inheritParams compute_distribution_teststat_fixed_es
+#' @param fold_change A vector consisting of the fold changes for each gRNA-gene pair
+#' @param expression_mean Mean gene expression
+#' @param expression_size Size parameter in NB distribution
+#' @param num_cntrl_cells Number of control cells in score test
 #' @param mean_num_cells Mean of number of treatment cells
 #' @param sd_num_cells Standard deviation of number of treatment cells
 #' @param B Number of Monte Carlo replications to estiamte variance
