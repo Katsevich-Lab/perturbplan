@@ -57,7 +57,7 @@ compute_power_grid(
 \item{B}{(Optional) A scalar specifying how many Monte Carlo samples used}
 }
 \value{
-A dataframe concatenating the overall_power, power_on_fc and power_on_pi
+A dataframe concatenating the overall_power, power_by_fc and power_by_expr
 }
 \description{
 Compute power in underspecified setup

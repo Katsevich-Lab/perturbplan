@@ -84,6 +84,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_underspecified_BH_cutoff_cpp
+double compute_underspecified_BH_cutoff_cpp(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double multiple_testing_alpha, double prop_non_null, int num_pairs);
+RcppExport SEXP _perturbplan_compute_underspecified_BH_cutoff_cpp(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP multiple_testing_alphaSEXP, SEXP prop_non_nullSEXP, SEXP num_pairsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type mean_list(mean_listSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type sd_list(sd_listSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type side(sideSEXP);
+    Rcpp::traits::input_parameter< double >::type multiple_testing_alpha(multiple_testing_alphaSEXP);
+    Rcpp::traits::input_parameter< double >::type prop_non_null(prop_non_nullSEXP);
+    Rcpp::traits::input_parameter< int >::type num_pairs(num_pairsSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_underspecified_BH_cutoff_cpp(mean_list, sd_list, side, multiple_testing_alpha, prop_non_null, num_pairs));
+    return rcpp_result_gen;
+END_RCPP
+}
 // compute_QC_fixed_es_cpp
 double compute_QC_fixed_es_cpp(NumericVector fold_change, NumericVector expression_mean, NumericVector expression_size, NumericVector num_cntrl_cells, NumericVector num_cells, int n_nonzero_trt_thresh, int n_nonzero_cntrl_thresh);
 RcppExport SEXP _perturbplan_compute_QC_fixed_es_cpp(SEXP fold_changeSEXP, SEXP expression_meanSEXP, SEXP expression_sizeSEXP, SEXP num_cntrl_cellsSEXP, SEXP num_cellsSEXP, SEXP n_nonzero_trt_threshSEXP, SEXP n_nonzero_cntrl_threshSEXP) {
@@ -141,6 +157,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_fdp_hat_cpp", (DL_FUNC) &_perturbplan_fdp_hat_cpp, 5},
     {"_perturbplan_BH_cutoff_cpp", (DL_FUNC) &_perturbplan_BH_cutoff_cpp, 5},
     {"_perturbplan_BH_cutoff_bi", (DL_FUNC) &_perturbplan_BH_cutoff_bi, 5},
+    {"_perturbplan_compute_underspecified_BH_cutoff_cpp", (DL_FUNC) &_perturbplan_compute_underspecified_BH_cutoff_cpp, 6},
     {"_perturbplan_compute_QC_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_QC_fixed_es_cpp, 7},
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
     {"_perturbplan_compute_distribution_teststat_fixed_es_random_assignment_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_random_assignment_cpp, 7},

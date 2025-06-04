@@ -40,12 +40,12 @@ compute_underspecified_power <- function(
   #################### compute intra-experiment curves #########################
 
   ##################### compute the power on fold change #######################
-  power_on_fc <- function(fold_change){
-    power_df$power_on_fc(cutoff = sig_cutoff, fold_change = fold_change)
+  power_by_fc <- function(fold_change){
+    power_df$power_by_fc(cutoff = sig_cutoff, fold_change = fold_change)
   }
 
   ################## compute the power on relative expression ##################
-  power_on_pi <- function(TPM){
+  power_by_expr <- function(TPM){
 
     # extract relative expression and dispersion
     relative_expression <- TPM / 1e6
@@ -63,8 +63,8 @@ compute_underspecified_power <- function(
   # return the output
   return(list(
     overall_power = overall_power,
-    power_on_fc = power_on_fc,
-    power_on_pi = power_on_pi
+    power_by_fc = power_by_fc,
+    power_by_expr = power_by_expr
   ))
 }
 
@@ -143,7 +143,7 @@ compute_power_function <- function(fc_expression_df, library_size, num_trt_cells
   }
 
   # compute the power against fold change
-  power_on_fc <- function(cutoff, fold_change){
+  power_by_fc <- function(cutoff, fold_change){
 
     # obtain conditional_power_df
     conditional_power_df <- fc_expression_df |>
@@ -163,7 +163,7 @@ compute_power_function <- function(fc_expression_df, library_size, num_trt_cells
   return(list(
     conditional_power_function = conditional_power_function,
     marginal_power_function = marginal_power_function,
-    power_on_fc = power_on_fc
+    power_by_fc = power_by_fc
   ))
 }
 

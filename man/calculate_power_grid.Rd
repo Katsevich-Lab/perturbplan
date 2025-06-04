@@ -48,5 +48,7 @@ calculate_power_grid(
 List with power grid, cell/read sequences, and parameters
 }
 \description{
-Calculate power grid for app heatmap visualization
+This function now uses the optimized separated Monte Carlo approach for
+accurate and efficient power analysis while maintaining the interface
+expected by the Shiny application.
 }
