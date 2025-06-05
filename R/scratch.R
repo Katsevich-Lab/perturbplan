@@ -132,13 +132,15 @@ compute_power_posthoc_fixed_fc <- function(
       ) |> dplyr::select(cutoff) |> dplyr::pull()
   }
   # compute the adjusted power
+  power_values <- rejection_computation_cpp(mean_list = enhancer_gene$mean_test_stat,
+                                            sd_list = enhancer_gene$sd_test_stat,
+                                            side = side,
+                                            cutoff = cutoff) * (1 - enhancer_gene$QC_prob)
+  
   enhancer_gene <- enhancer_gene |>
     dplyr::mutate(
       cutoff = cutoff,
-      power = rejection_computation(mean_list = mean_test_stat,
-                                    sd_list = sd_test_stat,
-                                    side = side,
-                                    cutoff = cutoff) * (1 - QC_prob)
+      power = power_values
     )
 
   # store individual power and rejection size as the output
@@ -149,6 +151,7 @@ compute_power_posthoc_fixed_fc <- function(
 
   return(output)
 }
+
 
 # This is a Rscript computing the power function using score test
 
