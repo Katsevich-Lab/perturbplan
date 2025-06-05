@@ -27,113 +27,21 @@ adjusted_cutoff <- function(mean_list, sd_list, multiple_testing_alpha, multiple
   # compute the adjusted cutoff/significance level
   adjusted_sig_level <- switch (multiple_testing_method,
                                 BH = {
-                                  BH_cutoff(mean_list = mean_list,
-                                            sd_list = sd_list,
-                                            multiple_testing_alpha = multiple_testing_alpha,
-                                            side = side,
-                                            QC_prob = QC_prob)
-                                },
-                                bonferroni = {
-                                  num_hypo_adjusted <- sum(1 - QC_prob)
-                                  multiple_testing_alpha / num_hypo_adjusted
-                                },
-                                BH_cpp = {
-                                  BH_cutoff_efficient(mean_list = mean_list,
-                                                      sd_list = sd_list,
-                                                      multiple_testing_alpha = multiple_testing_alpha,
-                                                      side = side,
-                                                      QC_prob = QC_prob)
-                                },
-                                BH_bisection = {
                                   BH_cutoff_bisection(mean_list = mean_list,
                                                       sd_list = sd_list,
                                                       multiple_testing_alpha = multiple_testing_alpha,
                                                       side = side,
                                                       QC_prob = QC_prob)
+                                },
+                                bonferroni = {
+                                  num_hypo_adjusted <- sum(1 - QC_prob)
+                                  multiple_testing_alpha / num_hypo_adjusted
                                 }
   )
 
   # return the adjusted cutoff/significance level
   return(adjusted_sig_level)
 }
-
-#' Compute the adjusted cutoff/significance level applying BH procedure.
-#'
-#' @inheritParams adjusted_cutoff
-#'
-#' @return Adjusted cutoff/significance level.
-
-BH_cutoff <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob){
-
-  # compute the FDP estimate with the given significance level
-  FDP <- function(t){FDP_estimate(mean_list = mean_list,
-                                  sd_list = sd_list,
-                                  side = side,
-                                  cutoff = t, QC_prob = QC_prob)}
-
-  # do a grid search to obtain the adjusted cutoff
-  num_hypotheses <- length(mean_list)
-  t_vals <- seq(multiple_testing_alpha, multiple_testing_alpha / num_hypotheses,  length.out = num_hypotheses)
-
-  # if the grid search line is too long, we split it
-  if(num_hypotheses > 1e4){
-
-    ## check in batches with 1e4 size
-    t_hat <- NULL
-    tolerance <-  1 / num_hypotheses
-    batch <- 0
-    splitted_tvals <- split(t_vals, ceiling(seq_along(t_vals) / 1e4))
-    while(is.null(t_hat)){
-
-      # add another batch
-      batch <- batch + 1
-
-      # extract the current t_vals
-      cur_t_vals <- splitted_tvals[[batch]]
-
-      # grid search in next batch
-      fdp_hat_vals <- sapply(cur_t_vals, FDP)
-
-      # if the above condition is not true then do the following
-      if(all(fdp_hat_vals > multiple_testing_alpha)){
-        next
-      } else{
-        t_hat <- cur_t_vals[min(which(fdp_hat_vals <= multiple_testing_alpha))]
-      }
-
-      # if this is the last batch but sill no t_hat searched, specify zero
-      if(is.null(t_hat) & (batch == length(splitted_tvals))){
-        t_hat <- 0
-      }
-
-    }
-  }else{
-
-    # do not split
-    fdp_hat_vals <- sapply(t_vals, FDP)
-    if(all(fdp_hat_vals > multiple_testing_alpha)){
-      t_hat <- 0
-    }else{
-      t_hat <- t_vals[min(which(fdp_hat_vals <= multiple_testing_alpha))]
-    }
-  }
-
-  # return the adjusted cutoff/significance level
-  return(t_hat)
-}
-
-#' Benjamini–Hochberg cutoff (C++ back-end)
-#'
-#' Thin wrapper that validates inputs and forwards to the compiled routine.
-#'
-#' @inheritParams adjusted_cutoff
-#'
-#' @return Adjusted cutoff/significance level.
-BH_cutoff_efficient <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
-{
-  BH_cutoff_cpp(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
-}
-
 
 #' @useDynLib perturbplan, .registration = TRUE
 #' @importFrom Rcpp evalCpp
