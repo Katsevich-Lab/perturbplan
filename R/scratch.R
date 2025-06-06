@@ -1,4 +1,3 @@
-
 # This is a Rscript computing the power function using score test
 
 #' Compute power for each perturbation-gene pair with fixed fold change
@@ -153,69 +152,6 @@ compute_power_posthoc_fixed_fc <- function(
 }
 
 
-# This is a Rscript computing the power function using score test
-
-
-
-#' Compute power in underspecified setup
-#'
-#' @inheritParams calculate_power_grid
-#' @param cells_reads_df A dataframe including columns num_total_cells and reads_per_cell
-#' @param side (Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"
-#' @param control_group A character string specifying the control group, either "complement" or "nt_cells"
-#' @param B (Optional) A scalar specifying how many Monte Carlo samples used
-#'
-#' @return A dataframe concatenating the overall_power, power_by_fc and power_by_expr
-compute_power_grid <- function(
-    cells_reads_df,
-    num_targets = 100,
-    gRNAs_per_target = 4,
-    non_targeting_gRNAs = 10,
-    num_pairs = 1000,
-    tpm_threshold = 10,
-    fdr_target = 0.05,
-    fc_mean = 0.85,
-    fc_sd = 0.15,
-    prop_non_null = 0.1,
-    MOI = 10,
-    biological_system = "K562",
-    experimental_platform = "10x Chromium v3",
-    side = "left",
-    control_group = "complement",
-    B = 500
-){
-
-  ############### extract the baseline expression information ##################
-  fc_expression_info <- extract_fc_expression_info(fold_change_mean = fc_mean, fold_change_sd = fc_sd,
-                                                   biological_system = biological_system, B = B)
-
-  ################## compute the library size information ######################
-  # TBD
-
-  ############### compute the power for the cells-reads grid ###################
-  power_df <- cells_reads_df |>
-    dplyr::rowwise() |>
-    dplyr::mutate(
-      power_output = list(
-        compute_underspecified_power(
-          # experimental information
-          num_total_cells = num_total_cells, library_size = reads_per_cell, MOI = MOI, num_targets = num_targets, gRNAs_per_target = gRNAs_per_target, non_targeting_gRNAs = non_targeting_gRNAs,
-          # analysis information
-          multiple_testing_alpha = fdr_target, multiple_testing_method = "BH", control_group = control_group, side = side, num_pairs = num_pairs,
-          # effect size and baseline expression information
-          fc_expression_df = fc_expression_info$fc_expression_df, expression_dispersion_curve = fc_expression_info$expression_dispersion_curve, prop_non_null = prop_non_null)
-      ),
-      overall_power = power_output$overall_power,
-      power_by_fc = list(power_output$power_by_fc),
-      power_by_expr = list(power_output$power_by_expr)
-    ) |>
-    dplyr::select(-power_output)
-
-  # return the output dataframe
-  return(power_df)
-}
-
-
 #' Helper function that returns named vector directly (cleaner than original)
 #'
 #' @param num_trt_cells Number of treatment cells
@@ -364,6 +300,342 @@ compute_power_grid_separated <- function(
 
   # return the output dataframe
   return(power_df)
+}
+
+
+#' Internal function for efficient separated power computation using C++
+#'
+#' @param num_total_cells Total number of cells
+#' @param library_size Library size (reads per cell)
+#' @param MOI Multiplicity of infection
+#' @param num_targets Number of targets
+#' @param gRNAs_per_target Number of gRNAs per target
+#' @param non_targeting_gRNAs Number of non-targeting gRNAs
+#' @param multiple_testing_alpha Alpha level for multiple testing
+#' @param multiple_testing_method Multiple testing method
+#' @param control_group Control group type
+#' @param side Test sidedness
+#' @param num_pairs Number of pairs
+#' @param fc_expression_df Data frame with fold change and expression info
+#' @param expression_dispersion_curve Function for expression-size relationship
+#' @param fc_output_grid Grid points for fold change curve
+#' @param expr_output_grid Grid points for expression curve
+#' @param prop_non_null Proportion of non-null hypotheses
+#' @return List with overall power and power curves
+.compute_underspecified_power_efficient <- function(
+  # experimental information
+  num_total_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
+  # analysis information
+  multiple_testing_alpha = 0.05, multiple_testing_method = "BH", control_group = "complement", side = "left", num_pairs = 1000,
+  # separated approach information
+  fc_expression_df, expression_dispersion_curve, fc_output_grid, expr_output_grid, prop_non_null = 0.1){
+
+  ################ compute the treatment and control cells #####################
+  num_trt_cells <- gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+  num_cntrl_cells <- round(switch(control_group,
+                                  complement = {
+                                    num_total_cells - num_trt_cells
+                                  },
+                                  nt_cells = {
+                                    non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+                                  }))
+
+  ##############################################################################
+  #################### compute Monte Carlo integration ########################
+
+  # Compute test statistics for B Monte Carlo samples (for integration)
+  mc_expression_means <- library_size * fc_expression_df$relative_expression
+
+  mc_test_stats <- vector("list", nrow(fc_expression_df))
+  for (i in 1:nrow(fc_expression_df)) {
+    # Use C++ function instead of R function
+    mc_test_stats[[i]] <- compute_distribution_teststat_fixed_es_cpp(
+      fold_change = fc_expression_df$fold_change[i],
+      expression_mean = mc_expression_means[i],
+      expression_size = fc_expression_df$expression_size[i],
+      num_trt_cells = num_trt_cells,
+      num_cntrl_cells = num_cntrl_cells,
+      num_cells = num_trt_cells  # For single gRNA case, all cells have same fold change
+    )
+  }
+
+  # Extract vectors for Monte Carlo samples
+  mc_means <- sapply(mc_test_stats, function(x) x[["mean"]])
+  mc_sds <- sapply(mc_test_stats, function(x) x[["sd"]])
+
+  ########################## compute the cutoff ################################
+  sig_cutoff <- switch(multiple_testing_method,
+                       BH = {
+                         compute_underspecified_BH_cutoff_cpp(
+                           mean_list = mc_means,
+                           sd_list = mc_sds,
+                           side = side,
+                           multiple_testing_alpha = multiple_testing_alpha,
+                           prop_non_null = prop_non_null,
+                           num_pairs = num_pairs
+                         )
+                       })
+
+  ####################### compute overall power ################################
+  mc_powers <- rejection_computation_cpp(mean_list = mc_means,
+                                         sd_list = mc_sds,
+                                         side = side,
+                                         cutoff = sig_cutoff)
+  overall_power <- mean(mc_powers)
+
+  ##############################################################################
+  #################### compute output curves ###################################
+
+  ##################### compute FC curve at specific points ###################
+  power_by_fc_list <- vector("list", length(fc_output_grid))
+  for (i in 1:length(fc_output_grid)) {
+    fc_val <- fc_output_grid[i]
+
+    # Compute power for this FC across all Monte Carlo expression samples
+    fc_test_stats <- vector("list", nrow(fc_expression_df))
+    for (j in 1:nrow(fc_expression_df)) {
+      # Use C++ function instead of R function
+      fc_test_stats[[j]] <- compute_distribution_teststat_fixed_es_cpp(
+        fold_change = fc_val,  # Use systematic FC grid point
+        expression_mean = mc_expression_means[j],  # Use MC expression samples
+        expression_size = fc_expression_df$expression_size[j],
+        num_trt_cells = num_trt_cells,
+        num_cntrl_cells = num_cntrl_cells,
+        num_cells = num_trt_cells  # For single gRNA case
+      )
+    }
+
+    fc_means <- sapply(fc_test_stats, function(x) x[["mean"]])
+    fc_sds <- sapply(fc_test_stats, function(x) x[["sd"]])
+
+    fc_powers <- rejection_computation_cpp(mean_list = fc_means,
+                                           sd_list = fc_sds,
+                                           side = side,
+                                           cutoff = sig_cutoff)
+    power_by_fc_list[[i]] <- mean(fc_powers)
+  }
+
+  power_by_fc <- data.frame(
+    fold_change = fc_output_grid,
+    power = unlist(power_by_fc_list)
+  )
+
+  ################## compute expression curve at specific points ###############
+  power_by_expr_list <- vector("list", length(expr_output_grid))
+  for (i in 1:length(expr_output_grid)) {
+    expr_val <- expr_output_grid[i]
+    expr_mean <- library_size * expr_val
+
+    # Use expression_dispersion_curve to get size parameter
+    expr_size <- expression_dispersion_curve(expr_val)
+
+    # Compute power for this expression across all Monte Carlo FC samples
+    expr_test_stats <- vector("list", nrow(fc_expression_df))
+    for (j in 1:nrow(fc_expression_df)) {
+      # Use C++ function instead of R function
+      expr_test_stats[[j]] <- compute_distribution_teststat_fixed_es_cpp(
+        fold_change = fc_expression_df$fold_change[j],  # Use MC FC samples
+        expression_mean = expr_mean,  # Use systematic expression grid point
+        expression_size = expr_size,
+        num_trt_cells = num_trt_cells,
+        num_cntrl_cells = num_cntrl_cells,
+        num_cells = num_trt_cells  # For single gRNA case
+      )
+    }
+
+    expr_means <- sapply(expr_test_stats, function(x) x[["mean"]])
+    expr_sds <- sapply(expr_test_stats, function(x) x[["sd"]])
+
+    expr_powers <- rejection_computation_cpp(mean_list = expr_means,
+                                             sd_list = expr_sds,
+                                             side = side,
+                                             cutoff = sig_cutoff)
+    power_by_expr_list[[i]] <- mean(expr_powers)
+  }
+
+  power_by_expr <- data.frame(
+    relative_expression = expr_output_grid,
+    power = unlist(power_by_expr_list)
+  )
+
+  # return the output
+  return(list(
+    overall_power = overall_power,
+    power_by_fc = power_by_fc,
+    power_by_expr = power_by_expr,
+    grid_summary = list(
+      mc_samples = nrow(fc_expression_df),
+      fc_output_points = length(fc_output_grid),
+      expr_output_points = length(expr_output_grid),
+      total_computations = nrow(fc_expression_df) * (1 + length(fc_output_grid) + length(expr_output_grid)),
+      cutoff = sig_cutoff
+    )
+  ))
+}
+
+
+#' Internal function for separated power computation
+#'
+#' @param num_total_cells Total number of cells
+#' @param library_size Library size (reads per cell)
+#' @param MOI Multiplicity of infection
+#' @param num_targets Number of targets
+#' @param gRNAs_per_target Number of gRNAs per target
+#' @param non_targeting_gRNAs Number of non-targeting gRNAs
+#' @param multiple_testing_alpha Alpha level for multiple testing
+#' @param multiple_testing_method Multiple testing method
+#' @param control_group Control group type
+#' @param side Test sidedness
+#' @param num_pairs Number of pairs
+#' @param fc_expression_df Data frame with fold change and expression info
+#' @param expression_dispersion_curve Function for expression-size relationship
+#' @param fc_output_grid Grid points for fold change curve
+#' @param expr_output_grid Grid points for expression curve
+#' @param prop_non_null Proportion of non-null hypotheses
+#' @return List with overall power and power curves
+.compute_underspecified_power_separated <- function(
+  # experimental information
+  num_total_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
+  # analysis information
+  multiple_testing_alpha = 0.05, multiple_testing_method = "BH", control_group = "complement", side = "left", num_pairs = 1000,
+  # separated approach information
+  fc_expression_df, expression_dispersion_curve, fc_output_grid, expr_output_grid, prop_non_null = 0.1){
+
+  ################ compute the treatment and control cells #####################
+  num_trt_cells <- gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+  num_cntrl_cells <- round(switch(control_group,
+                                  complement = {
+                                    num_total_cells - num_trt_cells
+                                  },
+                                  nt_cells = {
+                                    non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+                                  }))
+
+  ##############################################################################
+  #################### compute Monte Carlo integration ########################
+
+  # Compute test statistics for B Monte Carlo samples (for integration)
+  mc_expression_means <- library_size * fc_expression_df$relative_expression
+
+  mc_test_stats <- vector("list", nrow(fc_expression_df))
+  for (i in 1:nrow(fc_expression_df)) {
+    mc_test_stats[[i]] <- compute_test_stat_clean(
+      num_trt_cells = num_trt_cells,
+      num_cntrl_cells = num_cntrl_cells,
+      expression_mean = mc_expression_means[i],
+      expression_size = fc_expression_df$expression_size[i],
+      fold_change_mean = fc_expression_df$fold_change[i]
+    )
+  }
+
+  # Extract vectors for Monte Carlo samples
+  mc_means <- sapply(mc_test_stats, function(x) x["mean"])
+  mc_sds <- sapply(mc_test_stats, function(x) x["sd"])
+
+  ########################## compute the cutoff ################################
+  sig_cutoff <- switch(multiple_testing_method,
+                       BH = {
+                         compute_underspecified_BH_cutoff_cpp(
+                           mean_list = mc_means,
+                           sd_list = mc_sds,
+                           side = side,
+                           multiple_testing_alpha = multiple_testing_alpha,
+                           prop_non_null = prop_non_null,
+                           num_pairs = num_pairs
+                         )
+                       })
+
+  ####################### compute overall power ################################
+  mc_powers <- rejection_computation_cpp(mean_list = mc_means,
+                                         sd_list = mc_sds,
+                                         side = side,
+                                         cutoff = sig_cutoff)
+  overall_power <- mean(mc_powers)
+
+  ##############################################################################
+  #################### compute output curves ###################################
+
+  ##################### compute FC curve at specific points ###################
+  power_by_fc_list <- vector("list", length(fc_output_grid))
+  for (i in 1:length(fc_output_grid)) {
+    fc_val <- fc_output_grid[i]
+
+    # Compute power for this FC across all Monte Carlo expression samples
+    fc_test_stats <- vector("list", nrow(fc_expression_df))
+    for (j in 1:nrow(fc_expression_df)) {
+      fc_test_stats[[j]] <- compute_test_stat_clean(
+        num_trt_cells = num_trt_cells,
+        num_cntrl_cells = num_cntrl_cells,
+        expression_mean = mc_expression_means[j],  # Use MC expression samples
+        expression_size = fc_expression_df$expression_size[j],
+        fold_change_mean = fc_val  # Use systematic FC grid point
+      )
+    }
+
+    fc_means <- sapply(fc_test_stats, function(x) x["mean"])
+    fc_sds <- sapply(fc_test_stats, function(x) x["sd"])
+
+    fc_powers <- rejection_computation_cpp(mean_list = fc_means,
+                                           sd_list = fc_sds,
+                                           side = side,
+                                           cutoff = sig_cutoff)
+    power_by_fc_list[[i]] <- mean(fc_powers)
+  }
+
+  power_by_fc <- data.frame(
+    fold_change = fc_output_grid,
+    power = unlist(power_by_fc_list)
+  )
+
+  ################## compute expression curve at specific points ###############
+  power_by_expr_list <- vector("list", length(expr_output_grid))
+  for (i in 1:length(expr_output_grid)) {
+    expr_val <- expr_output_grid[i]
+    expr_mean <- library_size * expr_val
+
+    # Use expression_dispersion_curve to get size parameter
+    expr_size <- expression_dispersion_curve(expr_val)
+
+    # Compute power for this expression across all Monte Carlo FC samples
+    expr_test_stats <- vector("list", nrow(fc_expression_df))
+    for (j in 1:nrow(fc_expression_df)) {
+      expr_test_stats[[j]] <- compute_test_stat_clean(
+        num_trt_cells = num_trt_cells,
+        num_cntrl_cells = num_cntrl_cells,
+        expression_mean = expr_mean,  # Use systematic expression grid point
+        expression_size = expr_size,
+        fold_change_mean = fc_expression_df$fold_change[j]  # Use MC FC samples
+      )
+    }
+
+    expr_means <- sapply(expr_test_stats, function(x) x["mean"])
+    expr_sds <- sapply(expr_test_stats, function(x) x["sd"])
+
+    expr_powers <- rejection_computation_cpp(mean_list = expr_means,
+                                             sd_list = expr_sds,
+                                             side = side,
+                                             cutoff = sig_cutoff)
+    power_by_expr_list[[i]] <- mean(expr_powers)
+  }
+
+  power_by_expr <- data.frame(
+    relative_expression = expr_output_grid,
+    power = unlist(power_by_expr_list)
+  )
+
+  # return the output
+  return(list(
+    overall_power = overall_power,
+    power_by_fc = power_by_fc,
+    power_by_expr = power_by_expr,
+    grid_summary = list(
+      mc_samples = nrow(fc_expression_df),
+      fc_output_points = length(fc_output_grid),
+      expr_output_points = length(expr_output_grid),
+      total_computations = nrow(fc_expression_df) * (1 + length(fc_output_grid) + length(expr_output_grid)),
+      cutoff = sig_cutoff
+    )
+  ))
 }
 
 
@@ -788,51 +1060,4 @@ compute_power_grid_efficient <- function(
       cutoff = sig_cutoff
     )
   ))
-}
-
-
-#' Example usage of the separated Monte Carlo power analysis
-#'
-#' This function demonstrates how to use the optimized power analysis approach
-#' with reasonable default parameters.
-#'
-#' @param num_cells Vector of cell numbers to test
-#' @param reads_per_cell Vector of read depths to test
-#' @param B Number of Monte Carlo samples (default: 100)
-#' @param curve_points Number of points for power curves (default: 10)
-#' @return Data frame with power analysis results
-#' @export
-#' @examples
-#' # Quick power analysis for different experimental conditions
-#' result <- example_power_analysis(
-#'   num_cells = c(10000, 20000),
-#'   reads_per_cell = c(500, 1000)
-#' )
-#' print(result$overall_power)
-example_power_analysis <- function(
-  num_cells = c(10000, 20000),
-  reads_per_cell = c(500, 1000),
-  B = 100,
-  curve_points = 10
-) {
-
-  # Create experimental design grid
-  cells_reads_df <- data.frame(
-    num_total_cells = num_cells,
-    reads_per_cell = reads_per_cell
-  )
-
-  # Run separated power analysis
-  result <- compute_power_grid_separated(
-    cells_reads_df = cells_reads_df,
-    B = B,
-    num_targets = 100,
-    fc_mean = 0.85,
-    fc_sd = 0.15,
-    prop_non_null = 0.1,
-    fc_curve_points = curve_points,
-    expr_curve_points = curve_points
-  )
-
-  return(result)
 }

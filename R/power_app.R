@@ -1,11 +1,9 @@
-# Power calculation function using optimized separated Monte Carlo approach
-# Integrates the new compute_power_grid_separated() function with Shiny app interface
+# Power calculation function using optimized approach for Shiny app integration
 
 #' Calculate power grid for app heatmap visualization
 #' 
-#' This function now uses the optimized separated Monte Carlo approach for
-#' accurate and efficient power analysis while maintaining the interface
-#' expected by the Shiny application.
+#' This function provides power analysis functionality for the Shiny application.
+#' It creates a grid of cell/read combinations and computes power for each combination.
 #' 
 #' @param num_targets Number of targets
 #' @param gRNAs_per_target Number of gRNAs per target

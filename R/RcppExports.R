@@ -25,6 +25,7 @@ compute_underspecified_BH_cutoff_cpp <- function(mean_list, sd_list, side, multi
     .Call(`_perturbplan_compute_underspecified_BH_cutoff_cpp`, mean_list, sd_list, side, multiple_testing_alpha, prop_non_null, num_pairs)
 }
 
+
 compute_QC_fixed_es_cpp <- function(fold_change, expression_mean, expression_size, num_cntrl_cells, num_cells, n_nonzero_trt_thresh = 7L, n_nonzero_cntrl_thresh = 7L) {
     .Call(`_perturbplan_compute_QC_fixed_es_cpp`, fold_change, expression_mean, expression_size, num_cntrl_cells, num_cells, n_nonzero_trt_thresh, n_nonzero_cntrl_thresh)
 }

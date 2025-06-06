@@ -19,7 +19,9 @@ Imports:
     Rcpp,
     tibble,
     dtplyr,
-    data.table
+    data.table,
+    methods,
+    utils
 Suggests: 
     knitr,
     rmarkdown,
