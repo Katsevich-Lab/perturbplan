@@ -385,6 +385,123 @@ compute_power_grid_efficient <- function(
 
 
 
+#' Internal function for efficient separated power computation using C++ Monte Carlo
+#'
+#' This function replaces the R Monte Carlo for loop with C++ implementation
+#' for improved performance.
+#'
+#' @param num_total_cells Total number of cells
+#' @param library_size Library size (reads per cell)
+#' @param MOI Multiplicity of infection
+#' @param num_targets Number of targets
+#' @param gRNAs_per_target Number of gRNAs per target
+#' @param non_targeting_gRNAs Number of non-targeting gRNAs
+#' @param multiple_testing_alpha Alpha level for multiple testing
+#' @param multiple_testing_method Multiple testing method
+#' @param control_group Control group type
+#' @param side Test sidedness
+#' @param num_pairs Number of pairs
+#' @param fc_expression_df Data frame with fold change and expression info
+#' @param expression_dispersion_curve Function for expression-size relationship
+#' @param fc_output_grid Grid points for fold change curve
+#' @param expr_output_grid Grid points for expression curve
+#' @param prop_non_null Proportion of non-null hypotheses
+#' @return List with overall power and power curves
+.compute_power_plan_efficient <- function(
+  # experimental information
+  num_total_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
+  # analysis information
+  multiple_testing_alpha = 0.05, multiple_testing_method = "BH", control_group = "complement", side = "left", num_pairs = 1000,
+  # separated approach information
+  fc_expression_df, expression_dispersion_curve, fc_output_grid, expr_output_grid, prop_non_null = 0.1){
+
+  ################ compute the treatment and control cells #####################
+  num_trt_cells <- gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+  num_cntrl_cells <- round(switch(control_group,
+                                  complement = {
+                                    num_total_cells - num_trt_cells
+                                  },
+                                  nt_cells = {
+                                    non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+                                  }))
+
+  ##############################################################################
+  #################### compute Monte Carlo integration ########################
+
+  # Use C++ function to compute test statistics for all Monte Carlo samples
+  mc_results <- compute_monte_carlo_teststat_cpp(
+    fc_expression_df = fc_expression_df,
+    library_size = library_size,
+    num_trt_cells = num_trt_cells,
+    num_cntrl_cells = num_cntrl_cells
+  )
+
+  # Extract vectors for Monte Carlo samples
+  mc_means <- mc_results$means
+  mc_sds <- mc_results$sds
+
+  ########################## compute the cutoff ################################
+  sig_cutoff <- switch(multiple_testing_method,
+                       BH = {
+                         compute_BH_plan(
+                           mean_list = mc_means,
+                           sd_list = mc_sds,
+                           side = side,
+                           multiple_testing_alpha = multiple_testing_alpha,
+                           prop_non_null = prop_non_null,
+                           num_pairs = num_pairs
+                         )
+                       })
+
+  ####################### compute overall power ################################
+  mc_powers <- rejection_computation_cpp(mean_list = mc_means,
+                                         sd_list = mc_sds,
+                                         side = side,
+                                         cutoff = sig_cutoff)
+  overall_power <- mean(mc_powers)
+
+  ##############################################################################
+  #################### compute output curves ###################################
+
+  # Compute fold change curve using C++ function for performance
+  power_by_fc <- compute_fc_curve_cpp(
+    fc_output_grid = fc_output_grid,
+    fc_expression_df = fc_expression_df,
+    library_size = library_size,
+    num_trt_cells = num_trt_cells,
+    num_cntrl_cells = num_cntrl_cells,
+    side = side,
+    cutoff = sig_cutoff
+  )
+
+  # Compute expression curve using C++ function for performance
+  power_by_expr <- compute_expression_curve_cpp(
+    expr_output_grid = expr_output_grid,
+    fc_expression_df = fc_expression_df,
+    library_size = library_size,
+    expression_dispersion_curve = expression_dispersion_curve,
+    num_trt_cells = num_trt_cells,
+    num_cntrl_cells = num_cntrl_cells,
+    side = side,
+    cutoff = sig_cutoff
+  )
+
+  # return the output
+  return(list(
+    overall_power = overall_power,
+    power_by_fc = power_by_fc,
+    power_by_expr = power_by_expr,
+    grid_summary = list(
+      mc_samples = nrow(fc_expression_df),
+      fc_output_points = length(fc_output_grid),
+      expr_output_points = length(expr_output_grid),
+      total_computations = nrow(fc_expression_df) * (1 + length(fc_output_grid) + length(expr_output_grid)),
+      cutoff = sig_cutoff
+    )
+  ))
+}
+
+
 #' Example usage of the separated Monte Carlo power analysis
 #'
 #' This function demonstrates how to use the optimized power analysis approach

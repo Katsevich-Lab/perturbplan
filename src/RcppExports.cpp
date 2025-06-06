@@ -153,6 +153,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_monte_carlo_teststat_cpp
+List compute_monte_carlo_teststat_cpp(DataFrame fc_expression_df, double library_size, double num_trt_cells, double num_cntrl_cells);
+RcppExport SEXP _perturbplan_compute_monte_carlo_teststat_cpp(SEXP fc_expression_dfSEXP, SEXP library_sizeSEXP, SEXP num_trt_cellsSEXP, SEXP num_cntrl_cellsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type fc_expression_df(fc_expression_dfSEXP);
+    Rcpp::traits::input_parameter< double >::type library_size(library_sizeSEXP);
+    Rcpp::traits::input_parameter< double >::type num_trt_cells(num_trt_cellsSEXP);
+    Rcpp::traits::input_parameter< double >::type num_cntrl_cells(num_cntrl_cellsSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_monte_carlo_teststat_cpp(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_rejection_computation_cpp", (DL_FUNC) &_perturbplan_rejection_computation_cpp, 4},
@@ -164,6 +178,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
     {"_perturbplan_compute_fc_curve_cpp", (DL_FUNC) &_perturbplan_compute_fc_curve_cpp, 7},
     {"_perturbplan_compute_expression_curve_cpp", (DL_FUNC) &_perturbplan_compute_expression_curve_cpp, 8},
+    {"_perturbplan_compute_monte_carlo_teststat_cpp", (DL_FUNC) &_perturbplan_compute_monte_carlo_teststat_cpp, 4},
     {NULL, NULL, 0}
 };
 

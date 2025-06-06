@@ -37,3 +37,7 @@ compute_expression_curve_cpp <- function(expr_output_grid, fc_expression_df, lib
     .Call(`_perturbplan_compute_expression_curve_cpp`, expr_output_grid, fc_expression_df, library_size, expression_dispersion_curve, num_trt_cells, num_cntrl_cells, side, cutoff)
 }
 
+compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells) {
+    .Call(`_perturbplan_compute_monte_carlo_teststat_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells)
+}
+
