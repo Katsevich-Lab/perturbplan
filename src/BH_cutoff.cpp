@@ -149,17 +149,6 @@ double compute_BH_posthoc(const NumericVector &mean_list,
 }
 
 /*------------------------------------------------------------ *
- *  Helper function to compute power using vectorized rejection computation *
- *------------------------------------------------------------ */
-double compute_marginal_power_cpp(double cutoff,
-                                  const NumericVector &mean_list,
-                                  const NumericVector &sd_list,
-                                  const std::string   &side) {
-  NumericVector rejection_probs = rejection_computation_cpp(mean_list, sd_list, side, cutoff);
-  return mean(rejection_probs);
-}
-
-/*------------------------------------------------------------ *
  *  FDP estimate for planning analysis with prop_non_null      *
  *------------------------------------------------------------ */
 // [[Rcpp::export]]
@@ -173,8 +162,9 @@ double compute_FDP_plan(const NumericVector &mean_list,
   if (n < 1) stop("mean_list must have at least one element.");
   if (sd_list.size() != n) stop("mean_list and sd_list must have identical length.");
   
-  // Compute power at given cutoff
-  double power_t = compute_marginal_power_cpp(cutoff, mean_list, sd_list, side);
+  // Compute marginal power: mean of rejection probabilities across all test statistics
+  NumericVector rejection_probs = rejection_computation_cpp(mean_list, sd_list, side, cutoff);
+  double power_t = mean(rejection_probs);
   
   // FDP formula: FDP(t) = t / (1 - prop_non_null + prop_non_null * power(t))
   double denominator = 1.0 - prop_non_null + prop_non_null * power_t;
