@@ -135,7 +135,7 @@ compute_power_posthoc_fixed_fc <- function(
                                             sd_list = enhancer_gene$sd_test_stat,
                                             side = side,
                                             cutoff = cutoff) * (1 - enhancer_gene$QC_prob)
-  
+
   enhancer_gene <- enhancer_gene |>
     dplyr::mutate(
       cutoff = cutoff,
@@ -962,4 +962,50 @@ compute_power_grid_efficient <- function(
       cutoff = sig_cutoff
     )
   ))
+}
+
+#' Example usage of the separated Monte Carlo power analysis
+#'
+#' This function demonstrates how to use the optimized power analysis approach
+#' with reasonable default parameters.
+#'
+#' @param num_cells Vector of cell numbers to test
+#' @param reads_per_cell Vector of read depths to test
+#' @param B Number of Monte Carlo samples (default: 100)
+#' @param curve_points Number of points for power curves (default: 10)
+#' @return Data frame with power analysis results
+#' @export
+#' @examples
+#' # Quick power analysis for different experimental conditions
+#' result <- example_power_analysis(
+#'   num_cells = c(10000, 20000),
+#'   reads_per_cell = c(500, 1000)
+#' )
+#' print(result$overall_power)
+example_power_analysis <- function(
+    num_cells = c(10000, 20000),
+    reads_per_cell = c(500, 1000),
+    B = 100,
+    curve_points = 10
+) {
+
+  # Create experimental design grid
+  cells_reads_df <- data.frame(
+    num_total_cells = num_cells,
+    reads_per_cell = reads_per_cell
+  )
+
+  # Run separated power analysis
+  result <- compute_power_grid_efficient(
+    cells_reads_df = cells_reads_df,
+    B = B,
+    num_targets = 100,
+    fc_mean = 0.85,
+    fc_sd = 0.15,
+    prop_non_null = 0.1,
+    fc_curve_points = curve_points,
+    expr_curve_points = curve_points
+  )
+
+  return(result)
 }
