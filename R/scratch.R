@@ -386,8 +386,8 @@ compute_power_grid_separated <- function(
   ##############################################################################
   #################### compute output curves ###################################
 
-  # Compute fold change curve using modular function
-  power_by_fc <- compute_fc_curve(
+  # Compute fold change curve using C++ function for performance
+  power_by_fc <- compute_fc_curve_cpp(
     fc_output_grid = fc_output_grid,
     fc_expression_df = fc_expression_df,
     library_size = library_size,
@@ -397,8 +397,8 @@ compute_power_grid_separated <- function(
     cutoff = sig_cutoff
   )
 
-  # Compute expression curve using modular function
-  power_by_expr <- compute_expression_curve(
+  # Compute expression curve using C++ function for performance
+  power_by_expr <- compute_expression_curve_cpp(
     expr_output_grid = expr_output_grid,
     fc_expression_df = fc_expression_df,
     library_size = library_size,
@@ -761,8 +761,8 @@ compute_power_grid_efficient <- function(
   ##############################################################################
   #################### compute output curves ###################################
 
-  # Compute fold change curve using modular function
-  power_by_fc <- compute_fc_curve(
+  # Compute fold change curve using C++ function for performance
+  power_by_fc <- compute_fc_curve_cpp(
     fc_output_grid = fc_output_grid,
     fc_expression_df = fc_expression_df,
     library_size = library_size,
@@ -772,8 +772,8 @@ compute_power_grid_efficient <- function(
     cutoff = sig_cutoff
   )
 
-  # Compute expression curve using modular function
-  power_by_expr <- compute_expression_curve(
+  # Compute expression curve using C++ function for performance
+  power_by_expr <- compute_expression_curve_cpp(
     expr_output_grid = expr_output_grid,
     fc_expression_df = fc_expression_df,
     library_size = library_size,
