@@ -70,45 +70,21 @@ double compute_FDP_posthoc(const NumericVector &mean_list,
 
 
 /*------------------------------------------------------------ *
- *  Bisection search for posthoc BH cutoff                     *
+ *  Unified bisection search for BH cutoff                     *
  *------------------------------------------------------------ */
-double bisection_search_posthoc(double lower, double upper, double tolerance, double target_alpha,
-                                 std::function<double(double)> fdp_function) {
+double bisection_search(double lower, double upper, double tolerance, double target_alpha,
+                         std::function<double(double)> fdp_function) {
   
-  // Check if even the lower bound has FDP > α, give up (original posthoc logic)
-  if (fdp_function(lower) > target_alpha) {
+  // Check early termination conditions
+  double f_low = fdp_function(lower) - target_alpha;
+  
+  // If even the lower bound has FDP > α, no solution exists
+  if (f_low > 0) {
     return 0.0;
   }
   
-  // Bisection search with iteration limit
-  for (int iter = 0; iter < 100; ++iter) {
-    double mid = 0.5 * (lower + upper);
-    double f_mid = fdp_function(mid) - target_alpha;
-    
-    if (f_mid > 0) {
-      upper = mid;
-    } else {
-      lower = mid;
-    }
-    
-    if ((upper - lower) < tolerance) {
-      break;
-    }
-  }
-  
-  return 0.5 * (lower + upper);
-}
-
-/*------------------------------------------------------------ *
- *  Bisection search for planning BH cutoff                    *
- *------------------------------------------------------------ */
-double bisection_search_plan(double lower, double upper, double tolerance, double target_alpha,
-                              std::function<double(double)> fdp_function) {
-  
-  double f_low = fdp_function(lower) - target_alpha;
-  
-  // Check if solution exists at lower bound (original planning logic)
-  if (f_low >= 0) {
+  // If lower bound satisfies FDP ≤ α exactly (within tolerance), return it
+  if (f_low >= 0 || std::abs(f_low) < tolerance) {
     return lower;
   }
   
@@ -117,8 +93,8 @@ double bisection_search_plan(double lower, double upper, double tolerance, doubl
     double mid = 0.5 * (lower + upper);
     double f_mid = fdp_function(mid) - target_alpha;
     
-    // Check convergence (original planning had this extra check)
-    if (f_mid < 0 && std::abs(f_mid) < tolerance) {
+    // Check for convergence at midpoint
+    if (std::abs(f_mid) < tolerance) {
       return mid;
     }
     
@@ -168,8 +144,8 @@ double compute_BH_posthoc(const NumericVector &mean_list,
     return compute_FDP_posthoc(mean_list, sd_list, side, t, qc);
   };
   
-  // Use posthoc-specific bisection search
-  return bisection_search_posthoc(lower, upper, tolerance, alpha, fdp_function);
+  // Use unified bisection search
+  return bisection_search(lower, upper, tolerance, alpha, fdp_function);
 }
 
 /*------------------------------------------------------------ *
@@ -231,6 +207,6 @@ double compute_BH_plan(const NumericVector &mean_list,
     return compute_FDP_plan(mean_list, sd_list, side, t, prop_non_null);
   };
   
-  // Use planning-specific bisection search
-  return bisection_search_plan(lower, upper, tolerance, multiple_testing_alpha, fdp_function);
+  // Use unified bisection search
+  return bisection_search(lower, upper, tolerance, multiple_testing_alpha, fdp_function);
 }
