@@ -45,8 +45,8 @@ calculate_power_grid <- function(
     reads_per_cell = reads_seq
   )
   
-  # Call the optimized separated Monte Carlo power function
-  power_results <- compute_power_grid_separated(
+  # Call the optimized efficient Monte Carlo power function
+  power_results <- compute_power_grid_efficient(
     cells_reads_df = cells_reads_df,
     num_targets = num_targets,
     gRNAs_per_target = gRNAs_per_target,

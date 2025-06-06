@@ -66,7 +66,6 @@ compute_power_grid_efficient(
 Data frame with power analysis results
 }
 \description{
-This function is identical to compute_power_grid_separated() except it uses
-the C++ implementation compute_distribution_teststat_fixed_es_cpp() instead of
-the R function compute_test_stat_clean() for test statistic computation.
+This function uses C++ implementations for computational efficiency in power analysis
+for perturb-seq experiments across different experimental conditions.
 }

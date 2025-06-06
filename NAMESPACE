@@ -2,7 +2,6 @@
 
 export(calculate_power_grid)
 export(compute_power_grid_efficient)
-export(compute_power_grid_separated)
 export(compute_power_posthoc)
 export(compute_power_posthoc_fixed_fc)
 export(example_power_analysis)
