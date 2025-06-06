@@ -56,7 +56,7 @@ NULL
 #' @return Adjusted cutoff/significance level.
 BH_cutoff_bisection <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 {
-  BH_cutoff_bi(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
+  compute_BH_posthoc(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 }
 
 #' FDP estimate based on rejection probability.

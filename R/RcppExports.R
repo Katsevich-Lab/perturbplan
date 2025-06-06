@@ -5,26 +5,21 @@ rejection_computation_cpp <- function(mean_list, sd_list, side, cutoff) {
     .Call(`_perturbplan_rejection_computation_cpp`, mean_list, sd_list, side, cutoff)
 }
 
-FDP_estimate_cpp <- function(mean_list, sd_list, side, cutoff, QC_prob) {
-    .Call(`_perturbplan_FDP_estimate_cpp`, mean_list, sd_list, side, cutoff, QC_prob)
+compute_FDP_posthoc <- function(mean_list, sd_list, side, cutoff, QC_prob) {
+    .Call(`_perturbplan_compute_FDP_posthoc`, mean_list, sd_list, side, cutoff, QC_prob)
 }
 
-fdp_hat_cpp <- function(t, mean_list, sd_list, side, QC_prob) {
-    .Call(`_perturbplan_fdp_hat_cpp`, t, mean_list, sd_list, side, QC_prob)
+compute_BH_posthoc <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob) {
+    .Call(`_perturbplan_compute_BH_posthoc`, mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 }
 
-BH_cutoff_cpp <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob) {
-    .Call(`_perturbplan_BH_cutoff_cpp`, mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
+compute_FDP_plan <- function(mean_list, sd_list, side, cutoff, prop_non_null) {
+    .Call(`_perturbplan_compute_FDP_plan`, mean_list, sd_list, side, cutoff, prop_non_null)
 }
 
-BH_cutoff_bi <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob) {
-    .Call(`_perturbplan_BH_cutoff_bi`, mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
+compute_BH_plan <- function(mean_list, sd_list, side, multiple_testing_alpha, prop_non_null, num_pairs) {
+    .Call(`_perturbplan_compute_BH_plan`, mean_list, sd_list, side, multiple_testing_alpha, prop_non_null, num_pairs)
 }
-
-compute_underspecified_BH_cutoff_cpp <- function(mean_list, sd_list, side, multiple_testing_alpha, prop_non_null, num_pairs) {
-    .Call(`_perturbplan_compute_underspecified_BH_cutoff_cpp`, mean_list, sd_list, side, multiple_testing_alpha, prop_non_null, num_pairs)
-}
-
 
 compute_QC_fixed_es_cpp <- function(fold_change, expression_mean, expression_size, num_cntrl_cells, num_cells, n_nonzero_trt_thresh = 7L, n_nonzero_cntrl_thresh = 7L) {
     .Call(`_perturbplan_compute_QC_fixed_es_cpp`, fold_change, expression_mean, expression_size, num_cntrl_cells, num_cells, n_nonzero_trt_thresh, n_nonzero_cntrl_thresh)

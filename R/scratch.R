@@ -366,7 +366,7 @@ compute_power_grid_separated <- function(
   ########################## compute the cutoff ################################
   sig_cutoff <- switch(multiple_testing_method,
                        BH = {
-                         compute_underspecified_BH_cutoff_cpp(
+                         compute_BH_plan(
                            mean_list = mc_means,
                            sd_list = mc_sds,
                            side = side,
@@ -535,7 +535,7 @@ compute_power_grid_separated <- function(
   ########################## compute the cutoff ################################
   sig_cutoff <- switch(multiple_testing_method,
                        BH = {
-                         compute_underspecified_BH_cutoff_cpp(
+                         compute_BH_plan(
                            mean_list = mc_means,
                            sd_list = mc_sds,
                            side = side,
@@ -790,7 +790,7 @@ compute_power_grid_efficient <- function(
   ########################## compute the cutoff ################################
   sig_cutoff <- switch(multiple_testing_method,
                        BH = {
-                         compute_underspecified_BH_cutoff_cpp(
+                         compute_BH_plan(
                            mean_list = mc_means,
                            sd_list = mc_sds,
                            side = side,
@@ -959,7 +959,7 @@ compute_power_grid_efficient <- function(
   ########################## compute the cutoff ################################
   sig_cutoff <- switch(multiple_testing_method,
                        BH = {
-                         compute_underspecified_BH_cutoff_cpp(
+                         compute_BH_plan(
                            mean_list = mc_means,
                            sd_list = mc_sds,
                            side = side,

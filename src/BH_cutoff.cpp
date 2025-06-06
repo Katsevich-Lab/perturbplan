@@ -1,5 +1,6 @@
-// BH_cutoff.cpp          <<—— replace the old file with this
+// BH_cutoff.cpp - Merged BH cutoff implementations
 #include <Rcpp.h>
+#include <functional>
 using namespace Rcpp;
 
 /*------------------------------------------------------------ *
@@ -44,11 +45,11 @@ NumericVector rejection_computation_cpp(const NumericVector &mean_list,
  *  FDP estimate (vector QC_prob)                              *
  *------------------------------------------------------------ */
 // [[Rcpp::export]]
-double FDP_estimate_cpp(const NumericVector &mean_list,
-                        const NumericVector &sd_list,
-                        const std::string   &side,
-                        double               cutoff,
-                        const NumericVector &QC_prob)
+double compute_FDP_posthoc(const NumericVector &mean_list,
+                           const NumericVector &sd_list,
+                           const std::string   &side,
+                           double               cutoff,
+                           const NumericVector &QC_prob)
 {
   const int n = mean_list.size();
   if (sd_list.size() != n || QC_prob.size() != n)
@@ -67,45 +68,169 @@ double FDP_estimate_cpp(const NumericVector &mean_list,
   return num_hypo_adj * cutoff / rejection_sz;
 }
 
+
 /*------------------------------------------------------------ *
- *  Wrapper: FDP at a given t                                  *
+ *  Bisection search for posthoc BH cutoff                     *
  *------------------------------------------------------------ */
-// [[Rcpp::export]]
-double fdp_hat_cpp(double t,
-                   const NumericVector &mean_list,
-                   const NumericVector &sd_list,
-                   const std::string   &side,
-                   const NumericVector &QC_prob)
-{
-  return FDP_estimate_cpp(mean_list, sd_list, side, t, QC_prob);
+double bisection_search_posthoc(double lower, double upper, double tolerance, double target_alpha,
+                                 std::function<double(double)> fdp_function) {
+  
+  // Check if even the lower bound has FDP > α, give up (original posthoc logic)
+  if (fdp_function(lower) > target_alpha) {
+    return 0.0;
+  }
+  
+  // Bisection search with iteration limit
+  for (int iter = 0; iter < 100; ++iter) {
+    double mid = 0.5 * (lower + upper);
+    double f_mid = fdp_function(mid) - target_alpha;
+    
+    if (f_mid > 0) {
+      upper = mid;
+    } else {
+      lower = mid;
+    }
+    
+    if ((upper - lower) < tolerance) {
+      break;
+    }
+  }
+  
+  return 0.5 * (lower + upper);
 }
 
 /*------------------------------------------------------------ *
- *  Main grid-search (no batch_size)                           *
+ *  Bisection search for planning BH cutoff                    *
+ *------------------------------------------------------------ */
+double bisection_search_plan(double lower, double upper, double tolerance, double target_alpha,
+                              std::function<double(double)> fdp_function) {
+  
+  double f_low = fdp_function(lower) - target_alpha;
+  
+  // Check if solution exists at lower bound (original planning logic)
+  if (f_low >= 0) {
+    return lower;
+  }
+  
+  // Bisection search with iteration limit
+  for (int iter = 0; iter < 100; ++iter) {
+    double mid = 0.5 * (lower + upper);
+    double f_mid = fdp_function(mid) - target_alpha;
+    
+    // Check convergence (original planning had this extra check)
+    if (f_mid < 0 && std::abs(f_mid) < tolerance) {
+      return mid;
+    }
+    
+    // Update bounds
+    if (f_mid > 0) {
+      upper = mid;
+    } else {
+      lower = mid;
+    }
+    
+    // Check bracket convergence
+    if ((upper - lower) < tolerance) {
+      break;
+    }
+  }
+  
+  return 0.5 * (lower + upper);
+}
+
+/*------------------------------------------------------------ *
+ *  BH cutoff with bisection search (for standard QC analysis) *
  *------------------------------------------------------------ */
 // [[Rcpp::export]]
-double BH_cutoff_cpp(const NumericVector &mean_list,
-                     const NumericVector &sd_list,
-                     const std::string   &side,
-                     double               multiple_testing_alpha,
-                     const NumericVector &QC_prob)
-{
-  const int n = mean_list.size();
+double compute_BH_posthoc(const NumericVector &mean_list,
+                          const NumericVector &sd_list,
+                          const std::string   &side,
+                          double               multiple_testing_alpha,
+                          const NumericVector &QC_prob) {
+  int n = mean_list.size();
   if (n < 1) stop("mean_list must have at least one element.");
 
-  // accept scalar QC_prob by recycling
-  NumericVector qc = QC_prob.size() == 1 ?
-  NumericVector(n, QC_prob[0]) : QC_prob;
-  if (qc.size() != n) stop("QC_prob must have length 1 or length(mean_list).");
+  // recycle scalar QC_prob
+  NumericVector qc = (QC_prob.size() == 1
+                        ? NumericVector(n, QC_prob[0])
+                          : QC_prob);
+  if (qc.size() != n)
+    stop("QC_prob must have length 1 or length(mean_list).");
 
-  const double t_max = multiple_testing_alpha;
-  const double t_min = multiple_testing_alpha / n;
-  const double step  = (t_max - t_min) / (n - 1);
+  // Setup bounds and tolerance for post-hoc analysis
+  double alpha = multiple_testing_alpha;
+  double lower = alpha / n;
+  double upper = alpha;
+  double tolerance = alpha / n;
+  
+  // Define FDP function for post-hoc analysis
+  auto fdp_function = [&](double t) -> double {
+    return compute_FDP_posthoc(mean_list, sd_list, side, t, qc);
+  };
+  
+  // Use posthoc-specific bisection search
+  return bisection_search_posthoc(lower, upper, tolerance, alpha, fdp_function);
+}
 
-  for (int i = 0; i < n; ++i) {
-    double t_i = t_max - i * step;
-    if (fdp_hat_cpp(t_i, mean_list, sd_list, side, qc) <= multiple_testing_alpha)
-      return t_i;            // first admissible cutoff
-  }
-  return 0.0;                // none passed
+/*------------------------------------------------------------ *
+ *  Helper function to compute power using vectorized rejection computation *
+ *------------------------------------------------------------ */
+double compute_marginal_power_cpp(double cutoff,
+                                  const NumericVector &mean_list,
+                                  const NumericVector &sd_list,
+                                  const std::string   &side) {
+  NumericVector rejection_probs = rejection_computation_cpp(mean_list, sd_list, side, cutoff);
+  return mean(rejection_probs);
+}
+
+/*------------------------------------------------------------ *
+ *  FDP estimate for planning analysis with prop_non_null      *
+ *------------------------------------------------------------ */
+// [[Rcpp::export]]
+double compute_FDP_plan(const NumericVector &mean_list,
+                        const NumericVector &sd_list,
+                        const std::string   &side,
+                        double               cutoff,
+                        double               prop_non_null) {
+  
+  const int n = mean_list.size();
+  if (n < 1) stop("mean_list must have at least one element.");
+  if (sd_list.size() != n) stop("mean_list and sd_list must have identical length.");
+  
+  // Compute power at given cutoff
+  double power_t = compute_marginal_power_cpp(cutoff, mean_list, sd_list, side);
+  
+  // FDP formula: FDP(t) = t / (1 - prop_non_null + prop_non_null * power(t))
+  double denominator = 1.0 - prop_non_null + prop_non_null * power_t;
+  
+  return cutoff / denominator;
+}
+
+/*------------------------------------------------------------ *
+ *  BH cutoff for underspecified analysis with prop_non_null   *
+ *------------------------------------------------------------ */
+// [[Rcpp::export]]
+double compute_BH_plan(const NumericVector &mean_list,
+                       const NumericVector &sd_list,
+                       const std::string   &side,
+                       double               multiple_testing_alpha,
+                       double               prop_non_null,
+                       int                  num_pairs) {
+  
+  const int n = mean_list.size();
+  if (n < 1) stop("mean_list must have at least one element.");
+  if (sd_list.size() != n) stop("mean_list and sd_list must have identical length.");
+  
+  // Setup bounds and tolerance for planning analysis
+  double lower = 1.0 / num_pairs;
+  double upper = multiple_testing_alpha;
+  double tolerance = 1.0 / num_pairs;
+  
+  // Define FDP function for planning analysis
+  auto fdp_function = [&](double t) -> double {
+    return compute_FDP_plan(mean_list, sd_list, side, t, prop_non_null);
+  };
+  
+  // Use planning-specific bisection search
+  return bisection_search_plan(lower, upper, tolerance, multiple_testing_alpha, fdp_function);
 }

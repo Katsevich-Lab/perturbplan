@@ -24,9 +24,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// FDP_estimate_cpp
-double FDP_estimate_cpp(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double cutoff, const NumericVector& QC_prob);
-RcppExport SEXP _perturbplan_FDP_estimate_cpp(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP cutoffSEXP, SEXP QC_probSEXP) {
+// compute_FDP_posthoc
+double compute_FDP_posthoc(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double cutoff, const NumericVector& QC_prob);
+RcppExport SEXP _perturbplan_compute_FDP_posthoc(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP cutoffSEXP, SEXP QC_probSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -35,28 +35,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type side(sideSEXP);
     Rcpp::traits::input_parameter< double >::type cutoff(cutoffSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type QC_prob(QC_probSEXP);
-    rcpp_result_gen = Rcpp::wrap(FDP_estimate_cpp(mean_list, sd_list, side, cutoff, QC_prob));
+    rcpp_result_gen = Rcpp::wrap(compute_FDP_posthoc(mean_list, sd_list, side, cutoff, QC_prob));
     return rcpp_result_gen;
 END_RCPP
 }
-// fdp_hat_cpp
-double fdp_hat_cpp(double t, const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, const NumericVector& QC_prob);
-RcppExport SEXP _perturbplan_fdp_hat_cpp(SEXP tSEXP, SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP QC_probSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type t(tSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type mean_list(mean_listSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type sd_list(sd_listSEXP);
-    Rcpp::traits::input_parameter< const std::string& >::type side(sideSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type QC_prob(QC_probSEXP);
-    rcpp_result_gen = Rcpp::wrap(fdp_hat_cpp(t, mean_list, sd_list, side, QC_prob));
-    return rcpp_result_gen;
-END_RCPP
-}
-// BH_cutoff_cpp
-double BH_cutoff_cpp(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double multiple_testing_alpha, const NumericVector& QC_prob);
-RcppExport SEXP _perturbplan_BH_cutoff_cpp(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP multiple_testing_alphaSEXP, SEXP QC_probSEXP) {
+// compute_BH_posthoc
+double compute_BH_posthoc(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double multiple_testing_alpha, const NumericVector& QC_prob);
+RcppExport SEXP _perturbplan_compute_BH_posthoc(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP multiple_testing_alphaSEXP, SEXP QC_probSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -65,28 +50,28 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type side(sideSEXP);
     Rcpp::traits::input_parameter< double >::type multiple_testing_alpha(multiple_testing_alphaSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type QC_prob(QC_probSEXP);
-    rcpp_result_gen = Rcpp::wrap(BH_cutoff_cpp(mean_list, sd_list, side, multiple_testing_alpha, QC_prob));
+    rcpp_result_gen = Rcpp::wrap(compute_BH_posthoc(mean_list, sd_list, side, multiple_testing_alpha, QC_prob));
     return rcpp_result_gen;
 END_RCPP
 }
-// BH_cutoff_bi
-double BH_cutoff_bi(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double multiple_testing_alpha, const NumericVector& QC_prob);
-RcppExport SEXP _perturbplan_BH_cutoff_bi(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP multiple_testing_alphaSEXP, SEXP QC_probSEXP) {
+// compute_FDP_plan
+double compute_FDP_plan(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double cutoff, double prop_non_null);
+RcppExport SEXP _perturbplan_compute_FDP_plan(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP cutoffSEXP, SEXP prop_non_nullSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const NumericVector& >::type mean_list(mean_listSEXP);
     Rcpp::traits::input_parameter< const NumericVector& >::type sd_list(sd_listSEXP);
     Rcpp::traits::input_parameter< const std::string& >::type side(sideSEXP);
-    Rcpp::traits::input_parameter< double >::type multiple_testing_alpha(multiple_testing_alphaSEXP);
-    Rcpp::traits::input_parameter< const NumericVector& >::type QC_prob(QC_probSEXP);
-    rcpp_result_gen = Rcpp::wrap(BH_cutoff_bi(mean_list, sd_list, side, multiple_testing_alpha, QC_prob));
+    Rcpp::traits::input_parameter< double >::type cutoff(cutoffSEXP);
+    Rcpp::traits::input_parameter< double >::type prop_non_null(prop_non_nullSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_FDP_plan(mean_list, sd_list, side, cutoff, prop_non_null));
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_underspecified_BH_cutoff_cpp
-double compute_underspecified_BH_cutoff_cpp(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double multiple_testing_alpha, double prop_non_null, int num_pairs);
-RcppExport SEXP _perturbplan_compute_underspecified_BH_cutoff_cpp(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP multiple_testing_alphaSEXP, SEXP prop_non_nullSEXP, SEXP num_pairsSEXP) {
+// compute_BH_plan
+double compute_BH_plan(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double multiple_testing_alpha, double prop_non_null, int num_pairs);
+RcppExport SEXP _perturbplan_compute_BH_plan(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP multiple_testing_alphaSEXP, SEXP prop_non_nullSEXP, SEXP num_pairsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -96,7 +81,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type multiple_testing_alpha(multiple_testing_alphaSEXP);
     Rcpp::traits::input_parameter< double >::type prop_non_null(prop_non_nullSEXP);
     Rcpp::traits::input_parameter< int >::type num_pairs(num_pairsSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_underspecified_BH_cutoff_cpp(mean_list, sd_list, side, multiple_testing_alpha, prop_non_null, num_pairs));
+    rcpp_result_gen = Rcpp::wrap(compute_BH_plan(mean_list, sd_list, side, multiple_testing_alpha, prop_non_null, num_pairs));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -136,11 +121,10 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_rejection_computation_cpp", (DL_FUNC) &_perturbplan_rejection_computation_cpp, 4},
-    {"_perturbplan_FDP_estimate_cpp", (DL_FUNC) &_perturbplan_FDP_estimate_cpp, 5},
-    {"_perturbplan_fdp_hat_cpp", (DL_FUNC) &_perturbplan_fdp_hat_cpp, 5},
-    {"_perturbplan_BH_cutoff_cpp", (DL_FUNC) &_perturbplan_BH_cutoff_cpp, 5},
-    {"_perturbplan_BH_cutoff_bi", (DL_FUNC) &_perturbplan_BH_cutoff_bi, 5},
-    {"_perturbplan_compute_underspecified_BH_cutoff_cpp", (DL_FUNC) &_perturbplan_compute_underspecified_BH_cutoff_cpp, 6},
+    {"_perturbplan_compute_FDP_posthoc", (DL_FUNC) &_perturbplan_compute_FDP_posthoc, 5},
+    {"_perturbplan_compute_BH_posthoc", (DL_FUNC) &_perturbplan_compute_BH_posthoc, 5},
+    {"_perturbplan_compute_FDP_plan", (DL_FUNC) &_perturbplan_compute_FDP_plan, 5},
+    {"_perturbplan_compute_BH_plan", (DL_FUNC) &_perturbplan_compute_BH_plan, 6},
     {"_perturbplan_compute_QC_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_QC_fixed_es_cpp, 7},
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
     {NULL, NULL, 0}

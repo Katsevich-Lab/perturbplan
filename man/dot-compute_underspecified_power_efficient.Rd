@@ -22,6 +22,25 @@
   expr_output_grid,
   prop_non_null = 0.1
 )
+
+.compute_underspecified_power_efficient(
+  num_total_cells,
+  library_size,
+  MOI = 10,
+  num_targets = 100,
+  gRNAs_per_target = 4,
+  non_targeting_gRNAs = 10,
+  multiple_testing_alpha = 0.05,
+  multiple_testing_method = "BH",
+  control_group = "complement",
+  side = "left",
+  num_pairs = 1000,
+  fc_expression_df,
+  expression_dispersion_curve,
+  fc_output_grid,
+  expr_output_grid,
+  prop_non_null = 0.1
+)
 }
 \arguments{
 \item{num_total_cells}{Total number of cells}
@@ -58,7 +77,11 @@
 }
 \value{
 List with overall power and power curves
+
+List with overall power and power curves
 }
 \description{
+Internal function for efficient separated power computation using C++
+
 Internal function for efficient separated power computation using C++
 }
