@@ -166,8 +166,8 @@ double compute_FDP_plan(const NumericVector &mean_list,
   NumericVector rejection_probs = rejection_computation_cpp(mean_list, sd_list, side, cutoff);
   double power_t = mean(rejection_probs);
   
-  // FDP formula: FDP(t) = t / (1 - prop_non_null + prop_non_null * power(t))
-  double denominator = 1.0 - prop_non_null + prop_non_null * power_t;
+  // FDP formula: FDP(t) = t / ((1 - prop_non_null) * t + prop_non_null * power(t))
+  double denominator = (1.0 - prop_non_null) * cutoff + prop_non_null * power_t;
   
   return cutoff / denominator;
 }
