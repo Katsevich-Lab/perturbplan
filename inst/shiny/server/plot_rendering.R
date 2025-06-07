@@ -132,8 +132,7 @@ output$pp_combined <- renderPlot({
             data.frame(
               x = curve_data$fold_change,  # Already in fold change units
               Power = curve_data$power,     # Already in power units (0-1)
-              cells = factor(cell_val),
-              reads = factor(read_val)
+              design = factor(sprintf("%d × %d", cell_val, read_val))  # Combined cells-reads label
             )
           } else {
             # For expression: convert relative expression to TPM scale
@@ -142,8 +141,7 @@ output$pp_combined <- renderPlot({
             data.frame(
               x = tpm_values,              # Expression in TPM units  
               Power = curve_data$power,     # Power values (0-1)
-              cells = factor(cell_val),
-              reads = factor(read_val)
+              design = factor(sprintf("%d × %d", cell_val, read_val))  # Combined cells-reads label
             )
           }
         } else {
@@ -151,8 +149,7 @@ output$pp_combined <- renderPlot({
           data.frame(
             x = numeric(0),
             Power = numeric(0),
-            cells = factor(character(0)),
-            reads = factor(character(0))
+            design = factor(character(0))
           )
         }
       } else {
@@ -160,8 +157,7 @@ output$pp_combined <- renderPlot({
         data.frame(
           x = numeric(0), 
           Power = numeric(0),
-          cells = factor(character(0)),
-          reads = factor(character(0))
+          design = factor(character(0))
         )
       }
     }, sel$tiles$row, sel$tiles$col)
@@ -175,8 +171,7 @@ output$pp_combined <- renderPlot({
       data.frame(
         x = numeric(0),
         Power = numeric(0), 
-        cells = factor(character(0)),
-        reads = factor(character(0))
+        design = factor(character(0))
       )
     }
   }
@@ -184,23 +179,23 @@ output$pp_combined <- renderPlot({
   # First plot: Power vs Expression Level (TPM scale)
   df1 <- create_real_plot_data("expr")
   
-  p1 <- ggplot(df1, aes(x, Power, colour = cells, linetype = reads)) +
+  p1 <- ggplot(df1, aes(x, Power, colour = design)) +
     geom_line() +
     geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
     scale_x_log10() +  # Log scale for TPM values
     theme_bw(base_size = 16) +
     theme(aspect.ratio = 1) +
-    labs(x = "Expression Level (TPM)", y = "Power", colour = "Cells", linetype = "Reads/cell")
+    labs(x = "Expression Level (TPM)", y = "Power", colour = "Design (cells × reads/cell)")
 
   # Second plot: Power vs Fold-change
   df2 <- create_real_plot_data("fc")
   
-  p2 <- ggplot(df2, aes(x, Power, colour = cells, linetype = reads)) +
+  p2 <- ggplot(df2, aes(x, Power, colour = design)) +
     geom_line() +
     geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
     theme_bw(base_size = 16) +
     theme(aspect.ratio = 1) +
-    labs(x = "Fold Change", y = "Power", colour = "Cells", linetype = "Reads/cell")
+    labs(x = "Fold Change", y = "Power", colour = "Design (cells × reads/cell)")
 
   # Combine with shared legend below
   (p1 + p2) +
