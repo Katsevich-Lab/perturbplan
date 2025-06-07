@@ -40,7 +40,7 @@ devtools::check()
 
 ### Shiny App
 ```r
-# Launch the interactive app (runs app-prototype.R)
+# Launch the interactive app (runs app.R)
 perturbplan::launch_app()
 ```
 
@@ -95,7 +95,7 @@ perturbplan::launch_app()
 
 - **Rcpp Integration**: C++ code handles computationally intensive operations (distribution calculations, multiple testing corrections)
 - **Modular Design**: Separate functions for parameter estimation, QC computation, and power analysis allow flexible workflows
-- **Shiny Interface**: Provides non-programmatic access via `inst/shiny/app-prototype.R`
+- **Shiny Interface**: Provides non-programmatic access via `inst/shiny/app.R`
 - **C++ Optimization**: Monte Carlo loops implemented in C++ for significant performance improvements
 
 ## Performance

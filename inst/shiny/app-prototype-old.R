@@ -1,3 +1,7 @@
+# DEPRECATED: Use app.R instead
+# This file contains old placeholder power calculations
+# The current app with real statistical power analysis is in app.R
+# 
 # app.R  –  Perturb-seq power planner (single interactive Overall box)
 
 library(shiny)
