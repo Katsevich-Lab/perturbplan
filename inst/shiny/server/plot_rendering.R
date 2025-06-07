@@ -95,51 +95,112 @@ output$pair_title <- renderText({
   "Per-pair power"
 })
 
-make_curve <- function(x, base, fun, label)
-  data.frame(x=x, Power=fun(x, base), label=label)
-
 output$pp_combined <- renderPlot({
   req(planned(), is_sel("tile"))
   
-  # Get max power for scaling (from placeholder function)
-  max_pow <- max(log10(cells_seq()) * log10(reads_seq()))
-
-  # Create data with consistent color/linetype mapping
-  # Color = cell number, Linetype = reads per cell
-  create_plot_data <- function(x_vals, power_fun) {
-    dfs <- Map(function(r, c){
-      base <- log10(cells_seq()[r] * reads_seq()[c])
-      data.frame(
-        x = x_vals,
-        Power = power_fun(x_vals, base),
-        cells = factor(cells_seq()[r]),
-        reads = factor(reads_seq()[c])
-      )
+  # Get real power curves from calculate_power_grid results
+  power_curves <- power_results()$power_curves
+  
+  # Extract power curve data for selected tiles  
+  create_real_plot_data <- function(curve_type) {
+    # Get the full power results from calculate_power_grid
+    full_power_results <- power_results()
+    
+    # Map selected tiles to corresponding rows in the power computation results
+    dfs <- Map(function(r, c) {
+      # Get the actual cell and read values for this tile
+      cell_val <- cells_seq()[r]
+      read_val <- reads_seq()[c]
+      
+      # Find matching row in the grid - need to match against the original computation
+      # The power_results() comes from calculate_power_grid which calls compute_power_grid_efficient
+      power_grid <- full_power_results$power_grid
+      matching_row <- which(power_grid$cells == cell_val & power_grid$reads == read_val)
+      
+      if (length(matching_row) > 0) {
+        # Get curve data from the power_curves section
+        if (curve_type == "fc") {
+          curve_data <- full_power_results$power_curves$fc_curves[[matching_row[1]]]
+        } else {
+          curve_data <- full_power_results$power_curves$expr_curves[[matching_row[1]]]
+        }
+        
+        if (!is.null(curve_data) && nrow(curve_data) > 0) {
+          # The curve_data is already a data frame with proper column names
+          if (curve_type == "fc") {
+            # For fold change: scale to percentage and use meaningful labels
+            data.frame(
+              x = curve_data$fold_change,  # Already in fold change units
+              Power = curve_data$power,     # Already in power units (0-1)
+              cells = factor(cell_val),
+              reads = factor(read_val)
+            )
+          } else {
+            # For expression: convert relative expression to TPM scale
+            # The relative_expression is in relative units, convert to TPM
+            tpm_values <- curve_data$relative_expression * 1e6  # Convert to TPM scale
+            data.frame(
+              x = tpm_values,              # Expression in TPM units  
+              Power = curve_data$power,     # Power values (0-1)
+              cells = factor(cell_val),
+              reads = factor(read_val)
+            )
+          }
+        } else {
+          # Return empty data frame if no curve data
+          data.frame(
+            x = numeric(0),
+            Power = numeric(0),
+            cells = factor(character(0)),
+            reads = factor(character(0))
+          )
+        }
+      } else {
+        # Return empty data frame if no matching grid point
+        data.frame(
+          x = numeric(0), 
+          Power = numeric(0),
+          cells = factor(character(0)),
+          reads = factor(character(0))
+        )
+      }
     }, sel$tiles$row, sel$tiles$col)
-    do.call(rbind, dfs)
+    
+    # Combine all valid data frames
+    valid_dfs <- dfs[sapply(dfs, nrow) > 0]
+    if (length(valid_dfs) > 0) {
+      do.call(rbind, valid_dfs)
+    } else {
+      # Return empty data frame with correct structure
+      data.frame(
+        x = numeric(0),
+        Power = numeric(0), 
+        cells = factor(character(0)),
+        reads = factor(character(0))
+      )
+    }
   }
 
-  # First plot: Power vs TPM
-  tpm  <- seq(0, 10, length.out = 100)
-  df1 <- create_plot_data(tpm, function(v, b) 1 - exp(-((v/5)^1.8) * (b/max_pow)^10 * 5000))
+  # First plot: Power vs Expression Level (TPM scale)
+  df1 <- create_real_plot_data("expr")
   
   p1 <- ggplot(df1, aes(x, Power, colour = cells, linetype = reads)) +
     geom_line() +
     geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
+    scale_x_log10() +  # Log scale for TPM values
     theme_bw(base_size = 16) +
     theme(aspect.ratio = 1) +
-    labs(x = "TPM", y = "Power", colour = "Cells", linetype = "Reads/cell")
+    labs(x = "Expression Level (TPM)", y = "Power", colour = "Cells", linetype = "Reads/cell")
 
   # Second plot: Power vs Fold-change
-  fc   <- seq(0, 50, length.out = 100)
-  df2 <- create_plot_data(fc, function(v, b) 1 - exp(-(((v*4/50)/2)^1.8) * (b/max_pow)^8 * 2000))
+  df2 <- create_real_plot_data("fc")
   
   p2 <- ggplot(df2, aes(x, Power, colour = cells, linetype = reads)) +
     geom_line() +
     geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
     theme_bw(base_size = 16) +
     theme(aspect.ratio = 1) +
-    labs(x = "Fold-change (percent)", y = "Power", colour = "Cells", linetype = "Reads/cell")
+    labs(x = "Fold Change", y = "Power", colour = "Cells", linetype = "Reads/cell")
 
   # Combine with shared legend below
   (p1 + p2) +
