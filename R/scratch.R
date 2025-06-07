@@ -229,6 +229,17 @@ compute_power_grid_efficient <- function(
   # Use log-spaced points for gene expression evaluation grid
   expr_output_grid <- 10^seq(log10(expr_range[1]), log10(expr_range[2]), length.out = expr_curve_points)
 
+  ########################## compute the library size ##########################
+  read_UMI_info <- extract_library_info(biological_system = biological_system)
+  UMI_per_cell <- read_UMI_info$UMI_per_cell
+  variation <- read_UMI_info$variation
+
+  # compute the library size
+  cells_reads_df <- cells_reads_df |>
+    dplyr::mutate(
+      library_size = fit_read_UMI_curve(reads_per_cell = reads_per_cell, UMI_per_cell = !!UMI_per_cell, variation = !!variation)
+    )
+
   ############### compute the power for the cells-reads grid ###################
   power_df <- cells_reads_df |>
     dplyr::rowwise() |>
