@@ -1,157 +1,109 @@
-# This is a Rscript computing the power function using score test
+# Power calculation function using optimized approach for Shiny app integration
 
-#' Compute power for each perturbation-gene pair with fixed fold change
+#' Calculate power grid for app heatmap visualization
 #'
-#' This function computes power for perturb-seq experiments with fixed (non-random) gRNA assignment.
-#' It uses C++ implementations for computational efficiency.
+#' This function provides power analysis functionality for the Shiny application.
+#' It creates a grid of cell/read combinations and computes power for each combination.
 #'
-#' @param discovery_pairs A data frame specifying which element-gene pairs to consider, with columns `grna_target` and `response_id`; it can also have `grna_id` as a column but this is optional
-#' @param cells_per_grna A data frame specifying how many cells contain each gRNA, with columns `grna_id`, `grna_target`, and `num_cells`
-#' @param baseline_expression_stats A data frame specifying the baseline expression statistics for each gene, with columns `response_id`, `expression_mean`, and `expression_size`
-#' @param control_group A character string specifying the control group, either "complement" or "nt_cells"
-#' @param fold_change A numeric value or data frame to use for fixed effect size for all gRNA-gene pairs
-#' @param num_total_cells (Required only if control_group == "complement") A positive integer specifying the total number of cells in the experiment
-#' @param cutoff (Optional) A numeric value between 0 and 1 to use as the p-value cutoff
-#' @param n_nonzero_trt_thresh (Optional) An integer specifying the sceptre QC parameter of the same name; defaults to 7
-#' @param n_nonzero_cntrl_thresh (Optional) An integer specifying the sceptre QC parameter of the same name; defaults to 7
-#' @param side (Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"
-#' @param multiple_testing_method (Optional) A character string specifying the multiple testing correction method to use, either "BH" or "bonferroni"; defaults to "BH"
-#' @param multiple_testing_alpha (Optional) A numeric value between 0 and 1 specifying the alpha level for multiple testing correction; defaults to 0.1
+#' @param num_targets Number of targets
+#' @param gRNAs_per_target Number of gRNAs per target
+#' @param non_targeting_gRNAs Number of non-targeting gRNAs
+#' @param num_pairs Number of pairs analyzed
+#' @param tpm_threshold Minimum TPM threshold
+#' @param fdr_target FDR target level
+#' @param fc_mean Fold-change mean
+#' @param fc_sd Fold-change SD
+#' @param prop_non_null Proportion of non-null pairs
+#' @param MOI Multiplicity of infection
+#' @param biological_system Biological system
+#' @param experimental_platform Experimental platform
 #'
-#' @return A list with two elements: `individual_power` (a data frame with columns `grna_target`, `response_id`, and `power`) and `expected_num_discoveries` (a numeric value)
+#' @return List with power grid, cell/read sequences, and parameters
 #' @export
-compute_power_posthoc_fixed_fc <- function(
-    discovery_pairs,
-    cells_per_grna,
-    baseline_expression_stats,
-    control_group,
-    fold_change,
-    num_total_cells = NULL,
-    cutoff = NULL,
-    n_nonzero_trt_thresh = 7L,
-    n_nonzero_cntrl_thresh = 7L,
-    side = "both",
-    multiple_testing_method = "BH",
-    multiple_testing_alpha = 0.1) {
+calculate_power_grid <- function(
+  num_targets = 100,
+  gRNAs_per_target = 4,
+  non_targeting_gRNAs = 10,
+  num_pairs = 1000,
+  tpm_threshold = 10,
+  fdr_target = 0.05,
+  fc_mean = 0.85,
+  fc_sd = 0.15,
+  prop_non_null = 0.1,
+  MOI = 10,
+  biological_system = "K562",
+  experimental_platform = "10x Chromium v3"
+) {
 
-  ############################# create grna_gene df ############################
-  grna_gene <-  cells_per_grna |>
-    # exclude the non-targeting gRNAs
-    dplyr::filter(grna_target != "non-targeting") |>
-    # join discovery pairs
-    dplyr::left_join(discovery_pairs,
-                     unlist(ifelse("grna_id" %in% colnames(discovery_pairs), list(c("grna_id", "grna_target")), "grna_target"))) |>
-    # join gene expression df
-    dplyr::left_join(baseline_expression_stats, "response_id")
+  # Create grid for heatmap visualization
+  cells_seq <- round(seq(5000, 50000, length.out = 20))
+  reads_seq <- round(seq(2000, 50000, length.out = 20))
 
-  ################### obtain number of treatment and control cells #############
-  # compute the number of treatment cells by grouping grna_target and response_id
-  grna_gene <- grna_gene |>
-    dplyr::group_by(grna_target, response_id) |>
-    dplyr::mutate(num_trt_cells = sum(num_cells)) |>
-    dplyr::ungroup()
-
-  # define the control cells based on control_group
-  if (control_group == "nt_cells") {
-    # compute the number of control cells using cells receiving non-targeting gRNAs
-    num_cntrl_cells <- cells_per_grna |>
-      dplyr::filter(grna_target == "non-targeting") |>
-      dplyr::summarize(sum(num_cells)) |>
-      dplyr::pull()
-
-    grna_gene <- grna_gene |> dplyr::mutate(num_cntrl_cells = num_cntrl_cells)
-  } else { # control_group == "complement"
-    grna_gene <- grna_gene |> dplyr::mutate(num_cntrl_cells = num_total_cells - num_trt_cells)
-  }
-
-  ################## transform the scalar-valued effect size ###########
-  if(is.numeric(fold_change)){
-    # append the scalar to form a new column in grna_gene
-    grna_gene <- grna_gene |> dplyr::mutate(fold_change = fold_change)
-  }else{
-    # join the grna_gene df and effect size data frames
-    grna_gene <- grna_gene |> dplyr::left_join(fold_change, c("grna_id", "response_id"))
-  }
-
-  ########################### prepare for multiple testing #####################
-  # Use data.table for efficiency
-  enhancer_gene_dt <- grna_gene |>
-    dtplyr::lazy_dt() |>
-    dplyr::group_by(grna_target, response_id) |>
-    dplyr::summarise(
-      # compute mean and sd of the test statistic for each pair
-      test_stat_distribution = list(
-        compute_distribution_teststat_fixed_es_cpp(
-          num_trt_cells = num_trt_cells,
-          num_cntrl_cells = num_cntrl_cells,
-          num_cells = num_cells,
-          expression_mean = expression_mean,
-          expression_size = expression_size,
-          fold_change = fold_change
-        )
-      ),
-
-      # compute QC probability
-      QC_prob = compute_QC_fixed_es_cpp(
-        fold_change = fold_change,
-        expression_mean = expression_mean,
-        expression_size = expression_size,
-        num_cntrl_cells = num_cntrl_cells,
-        num_cells = num_cells,
-        n_nonzero_trt_thresh = n_nonzero_trt_thresh,
-        n_nonzero_cntrl_thresh = n_nonzero_cntrl_thresh)
-    ) |>
-    dplyr::ungroup() |>
-    dplyr::collect()
-
-  # Expand the list‐column
-  data.table::setDT(enhancer_gene_dt)
-  dist_dt <- data.table::rbindlist(enhancer_gene_dt$test_stat_distribution)
-
-  # Rename columns
-  data.table::setnames(
-    dist_dt,
-    old = c("mean", "sd"),
-    new = c("mean_test_stat", "sd_test_stat")
+  # Create cells-reads data frame for power calculation
+  cells_reads_df <- expand.grid(
+    num_total_cells = cells_seq,
+    reads_per_cell = reads_seq
   )
 
-  # Combine results
-  enhancer_gene <- cbind(enhancer_gene_dt[, !"test_stat_distribution"], dist_dt) |> tibble::as_tibble()
+  # Call the optimized efficient Monte Carlo power function
+  power_results <- compute_power_grid_efficient(
+    cells_reads_df = cells_reads_df,
+    num_targets = num_targets,
+    gRNAs_per_target = gRNAs_per_target,
+    non_targeting_gRNAs = non_targeting_gRNAs,
+    num_pairs = num_pairs,
+    tpm_threshold = tpm_threshold,
+    fdr_target = fdr_target,
+    fc_mean = fc_mean,
+    fc_sd = fc_sd,
+    prop_non_null = prop_non_null,
+    MOI = MOI,
+    biological_system = biological_system,
+    experimental_platform = experimental_platform,
+    side = "left",  # Standard for CRISPRi knockdown experiments
+    control_group = "complement",  # Use complement cells as control
+    B = 100,  # Monte Carlo samples for good accuracy vs speed balance
+    fc_curve_points = 10,  # Sufficient resolution for curves
+    expr_curve_points = 10
+  )
 
-  ########################### correct multiplicity #############################
-  # compute cutoff if it is NULL
-  if(is.null(cutoff)){
-    cutoff <- enhancer_gene |>
-      dplyr::summarize(
-        cutoff = adjusted_cutoff(mean_list = mean_test_stat,
-                                 sd_list = sd_test_stat,
-                                 multiple_testing_alpha = multiple_testing_alpha,
-                                 multiple_testing_method = multiple_testing_method,
-                                 side = side, QC_prob = QC_prob)
-      ) |> dplyr::select(cutoff) |> dplyr::pull()
-  }
-  # compute the adjusted power
-  power_values <- rejection_computation_cpp(mean_list = enhancer_gene$mean_test_stat,
-                                            sd_list = enhancer_gene$sd_test_stat,
-                                            side = side,
-                                            cutoff = cutoff) * (1 - enhancer_gene$QC_prob)
+  # Transform to expected format for heatmap
+  power_grid <- data.frame(
+    cells = power_results$num_total_cells,
+    reads = power_results$reads_per_cell,
+    power = power_results$overall_power
+  )
 
-  enhancer_gene <- enhancer_gene |>
-    dplyr::mutate(
-      cutoff = cutoff,
-      power = power_values
+  # Calculate expected discoveries
+  expected_discoveries <- sum(power_grid$power) * prop_non_null
+
+  # Return structure compatible with Shiny app
+  list(
+    power_grid = power_grid,
+    cells_seq = cells_seq,
+    reads_seq = reads_seq,
+    expected_discoveries = expected_discoveries,
+    parameters = list(
+      num_targets = num_targets,
+      gRNAs_per_target = gRNAs_per_target,
+      non_targeting_gRNAs = non_targeting_gRNAs,
+      num_pairs = num_pairs,
+      tpm_threshold = tpm_threshold,
+      fdr_target = fdr_target,
+      fc_mean = fc_mean,
+      fc_sd = fc_sd,
+      prop_non_null = prop_non_null,
+      MOI = MOI,
+      biological_system = biological_system,
+      experimental_platform = experimental_platform
+    ),
+    # Additional data for potential future use
+    power_curves = list(
+      fc_curves = power_results$power_by_fc,
+      expr_curves = power_results$power_by_expr
     )
-
-  # store individual power and rejection size as the output
-  output <- list(
-    individual_power = enhancer_gene |> dplyr::select(grna_target, response_id, power),
-    expected_num_discoveries = sum(enhancer_gene$power)
   )
-
-  return(output)
 }
-
-
 
 
 
@@ -296,7 +248,7 @@ compute_power_grid_efficient <- function(
 #' @param prop_non_null Proportion of non-null hypotheses
 #' @return List with overall power and power curves
 .compute_power_plan_efficient <- function(
-  # experimental information
+    # experimental information
   num_total_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
   # analysis information
   multiple_testing_alpha = 0.05, multiple_testing_method = "BH", control_group = "complement", side = "left", num_pairs = 1000,
