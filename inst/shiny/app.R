@@ -128,7 +128,7 @@ ui <- fluidPage(
 
         # === Per-pair tab ============================================
         tabPanel(
-          "Per-pair power",
+          "Power over TPM & FC",
           h4(textOutput("pair_title")),
           fluidRow(
             column(
@@ -302,7 +302,7 @@ server <- function(input, output, session) {
     toggleState("go_overall", ok)
   })
   observeEvent(input$go_overall, {
-    dest <- if (is_sel("tile")) "Per-pair power" else "Overall power (slice)"
+    dest <- if (is_sel("tile")) "Power over TPM & FC" else "Overall power (slice)"
     updateTabsetPanel(session,"tabs",selected=dest)
   })
 
@@ -437,12 +437,12 @@ server <- function(input, output, session) {
       sel$tiles <- expand.grid(row=match(slice_x(),cells_seq()),
                                col=sel$idx)
     sel$type <- "tile"
-    updateTabsetPanel(session,"tabs",selected="Per-pair power")
+    updateTabsetPanel(session,"tabs",selected="Power over TPM & FC")
   })
 
   # Per-pair title & plots
   output$pair_title <- renderText({
-    "Per-pair power"
+    "Power over TPM & FC"
   })
   output$pp_combined <- renderPlot({
     req(planned(), is_sel("tile"))
