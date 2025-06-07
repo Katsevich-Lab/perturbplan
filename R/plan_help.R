@@ -2,9 +2,6 @@
 
 extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biological_system =  "K562", B = 200){
 
-  # set the random seed
-  set.seed(1)
-
   ############## combine expression and effect size information ################
   baseline_expression_stats <- extract_baseline_expression(biological_system = biological_system)
   fc_expression_df <- data.frame(
