@@ -13,15 +13,35 @@ var_nb <- function(mean, size){
   mean + mean^2 / size
 }
 
-#' Compute the adjusted significance level with either BH or Bonferroni procedure.
+#' Compute adjusted significance cutoff for multiple testing correction
 #'
-#' @param mean_list Asymptotic mean of test statistic
-#' @param sd_list Asymptotic sd of test statistic
-#' @param QC_prob The probability of failing QC
-#' @inheritParams compute_power_posthoc
+#' @description
+#' This function computes the adjusted significance level (cutoff) for multiple
+#' hypothesis testing using either Benjamini-Hochberg (BH) or Bonferroni correction,
+#' accounting for quality control failures.
 #'
-#' @return The adjusted significance level.
-
+#' @param mean_list Numeric vector. Mean values of test statistics for each hypothesis.
+#' @param sd_list Numeric vector. Standard deviation values of test statistics for each hypothesis.
+#' @param multiple_testing_alpha Numeric. Target false discovery rate or family-wise error rate.
+#' @param multiple_testing_method Character. Multiple testing method, either "BH" or "bonferroni".
+#' @param side Character. Test sidedness: "left", "right", or "both".
+#' @param QC_prob Numeric vector. The probability of failing QC for each hypothesis.
+#'
+#' @return Numeric. The adjusted significance level (cutoff threshold).
+#'
+#' @details
+#' The function implements:
+#' \itemize{
+#'   \item \strong{BH method}: Uses bisection search to find the appropriate cutoff that
+#'     controls the false discovery rate at the specified level
+#'   \item \strong{Bonferroni method}: Divides the target alpha by the effective number of
+#'     tests (accounting for QC failures)
+#' }
+#'
+#' @seealso 
+#' \code{\link{BH_cutoff_bisection}} for the BH-specific implementation
+#' \code{\link{compute_power_posthoc}} for the main power analysis function
+#' @export
 adjusted_cutoff <- function(mean_list, sd_list, multiple_testing_alpha, multiple_testing_method, side, QC_prob){
 
   # compute the adjusted cutoff/significance level
@@ -59,13 +79,36 @@ BH_cutoff_bisection <- function(mean_list, sd_list, side, multiple_testing_alpha
   compute_BH_posthoc(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 }
 
-#' FDP estimate based on rejection probability.
+#' Estimate false discovery proportion (FDP) based on rejection probabilities
 #'
-#' @inheritParams adjusted_cutoff
-#' @inheritParams compute_power_posthoc
+#' @description
+#' This function estimates the false discovery proportion (FDP) by computing
+#' the expected number of false discoveries divided by the expected total
+#' number of discoveries, accounting for quality control failures.
 #'
-#' @return FDP estimate.
-
+#' @param mean_list Numeric vector. Mean values of test statistics for each hypothesis.
+#' @param sd_list Numeric vector. Standard deviation values of test statistics for each hypothesis.
+#' @param side Character. Test sidedness: "left", "right", or "both".
+#' @param cutoff Numeric. Significance threshold for rejecting hypotheses.
+#' @param QC_prob Numeric vector. The probability of failing QC for each hypothesis.
+#'
+#' @return Numeric. The estimated false discovery proportion (FDP).
+#'
+#' @details
+#' The FDP is computed as:
+#' \deqn{FDP = \frac{E[\text{False Discoveries}]}{E[\text{Total Discoveries}]}}
+#' 
+#' where:
+#' \itemize{
+#'   \item False discoveries are assumed to follow the null distribution
+#'   \item Total discoveries include both true and false positives
+#'   \item QC failure probabilities are incorporated into the calculations
+#' }
+#'
+#' @seealso 
+#' \code{\link{adjusted_cutoff}} for computing appropriate cutoffs
+#' \code{\link{rejection_computation}} for computing rejection probabilities
+#' @export
 FDP_estimate <- function(mean_list, sd_list, side, cutoff, QC_prob){
 
   # adjust the number of hypothesis by taking QC probability into consideration
@@ -146,16 +189,44 @@ rejection_computation <- function(mean_list, sd_list, side, cutoff){
 #   return(test_stat)
 # }
 
-#' Compute mean and sd of the score test statistic
+#' Compute asymptotic distribution of score test statistic
 #'
-#' @inheritParams compute_power_posthoc
-#' @param num_trt_cells Number of treatment cells in score test
-#' @param num_cntrl_cells Number of control cells in score test
-#' @param num_trt_cells_sq Squared number of control cells in score test
-#' @param expression_mean Mean gene expression
-#' @param expression_size Size parameter in NB distribution
+#' @description
+#' This function computes the asymptotic mean and standard deviation of the
+#' score test statistic used for differential expression analysis in single-cell
+#' perturbation experiments.
 #'
-#' @return A list including mean and sd of the test statistic
+#' @param num_trt_cells Integer. Number of treatment cells in the score test.
+#' @param num_cntrl_cells Integer. Number of control cells in the score test.
+#' @param num_trt_cells_sq Numeric. Squared number of treatment cells (used for variance calculations).
+#' @param expression_mean Numeric. Mean gene expression level.
+#' @param expression_size Numeric. Size parameter in the negative binomial distribution.
+#' @param fold_change_mean Numeric. Mean fold change effect size.
+#' @param fold_change_sd Numeric. Standard deviation of fold change effect size.
+#'
+#' @return A list with elements:
+#' \describe{
+#'   \item{mean}{Asymptotic mean of the test statistic}
+#'   \item{sd}{Asymptotic standard deviation of the test statistic}
+#' }
+#'
+#' @details
+#' The function computes the asymptotic distribution parameters for a score test
+#' statistic under the negative binomial model. The calculations account for:
+#' \itemize{
+#'   \item Random effect sizes following a normal distribution
+#'   \item Negative binomial distribution for gene expression
+#'   \item Unequal sample sizes between treatment and control groups
+#'   \item Pooled variance estimation for the denominator
+#' }
+#'
+#' The score test statistic follows an asymptotically normal distribution
+#' under both null and alternative hypotheses.
+#'
+#' @seealso 
+#' \code{\link{var_nb}} for negative binomial variance calculation
+#' \code{\link{rejection_computation}} for computing power from these distributions
+#' @export
 compute_distribution_teststat <- function(num_trt_cells, num_cntrl_cells, num_trt_cells_sq,
                                           expression_mean, expression_size,
                                           fold_change_mean, fold_change_sd){

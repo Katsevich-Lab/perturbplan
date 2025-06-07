@@ -1,5 +1,31 @@
 
-
+#' Extract fold change and expression information for power analysis
+#'
+#' @description
+#' This function combines fold change effect size sampling with baseline expression
+#' data to create a comprehensive dataset for Monte Carlo power analysis simulations.
+#'
+#' @param fold_change_mean Numeric. Mean of the fold change distribution.
+#' @param fold_change_sd Numeric. Standard deviation of the fold change distribution.
+#' @param biological_system Character. Biological system for baseline expression (default: "K562").
+#' @param B Integer. Number of Monte Carlo samples to generate (default: 200).
+#'
+#' @return A list with elements:
+#' \describe{
+#'   \item{fc_expression_df}{Data frame with sampled fold changes and expression parameters}
+#'   \item{expression_dispersion_curve}{Function relating expression mean to dispersion}
+#' }
+#'
+#' @details
+#' The function:
+#' \itemize{
+#'   \item Sets a random seed for reproducibility
+#'   \item Samples fold change values from a normal distribution
+#'   \item Randomly samples expression parameters from baseline data
+#'   \item Returns combined data for Monte Carlo integration
+#' }
+#'
+#' @seealso \code{\link{extract_baseline_expression}} for baseline data extraction
 extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biological_system =  "K562", B = 200){
 
   # set the random seed
@@ -22,6 +48,30 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
   ))
 }
 
+#' Extract baseline expression data by biological system
+#'
+#' @description
+#' This function loads pre-computed baseline expression statistics and
+#' expression-dispersion relationships for specified biological systems.
+#'
+#' @param biological_system Character. Biological system identifier (default: "K562").
+#' Currently supports "K562" cells.
+#'
+#' @return A list with elements:
+#' \describe{
+#'   \item{baseline_expression}{Data frame with expression parameters for genes}
+#'   \item{expression_dispersion_curve}{Function mapping expression mean to dispersion}
+#' }
+#'
+#' @details
+#' The function loads system-specific data files containing:
+#' \itemize{
+#'   \item Gene expression means and dispersion parameters
+#'   \item Fitted dispersion curves for the negative binomial model
+#'   \item System-specific calibration parameters
+#' }
+#'
+#' @seealso \code{\link{extract_fc_expression_info}} for combining with effect sizes
 extract_baseline_expression <- function(biological_system = "K562"){
 
   # sample baseline expression based on biological system
@@ -41,6 +91,30 @@ extract_baseline_expression <- function(biological_system = "K562"){
   ))
 }
 
+#' Extract library size parameters by biological system
+#'
+#' @description
+#' This function loads pre-computed library size parameters including UMI saturation
+#' curve parameters for specified biological systems.
+#'
+#' @param biological_system Character. Biological system identifier (default: "K562").
+#' Currently supports "K562" cells.
+#'
+#' @return A list with elements:
+#' \describe{
+#'   \item{UMI_per_cell}{Total UMI per cell parameter}
+#'   \item{variation}{Variation parameter characterizing PCR bias}
+#' }
+#'
+#' @details
+#' The function loads system-specific library parameters fitted from
+#' single-cell RNA-seq data using the saturation-magnitude (S-M) curve model.
+#' These parameters are used in \code{\link{fit_read_UMI_curve}} to convert
+#' read depth to effective library size.
+#'
+#' @seealso 
+#' \code{\link{fit_read_UMI_curve}} for using these parameters
+#' \code{\link{library_computation}} for fitting these parameters from data
 extract_library_info <- function(biological_system = "K562"){
 
   # sample baseline expression based on biological system
@@ -60,14 +134,35 @@ extract_library_info <- function(biological_system = "K562"){
   ))
 }
 
-#' Compute the library size
+#' Compute effective library size from read depth using UMI saturation curve
 #'
-#' @param reads_per_cell Reads per cell
-#' @param UMI_per_cell Total UMI (unseen) per cell
-#' @param variation Variation parameter characterizing the PCR bias
+#' @description
+#' This function implements the saturation-magnitude (S-M) curve to convert
+#' read depth per cell into effective library size (observed UMIs), accounting
+#' for PCR bias and UMI saturation effects.
 #'
-#' @return Library size
-
+#' @param reads_per_cell Numeric. Number of reads per cell.
+#' @param UMI_per_cell Numeric. Total UMI per cell parameter (asymptotic maximum).
+#' @param variation Numeric. Variation parameter characterizing PCR bias and saturation.
+#'
+#' @return Numeric. Effective library size (number of observed UMIs per cell).
+#'
+#' @details
+#' The function implements the S-M curve model:
+#' \deqn{UMI_{obs} = UMI_{total} \times \left(1 - \exp\left(-\frac{reads}{UMI_{total}}\right) \times \left(1 + variation \times \frac{reads^2}{2 \times UMI_{total}^2}\right)\right)}
+#'
+#' where:
+#' \itemize{
+#'   \item \code{UMI_obs} is the number of observed UMIs (library size)
+#'   \item \code{UMI_total} is the total number of UMIs per cell
+#'   \item \code{reads} is the number of reads per cell
+#'   \item \code{variation} accounts for PCR bias and technical variation
+#' }
+#'
+#' @seealso 
+#' \code{\link{extract_library_info}} for obtaining the parameters
+#' \code{\link{library_computation}} for fitting parameters from data
+#' @export
 fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
   UMI_per_cell * (1 - exp(-reads_per_cell / UMI_per_cell) * (1 + variation * reads_per_cell^2 / (2 * UMI_per_cell^2)))
 }
