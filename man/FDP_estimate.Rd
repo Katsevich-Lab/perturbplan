@@ -2,24 +2,41 @@
 % Please edit documentation in R/posthoc_help.R
 \name{FDP_estimate}
 \alias{FDP_estimate}
-\title{FDP estimate based on rejection probability.}
+\title{Estimate false discovery proportion (FDP) based on rejection probabilities}
 \usage{
 FDP_estimate(mean_list, sd_list, side, cutoff, QC_prob)
 }
 \arguments{
-\item{mean_list}{Asymptotic mean of test statistic}
+\item{mean_list}{Numeric vector. Mean values of test statistics for each hypothesis.}
 
-\item{sd_list}{Asymptotic sd of test statistic}
+\item{sd_list}{Numeric vector. Standard deviation values of test statistics for each hypothesis.}
 
-\item{side}{(Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"}
+\item{side}{Character. Test sidedness: "left", "right", or "both".}
 
-\item{cutoff}{(Optional) A numeric value between 0 and 1 to use as the p-value cutoff}
+\item{cutoff}{Numeric. Significance threshold for rejecting hypotheses.}
 
-\item{QC_prob}{The probability of failing QC}
+\item{QC_prob}{Numeric vector. The probability of failing QC for each hypothesis.}
 }
 \value{
-FDP estimate.
+Numeric. The estimated false discovery proportion (FDP).
 }
 \description{
-FDP estimate based on rejection probability.
+This function estimates the false discovery proportion (FDP) by computing
+the expected number of false discoveries divided by the expected total
+number of discoveries, accounting for quality control failures.
+}
+\details{
+The FDP is computed as:
+\deqn{FDP = \frac{E[\text{False Discoveries}]}{E[\text{Total Discoveries}]}}
+
+where:
+\itemize{
+\item False discoveries are assumed to follow the null distribution
+\item Total discoveries include both true and false positives
+\item QC failure probabilities are incorporated into the calculations
+}
+}
+\seealso{
+\code{\link{adjusted_cutoff}} for computing appropriate cutoffs
+\code{\link{rejection_computation}} for computing rejection probabilities
 }

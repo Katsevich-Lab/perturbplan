@@ -2,7 +2,7 @@
 % Please edit documentation in R/posthoc_help.R
 \name{compute_distribution_teststat}
 \alias{compute_distribution_teststat}
-\title{Compute mean and sd of the score test statistic}
+\title{Compute asymptotic distribution of score test statistic}
 \usage{
 compute_distribution_teststat(
   num_trt_cells,
@@ -15,23 +15,46 @@ compute_distribution_teststat(
 )
 }
 \arguments{
-\item{num_trt_cells}{Number of treatment cells in score test}
+\item{num_trt_cells}{Integer. Number of treatment cells in the score test.}
 
-\item{num_cntrl_cells}{Number of control cells in score test}
+\item{num_cntrl_cells}{Integer. Number of control cells in the score test.}
 
-\item{num_trt_cells_sq}{Squared number of control cells in score test}
+\item{num_trt_cells_sq}{Numeric. Squared number of treatment cells (used for variance calculations).}
 
-\item{expression_mean}{Mean gene expression}
+\item{expression_mean}{Numeric. Mean gene expression level.}
 
-\item{expression_size}{Size parameter in NB distribution}
+\item{expression_size}{Numeric. Size parameter in the negative binomial distribution.}
 
-\item{fold_change_mean}{A numeric value to use for mean effect size for all element-gene pairs}
+\item{fold_change_mean}{Numeric. Mean fold change effect size.}
 
-\item{fold_change_sd}{A numeric value to use for standard deviation of effect size for all element-gene pairs}
+\item{fold_change_sd}{Numeric. Standard deviation of fold change effect size.}
 }
 \value{
-A list including mean and sd of the test statistic
+A list with elements:
+\describe{
+\item{mean}{Asymptotic mean of the test statistic}
+\item{sd}{Asymptotic standard deviation of the test statistic}
+}
 }
 \description{
-Compute mean and sd of the score test statistic
+This function computes the asymptotic mean and standard deviation of the
+score test statistic used for differential expression analysis in single-cell
+perturbation experiments.
+}
+\details{
+The function computes the asymptotic distribution parameters for a score test
+statistic under the negative binomial model. The calculations account for:
+\itemize{
+\item Random effect sizes following a normal distribution
+\item Negative binomial distribution for gene expression
+\item Unequal sample sizes between treatment and control groups
+\item Pooled variance estimation for the denominator
+}
+
+The score test statistic follows an asymptotically normal distribution
+under both null and alternative hypotheses.
+}
+\seealso{
+\code{\link{var_nb}} for negative binomial variance calculation
+\code{\link{rejection_computation}} for computing power from these distributions
 }

@@ -7,11 +7,11 @@
 rejection_computation(mean_list, sd_list, side, cutoff)
 }
 \arguments{
-\item{mean_list}{Asymptotic mean of test statistic}
+\item{mean_list}{Numeric vector. Mean values of test statistics for each hypothesis.}
 
-\item{sd_list}{Asymptotic sd of test statistic}
+\item{sd_list}{Numeric vector. Standard deviation values of test statistics for each hypothesis.}
 
-\item{side}{(Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"}
+\item{side}{Character. Test sidedness: "left", "right", or "both".}
 
 \item{cutoff}{(Optional) A numeric value between 0 and 1 to use as the p-value cutoff}
 }

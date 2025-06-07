@@ -2,20 +2,43 @@
 % Please edit documentation in R/parameter_estimation_help.R
 \name{library_computation}
 \alias{library_computation}
-\title{Fit the S-M curve between # mapped reads and # ovserved UMIs.}
+\title{Fit saturation-magnitude (S-M) curve between mapped reads and observed UMIs}
 \usage{
 library_computation(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 }
 \arguments{
-\item{QC_data}{The QC'd data coming from the function obtain_qc_h5_data.}
+\item{QC_data}{Data frame. The QC'd molecular data from \code{\link{obtain_qc_h5_data}}
+containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
 
-\item{downsample_ratio}{The ratio of the size of the downsampled dataset to the one of the original dataset.}
+\item{downsample_ratio}{Numeric. The ratio for downsampling the dataset (default: 0.7).
+Must be between 0 and 1.}
 
-\item{D2_rough}{The rough estimate of D2 in the S-M curve model.}
+\item{D2_rough}{Numeric. Rough estimate of the D2 parameter in the S-M curve model (default: 0.3).
+Represents the variation parameter in the saturation curve.}
 }
 \value{
-A fitted S-M curve model in the form of a nlsLM object.
+A fitted S-M curve model object of class \code{nlsLM} from the \code{minpack.lm} package.
+The model parameters include:
+\describe{
+\item{total_UMIs}{Total number of UMIs per cell}
+\item{variation}{Variation parameter characterizing PCR bias and saturation}
+}
 }
 \description{
-Fit the S-M curve between # mapped reads and # ovserved UMIs.
+This function fits a nonlinear saturation curve model to estimate the relationship
+between the number of mapped reads per cell and the number of observed UMIs per cell.
+The model is essential for library size estimation in single-cell RNA sequencing.
+}
+\details{
+The function:
+\enumerate{
+\item Downsamples the read data to create multiple observation points
+\item Computes UMI counts for different read depths
+\item Fits a nonlinear saturation curve: \code{UMI = total_UMIs * (1 - exp(-reads/total_UMIs) * (1 + variation * reads^2/(2*total_UMIs^2)))}
+\item Returns the best-fitting model from multiple initial parameter values
+}
+}
+\seealso{
+\code{\link{obtain_qc_h5_data}} for input data preparation
+\code{\link{fit_read_UMI_curve}} for using the fitted parameters
 }

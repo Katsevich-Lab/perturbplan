@@ -7,15 +7,15 @@
 BH_cutoff_bisection(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 }
 \arguments{
-\item{mean_list}{Asymptotic mean of test statistic}
+\item{mean_list}{Numeric vector. Mean values of test statistics for each hypothesis.}
 
-\item{sd_list}{Asymptotic sd of test statistic}
+\item{sd_list}{Numeric vector. Standard deviation values of test statistics for each hypothesis.}
 
-\item{side}{(Optional) A character string specifying the side of the test, either "left", "right", or "both"; defaults to "both"}
+\item{side}{Character. Test sidedness: "left", "right", or "both".}
 
-\item{multiple_testing_alpha}{(Optional) A numeric value between 0 and 1 specifying the alpha level for multiple testing correction; defaults to 0.1}
+\item{multiple_testing_alpha}{Numeric. Target false discovery rate or family-wise error rate.}
 
-\item{QC_prob}{The probability of failing QC}
+\item{QC_prob}{Numeric vector. The probability of failing QC for each hypothesis.}
 }
 \value{
 Adjusted cutoff/significance level.
