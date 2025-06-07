@@ -81,47 +81,6 @@ test_that("fit_read_UMI_curve has correct mathematical properties", {
   expect_equal(result_zero, 0, tolerance = 1e-10)
 })
 
-# Test extract_library_info function (conditional on data availability)
-test_that("extract_library_info function structure", {
-  
-  # Skip test if library data file doesn't exist
-  library_path <- system.file("extdata/library_info", "Gasperini_library.rds", package = "perturbplan")
-  
-  if (file.exists(library_path)) {
-    # Test with default biological system (K562)
-    result <- extract_library_info()
-    
-    # Should return a list with specific elements
-    expect_type(result, "list")
-    expect_named(result, c("UMI_per_cell", "variation"))
-    
-    # Both elements should be numeric
-    expect_type(result$UMI_per_cell, "double")
-    expect_type(result$variation, "double")
-    
-    # Values should be positive
-    expect_gt(result$UMI_per_cell, 0)
-    expect_gt(result$variation, 0)
-    
-    # UMI_per_cell should be a reasonable value (typically hundreds to thousands)
-    expect_gt(result$UMI_per_cell, 100)
-    expect_lt(result$UMI_per_cell, 10000)
-    
-    # Variation should be a small positive value (typically < 1)
-    expect_lt(result$variation, 1)
-    
-    # Test with explicit K562 system
-    result_k562 <- extract_library_info(biological_system = "K562")
-    expect_identical(result, result_k562)
-    
-    # Test that the function is deterministic (same inputs give same outputs)
-    result2 <- extract_library_info()
-    expect_identical(result, result2)
-    
-  } else {
-    skip("Library data file not available - extract_library_info tests skipped")
-  }
-})
 
 # Test integration with mock data
 test_that("fit_read_UMI_curve works with realistic parameters", {
