@@ -17,6 +17,8 @@
 #' @param MOI Multiplicity of infection
 #' @param biological_system Biological system
 #' @param experimental_platform Experimental platform
+#' @param side Test sidedness ("left", "right", "both")
+#' @param control_group Control group type ("complement" or "nt_cells")
 #'
 #' @return List with power grid, cell/read sequences, and parameters
 #' @export
@@ -32,7 +34,9 @@ calculate_power_grid <- function(
   prop_non_null = 0.1,
   MOI = 10,
   biological_system = "K562",
-  experimental_platform = "10x Chromium v3"
+  experimental_platform = "10x Chromium v3",
+  side = "left",
+  control_group = "complement"
 ) {
 
   # Create grid for heatmap visualization
@@ -60,8 +64,8 @@ calculate_power_grid <- function(
     MOI = MOI,
     biological_system = biological_system,
     experimental_platform = experimental_platform,
-    side = "left",  # Standard for CRISPRi knockdown experiments
-    control_group = "complement",  # Use complement cells as control
+    side = side,
+    control_group = control_group,
     B = 100,  # Monte Carlo samples for good accuracy vs speed balance
     fc_curve_points = 10,  # Sufficient resolution for curves
     expr_curve_points = 10

@@ -1,0 +1,27 @@
+Package: perturbplan
+Title: Experimental Design and Power Analysis for Perturb-Seq
+        Experiments
+Version: 0.0.1
+Authors@R: 
+    c(person("Ziang", "Niu", , "ziangniu@wharton.upenn.edu", role = c("aut", "cre")),
+      person("Yihui", "He", , "yihuihe@wharton.upenn.edu", role = c("aut")),
+      person("Eugene", "Katsevich", , "ekatsevi@wharton.upenn.edu", role = c("aut"))
+    )
+Description: Experimental design and power analysis for perturb-seq experiments.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: dplyr, stats, rhdf5, minpack.lm, Rcpp, tibble, dtplyr,
+        data.table, methods, utils
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
+Config/testthat/edition: 3
+LinkingTo: PoissonBinomial, Rcpp
+NeedsCompilation: yes
+Packaged: 2025-06-06 22:01:21 UTC; ziangniu
+Author: Ziang Niu [aut, cre],
+  Yihui He [aut],
+  Eugene Katsevich [aut]
+Maintainer: Ziang Niu <ziangniu@wharton.upenn.edu>
+Depends: R (>= 3.5.0)
+Built: R 4.4.1; aarch64-apple-darwin20; 2025-06-07 20:41:22 UTC; unix
