@@ -48,8 +48,10 @@ perturbplan::launch_app()
 
 ### Core Components
 
-1. **Power Analysis Pipeline** (`R/power.R`, `R/power_help.R`)
+1. **Power Analysis Pipeline** (`R/power.R`, `R/plan_help.R`)
    - `compute_power_posthoc()`: Main function for post-hoc power analysis
+   - `compute_power_grid_efficient()`: Efficient grid-based power analysis using C++ Monte Carlo
+   - `example_power_analysis()`: Convenience function for quick power analysis
    - Integrates with C++ implementations for performance
 
 2. **Parameter Estimation** (`R/parameter_estimation.R`, `R/parameter_estimation_help.R`)
@@ -59,6 +61,8 @@ perturbplan::launch_app()
 3. **C++ Performance Layer** (`src/`)
    - `BH_cutoff.cpp`: Benjamini-Hochberg multiple testing corrections
    - `compute_distribution_teststat_*.cpp`: Test statistic distributions
+   - `power_curves.cpp`: Monte Carlo integration for power curves
+   - Key C++ functions: `compute_monte_carlo_teststat_cpp()`, `compute_fc_curve_cpp()`, `compute_expression_curve_cpp()`
    - Uses Rcpp for seamless R/C++ integration
 
 4. **Quality Control** (`R/QC_computation.R`)
@@ -92,7 +96,37 @@ perturbplan::launch_app()
 - **Rcpp Integration**: C++ code handles computationally intensive operations (distribution calculations, multiple testing corrections)
 - **Modular Design**: Separate functions for parameter estimation, QC computation, and power analysis allow flexible workflows
 - **Shiny Interface**: Provides non-programmatic access via `inst/shiny/app-prototype.R`
+- **C++ Optimization**: Monte Carlo loops implemented in C++ for significant performance improvements
+
+## Performance
+
+The package has been optimized for computational efficiency:
+
+- **C++ Monte Carlo**: `.compute_power_plan_efficient()` replaces the older R-based `.compute_underspecified_power_efficient()` with C++ implementations
+- **Batch Processing**: Monte Carlo samples processed in batch using `compute_monte_carlo_teststat_cpp()`
+- **Efficient Curves**: Power curves computed using optimized C++ functions (`compute_fc_curve_cpp`, `compute_expression_curve_cpp`)
 
 ## Testing
 
 The package uses testthat (edition 3) with helper functions in `tests/testthat/helper-*.R` for test data generation. Tests compare analytical computations against simulations to ensure accuracy.
+
+## Known Issues
+
+Current R CMD check warnings that need attention:
+
+- **Missing Imports**: Need to declare imports for `Matrix`, `sceptre`, `shiny` packages
+- **Namespace Issues**: Missing imports for standard R functions (`setNames`, `read.csv`, `as`)
+- **Hidden Files**: `.claude` directory should be added to `.Rbuildignore`
+
+To fix namespace issues, add to NAMESPACE:
+```r
+importFrom("methods", "as")
+importFrom("stats", "setNames")
+importFrom("utils", "read.csv")
+```
+
+## Development Notes
+
+- **Function Migration**: `.compute_underspecified_power_efficient()` has been replaced with `.compute_power_plan_efficient()` for better performance
+- **C++ Priority**: When possible, use C++ implementations over R loops for computationally intensive operations
+- **Grid Analysis**: Use `compute_power_grid_efficient()` for systematic power analysis across experimental conditions
