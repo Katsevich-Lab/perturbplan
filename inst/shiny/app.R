@@ -342,10 +342,10 @@ server <- function(input, output, session) {
   output$slice_box_ui <- renderUI({
     req(planned(), !is.null(slice_mode()))   # only after overall plot + slice mode chosen
     lab <- if (identical(slice_mode(),"row"))
-      "Drill down by number of reads / cell:<br/>(click the plot)"
-    else "Drill down by number of cells:<br/>(click the plot)"
+      "Drill down by number of reads / cell:<br/>(click to select multiple points)"
+    else "Drill down by number of cells:<br/>(click to select multiple points)"
     textInput("slice_points", HTML(lab),
-              if (length(slice_x())) slice_x() else "")
+              if (length(slice_x())) paste(slice_x(), collapse=", ") else "")
   })
 
   # Slice title & plot
@@ -380,29 +380,45 @@ server <- function(input, output, session) {
     }
   })
 
-  # Slice interactions
+  # Slice interactions - support multiple selections like main heatmap
   observeEvent(input$slice_click,{
     req(slice_mode()%in%c("row","col"))
     x <- if (slice_mode()=="row")
       reads_seq()[which.min(abs(reads_seq()-input$slice_click$x))]
     else
       cells_seq()[which.min(abs(cells_seq()-input$slice_click$x))]
-    slice_x(x); updateTextInput(session,"slice_points",value=x)
+    
+    # Toggle selection - add if not present, remove if already selected (like main heatmap)
+    current_vals <- slice_x()
+    if (x %in% current_vals) {
+      new_vals <- setdiff(current_vals, x)
+    } else {
+      new_vals <- c(current_vals, x)
+    }
+    
+    slice_x(new_vals)
+    updateTextInput(session,"slice_points",value=paste(new_vals, collapse=", "))
   })
   observeEvent(input$slice_points,ignoreInit=TRUE,{
-    v <- as.numeric(strsplit(input$slice_points,",")[[1]])
-    if (!is.na(v[1])) slice_x(v[1])
+    txt <- gsub("\\s","", input$slice_points)
+    if (nzchar(txt)) {
+      v <- as.numeric(strsplit(txt,",")[[1]])
+      v <- v[!is.na(v)]  # Remove any NAs
+      slice_x(v)
+    } else {
+      slice_x(numeric(0))
+    }
   })
   observe({
-    toggleState("go_slice", length(slice_x())==1)
+    toggleState("go_slice", length(slice_x())>=1)  # Allow 1 or more selections
   })
   observeEvent(input$slice_clear,{
     slice_x(numeric(0)); updateTextInput(session,"slice_points",value="")
   })
 
-  # Slice -> Per-pair
+  # Slice -> Per-pair (support multiple selections)
   observeEvent(input$go_slice,{
-    req(length(slice_x())==1)
+    req(length(slice_x())>=1)  # Allow 1 or more selections
     if (slice_mode()=="row")
       sel$tiles <- expand.grid(row=sel$idx,
                                col=match(slice_x(),reads_seq()))
