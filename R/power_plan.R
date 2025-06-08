@@ -1,5 +1,8 @@
 # Power calculation function using optimized approach for Shiny app integration
 
+# Suppress R CMD check warnings for variables used in dplyr contexts
+utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell"))
+
 #' Calculate power grid for app heatmap visualization
 #'
 #' This function provides power analysis functionality for the Shiny application.
