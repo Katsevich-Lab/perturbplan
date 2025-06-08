@@ -67,7 +67,7 @@ calculate_power_grid <- function(
     experimental_platform = experimental_platform,
     side = side,
     control_group = control_group,
-    B = 100  # Monte Carlo samples for good accuracy vs speed balance
+    B = 1000  # Monte Carlo samples for good accuracy
   )
 
   # Transform to expected format for heatmap
@@ -159,7 +159,7 @@ calculate_power_curves <- function(
     experimental_platform = experimental_platform,
     side = side,
     control_group = control_group,
-    B = 100,  # Monte Carlo samples for good accuracy vs speed balance
+    B = 1000,  # Monte Carlo samples for good accuracy
     fc_curve_points = 10,  # Sufficient resolution for curves
     expr_curve_points = 10
   )
@@ -210,7 +210,7 @@ compute_power_grid_lightweight <- function(
     experimental_platform = "10x Chromium v3",
     side = "left",
     control_group = "complement",
-    B = 500
+    B = 1000
 ){
 
   ############### extract Monte Carlo samples for integration ##################
@@ -296,7 +296,7 @@ compute_power_grid_efficient <- function(
     experimental_platform = "10x Chromium v3",
     side = "left",
     control_group = "complement",
-    B = 500,
+    B = 1000,
     fc_curve_points = 10,
     expr_curve_points = 10
 ){
@@ -583,7 +583,7 @@ compute_power_grid_efficient <- function(
 example_power_analysis <- function(
     num_cells = c(10000, 20000),
     reads_per_cell = c(1e4, 2e4),
-    B = 100,
+    B = 1000,
     curve_points = 10
 ) {
 
