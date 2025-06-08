@@ -296,55 +296,75 @@ server <- function(input, output, session) {
     updateTabItems(session, "sidebar", selected = "per_pair")
   })
 
+  # Compute detailed power curves only when needed (for selected tiles)
+  selected_power_curves <- reactive({
+    req(planned(), is_sel("tile"), nrow(sel$tiles) > 0)
+    
+    # Create selected tiles data frame
+    selected_tiles <- data.frame(
+      cells = cells_seq()[sel$tiles$row],
+      reads = reads_seq()[sel$tiles$col]
+    )
+    
+    # Compute power curves only for selected tiles
+    perturbplan::calculate_power_curves(
+      selected_tiles = selected_tiles,
+      num_targets = input$num_targets,
+      gRNAs_per_target = input$gRNAs_per_target,
+      non_targeting_gRNAs = input$non_targeting_gRNAs,
+      tpm_threshold = input$tpm_threshold,
+      fdr_target = input$fdr_target,
+      fc_mean = input$fc_mean,
+      fc_sd = input$fc_sd,
+      prop_non_null = input$prop_non_null,
+      MOI = input$MOI,
+      biological_system = input$biological_system,
+      experimental_platform = input$experimental_platform,
+      side = input$side,
+      control_group = input$control_group
+    )
+  })
+
   # Per-pair plots with real power curves
   output$pp_combined <- renderPlot({
     req(planned(), is_sel("tile"))
 
-    # Get real power curves from calculate_power_grid results
-    full_power_results <- power_results()
-    power_grid <- full_power_results$power_grid
+    # Get power curves for selected tiles
+    curves_results <- selected_power_curves()
+    tiles_info <- curves_results$tiles_info
     
     # Extract power curve data for selected tiles  
     create_real_plot_data <- function(curve_type) {
-      dfs <- Map(function(r, c) {
-        # Get the actual cell and read values for this tile
-        cell_val <- cells_seq()[r]
-        read_val <- reads_seq()[c]
+      power_curves <- curves_results$power_curves
+      
+      dfs <- Map(function(i) {
+        # Get curve data for this tile
+        if (curve_type == "fc") {
+          curve_data <- power_curves$fc_curves[[i]]
+        } else {
+          curve_data <- power_curves$expr_curves[[i]]
+        }
         
-        # Find matching row in the grid
-        matching_row <- which(power_grid$cells == cell_val & power_grid$reads == read_val)
-        
-        if (length(matching_row) > 0) {
-          # Get curve data from the power_curves section
+        if (!is.null(curve_data) && nrow(curve_data) > 0) {
           if (curve_type == "fc") {
-            curve_data <- full_power_results$power_curves$fc_curves[[matching_row[1]]]
+            data.frame(
+              x = curve_data$fold_change,
+              Power = curve_data$power,
+              label = sprintf("%d × %d", tiles_info$cells[i], tiles_info$reads[i])
+            )
           } else {
-            curve_data <- full_power_results$power_curves$expr_curves[[matching_row[1]]]
-          }
-          
-          if (!is.null(curve_data) && nrow(curve_data) > 0) {
-            if (curve_type == "fc") {
-              data.frame(
-                x = curve_data$fold_change,
-                Power = curve_data$power,
-                label = sprintf("%d × %d", cell_val, read_val)
-              )
-            } else {
-              # Convert relative_expression to TPM scale
-              tpm_values <- curve_data$relative_expression * 1e6
-              data.frame(
-                x = tpm_values,
-                Power = curve_data$power,
-                label = sprintf("%d × %d", cell_val, read_val)
-              )
-            }
-          } else {
-            data.frame(x = numeric(0), Power = numeric(0), label = character(0))
+            # Convert relative_expression to TPM scale
+            tpm_values <- curve_data$relative_expression * 1e6
+            data.frame(
+              x = tpm_values,
+              Power = curve_data$power,
+              label = sprintf("%d × %d", tiles_info$cells[i], tiles_info$reads[i])
+            )
           }
         } else {
           data.frame(x = numeric(0), Power = numeric(0), label = character(0))
         }
-      }, sel$tiles$row, sel$tiles$col)
+      }, seq_len(nrow(tiles_info)))
       
       # Combine all valid data frames
       valid_dfs <- dfs[sapply(dfs, nrow) > 0]
