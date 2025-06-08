@@ -7,7 +7,7 @@
 example_power_analysis(
   num_cells = c(10000, 20000),
   reads_per_cell = c(10000, 20000),
-  B = 100,
+  B = 1000,
   curve_points = 10
 )
 }

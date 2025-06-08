@@ -159,7 +159,7 @@ server <- function(input, output, session) {
   })
   observeEvent(input$go_overall, {
     dest <- if (is_sel("tile")) "per_pair" else "overall_slice"
-    updateTabItems(session, "sidebar", selected = dest)
+    updateTabsetPanel(session, "main_tabs", selected = dest)
   })
 
   # Render heatmap
@@ -293,7 +293,7 @@ server <- function(input, output, session) {
       sel$tiles <- expand.grid(row=match(slice_x(),cells_seq()),
                                col=sel$idx)
     sel$type <- "tile"
-    updateTabItems(session, "sidebar", selected = "per_pair")
+    updateTabsetPanel(session, "main_tabs", selected = "per_pair")
   })
 
   # Compute detailed power curves only when needed (for selected tiles)
@@ -401,4 +401,96 @@ server <- function(input, output, session) {
       plot_layout(ncol = 2, guides = "collect") &
       theme(legend.position = "bottom")
   })
+  
+  # Download handler for results
+  output$download_results <- downloadHandler(
+    filename = function() {
+      paste("perturbplan_results_", Sys.Date(), ".xlsx", sep = "")
+    },
+    content = function(file) {
+      req(planned())
+      
+      # Get power results
+      power_data <- power_results()
+      
+      # Create a workbook
+      wb <- openxlsx::createWorkbook()
+      
+      # Add power grid sheet
+      openxlsx::addWorksheet(wb, "Power_Grid")
+      openxlsx::writeData(wb, "Power_Grid", power_data$power_grid)
+      
+      # Add parameters sheet
+      params_df <- data.frame(
+        Parameter = c(
+          "Number of targets", "gRNAs per target", "Non-targeting gRNAs",
+          "TPM threshold", "FDR target", "Fold-change mean", "Fold-change SD",
+          "Proportion non-null", "MOI", "Biological system", "Experimental platform",
+          "Test side", "Control group"
+        ),
+        Value = c(
+          input$num_targets, input$gRNAs_per_target, input$non_targeting_gRNAs,
+          input$tpm_threshold, input$fdr_target, input$fc_mean, input$fc_sd,
+          input$prop_non_null, input$MOI, input$biological_system, 
+          input$experimental_platform, input$side, input$control_group
+        ),
+        stringsAsFactors = FALSE
+      )
+      
+      openxlsx::addWorksheet(wb, "Parameters")
+      openxlsx::writeData(wb, "Parameters", params_df)
+      
+      # Add power curves if available
+      if (is_sel("tile") && nrow(sel$tiles) > 0) {
+        curves_data <- selected_power_curves()
+        
+        # Add tiles info
+        openxlsx::addWorksheet(wb, "Selected_Tiles")
+        openxlsx::writeData(wb, "Selected_Tiles", curves_data$tiles_info)
+        
+        # Add fold-change curves
+        if (!is.null(curves_data$power_curves$fc_curves)) {
+          fc_combined <- do.call(rbind, lapply(seq_along(curves_data$power_curves$fc_curves), function(i) {
+            fc_data <- curves_data$power_curves$fc_curves[[i]]
+            if (!is.null(fc_data) && nrow(fc_data) > 0) {
+              fc_data$tile_index <- i
+              fc_data$cells <- curves_data$tiles_info$cells[i]
+              fc_data$reads <- curves_data$tiles_info$reads[i]
+              return(fc_data)
+            }
+            return(NULL)
+          }))
+          
+          if (!is.null(fc_combined) && nrow(fc_combined) > 0) {
+            openxlsx::addWorksheet(wb, "FC_Power_Curves")
+            openxlsx::writeData(wb, "FC_Power_Curves", fc_combined)
+          }
+        }
+        
+        # Add expression curves
+        if (!is.null(curves_data$power_curves$expr_curves)) {
+          expr_combined <- do.call(rbind, lapply(seq_along(curves_data$power_curves$expr_curves), function(i) {
+            expr_data <- curves_data$power_curves$expr_curves[[i]]
+            if (!is.null(expr_data) && nrow(expr_data) > 0) {
+              expr_data$tile_index <- i
+              expr_data$cells <- curves_data$tiles_info$cells[i]
+              expr_data$reads <- curves_data$tiles_info$reads[i]
+              # Convert to TPM scale
+              expr_data$TPM <- expr_data$relative_expression * 1e6
+              return(expr_data)
+            }
+            return(NULL)
+          }))
+          
+          if (!is.null(expr_combined) && nrow(expr_combined) > 0) {
+            openxlsx::addWorksheet(wb, "TPM_Power_Curves")
+            openxlsx::writeData(wb, "TPM_Power_Curves", expr_combined)
+          }
+        }
+      }
+      
+      # Save workbook
+      openxlsx::saveWorkbook(wb, file, overwrite = TRUE)
+    }
+  )
 }

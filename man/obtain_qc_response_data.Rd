@@ -2,7 +2,7 @@
 % Please edit documentation in R/parameter_estimation_help.R
 \name{obtain_qc_response_data}
 \alias{obtain_qc_response_data}
-\title{Load and QC gene expression matrix from Cell Ranger .mtx format.}
+\title{Load and QC gene expression matrix from Cell Ranger .mtx format}
 \usage{
 obtain_qc_response_data(path_to_gene_expression)
 }

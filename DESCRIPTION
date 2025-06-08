@@ -21,7 +21,11 @@ Imports:
     dtplyr,
     data.table,
     methods,
-    utils
+    utils,
+    Matrix,
+    sceptre,
+    shiny,
+    openxlsx
 Suggests: 
     knitr,
     rmarkdown,

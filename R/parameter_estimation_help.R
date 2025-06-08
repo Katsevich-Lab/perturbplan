@@ -1,4 +1,9 @@
-#' Load and QC gene expression matrix from Cell Ranger .mtx format.
+#' @importFrom methods as
+#' @importFrom stats setNames
+#' @importFrom utils read.csv
+NULL
+
+#' Load and QC gene expression matrix from Cell Ranger .mtx format
 #'
 #' @description
 #' This function reads a sparse expression matrix from a Cell Ranger output directory

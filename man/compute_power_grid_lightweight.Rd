@@ -19,7 +19,7 @@ compute_power_grid_lightweight(
   experimental_platform = "10x Chromium v3",
   side = "left",
   control_group = "complement",
-  B = 500
+  B = 1000
 )
 }
 \arguments{
