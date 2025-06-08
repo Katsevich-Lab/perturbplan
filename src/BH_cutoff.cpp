@@ -135,7 +135,7 @@ double compute_BH_posthoc(const NumericVector &mean_list,
 
   // Setup bounds and tolerance for post-hoc analysis
   double alpha = multiple_testing_alpha;
-  double lower = alpha / n;
+  double lower = 1e-10;
   double upper = alpha;
   double tolerance = 1e-10;
   
@@ -188,7 +188,7 @@ double compute_BH_plan(const NumericVector &mean_list,
   if (sd_list.size() != n) stop("mean_list and sd_list must have identical length.");
   
   // Setup bounds and tolerance for planning analysis
-  double lower = 1.0 / num_pairs;
+  double lower = 1e-10;
   double upper = multiple_testing_alpha;
   double tolerance = 1e-10;
   
