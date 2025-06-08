@@ -366,7 +366,7 @@ compute_power_grid_efficient <- function(
 #' print(result$overall_power)
 example_power_analysis <- function(
     num_cells = c(10000, 20000),
-    reads_per_cell = c(500, 1000),
+    reads_per_cell = c(1e4, 2e4),
     B = 100,
     curve_points = 10
 ) {

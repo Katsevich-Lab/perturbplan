@@ -137,7 +137,7 @@ double compute_BH_posthoc(const NumericVector &mean_list,
   double alpha = multiple_testing_alpha;
   double lower = alpha / n;
   double upper = alpha;
-  double tolerance = alpha / n;
+  double tolerance = 1e-10;
   
   // Define FDP function for post-hoc analysis
   auto fdp_function = [&](double t) -> double {
@@ -190,7 +190,7 @@ double compute_BH_plan(const NumericVector &mean_list,
   // Setup bounds and tolerance for planning analysis
   double lower = 1.0 / num_pairs;
   double upper = multiple_testing_alpha;
-  double tolerance = 1.0 / num_pairs;
+  double tolerance = 1e-10;
   
   // Define FDP function for planning analysis
   auto fdp_function = [&](double t) -> double {
