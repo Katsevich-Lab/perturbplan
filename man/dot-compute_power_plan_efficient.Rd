@@ -15,7 +15,6 @@
   multiple_testing_method = "BH",
   control_group = "complement",
   side = "left",
-  num_pairs = 1000,
   fc_expression_df,
   expression_dispersion_curve,
   fc_output_grid,
@@ -43,8 +42,6 @@
 \item{control_group}{Control group type}
 
 \item{side}{Test sidedness}
-
-\item{num_pairs}{Number of pairs}
 
 \item{fc_expression_df}{Data frame with fold change and expression info}
 

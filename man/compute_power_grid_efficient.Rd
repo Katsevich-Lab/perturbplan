@@ -9,7 +9,6 @@ compute_power_grid_efficient(
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
-  num_pairs = 1000,
   tpm_threshold = 10,
   fdr_target = 0.05,
   fc_mean = 0.85,
@@ -33,8 +32,6 @@ compute_power_grid_efficient(
 \item{gRNAs_per_target}{Number of gRNAs per target}
 
 \item{non_targeting_gRNAs}{Number of non-targeting gRNAs}
-
-\item{num_pairs}{Number of pairs for multiple testing}
 
 \item{tpm_threshold}{TPM threshold (currently unused)}
 

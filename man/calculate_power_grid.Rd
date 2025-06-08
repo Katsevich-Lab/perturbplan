@@ -8,7 +8,6 @@ calculate_power_grid(
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
-  num_pairs = 1000,
   tpm_threshold = 10,
   fdr_target = 0.05,
   fc_mean = 0.85,
@@ -27,8 +26,6 @@ calculate_power_grid(
 \item{gRNAs_per_target}{Number of gRNAs per target}
 
 \item{non_targeting_gRNAs}{Number of non-targeting gRNAs}
-
-\item{num_pairs}{Number of pairs analyzed}
 
 \item{tpm_threshold}{Minimum TPM threshold}
 

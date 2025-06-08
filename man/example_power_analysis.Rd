@@ -6,7 +6,7 @@
 \usage{
 example_power_analysis(
   num_cells = c(10000, 20000),
-  reads_per_cell = c(500, 1000),
+  reads_per_cell = c(10000, 20000),
   B = 100,
   curve_points = 10
 )
