@@ -8,18 +8,7 @@ server <- function(input, output, session) {
   planned <- reactiveVal(FALSE)
   output$need_plan <- reactive(!planned())
   outputOptions(output, "need_plan", suspendWhenHidden = FALSE)
-  observeEvent(input$plan_btn, {
-    planned(TRUE)
-    # Auto-navigate to heatmap tab after planning
-    updateTabItems(session, "sidebar", selected = "overall_heatmap")
-    
-    # Show success notification
-    showNotification(
-      "Power analysis complete! Click tiles in the heatmap to explore detailed curves.",
-      type = "success",
-      duration = 5
-    )
-  })
+  observeEvent(input$plan_btn, planned(TRUE))
 
   # Real power calculation using perturbplan package
   power_results <- reactive({
