@@ -324,8 +324,11 @@ compute_power_grid_efficient <- function(
     fc_output_grid <- seq(fc_range[1], fc_range[2], length.out = fc_curve_points)
   }
 
-  # Use log-spaced points for gene expression evaluation grid
-  expr_output_grid <- 10^seq(log10(expr_range[1]), log10(expr_range[2]), length.out = expr_curve_points)
+  # Use log-spaced points for gene expression evaluation grid, starting from TPM threshold
+  # Convert TPM threshold to relative expression scale (TPM / 1e6)
+  tpm_threshold_relative <- tpm_threshold / 1e6
+  expr_min <- max(expr_range[1], tpm_threshold_relative)  # Start from TPM threshold or data minimum, whichever is higher
+  expr_output_grid <- 10^seq(log10(expr_min), log10(expr_range[2]), length.out = expr_curve_points)
 
   ########################## compute the library size ##########################
   read_UMI_info <- extract_library_info(biological_system = biological_system)
