@@ -193,7 +193,7 @@ compute_power_grid_efficient <- function(
       power_output = list(
         .compute_power_plan_efficient(
           # experimental information
-          num_total_cells = num_total_cells, library_size = reads_per_cell, MOI = MOI,
+          num_total_cells = num_total_cells, library_size = library_size, MOI = MOI,
           num_targets = num_targets, gRNAs_per_target = gRNAs_per_target,
           non_targeting_gRNAs = non_targeting_gRNAs,
           # analysis information
