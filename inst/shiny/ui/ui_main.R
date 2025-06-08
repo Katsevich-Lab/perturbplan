@@ -14,45 +14,70 @@ ui <- dashboardPage(
       menuItem("Power over TPM & FC", tabName = "per_pair", icon = icon("project-diagram"))
     ),
     
-    # Parameter panels
+    # Parameter panels with collapsible sections
     tags$div(
-      style = "padding: 15px;",
+      style = "padding: 10px; overflow-y: auto; height: calc(100vh - 100px);",
       
-      # Experimental choices
-      h4("Experimental choices"),
-      selectInput("biological_system", "Biological system:", c("K562")),
-      selectInput("experimental_platform", "Experimental platform:", c("10x Chromium v3")),
-      numericInput("MOI", "MOI:", 10, 1, 30, 0.5),
-      numericInput("num_targets", "Number of targets:", 100, 1, 1000),
-      numericInput("gRNAs_per_target", "Number of gRNAs per target:", 4, 1, 10),
-      numericInput("non_targeting_gRNAs", "Number of non-targeting gRNAs:", 10, 0, 100),
+      # Experimental choices - collapsible
+      box(
+        title = "Experimental choices", 
+        status = "primary",
+        solidHeader = TRUE,
+        collapsible = TRUE,
+        width = 12,
+        selectInput("biological_system", "Biological system:", c("K562")),
+        selectInput("experimental_platform", "Experimental platform:", c("10x Chromium v3")),
+        fluidRow(
+          column(6, numericInput("MOI", "MOI:", 10, 1, 30, 0.5)),
+          column(6, numericInput("num_targets", "Targets:", 100, 1, 1000))
+        ),
+        fluidRow(
+          column(6, numericInput("gRNAs_per_target", "gRNAs/target:", 4, 1, 10)),
+          column(6, numericInput("non_targeting_gRNAs", "Non-targeting:", 10, 0, 100))
+        )
+      ),
       
+      # Analysis choices - collapsible
+      box(
+        title = "Analysis choices", 
+        status = "info",
+        solidHeader = TRUE,
+        collapsible = TRUE,
+        width = 12,
+        fluidRow(
+          column(6, numericInput("tpm_threshold", "TPM threshold:", 10, 0, 10, 0.5)),
+          column(6, numericInput("fdr_target", "FDR target:", 0.05, 0.001, 0.1, 0.001))
+        ),
+        selectInput("side", "Test side:", 
+                    choices = c("Left (knockdown)" = "left", 
+                               "Right (overexpression)" = "right"), 
+                    selected = "left"),
+        selectInput("control_group", "Control group:", 
+                    choices = c("Complement cells" = "complement", 
+                               "Non-targeting cells" = "nt_cells"), 
+                    selected = "complement")
+      ),
+      
+      # Effect sizes - collapsible  
+      box(
+        title = "Assumed effect sizes", 
+        status = "warning",
+        solidHeader = TRUE,
+        collapsible = TRUE,
+        width = 12,
+        fluidRow(
+          column(6, numericInput("fc_mean", "FC mean:", 0.85, 1.1, 10, 0.05)),
+          column(6, numericInput("fc_sd", "FC SD:", 0.15, 0.1, 5, 0.05))
+        ),
+        numericInput("prop_non_null", "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
+      ),
+      
+      # Prominent Plan button
       br(),
-      
-      # Analysis choices
-      h4("Analysis choices"),
-      numericInput("tpm_threshold", "Minimum TPM threshold:", 10, 0, 10, 0.5),
-      numericInput("fdr_target", "FDR target level:", 0.05, 0.001, 0.1, 0.001),
-      selectInput("side", "Test side:", 
-                  choices = c("Left (knockdown)" = "left", 
-                             "Right (overexpression)" = "right"), 
-                  selected = "left"),
-      selectInput("control_group", "Control group:", 
-                  choices = c("Complement cells" = "complement", 
-                             "Non-targeting cells" = "nt_cells"), 
-                  selected = "complement"),
-      
-      br(),
-      
-      # Assumed effect sizes
-      h4("Assumed effect sizes"),
-      numericInput("fc_mean", "Fold-change mean:", 0.85, 1.1, 10, 0.05),
-      numericInput("fc_sd", "Fold-change SD:", 0.15, 0.1, 5, 0.05),
-      numericInput("prop_non_null", "Proportion of non-null pairs:", 0.1, 0, 1, 0.01),
-      
-      br(),
-      
-      actionButton("plan_btn", "Plan", class = "btn-success", width = "100%")
+      actionButton("plan_btn", "Plan Analysis", 
+                   class = "btn-success btn-lg", 
+                   width = "100%",
+                   style = "font-size: 18px; font-weight: bold;")
     )
   ),
   
@@ -75,7 +100,12 @@ ui <- dashboardPage(
             # Message before planning
             conditionalPanel(
               condition = "output.need_plan",
-              h4("Select your parameters and click \"Plan\"")
+              div(
+                class = "alert alert-info",
+                style = "margin: 20px;",
+                icon("info-circle"),
+                " Select your parameters in the sidebar and click \"Plan Analysis\" to generate the power heatmap."
+              )
             ),
             
             # Heatmap (after Plan)
