@@ -14,9 +14,9 @@ ui <- dashboardPage(
       menuItem("Power over TPM & FC", tabName = "per_pair", icon = icon("project-diagram"))
     ),
     
-    # Parameter panels
+    # Parameter panels - make scrollable while keeping right panel fixed
     tags$div(
-      style = "padding: 15px;",
+      style = "padding: 15px; height: calc(100vh - 100px); overflow-y: auto; position: fixed; width: 230px;",
       
       # Experimental choices
       h4("Experimental choices"),
@@ -56,9 +56,28 @@ ui <- dashboardPage(
     )
   ),
   
-  # Dashboard body
+  # Dashboard body - fixed position, no scrolling
   dashboardBody(
     useShinyjs(),
+    
+    # Custom CSS to ensure right panel is fixed
+    tags$head(
+      tags$style(HTML("
+        .content-wrapper {
+          position: fixed;
+          top: 50px;
+          left: 230px;
+          right: 0;
+          bottom: 0;
+          overflow: hidden;
+        }
+        .content {
+          height: 100%;
+          overflow-y: auto;
+          padding: 15px;
+        }
+      "))
+    ),
     
     # Tab content
     tabItems(
