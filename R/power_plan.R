@@ -75,15 +75,11 @@ calculate_power_grid <- function(
     power = power_results$overall_power
   )
 
-  # Calculate expected discoveries
-  expected_discoveries <- sum(power_grid$power) * prop_non_null
-
   # Return structure compatible with Shiny app
   list(
     power_grid = power_grid,
     cells_seq = cells_seq,
     reads_seq = reads_seq,
-    expected_discoveries = expected_discoveries,
     parameters = list(
       num_targets = num_targets,
       gRNAs_per_target = gRNAs_per_target,
