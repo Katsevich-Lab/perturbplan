@@ -131,11 +131,34 @@ obtain_random_pairs <- function(num_targets, pairs_per_target, gene_info) {
 
 
 
-#' Obtain a data frame with information of all QC'd reads for library estimation.
+#' Obtain a data frame with information of all QC'd reads for library estimation
 #'
-#' @param path_to_h5_file The path to the outs folder of the cellranger output.
+#' @description
+#' This function reads HDF5 files from Cell Ranger output to extract molecule-level
+#' information and applies quality control filtering to obtain a comprehensive
+#' data frame for library size estimation.
 #'
-#' @return A data frame with columns `num_reads`, `UMI_id`, `cell_id`, and `response_id`
+#' @param path_to_h5_file Character. The path to the outs folder of the Cell Ranger output
+#' containing `molecule_info.h5` and `filtered_feature_bc_matrix.h5` files.
+#'
+#' @return A data frame with columns:
+#' \describe{
+#'   \item{num_reads}{Number of reads per molecule}
+#'   \item{UMI_id}{Unique molecular identifier}
+#'   \item{cell_id}{Cell barcode identifier with gem group}
+#'   \item{response_id}{Gene identifier}
+#' }
+#' 
+#' @details
+#' The function performs the following steps:
+#' \enumerate{
+#'   \item Reads raw molecule information from `molecule_info.h5`
+#'   \item Extracts cell barcodes, UMI identifiers, and gene features
+#'   \item Filters molecules to only include those from QC-passed cells
+#'   \item Returns a cleaned data frame for downstream analysis
+#' }
+#'
+#' @export
 obtain_qc_h5_data <- function(path_to_h5_file){
 
   # specify the particular h5 file of interest
@@ -213,11 +236,31 @@ obtain_mapping_efficiency <- function(QC_data, path_to_metrics_summary) {
 }
 
 
-#' Obtain the summary statistics of the QC'd data.
+#' Obtain summary statistics of QC'd molecular data
 #'
-#' @param QC_data The QC'd data coming from the function obtain_qc_h5_data
+#' @description
+#' This function computes basic summary statistics from quality-controlled
+#' molecular data, providing key metrics for library size estimation.
 #'
-#' @return A named vector with the number of cells and average reads per cell.
+#' @param QC_data Data frame. The QC'd data from \code{\link{obtain_qc_h5_data}}
+#' containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.
+#'
+#' @return A named numeric vector with elements:
+#' \describe{
+#'   \item{num_cells}{Total number of unique cells}
+#'   \item{avg_reads}{Average number of reads per cell}
+#' }
+#'
+#' @details
+#' The function calculates:
+#' \itemize{
+#'   \item Total number of unique cell barcodes
+#'   \item Total reads summed across all molecules
+#'   \item Average reads per cell (total reads divided by number of cells)
+#' }
+#'
+#' @seealso \code{\link{obtain_qc_h5_data}} for generating the input data
+#' @export
 summary_h5_data <- function(QC_data){
 
   # extract the number of total cells
@@ -234,13 +277,40 @@ summary_h5_data <- function(QC_data){
 }
 
 
-#' Fit the S-M curve between # mapped reads and # ovserved UMIs.
+#' Fit saturation-magnitude (S-M) curve between mapped reads and observed UMIs
 #'
-#' @param QC_data The QC'd data coming from the function obtain_qc_h5_data.
-#' @param downsample_ratio The ratio of the size of the downsampled dataset to the one of the original dataset.
-#' @param D2_rough The rough estimate of D2 in the S-M curve model.
+#' @description
+#' This function fits a nonlinear saturation curve model to estimate the relationship
+#' between the number of mapped reads per cell and the number of observed UMIs per cell.
+#' The model is essential for library size estimation in single-cell RNA sequencing.
 #'
-#' @return A fitted S-M curve model in the form of a nlsLM object.
+#' @param QC_data Data frame. The QC'd molecular data from \code{\link{obtain_qc_h5_data}}
+#' containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.
+#' @param downsample_ratio Numeric. The ratio for downsampling the dataset (default: 0.7).
+#' Must be between 0 and 1.
+#' @param D2_rough Numeric. Rough estimate of the D2 parameter in the S-M curve model (default: 0.3).
+#' Represents the variation parameter in the saturation curve.
+#'
+#' @return A fitted S-M curve model object of class \code{nlsLM} from the \code{minpack.lm} package.
+#' The model parameters include:
+#' \describe{
+#'   \item{total_UMIs}{Total number of UMIs per cell}
+#'   \item{variation}{Variation parameter characterizing PCR bias and saturation}
+#' }
+#'
+#' @details
+#' The function:
+#' \enumerate{
+#'   \item Downsamples the read data to create multiple observation points
+#'   \item Computes UMI counts for different read depths
+#'   \item Fits a nonlinear saturation curve: \code{UMI = total_UMIs * (1 - exp(-reads/total_UMIs) * (1 + variation * reads^2/(2*total_UMIs^2)))}
+#'   \item Returns the best-fitting model from multiple initial parameter values
+#' }
+#'
+#' @seealso 
+#' \code{\link{obtain_qc_h5_data}} for input data preparation
+#' \code{\link{fit_read_UMI_curve}} for using the fitted parameters
+#' @export
 library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3){
 
   ########################### downsample the data ##############################

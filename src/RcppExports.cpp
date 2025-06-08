@@ -70,8 +70,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // compute_BH_plan
-double compute_BH_plan(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double multiple_testing_alpha, double prop_non_null, int num_pairs);
-RcppExport SEXP _perturbplan_compute_BH_plan(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP multiple_testing_alphaSEXP, SEXP prop_non_nullSEXP, SEXP num_pairsSEXP) {
+double compute_BH_plan(const NumericVector& mean_list, const NumericVector& sd_list, const std::string& side, double multiple_testing_alpha, double prop_non_null);
+RcppExport SEXP _perturbplan_compute_BH_plan(SEXP mean_listSEXP, SEXP sd_listSEXP, SEXP sideSEXP, SEXP multiple_testing_alphaSEXP, SEXP prop_non_nullSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -80,8 +80,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::string& >::type side(sideSEXP);
     Rcpp::traits::input_parameter< double >::type multiple_testing_alpha(multiple_testing_alphaSEXP);
     Rcpp::traits::input_parameter< double >::type prop_non_null(prop_non_nullSEXP);
-    Rcpp::traits::input_parameter< int >::type num_pairs(num_pairsSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_BH_plan(mean_list, sd_list, side, multiple_testing_alpha, prop_non_null, num_pairs));
+    rcpp_result_gen = Rcpp::wrap(compute_BH_plan(mean_list, sd_list, side, multiple_testing_alpha, prop_non_null));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -173,7 +172,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_compute_FDP_posthoc", (DL_FUNC) &_perturbplan_compute_FDP_posthoc, 5},
     {"_perturbplan_compute_BH_posthoc", (DL_FUNC) &_perturbplan_compute_BH_posthoc, 5},
     {"_perturbplan_compute_FDP_plan", (DL_FUNC) &_perturbplan_compute_FDP_plan, 5},
-    {"_perturbplan_compute_BH_plan", (DL_FUNC) &_perturbplan_compute_BH_plan, 6},
+    {"_perturbplan_compute_BH_plan", (DL_FUNC) &_perturbplan_compute_BH_plan, 5},
     {"_perturbplan_compute_QC_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_QC_fixed_es_cpp, 7},
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
     {"_perturbplan_compute_fc_curve_cpp", (DL_FUNC) &_perturbplan_compute_fc_curve_cpp, 7},

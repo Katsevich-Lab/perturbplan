@@ -6,6 +6,7 @@
     GNU Fortran (GCC) 12.2.0
 * running under: macOS Ventura 13.4
 * using session charset: UTF-8
+* using option ‘--no-manual’
 * checking for file ‘perturbplan/DESCRIPTION’ ... OK
 * this is package ‘perturbplan’ version ‘0.0.1’
 * package encoding: UTF-8
@@ -21,62 +22,8 @@ These were most likely included in error. See section ‘Package
 structure’ in the ‘Writing R Extensions’ manual.
 * checking for portable file names ... OK
 * checking for sufficient/correct file permissions ... OK
-* checking whether package ‘perturbplan’ can be installed ... OK
-* used C++ compiler: ‘Apple clang version 14.0.3 (clang-1403.0.22.14.1)’
-* used SDK: ‘MacOSX13.3.sdk’
-* checking installed package size ... OK
-* checking package directory ... OK
-* checking DESCRIPTION meta-information ... OK
-* checking top-level files ... OK
-* checking for left-over files ... OK
-* checking index information ... OK
-* checking package subdirectories ... OK
-* checking code files for non-ASCII characters ... OK
-* checking R files for syntax errors ... OK
-* checking whether the package can be loaded ... OK
-* checking whether the package can be loaded with stated dependencies ... OK
-* checking whether the package can be unloaded cleanly ... OK
-* checking whether the namespace can be loaded with stated dependencies ... OK
-* checking whether the namespace can be unloaded cleanly ... OK
-* checking dependencies in R code ... WARNING
-'::' or ':::' imports not declared from:
-  ‘Matrix’ ‘sceptre’ ‘shiny’
-Namespaces in Imports field not imported from:
-  ‘methods’ ‘utils’
-  All declared Imports should be used.
-Unexported object imported by a ':::' call: ‘sceptre:::perform_response_precomputation’
-  See the note in ?`:::` about the use of this operator.
-* checking S3 generic/method consistency ... OK
-* checking replacement functions ... OK
-* checking foreign function calls ... OK
-* checking R code for possible problems ... NOTE
-obtain_expression_information: no visible global function definition
-  for ‘setNames’
-obtain_mapping_efficiency: no visible global function definition for
-  ‘read.csv’
-obtain_qc_response_data: no visible global function definition for ‘as’
-Undefined global functions or variables:
-  as read.csv setNames
-Consider adding
-  importFrom("methods", "as")
-  importFrom("stats", "setNames")
-  importFrom("utils", "read.csv")
-to your NAMESPACE file (and ensure that your DESCRIPTION Imports field
-contains 'methods').
-* checking Rd files ... OK
-* checking Rd metadata ... OK
-* checking Rd cross-references ... OK
-* checking for missing documentation entries ... OK
-* checking for code/documentation mismatches ... OK
-* checking Rd \usage sections ... OK
-* checking Rd contents ... OK
-* checking for unstated dependencies in examples ... OK
-* checking line endings in C/C++/Fortran sources/headers ... OK
-* checking compiled code ... OK
-* checking examples ... NONE
-* checking for unstated dependencies in ‘tests’ ... OK
-* checking tests ... OK
-  Running ‘testthat.R’
-* checking PDF version of manual ... OK
+* checking whether package ‘perturbplan’ can be installed ... ERROR
+Installation failed.
+See ‘/Users/ziangniu/Documents/Projects/CRISPR-power-analysis/perturbplan/perturbplan.Rcheck/00install.out’ for details.
 * DONE
-Status: 1 WARNING, 2 NOTEs
+Status: 1 ERROR, 1 NOTE

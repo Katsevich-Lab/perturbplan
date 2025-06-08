@@ -29,3 +29,15 @@ compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_m
     .Call(`_perturbplan_compute_distribution_teststat_fixed_es_cpp`, fold_change, expression_mean, expression_size, num_trt_cells, num_cntrl_cells, num_cells)
 }
 
+compute_fc_curve_cpp <- function(fc_output_grid, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, side, cutoff) {
+    .Call(`_perturbplan_compute_fc_curve_cpp`, fc_output_grid, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, side, cutoff)
+}
+
+compute_expression_curve_cpp <- function(expr_output_grid, fc_expression_df, library_size, expression_dispersion_curve, num_trt_cells, num_cntrl_cells, side, cutoff) {
+    .Call(`_perturbplan_compute_expression_curve_cpp`, expr_output_grid, fc_expression_df, library_size, expression_dispersion_curve, num_trt_cells, num_cntrl_cells, side, cutoff)
+}
+
+compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells) {
+    .Call(`_perturbplan_compute_monte_carlo_teststat_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells)
+}
+

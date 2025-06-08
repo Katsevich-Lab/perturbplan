@@ -18,7 +18,7 @@ Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 LinkingTo: PoissonBinomial, Rcpp
 NeedsCompilation: yes
-Packaged: 2025-06-06 22:01:21 UTC; ziangniu
+Packaged: 2025-06-08 00:40:42 UTC; ziangniu
 Author: Ziang Niu [aut, cre],
   Yihui He [aut],
   Eugene Katsevich [aut]

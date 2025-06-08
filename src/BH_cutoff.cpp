@@ -180,8 +180,7 @@ double compute_BH_plan(const NumericVector &mean_list,
                        const NumericVector &sd_list,
                        const std::string   &side,
                        double               multiple_testing_alpha,
-                       double               prop_non_null,
-                       int                  num_pairs) {
+                       double               prop_non_null) {
   
   const int n = mean_list.size();
   if (n < 1) stop("mean_list must have at least one element.");

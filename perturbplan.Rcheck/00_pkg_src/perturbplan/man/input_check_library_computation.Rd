@@ -11,11 +11,14 @@ input_check_library_computation(
 )
 }
 \arguments{
-\item{QC_data}{The QC'd data coming from the function obtain_qc_h5_data.}
+\item{QC_data}{Data frame. The QC'd molecular data from \code{\link{obtain_qc_h5_data}}
+containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
 
-\item{downsample_ratio}{The ratio of the size of the downsampled dataset to the one of the original dataset.}
+\item{downsample_ratio}{Numeric. The ratio for downsampling the dataset (default: 0.7).
+Must be between 0 and 1.}
 
-\item{D2_rough}{The rough estimate of D2 in the S-M curve model.}
+\item{D2_rough}{Numeric. Rough estimate of the D2 parameter in the S-M curve model (default: 0.3).
+Represents the variation parameter in the saturation curve.}
 }
 \description{
 Input checking function for library_computation

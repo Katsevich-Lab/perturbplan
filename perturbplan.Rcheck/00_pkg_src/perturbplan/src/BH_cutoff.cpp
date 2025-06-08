@@ -135,9 +135,9 @@ double compute_BH_posthoc(const NumericVector &mean_list,
 
   // Setup bounds and tolerance for post-hoc analysis
   double alpha = multiple_testing_alpha;
-  double lower = alpha / n;
+  double lower = 1e-10;
   double upper = alpha;
-  double tolerance = alpha / n;
+  double tolerance = 1e-10;
   
   // Define FDP function for post-hoc analysis
   auto fdp_function = [&](double t) -> double {
@@ -166,8 +166,8 @@ double compute_FDP_plan(const NumericVector &mean_list,
   NumericVector rejection_probs = rejection_computation_cpp(mean_list, sd_list, side, cutoff);
   double power_t = mean(rejection_probs);
   
-  // FDP formula: FDP(t) = t / (1 - prop_non_null + prop_non_null * power(t))
-  double denominator = 1.0 - prop_non_null + prop_non_null * power_t;
+  // FDP formula: FDP(t) = t / ((1 - prop_non_null) * t + prop_non_null * power(t))
+  double denominator = (1.0 - prop_non_null) * cutoff + prop_non_null * power_t;
   
   return cutoff / denominator;
 }
@@ -180,17 +180,16 @@ double compute_BH_plan(const NumericVector &mean_list,
                        const NumericVector &sd_list,
                        const std::string   &side,
                        double               multiple_testing_alpha,
-                       double               prop_non_null,
-                       int                  num_pairs) {
+                       double               prop_non_null) {
   
   const int n = mean_list.size();
   if (n < 1) stop("mean_list must have at least one element.");
   if (sd_list.size() != n) stop("mean_list and sd_list must have identical length.");
   
   // Setup bounds and tolerance for planning analysis
-  double lower = 1.0 / num_pairs;
+  double lower = 1e-10;
   double upper = multiple_testing_alpha;
-  double tolerance = 1.0 / num_pairs;
+  double tolerance = 1e-10;
   
   // Define FDP function for planning analysis
   auto fdp_function = [&](double t) -> double {

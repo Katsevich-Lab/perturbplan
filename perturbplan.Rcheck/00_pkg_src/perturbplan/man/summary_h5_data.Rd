@@ -2,16 +2,33 @@
 % Please edit documentation in R/parameter_estimation_help.R
 \name{summary_h5_data}
 \alias{summary_h5_data}
-\title{Obtain the summary statistics of the QC'd data.}
+\title{Obtain summary statistics of QC'd molecular data}
 \usage{
 summary_h5_data(QC_data)
 }
 \arguments{
-\item{QC_data}{The QC'd data coming from the function obtain_qc_h5_data}
+\item{QC_data}{Data frame. The QC'd data from \code{\link{obtain_qc_h5_data}}
+containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
 }
 \value{
-A named vector with the number of cells and average reads per cell.
+A named numeric vector with elements:
+\describe{
+\item{num_cells}{Total number of unique cells}
+\item{avg_reads}{Average number of reads per cell}
+}
 }
 \description{
-Obtain the summary statistics of the QC'd data.
+This function computes basic summary statistics from quality-controlled
+molecular data, providing key metrics for library size estimation.
+}
+\details{
+The function calculates:
+\itemize{
+\item Total number of unique cell barcodes
+\item Total reads summed across all molecules
+\item Average reads per cell (total reads divided by number of cells)
+}
+}
+\seealso{
+\code{\link{obtain_qc_h5_data}} for generating the input data
 }

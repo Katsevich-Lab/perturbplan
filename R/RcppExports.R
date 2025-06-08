@@ -17,8 +17,8 @@ compute_FDP_plan <- function(mean_list, sd_list, side, cutoff, prop_non_null) {
     .Call(`_perturbplan_compute_FDP_plan`, mean_list, sd_list, side, cutoff, prop_non_null)
 }
 
-compute_BH_plan <- function(mean_list, sd_list, side, multiple_testing_alpha, prop_non_null, num_pairs) {
-    .Call(`_perturbplan_compute_BH_plan`, mean_list, sd_list, side, multiple_testing_alpha, prop_non_null, num_pairs)
+compute_BH_plan <- function(mean_list, sd_list, side, multiple_testing_alpha, prop_non_null) {
+    .Call(`_perturbplan_compute_BH_plan`, mean_list, sd_list, side, multiple_testing_alpha, prop_non_null)
 }
 
 compute_QC_fixed_es_cpp <- function(fold_change, expression_mean, expression_size, num_cntrl_cells, num_cells, n_nonzero_trt_thresh = 7L, n_nonzero_cntrl_thresh = 7L) {

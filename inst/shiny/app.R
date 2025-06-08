@@ -34,7 +34,6 @@ ui <- fluidPage(
           # --- Analysis choices ---------------------------------------
           bsCollapsePanel(
             "Analysis choices",
-            numericInput("num_pairs",     "Number of pairs analyzed:",  1000, 10, 10000),
             numericInput("tpm_threshold", "Minimum TPM threshold:",      10, 0, 10, 0.5),
             numericInput("fdr_target",    "FDR target level:", 0.05, 0.001, 0.1, 0.001),
             selectInput("side",           "Test side:", 
@@ -179,7 +178,6 @@ server <- function(input, output, session) {
       num_targets = input$num_targets,
       gRNAs_per_target = input$gRNAs_per_target, 
       non_targeting_gRNAs = input$non_targeting_gRNAs,
-      num_pairs = input$num_pairs,
       tpm_threshold = input$tpm_threshold,
       fdr_target = input$fdr_target,
       fc_mean = input$fc_mean,

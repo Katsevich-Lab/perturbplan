@@ -7,11 +7,11 @@
 compute_zero_prob(fold_change_mean, expression_mean, expression_size)
 }
 \arguments{
-\item{fold_change_mean}{A numeric value to use for mean effect size for all element-gene pairs}
+\item{fold_change_mean}{Numeric. Mean fold change effect size.}
 
-\item{expression_mean}{Mean gene expression}
+\item{expression_mean}{Numeric. Mean gene expression level.}
 
-\item{expression_size}{Size parameter in NB distribution}
+\item{expression_size}{Numeric. Size parameter in the negative binomial distribution.}
 }
 \value{
 Probability of a NB variable being 0

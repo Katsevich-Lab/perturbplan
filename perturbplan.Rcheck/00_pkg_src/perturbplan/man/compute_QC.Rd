@@ -15,15 +15,15 @@ compute_QC(
 )
 }
 \arguments{
-\item{fold_change_mean}{A numeric value to use for mean effect size for all element-gene pairs}
+\item{fold_change_mean}{Numeric. Mean fold change effect size.}
 
-\item{expression_mean}{Mean gene expression}
+\item{expression_mean}{Numeric. Mean gene expression level.}
 
-\item{expression_size}{Size parameter in NB distribution}
+\item{expression_size}{Numeric. Size parameter in the negative binomial distribution.}
 
-\item{num_cntrl_cells}{Number of control cells in score test}
+\item{num_cntrl_cells}{Integer. Number of control cells in the score test.}
 
-\item{num_trt_cells}{Number of treatment cells in score test}
+\item{num_trt_cells}{Integer. Number of treatment cells in the score test.}
 
 \item{n_nonzero_trt_thresh}{(Optional) An integer specifying the sceptre QC parameter of the same name; defaults to 7}
 

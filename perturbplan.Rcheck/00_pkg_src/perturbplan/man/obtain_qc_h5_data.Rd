@@ -2,16 +2,34 @@
 % Please edit documentation in R/parameter_estimation_help.R
 \name{obtain_qc_h5_data}
 \alias{obtain_qc_h5_data}
-\title{Obtain a data frame with information of all QC'd reads for library estimation.}
+\title{Obtain a data frame with information of all QC'd reads for library estimation}
 \usage{
 obtain_qc_h5_data(path_to_h5_file)
 }
 \arguments{
-\item{path_to_h5_file}{The path to the outs folder of the cellranger output.}
+\item{path_to_h5_file}{Character. The path to the outs folder of the Cell Ranger output
+containing \code{molecule_info.h5} and \code{filtered_feature_bc_matrix.h5} files.}
 }
 \value{
-A data frame with columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}
+A data frame with columns:
+\describe{
+\item{num_reads}{Number of reads per molecule}
+\item{UMI_id}{Unique molecular identifier}
+\item{cell_id}{Cell barcode identifier with gem group}
+\item{response_id}{Gene identifier}
+}
 }
 \description{
-Obtain a data frame with information of all QC'd reads for library estimation.
+This function reads HDF5 files from Cell Ranger output to extract molecule-level
+information and applies quality control filtering to obtain a comprehensive
+data frame for library size estimation.
+}
+\details{
+The function performs the following steps:
+\enumerate{
+\item Reads raw molecule information from \code{molecule_info.h5}
+\item Extracts cell barcodes, UMI identifiers, and gene features
+\item Filters molecules to only include those from QC-passed cells
+\item Returns a cleaned data frame for downstream analysis
+}
 }

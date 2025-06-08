@@ -8,6 +8,7 @@
 #' @param num_targets Number of targets
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
+#' @param num_pairs Number of pairs analyzed
 #' @param tpm_threshold Minimum TPM threshold
 #' @param fdr_target FDR target level
 #' @param fc_mean Fold-change mean
@@ -25,6 +26,7 @@ calculate_power_grid <- function(
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
+  num_pairs = 1000,
   tpm_threshold = 10,
   fdr_target = 0.05,
   fc_mean = 0.85,
@@ -53,6 +55,7 @@ calculate_power_grid <- function(
     num_targets = num_targets,
     gRNAs_per_target = gRNAs_per_target,
     non_targeting_gRNAs = non_targeting_gRNAs,
+    num_pairs = num_pairs,
     tpm_threshold = tpm_threshold,
     fdr_target = fdr_target,
     fc_mean = fc_mean,
@@ -88,6 +91,7 @@ calculate_power_grid <- function(
       num_targets = num_targets,
       gRNAs_per_target = gRNAs_per_target,
       non_targeting_gRNAs = non_targeting_gRNAs,
+      num_pairs = num_pairs,
       tpm_threshold = tpm_threshold,
       fdr_target = fdr_target,
       fc_mean = fc_mean,
@@ -118,6 +122,7 @@ calculate_power_grid <- function(
 #' @param num_targets Number of targets to test
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
+#' @param num_pairs Number of pairs for multiple testing
 #' @param tpm_threshold TPM threshold (currently unused)
 #' @param fdr_target Target false discovery rate
 #' @param fc_mean Mean fold change for effect size distribution
@@ -138,6 +143,7 @@ compute_power_grid_efficient <- function(
     num_targets = 100,
     gRNAs_per_target = 4,
     non_targeting_gRNAs = 10,
+    num_pairs = 1000,
     tpm_threshold = 10,
     fdr_target = 0.05,
     fc_mean = 0.85,
@@ -202,7 +208,7 @@ compute_power_grid_efficient <- function(
           non_targeting_gRNAs = non_targeting_gRNAs,
           # analysis information
           multiple_testing_alpha = fdr_target, multiple_testing_method = "BH",
-          control_group = control_group, side = side,
+          control_group = control_group, side = side, num_pairs = num_pairs,
           # separated approach information
           fc_expression_df = fc_expression_info$fc_expression_df,
           expression_dispersion_curve = fc_expression_info$expression_dispersion_curve,
@@ -238,6 +244,7 @@ compute_power_grid_efficient <- function(
 #' @param multiple_testing_method Multiple testing method
 #' @param control_group Control group type
 #' @param side Test sidedness
+#' @param num_pairs Number of pairs
 #' @param fc_expression_df Data frame with fold change and expression info
 #' @param expression_dispersion_curve Function for expression-size relationship
 #' @param fc_output_grid Grid points for fold change curve
@@ -248,7 +255,7 @@ compute_power_grid_efficient <- function(
     # experimental information
   num_total_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
   # analysis information
-  multiple_testing_alpha = 0.05, multiple_testing_method = "BH", control_group = "complement", side = "left",
+  multiple_testing_alpha = 0.05, multiple_testing_method = "BH", control_group = "complement", side = "left", num_pairs = 1000,
   # separated approach information
   fc_expression_df, expression_dispersion_curve, fc_output_grid, expr_output_grid, prop_non_null = 0.1){
 
