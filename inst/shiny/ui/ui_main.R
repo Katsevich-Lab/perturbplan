@@ -14,9 +14,9 @@ ui <- dashboardPage(
       menuItem("Power over TPM & FC", tabName = "per_pair", icon = icon("project-diagram"))
     ),
     
-    # Parameter panels
+    # Parameter panels - make scrollable
     tags$div(
-      style = "padding: 15px;",
+      style = "padding: 15px; max-height: 70vh; overflow-y: auto;",
       
       # Experimental choices
       h4("Experimental choices"),
