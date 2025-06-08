@@ -6,6 +6,10 @@ create_selection_server <- function(input, output, session, power_data) {
                         tiles=data.frame(row=integer(0), col=integer(0)))
   slice_mode <- reactiveVal(NULL)
   slice_x    <- reactiveVal(numeric(0))
+  
+  # Helper functions that use sel
+  is_sel <- function(x) identical(sel$type, x)
+  toggle  <- function(v, x) if (x %in% v) setdiff(v, x) else c(v, x)
 
   # Clear selections
   observeEvent(input$clear, {
@@ -73,11 +77,11 @@ create_selection_server <- function(input, output, session, power_data) {
     r <- which.min(abs(power_data$cells_seq() - input$heat_click$y))
     c <- which.min(abs(power_data$reads_seq() - input$heat_click$x))
     if (input$mode=="cells") {
-      sel$type <- "row"; sel$idx <- power_data$toggle(sel$idx,r); slice_mode("row")
+      sel$type <- "row"; sel$idx <- toggle(sel$idx,r); slice_mode("row")
       updateTextInput(session,"overall_points",
                       value=paste(power_data$cells_seq()[sel$idx],collapse=", "))
     } else if (input$mode=="reads") {
-      sel$type <- "col"; sel$idx <- power_data$toggle(sel$idx,c); slice_mode("col")
+      sel$type <- "col"; sel$idx <- toggle(sel$idx,c); slice_mode("col")
       updateTextInput(session,"overall_points",
                       value=paste(power_data$reads_seq()[sel$idx],collapse=", "))
     } else {
@@ -98,22 +102,24 @@ create_selection_server <- function(input, output, session, power_data) {
   # Enable Go button
   observe({
     ok <- power_data$planned() && (
-      (power_data$is_sel("row")  && length(sel$idx)>=1) ||
-        (power_data$is_sel("col")  && length(sel$idx)>=1) ||
-        (power_data$is_sel("tile") && nrow(sel$tiles)>=1)
+      (is_sel("row")  && length(sel$idx)>=1) ||
+        (is_sel("col")  && length(sel$idx)>=1) ||
+        (is_sel("tile") && nrow(sel$tiles)>=1)
     )
     toggleState("go_overall", ok)
   })
   
   observeEvent(input$go_overall, {
-    dest <- if (power_data$is_sel("tile")) "per_pair" else "overall_slice"
+    dest <- if (is_sel("tile")) "per_pair" else "overall_slice"
     updateTabsetPanel(session, "main_tabs", selected = dest)
   })
 
-  # Return selection state for use by other modules
+  # Return selection state and helper functions for use by other modules
   return(list(
     sel = sel,
     slice_mode = slice_mode,
-    slice_x = slice_x
+    slice_x = slice_x,
+    is_sel = is_sel,
+    toggle = toggle
   ))
 }

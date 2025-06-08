@@ -4,7 +4,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
   
   # Compute detailed power curves only when needed (for selected tiles)
   selected_power_curves <- reactive({
-    req(power_data$planned(), power_data$is_sel("tile"), nrow(selection_data$sel$tiles) > 0)
+    req(power_data$planned(), selection_data$is_sel("tile"), nrow(selection_data$sel$tiles) > 0)
     
     # Create selected tiles data frame
     selected_tiles <- data.frame(
@@ -33,7 +33,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
 
   # Per-pair plots with real power curves
   output$pp_combined <- renderPlot({
-    req(power_data$planned(), power_data$is_sel("tile"))
+    req(power_data$planned(), selection_data$is_sel("tile"))
 
     # Get power curves for selected tiles
     curves_results <- selected_power_curves()
@@ -147,7 +147,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       openxlsx::writeData(wb, "Parameters", params_df)
       
       # Add power curves if available
-      if (power_data$is_sel("tile") && nrow(selection_data$sel$tiles) > 0) {
+      if (selection_data$is_sel("tile") && nrow(selection_data$sel$tiles) > 0) {
         curves_data <- selected_power_curves()
         
         # Add tiles info

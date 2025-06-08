@@ -1,10 +1,6 @@
 # Server module for power calculations and reactive values
 
 create_power_server <- function(input, output, session) {
-  # Helper functions
-  is_sel <- function(x) identical(sel$type, x)
-  toggle  <- function(v, x) if (x %in% v) setdiff(v, x) else c(v, x)
-  
   # Reactive values
   planned <- reactiveVal(FALSE)
   output$need_plan <- reactive(!planned())
@@ -66,8 +62,6 @@ create_power_server <- function(input, output, session) {
     reads_seq = reads_seq,
     dcells = dcells,
     dreads = dreads,
-    gridDF = gridDF,
-    is_sel = is_sel,
-    toggle = toggle
+    gridDF = gridDF
   ))
 }

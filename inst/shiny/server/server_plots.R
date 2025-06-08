@@ -18,7 +18,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
       theme(panel.grid=element_blank(),
             aspect.ratio = 1)+
       labs(x="Reads per cell",y="Number of cells",fill="Power")
-    if (power_data$is_sel("row") && length(selection_data$sel$idx)) {
+    if (selection_data$is_sel("row") && length(selection_data$sel$idx)) {
       rect <- data.frame(
         xmin=min(power_data$reads_seq())-power_data$dreads()/2,
         xmax=max(power_data$reads_seq())+power_data$dreads()/2,
@@ -26,7 +26,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
         ymax=power_data$cells_seq()[selection_data$sel$idx]+power_data$dcells()/2
       )
       p <- draw_rects(rect,p)
-    } else if (power_data$is_sel("col") && length(selection_data$sel$idx)) {
+    } else if (selection_data$is_sel("col") && length(selection_data$sel$idx)) {
       rect <- data.frame(
         xmin=power_data$reads_seq()[selection_data$sel$idx]-power_data$dreads()/2,
         xmax=power_data$reads_seq()[selection_data$sel$idx]+power_data$dreads()/2,
@@ -34,7 +34,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
         ymax=max(power_data$cells_seq())+power_data$dcells()/2
       )
       p <- draw_rects(rect,p)
-    } else if (power_data$is_sel("tile") && nrow(selection_data$sel$tiles)) {
+    } else if (selection_data$is_sel("tile") && nrow(selection_data$sel$tiles)) {
       rect <- data.frame(
         xmin=power_data$reads_seq()[selection_data$sel$tiles$col]-power_data$dreads()/2,
         xmax=power_data$reads_seq()[selection_data$sel$tiles$col]+power_data$dreads()/2,
