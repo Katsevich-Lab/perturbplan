@@ -19,12 +19,12 @@ utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell"))
 #' @param experimental_platform Experimental platform
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
-#' @param fc_expression_df Data frame with fold change and expression info from extract_fc_expression_info()
+#' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #'
 #' @return List with power grid, cell/read sequences, and parameters
 #' @export
 calculate_power_grid <- function(
-  fc_expression_df,
+  fc_expression_info,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
@@ -50,7 +50,7 @@ calculate_power_grid <- function(
   # Call the lightweight power function (overall power only, no curves)
   power_results <- compute_power_grid_overall(
     cells_reads_df = cells_reads_df,
-    fc_expression_df = fc_expression_df,
+    fc_expression_info = fc_expression_info,
     num_targets = num_targets,
     gRNAs_per_target = gRNAs_per_target,
     non_targeting_gRNAs = non_targeting_gRNAs,
@@ -94,7 +94,7 @@ calculate_power_grid <- function(
 #' selected cell/read combinations. More efficient than computing all curves upfront.
 #'
 #' @param selected_tiles Data frame with columns 'cells' and 'reads' for selected tiles
-#' @param fc_expression_df Data frame with fold change and expression info from extract_fc_expression_info()
+#' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param num_targets Number of targets
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
@@ -110,7 +110,7 @@ calculate_power_grid <- function(
 #' @export
 calculate_power_curves <- function(
   selected_tiles,
-  fc_expression_df,
+  fc_expression_info,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
@@ -132,7 +132,7 @@ calculate_power_curves <- function(
   # Call the detailed power function for selected tiles only
   power_results <- compute_power_grid_full(
     cells_reads_df = cells_reads_df,
-    fc_expression_df = fc_expression_df,
+    fc_expression_info = fc_expression_info,
     num_targets = num_targets,
     gRNAs_per_target = gRNAs_per_target,
     non_targeting_gRNAs = non_targeting_gRNAs,
@@ -163,7 +163,7 @@ calculate_power_curves <- function(
 #' without the expensive curve calculations. Used for heatmap generation.
 #'
 #' @param cells_reads_df Data frame with columns num_total_cells and reads_per_cell
-#' @param fc_expression_df Data frame with fold change and expression info from extract_fc_expression_info()
+#' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param num_targets Number of targets to test
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
@@ -178,7 +178,7 @@ calculate_power_curves <- function(
 #' @export
 compute_power_grid_overall <- function(
     cells_reads_df,
-    fc_expression_df,
+    fc_expression_info,
     num_targets = 100,
     gRNAs_per_target = 4,
     non_targeting_gRNAs = 10,
@@ -217,7 +217,7 @@ compute_power_grid_overall <- function(
         multiple_testing_alpha = fdr_target, multiple_testing_method = "BH",
         control_group = control_group, side = side,
         # separated approach information
-        fc_expression_df = fc_expression_df,
+        fc_expression_df = fc_expression_info$fc_expression_df,
         prop_non_null = prop_non_null
       )
     )
@@ -236,7 +236,7 @@ compute_power_grid_overall <- function(
 #' for perturb-seq experiments across different experimental conditions.
 #'
 #' @param cells_reads_df Data frame with columns num_total_cells and reads_per_cell
-#' @param fc_expression_df Data frame with fold change and expression info from extract_fc_expression_info()
+#' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param num_targets Number of targets to test
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
@@ -253,7 +253,7 @@ compute_power_grid_overall <- function(
 #' @export
 compute_power_grid_full <- function(
     cells_reads_df,
-    fc_expression_df,
+    fc_expression_info,
     num_targets = 100,
     gRNAs_per_target = 4,
     non_targeting_gRNAs = 10,
@@ -268,12 +268,10 @@ compute_power_grid_full <- function(
     expr_curve_points = 10
 ){
 
-  ############### extract expression dispersion curve for baseline expression ##################
+  ############### extract components from fc_expression_info ##################
   set.seed(1)  # Reproducible results
-  # Extract biological system from baseline expression data or use default
-  biological_system <- "K562"  # Could be made parameter if needed
-  baseline_expression_stats <- extract_baseline_expression(biological_system = biological_system)
-  expression_dispersion_curve <- baseline_expression_stats$expression_dispersion_curve
+  fc_expression_df <- fc_expression_info$fc_expression_df
+  expression_dispersion_curve <- fc_expression_info$expression_dispersion_curve
 
   # Define systematic output grids
   fc_range <- range(fc_expression_df$fold_change)
@@ -298,6 +296,8 @@ compute_power_grid_full <- function(
   expr_output_grid <- 10^seq(log10(expr_min), log10(expr_range[2]), length.out = expr_curve_points)
 
   ########################## compute the library size ##########################
+  # Extract biological system from baseline expression data or use default
+  biological_system <- "K562"  # Could be made parameter if needed
   read_UMI_info <- extract_library_info(biological_system = biological_system)
   UMI_per_cell <- read_UMI_info$UMI_per_cell
   variation <- read_UMI_info$variation

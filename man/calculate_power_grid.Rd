@@ -5,7 +5,7 @@
 \title{Calculate power grid for app heatmap visualization (lightweight)}
 \usage{
 calculate_power_grid(
-  fc_expression_df,
+  fc_expression_info,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
@@ -19,7 +19,7 @@ calculate_power_grid(
 )
 }
 \arguments{
-\item{fc_expression_df}{Data frame with fold change and expression info from extract_fc_expression_info()}
+\item{fc_expression_info}{List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve}
 
 \item{num_targets}{Number of targets}
 

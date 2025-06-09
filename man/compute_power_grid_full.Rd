@@ -6,7 +6,7 @@
 \usage{
 compute_power_grid_full(
   cells_reads_df,
-  fc_expression_df,
+  fc_expression_info,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
@@ -24,7 +24,7 @@ compute_power_grid_full(
 \arguments{
 \item{cells_reads_df}{Data frame with columns num_total_cells and reads_per_cell}
 
-\item{fc_expression_df}{Data frame with fold change and expression info from extract_fc_expression_info()}
+\item{fc_expression_info}{List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve}
 
 \item{num_targets}{Number of targets to test}
 
