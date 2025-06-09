@@ -52,7 +52,28 @@ create_sidebar <- function() {
           selectInput("control_group", "Control group:", 
                       choices = c("Complement cells" = "complement", 
                                  "Non-targeting cells" = "nt_cells"), 
-                      selected = "complement")
+                      selected = "complement"),
+          br(),
+          tags$div(
+            style = "border-top: 1px solid #ddd; padding-top: 15px; margin-top: 10px;",
+            tags$label("Gene list (optional):", style = "font-weight: bold; color: #333;"),
+            br(),
+            tags$small("Upload a CSV file with gene names to analyze (one gene per row)", 
+                      style = "color: #666; font-style: italic;"),
+            br(), br(),
+            fileInput("gene_list_file", 
+                     label = NULL,
+                     accept = c(".csv", ".txt"),
+                     placeholder = "Choose CSV file..."),
+            conditionalPanel(
+              condition = "output.gene_list_uploaded",
+              tags$div(
+                style = "background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 8px; margin-top: 5px;",
+                tags$i(class = "fa fa-check-circle", style = "color: #155724; margin-right: 5px;"),
+                textOutput("gene_list_status", inline = TRUE)
+              )
+            )
+          )
         )
       ),
       

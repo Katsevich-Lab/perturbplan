@@ -146,6 +146,16 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       openxlsx::addWorksheet(wb, "Parameters")
       openxlsx::writeData(wb, "Parameters", params_df)
       
+      # Add gene list if uploaded
+      if (!is.null(power_data$gene_list()) && length(power_data$gene_list()) > 0) {
+        gene_list_df <- data.frame(
+          Gene_Name = power_data$gene_list(),
+          stringsAsFactors = FALSE
+        )
+        openxlsx::addWorksheet(wb, "Gene_List")
+        openxlsx::writeData(wb, "Gene_List", gene_list_df)
+      }
+      
       # Add power curves if available
       if (selection_data$is_sel("tile") && nrow(selection_data$sel$tiles) > 0) {
         curves_data <- selected_power_curves()

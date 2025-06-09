@@ -6,6 +6,67 @@ create_power_server <- function(input, output, session) {
   output$need_plan <- reactive(!planned())
   outputOptions(output, "need_plan", suspendWhenHidden = FALSE)
   observeEvent(input$plan_btn, planned(TRUE))
+  
+  # Gene list file upload handling
+  gene_list <- reactiveVal(NULL)
+  
+  observeEvent(input$gene_list_file, {
+    req(input$gene_list_file)
+    
+    tryCatch({
+      # Read the uploaded file
+      file_ext <- tools::file_ext(input$gene_list_file$name)
+      
+      if (file_ext %in% c("csv", "txt")) {
+        # Try reading as CSV first, then as simple text
+        if (file_ext == "csv") {
+          uploaded_data <- read.csv(input$gene_list_file$datapath, 
+                                  header = FALSE, 
+                                  stringsAsFactors = FALSE)
+          genes <- as.character(uploaded_data[,1])
+        } else {
+          genes <- readLines(input$gene_list_file$datapath)
+        }
+        
+        # Clean the gene list
+        genes <- trimws(genes)  # Remove whitespace
+        genes <- genes[genes != ""]  # Remove empty lines
+        genes <- unique(genes)  # Remove duplicates
+        
+        # Store the gene list
+        gene_list(genes)
+        
+        # Update status
+        output$gene_list_status <- renderText({
+          sprintf("Loaded %d unique genes", length(genes))
+        })
+        
+        output$gene_list_uploaded <- reactive(TRUE)
+        outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
+        
+      } else {
+        showNotification("Please upload a CSV or TXT file", type = "error")
+        gene_list(NULL)
+        output$gene_list_uploaded <- reactive(FALSE)
+        outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
+      }
+      
+    }, error = function(e) {
+      showNotification(paste("Error reading file:", e$message), type = "error")
+      gene_list(NULL)
+      output$gene_list_uploaded <- reactive(FALSE)
+      outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
+    })
+  })
+  
+  # Reset gene list when file is removed
+  observe({
+    if (is.null(input$gene_list_file)) {
+      gene_list(NULL)
+      output$gene_list_uploaded <- reactive(FALSE)
+      outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
+    }
+  })
 
   # Real power calculation using perturbplan package
   power_results <- reactive({
@@ -62,6 +123,7 @@ create_power_server <- function(input, output, session) {
     reads_seq = reads_seq,
     dcells = dcells,
     dreads = dreads,
-    gridDF = gridDF
+    gridDF = gridDF,
+    gene_list = gene_list
   ))
 }
