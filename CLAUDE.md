@@ -48,10 +48,11 @@ perturbplan::launch_app()
 
 ### Core Components
 
-1. **Power Analysis Pipeline** (`R/power.R`, `R/plan_help.R`)
-   - `compute_power_posthoc()`: Main function for post-hoc power analysis
+1. **Power Analysis Pipeline** (`R/power_plan.R`, `R/plan_help.R`)
+   - `calculate_power_grid()`: Main function for heatmap power analysis  
+   - `calculate_power_curves()`: Detailed power curves for selected conditions
    - `compute_power_grid_efficient()`: Efficient grid-based power analysis using C++ Monte Carlo
-   - `example_power_analysis()`: Convenience function for quick power analysis
+   - `compute_power_posthoc()`: Main function for post-hoc power analysis
    - Integrates with C++ implementations for performance
 
 2. **Parameter Estimation** (`R/parameter_estimation.R`, `R/parameter_estimation_help.R`)
