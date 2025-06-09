@@ -1,4 +1,3 @@
-
 # Suppress R CMD check warnings for variables used in dplyr contexts
 utils::globalVariables(c("response_id"))
 
@@ -50,62 +49,67 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
 
   ############## combine expression and effect size information ################
   baseline_expression_stats <- extract_baseline_expression(biological_system = biological_system)
+  baseline_df <- baseline_expression_stats$baseline_expression
   
-  # Handle gene-specific vs random sampling scenarios
-  if (!is.null(gene_list)) {
-    # User provided specific genes - use ALL specified genes (no sampling)
-    baseline_df <- baseline_expression_stats$baseline_expression
-    
-    # Check if baseline data has gene identifiers (assuming 'response_id' column exists)
-    if ("response_id" %in% colnames(baseline_df)) {
-      # Filter for specified genes
-      specified_genes_df <- baseline_df |> 
-        dplyr::filter(response_id %in% gene_list)
-      
-      # Check if we found any matching genes
-      if (nrow(specified_genes_df) == 0) {
-        stop("No matching genes found in baseline expression data. Please check gene IDs.")
-      } else {
-        # Use ALL specified genes (no sampling)
-        expression_df <- specified_genes_df
-        n_genes <- nrow(expression_df)
-      }
-    } else {
-      stop("Baseline expression data does not contain response_id column. Cannot use specified gene list.")
-    }
-  } else {
-    # No specific genes provided - use random sampling of B genes
-    expression_df <- baseline_expression_stats$baseline_expression |> dplyr::slice_sample(n = B)
-    n_genes <- B
-  }
-  
-  #################### apply TPM threshold filtering #########################
+  #################### apply TPM threshold filtering FIRST ###################
   # Convert TPM threshold to relative expression scale (TPM / 1e6)
   tpm_threshold_relative <- tpm_threshold / 1e6
   
-  # Filter out genes below TPM threshold
-  if ("relative_expression" %in% colnames(expression_df)) {
-    pre_filter_n <- nrow(expression_df)
-    expression_df <- expression_df |> 
+  # Filter the full baseline dataset by TPM threshold first
+  if ("relative_expression" %in% colnames(baseline_df)) {
+    pre_filter_n <- nrow(baseline_df)
+    filtered_baseline_df <- baseline_df |> 
       dplyr::filter(relative_expression >= tpm_threshold_relative)
-    post_filter_n <- nrow(expression_df)
+    post_filter_n <- nrow(filtered_baseline_df)
     
     # Check if we have any genes left after filtering
     if (post_filter_n == 0) {
       stop("No genes remain after TPM threshold filtering. Consider lowering tpm_threshold.")
     }
     
-    # Update n_genes to reflect filtered count
-    n_genes <- post_filter_n
-    
     # Print filtering summary
     cat("TPM filtering: Kept", post_filter_n, "out of", pre_filter_n, "genes (threshold:", tpm_threshold, "TPM)\n")
   } else {
-    warning("No relative_expression column found for TPM filtering.")
+    warning("No relative_expression column found for TPM filtering. Using unfiltered data.")
+    filtered_baseline_df <- baseline_df
+    post_filter_n <- nrow(filtered_baseline_df)
+  }
+  
+  ################# sample/subset genes from filtered pool ###################
+  # Handle gene-specific vs random sampling scenarios from the filtered pool
+  if (!is.null(gene_list)) {
+    # User provided specific genes - extract from filtered pool
+    if ("response_id" %in% colnames(filtered_baseline_df)) {
+      # Filter for specified genes from the TPM-filtered pool
+      specified_genes_df <- filtered_baseline_df |> 
+        dplyr::filter(response_id %in% gene_list)
+      
+      # Check if we found any matching genes in the filtered pool
+      if (nrow(specified_genes_df) == 0) {
+        stop("No matching genes found in TPM-filtered baseline expression data. Genes may be below TPM threshold or not in dataset.")
+      } else {
+        # Use ALL specified genes that passed TPM filtering
+        expression_df <- specified_genes_df
+        n_genes <- nrow(expression_df)
+        cat("Gene-specific mode: Using", n_genes, "specified genes that passed TPM filtering\n")
+      }
+    } else {
+      stop("Baseline expression data does not contain response_id column. Cannot use specified gene list.")
+    }
+  } else {
+    # No specific genes provided - sample B genes from filtered pool
+    if (post_filter_n < B) {
+      warning("Fewer genes (", post_filter_n, ") available after TPM filtering than requested (", B, "). Using all available genes.")
+      expression_df <- filtered_baseline_df
+      n_genes <- post_filter_n
+    } else {
+      expression_df <- filtered_baseline_df |> dplyr::slice_sample(n = B)
+      n_genes <- B
+    }
   }
   
   # Combine fold changes with expression parameters
-  # Generate fold changes to match the number of genes (after filtering)
+  # Generate fold changes to match the number of genes (after filtering and sampling)
   fc_expression_df <- data.frame(
     fold_change = stats::rnorm(n = n_genes, mean = fold_change_mean, sd = fold_change_sd)
   ) |>
@@ -211,32 +215,32 @@ extract_library_info <- function(biological_system = "K562"){
 #' Compute effective library size from read depth using UMI saturation curve
 #'
 #' @description
-#' This function implements the saturation-magnitude (S-M) curve to convert
-#' read depth per cell into effective library size (observed UMIs), accounting
-#' for PCR bias and UMI saturation effects.
+#' This function computes the effective library size (in UMIs) from sequencing read depth
+#' using fitted saturation curves that account for PCR amplification bias and UMI saturation.
 #'
-#' @param reads_per_cell Numeric. Number of reads per cell.
-#' @param UMI_per_cell Numeric. Total UMI per cell parameter (asymptotic maximum).
-#' @param variation Numeric. Variation parameter characterizing PCR bias and saturation.
+#' @param reads_per_cell Numeric. Total reads per cell.
+#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter from S-M curve fit.
+#' @param variation Numeric. Variation parameter characterizing PCR bias from S-M curve fit.
 #'
-#' @return Numeric. Effective library size (number of observed UMIs per cell).
+#' @return Numeric. Effective library size in UMIs.
 #'
 #' @details
-#' The function implements the S-M curve model:
-#' \deqn{UMI_{obs} = UMI_{total} \times \left(1 - \exp\left(-\frac{reads}{UMI_{total}}\right) \times \left(1 + variation \times \frac{reads^2}{2 \times UMI_{total}^2}\right)\right)}
-#'
-#' where:
+#' The saturation-magnitude (S-M) curve model relates sequencing reads to unique UMI counts
+#' accounting for:
 #' \itemize{
-#'   \item \code{UMI_obs} is the number of observed UMIs (library size)
-#'   \item \code{UMI_total} is the total number of UMIs per cell
-#'   \item \code{reads} is the number of reads per cell
-#'   \item \code{variation} accounts for PCR bias and technical variation
+#'   \item PCR amplification variability
+#'   \item UMI saturation at high read depths
+#'   \item Platform-specific technical biases
 #' }
 #'
-#' @seealso 
-#' \code{\link{extract_library_info}} for obtaining the parameters
-#' \code{\link{library_computation}} for fitting parameters from data
+#' The relationship follows: UMI = UMI_per_cell * (1 - exp(-reads_per_cell / (UMI_per_cell * variation)))
+#'
+#' @seealso \code{\link{extract_library_info}} for obtaining curve parameters
 #' @export
 fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
-  UMI_per_cell * (1 - exp(-reads_per_cell / UMI_per_cell) * (1 + variation * reads_per_cell^2 / (2 * UMI_per_cell^2)))
+
+  # Apply the saturation curve transformation
+  effective_UMI <- UMI_per_cell * (1 - exp(-reads_per_cell / (UMI_per_cell * variation)))
+  
+  return(effective_UMI)
 }

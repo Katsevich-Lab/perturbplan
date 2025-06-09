@@ -7,33 +7,30 @@
 fit_read_UMI_curve(reads_per_cell, UMI_per_cell, variation)
 }
 \arguments{
-\item{reads_per_cell}{Numeric. Number of reads per cell.}
+\item{reads_per_cell}{Numeric. Total reads per cell.}
 
-\item{UMI_per_cell}{Numeric. Total UMI per cell parameter (asymptotic maximum).}
+\item{UMI_per_cell}{Numeric. Maximum UMI per cell parameter from S-M curve fit.}
 
-\item{variation}{Numeric. Variation parameter characterizing PCR bias and saturation.}
+\item{variation}{Numeric. Variation parameter characterizing PCR bias from S-M curve fit.}
 }
 \value{
-Numeric. Effective library size (number of observed UMIs per cell).
+Numeric. Effective library size in UMIs.
 }
 \description{
-This function implements the saturation-magnitude (S-M) curve to convert
-read depth per cell into effective library size (observed UMIs), accounting
-for PCR bias and UMI saturation effects.
+This function computes the effective library size (in UMIs) from sequencing read depth
+using fitted saturation curves that account for PCR amplification bias and UMI saturation.
 }
 \details{
-The function implements the S-M curve model:
-\deqn{UMI_{obs} = UMI_{total} \times \left(1 - \exp\left(-\frac{reads}{UMI_{total}}\right) \times \left(1 + variation \times \frac{reads^2}{2 \times UMI_{total}^2}\right)\right)}
-
-where:
+The saturation-magnitude (S-M) curve model relates sequencing reads to unique UMI counts
+accounting for:
 \itemize{
-\item \code{UMI_obs} is the number of observed UMIs (library size)
-\item \code{UMI_total} is the total number of UMIs per cell
-\item \code{reads} is the number of reads per cell
-\item \code{variation} accounts for PCR bias and technical variation
+\item PCR amplification variability
+\item UMI saturation at high read depths
+\item Platform-specific technical biases
 }
+
+The relationship follows: UMI = UMI_per_cell * (1 - exp(-reads_per_cell / (UMI_per_cell * variation)))
 }
 \seealso{
-\code{\link{extract_library_info}} for obtaining the parameters
-\code{\link{library_computation}} for fitting parameters from data
+\code{\link{extract_library_info}} for obtaining curve parameters
 }
