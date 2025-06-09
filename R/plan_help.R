@@ -1,6 +1,6 @@
 
 # Suppress R CMD check warnings for variables used in dplyr contexts
-utils::globalVariables(c("gene_id"))
+utils::globalVariables(c("response_id"))
 
 #' Extract fold change and expression information for power analysis
 #'
@@ -47,11 +47,11 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
     # User provided specific genes - extract their expression parameters
     baseline_df <- baseline_expression_stats$baseline_expression
     
-    # Check if baseline data has gene identifiers (assuming 'gene_id' column exists)
-    if ("gene_id" %in% colnames(baseline_df)) {
+    # Check if baseline data has gene identifiers (assuming 'response_id' column exists)
+    if ("response_id" %in% colnames(baseline_df)) {
       # Filter for specified genes
       specified_genes_df <- baseline_df |> 
-        dplyr::filter(gene_id %in% gene_list)
+        dplyr::filter(response_id %in% gene_list)
       
       # Check if we found any matching genes
       if (nrow(specified_genes_df) == 0) {
@@ -68,7 +68,7 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
         }
       }
     } else {
-      warning("Baseline expression data does not contain gene identifiers. Using random sampling instead.")
+      warning("Baseline expression data does not contain response_id column. Using random sampling instead.")
       expression_df <- baseline_df |> dplyr::slice_sample(n = B)
     }
   } else {
