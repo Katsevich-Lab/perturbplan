@@ -77,7 +77,8 @@ create_power_server <- function(input, output, session) {
       fold_change_sd = input$fc_sd,
       biological_system = input$biological_system,
       B = 1000,  # Monte Carlo samples for good accuracy
-      gene_list = gene_list()  # Use uploaded gene list if available
+      gene_list = gene_list(),  # Use uploaded gene list if available
+      tpm_threshold = input$tpm_threshold  # Apply TPM filtering
     )
   })
 

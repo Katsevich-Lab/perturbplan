@@ -9,7 +9,8 @@ extract_fc_expression_info(
   fold_change_sd,
   biological_system = "K562",
   B = 200,
-  gene_list = NULL
+  gene_list = NULL,
+  tpm_threshold = 10
 )
 }
 \arguments{
@@ -25,6 +26,9 @@ Ignored when gene_list is provided.}
 \item{gene_list}{Character vector. Optional list of Ensembl gene IDs to use for analysis.
 If provided, expression parameters will be extracted for ALL specified genes (no sampling).
 If NULL (default), B genes are randomly sampled from baseline data.}
+
+\item{tpm_threshold}{Numeric. Minimum TPM threshold (default: 10). Genes with expression
+levels below tpm_threshold/1e6 are filtered out before power calculation.}
 }
 \value{
 A list with elements:
@@ -48,6 +52,7 @@ The function operates in two modes:
 In both modes:
 \itemize{
 \item Sets a random seed for reproducibility
+\item Filters genes below TPM threshold (relative_expression < tpm_threshold/1e6)
 \item Generates fold change values from a normal distribution (one per gene)
 \item Returns combined data for Monte Carlo integration
 }

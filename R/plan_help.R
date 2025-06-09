@@ -17,6 +17,8 @@ utils::globalVariables(c("response_id"))
 #' @param gene_list Character vector. Optional list of Ensembl gene IDs to use for analysis.
 #'   If provided, expression parameters will be extracted for ALL specified genes (no sampling).
 #'   If NULL (default), B genes are randomly sampled from baseline data.
+#' @param tpm_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression 
+#'   levels below tpm_threshold/1e6 are filtered out before power calculation.
 #'
 #' @return A list with elements:
 #' \describe{
@@ -33,14 +35,15 @@ utils::globalVariables(c("response_id"))
 #' 
 #' In both modes:
 #' \itemize{
-#'   \item Sets a random seed for reproducibility
+#'   \item Sets a random seed for reproducibility  
+#'   \item Filters genes below TPM threshold (relative_expression < tpm_threshold/1e6)
 #'   \item Generates fold change values from a normal distribution (one per gene)
 #'   \item Returns combined data for Monte Carlo integration
 #' }
 #'
 #' @seealso \code{\link{extract_baseline_expression}} for baseline data extraction
 #' @export
-extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biological_system =  "K562", B = 200, gene_list = NULL){
+extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biological_system =  "K562", B = 200, gene_list = NULL, tpm_threshold = 10){
 
   # set the random seed
   set.seed(1)
@@ -76,8 +79,33 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
     n_genes <- B
   }
   
+  #################### apply TPM threshold filtering #########################
+  # Convert TPM threshold to relative expression scale (TPM / 1e6)
+  tpm_threshold_relative <- tpm_threshold / 1e6
+  
+  # Filter out genes below TPM threshold
+  if ("relative_expression" %in% colnames(expression_df)) {
+    pre_filter_n <- nrow(expression_df)
+    expression_df <- expression_df |> 
+      dplyr::filter(relative_expression >= tpm_threshold_relative)
+    post_filter_n <- nrow(expression_df)
+    
+    # Check if we have any genes left after filtering
+    if (post_filter_n == 0) {
+      stop("No genes remain after TPM threshold filtering. Consider lowering tpm_threshold.")
+    }
+    
+    # Update n_genes to reflect filtered count
+    n_genes <- post_filter_n
+    
+    # Print filtering summary
+    cat("TPM filtering: Kept", post_filter_n, "out of", pre_filter_n, "genes (threshold:", tpm_threshold, "TPM)\n")
+  } else {
+    warning("No relative_expression column found for TPM filtering.")
+  }
+  
   # Combine fold changes with expression parameters
-  # Generate fold changes to match the number of genes (either B or length of gene_list)
+  # Generate fold changes to match the number of genes (after filtering)
   fc_expression_df <- data.frame(
     fold_change = stats::rnorm(n = n_genes, mean = fold_change_mean, sd = fold_change_sd)
   ) |>
