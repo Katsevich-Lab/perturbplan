@@ -58,8 +58,17 @@ create_sidebar <- function() {
             style = "border-top: 1px solid #ddd; padding-top: 15px; margin-top: 10px;",
             tags$label("Gene list (optional):", style = "font-weight: bold; color: #333;"),
             br(),
-            tags$small("Upload a CSV file with gene names to analyze (one gene per row)", 
+            tags$small("Upload a CSV file with Ensembl gene names to analyze (one gene per row)", 
                       style = "color: #666; font-style: italic;"),
+            br(),
+            tags$div(
+              style = "background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 3px; padding: 6px; margin: 5px 0;",
+              tags$small(
+                tags$i(class = "fa fa-info-circle", style = "color: #856404; margin-right: 3px;"),
+                tags$strong("Note: "), "Only Ensembl gene IDs are accepted (e.g., ENSG00000141510)",
+                style = "color: #856404; font-size: 11px;"
+              )
+            ),
             br(), br(),
             fileInput("gene_list_file", 
                      label = NULL,
