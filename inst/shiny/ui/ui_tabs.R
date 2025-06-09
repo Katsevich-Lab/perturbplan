@@ -24,13 +24,13 @@ create_heatmap_tab <- function() {
         )
       ),
       
-      box(
-        status = "info", 
-        solidHeader = TRUE,
-        width = 4,
-        
-        conditionalPanel(
-          condition = "!output.need_plan",
+      conditionalPanel(
+        condition = "!output.need_plan",
+        box(
+          status = "info", 
+          solidHeader = TRUE,
+          width = 4,
+          
           radioButtons(
             "mode", "Drill down by:",
             c("Number of cells (click one or more rows)" = "cells",
