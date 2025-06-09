@@ -14,33 +14,27 @@ utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell"))
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
 #' @param tpm_threshold Minimum TPM threshold
 #' @param fdr_target FDR target level
-#' @param fc_mean Fold-change mean
-#' @param fc_sd Fold-change SD
 #' @param prop_non_null Proportion of non-null pairs
 #' @param MOI Multiplicity of infection
-#' @param biological_system Biological system
 #' @param experimental_platform Experimental platform
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
-#' @param gene_list Character vector of Ensembl gene IDs for analysis (optional)
+#' @param fc_expression_df Data frame with fold change and expression info from extract_fc_expression_info()
 #'
 #' @return List with power grid, cell/read sequences, and parameters
 #' @export
 calculate_power_grid <- function(
+  fc_expression_df,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
   tpm_threshold = 10,
   fdr_target = 0.05,
-  fc_mean = 0.85,
-  fc_sd = 0.15,
   prop_non_null = 0.1,
   MOI = 10,
-  biological_system = "K562",
   experimental_platform = "10x Chromium v3",
   side = "left",
-  control_group = "complement",
-  gene_list = NULL
+  control_group = "complement"
 ) {
 
   # Create grid for heatmap visualization
@@ -56,21 +50,17 @@ calculate_power_grid <- function(
   # Call the lightweight power function (overall power only, no curves)
   power_results <- compute_power_grid_overall(
     cells_reads_df = cells_reads_df,
+    fc_expression_df = fc_expression_df,
     num_targets = num_targets,
     gRNAs_per_target = gRNAs_per_target,
     non_targeting_gRNAs = non_targeting_gRNAs,
     tpm_threshold = tpm_threshold,
     fdr_target = fdr_target,
-    fc_mean = fc_mean,
-    fc_sd = fc_sd,
     prop_non_null = prop_non_null,
     MOI = MOI,
-    biological_system = biological_system,
     experimental_platform = experimental_platform,
     side = side,
-    control_group = control_group,
-    B = 1000,  # Monte Carlo samples for good accuracy
-    gene_list = gene_list
+    control_group = control_group
   )
 
   # Transform to expected format for heatmap
@@ -91,11 +81,8 @@ calculate_power_grid <- function(
       non_targeting_gRNAs = non_targeting_gRNAs,
       tpm_threshold = tpm_threshold,
       fdr_target = fdr_target,
-      fc_mean = fc_mean,
-      fc_sd = fc_sd,
       prop_non_null = prop_non_null,
       MOI = MOI,
-      biological_system = biological_system,
       experimental_platform = experimental_platform
     )
   )
@@ -107,41 +94,33 @@ calculate_power_grid <- function(
 #' selected cell/read combinations. More efficient than computing all curves upfront.
 #'
 #' @param selected_tiles Data frame with columns 'cells' and 'reads' for selected tiles
+#' @param fc_expression_df Data frame with fold change and expression info from extract_fc_expression_info()
 #' @param num_targets Number of targets
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
 #' @param tpm_threshold Minimum TPM threshold
 #' @param fdr_target FDR target level
-#' @param fc_mean Fold-change mean
-#' @param fc_sd Fold-change SD
 #' @param prop_non_null Proportion of non-null pairs
 #' @param MOI Multiplicity of infection
-#' @param biological_system Biological system
 #' @param experimental_platform Experimental platform
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
-#' @param cached_fc_expression_info Optional cached fold-change expression information (currently unused)
-#' @param gene_list Character vector of Ensembl gene IDs for analysis (optional)
 #'
 #' @return List with power curves for selected tiles
 #' @export
 calculate_power_curves <- function(
   selected_tiles,
+  fc_expression_df,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
   tpm_threshold = 10,
   fdr_target = 0.05,
-  fc_mean = 0.85,
-  fc_sd = 0.15,
   prop_non_null = 0.1,
   MOI = 10,
-  biological_system = "K562",
   experimental_platform = "10x Chromium v3",
   side = "left",
-  control_group = "complement",
-  cached_fc_expression_info = NULL,
-  gene_list = NULL
+  control_group = "complement"
 ) {
 
   # Create cells_reads_df for selected tiles only
@@ -153,23 +132,19 @@ calculate_power_curves <- function(
   # Call the detailed power function for selected tiles only
   power_results <- compute_power_grid_full(
     cells_reads_df = cells_reads_df,
+    fc_expression_df = fc_expression_df,
     num_targets = num_targets,
     gRNAs_per_target = gRNAs_per_target,
     non_targeting_gRNAs = non_targeting_gRNAs,
     tpm_threshold = tpm_threshold,
     fdr_target = fdr_target,
-    fc_mean = fc_mean,
-    fc_sd = fc_sd,
     prop_non_null = prop_non_null,
     MOI = MOI,
-    biological_system = biological_system,
     experimental_platform = experimental_platform,
     side = side,
     control_group = control_group,
-    B = 1000,  # Monte Carlo samples for good accuracy
     fc_curve_points = 10,  # Sufficient resolution for curves
-    expr_curve_points = 10,
-    gene_list = gene_list
+    expr_curve_points = 10
   )
 
   # Return power curves with cell/read information
@@ -188,50 +163,37 @@ calculate_power_curves <- function(
 #' without the expensive curve calculations. Used for heatmap generation.
 #'
 #' @param cells_reads_df Data frame with columns num_total_cells and reads_per_cell
+#' @param fc_expression_df Data frame with fold change and expression info from extract_fc_expression_info()
 #' @param num_targets Number of targets to test
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
 #' @param tpm_threshold TPM threshold (currently unused)
 #' @param fdr_target Target false discovery rate
-#' @param fc_mean Mean fold change for effect size distribution
-#' @param fc_sd Standard deviation of fold change distribution
 #' @param prop_non_null Proportion of non-null hypotheses
 #' @param MOI Multiplicity of infection
-#' @param biological_system Biological system for baseline expression
 #' @param experimental_platform Experimental platform
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
-#' @param B Number of Monte Carlo samples for integration
-#' @param gene_list Character vector of Ensembl gene IDs for analysis (optional)
 #' @return Data frame with power analysis results (overall power only)
 #' @export
 compute_power_grid_overall <- function(
     cells_reads_df,
+    fc_expression_df,
     num_targets = 100,
     gRNAs_per_target = 4,
     non_targeting_gRNAs = 10,
     tpm_threshold = 10,
     fdr_target = 0.05,
-    fc_mean = 0.85,
-    fc_sd = 0.15,
     prop_non_null = 0.1,
     MOI = 10,
-    biological_system = "K562",
     experimental_platform = "10x Chromium v3",
     side = "left",
-    control_group = "complement",
-    B = 1000,
-    gene_list = NULL
+    control_group = "complement"
 ){
 
-  ############### extract Monte Carlo samples for integration ##################
-  set.seed(1)  # Reproducible results
-  fc_expression_info <- extract_fc_expression_info(
-    fold_change_mean = fc_mean, fold_change_sd = fc_sd,
-    biological_system = biological_system, B = B, gene_list = gene_list
-  )
-
   ########################## compute the library size ##########################
+  # Extract biological system from baseline expression data or use default
+  biological_system <- "K562"  # Could be made parameter if needed
   read_UMI_info <- extract_library_info(biological_system = biological_system)
   UMI_per_cell <- read_UMI_info$UMI_per_cell
   variation <- read_UMI_info$variation
@@ -255,7 +217,7 @@ compute_power_grid_overall <- function(
         multiple_testing_alpha = fdr_target, multiple_testing_method = "BH",
         control_group = control_group, side = side,
         # separated approach information
-        fc_expression_df = fc_expression_info$fc_expression_df,
+        fc_expression_df = fc_expression_df,
         prop_non_null = prop_non_null
       )
     )
@@ -274,56 +236,48 @@ compute_power_grid_overall <- function(
 #' for perturb-seq experiments across different experimental conditions.
 #'
 #' @param cells_reads_df Data frame with columns num_total_cells and reads_per_cell
+#' @param fc_expression_df Data frame with fold change and expression info from extract_fc_expression_info()
 #' @param num_targets Number of targets to test
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
 #' @param tpm_threshold TPM threshold (currently unused)
 #' @param fdr_target Target false discovery rate
-#' @param fc_mean Mean fold change for effect size distribution
-#' @param fc_sd Standard deviation of fold change distribution
 #' @param prop_non_null Proportion of non-null hypotheses
 #' @param MOI Multiplicity of infection
-#' @param biological_system Biological system for baseline expression
 #' @param experimental_platform Experimental platform
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
-#' @param B Number of Monte Carlo samples for integration
 #' @param fc_curve_points Number of points for fold change curve
 #' @param expr_curve_points Number of points for expression curve
-#' @param gene_list Character vector of Ensembl gene IDs for analysis (optional)
 #' @return Data frame with power analysis results
 #' @export
 compute_power_grid_full <- function(
     cells_reads_df,
+    fc_expression_df,
     num_targets = 100,
     gRNAs_per_target = 4,
     non_targeting_gRNAs = 10,
     tpm_threshold = 10,
     fdr_target = 0.05,
-    fc_mean = 0.85,
-    fc_sd = 0.15,
     prop_non_null = 0.1,
     MOI = 10,
-    biological_system = "K562",
     experimental_platform = "10x Chromium v3",
     side = "left",
     control_group = "complement",
-    B = 1000,
     fc_curve_points = 10,
-    expr_curve_points = 10,
-    gene_list = NULL
+    expr_curve_points = 10
 ){
 
-  ############### extract Monte Carlo samples for integration ##################
+  ############### extract expression dispersion curve for baseline expression ##################
   set.seed(1)  # Reproducible results
-  fc_expression_info <- extract_fc_expression_info(
-    fold_change_mean = fc_mean, fold_change_sd = fc_sd,
-    biological_system = biological_system, B = B, gene_list = gene_list
-  )
+  # Extract biological system from baseline expression data or use default
+  biological_system <- "K562"  # Could be made parameter if needed
+  baseline_expression_stats <- extract_baseline_expression(biological_system = biological_system)
+  expression_dispersion_curve <- baseline_expression_stats$expression_dispersion_curve
 
   # Define systematic output grids
-  fc_range <- range(fc_expression_info$fc_expression_df$fold_change)
-  expr_range <- range(fc_expression_info$fc_expression_df$relative_expression)
+  fc_range <- range(fc_expression_df$fold_change)
+  expr_range <- range(fc_expression_df$relative_expression)
 
   # Use directional fold change grid based on test sidedness
   if (side == "left") {
@@ -368,8 +322,8 @@ compute_power_grid_full <- function(
           multiple_testing_alpha = fdr_target, multiple_testing_method = "BH",
           control_group = control_group, side = side,
           # separated approach information
-          fc_expression_df = fc_expression_info$fc_expression_df,
-          expression_dispersion_curve = fc_expression_info$expression_dispersion_curve,
+          fc_expression_df = fc_expression_df,
+          expression_dispersion_curve = expression_dispersion_curve,
           fc_output_grid = fc_output_grid,
           expr_output_grid = expr_output_grid,
           prop_non_null = prop_non_null

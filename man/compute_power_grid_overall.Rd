@@ -6,25 +6,23 @@
 \usage{
 compute_power_grid_overall(
   cells_reads_df,
+  fc_expression_df,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
   tpm_threshold = 10,
   fdr_target = 0.05,
-  fc_mean = 0.85,
-  fc_sd = 0.15,
   prop_non_null = 0.1,
   MOI = 10,
-  biological_system = "K562",
   experimental_platform = "10x Chromium v3",
   side = "left",
-  control_group = "complement",
-  B = 1000,
-  gene_list = NULL
+  control_group = "complement"
 )
 }
 \arguments{
 \item{cells_reads_df}{Data frame with columns num_total_cells and reads_per_cell}
+
+\item{fc_expression_df}{Data frame with fold change and expression info from extract_fc_expression_info()}
 
 \item{num_targets}{Number of targets to test}
 
@@ -36,25 +34,15 @@ compute_power_grid_overall(
 
 \item{fdr_target}{Target false discovery rate}
 
-\item{fc_mean}{Mean fold change for effect size distribution}
-
-\item{fc_sd}{Standard deviation of fold change distribution}
-
 \item{prop_non_null}{Proportion of non-null hypotheses}
 
 \item{MOI}{Multiplicity of infection}
-
-\item{biological_system}{Biological system for baseline expression}
 
 \item{experimental_platform}{Experimental platform}
 
 \item{side}{Test sidedness ("left", "right", "both")}
 
 \item{control_group}{Control group type ("complement" or "nt_cells")}
-
-\item{B}{Number of Monte Carlo samples for integration}
-
-\item{gene_list}{Character vector of Ensembl gene IDs for analysis (optional)}
 }
 \value{
 Data frame with power analysis results (overall power only)

@@ -6,25 +6,23 @@
 \usage{
 calculate_power_curves(
   selected_tiles,
+  fc_expression_df,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
   tpm_threshold = 10,
   fdr_target = 0.05,
-  fc_mean = 0.85,
-  fc_sd = 0.15,
   prop_non_null = 0.1,
   MOI = 10,
-  biological_system = "K562",
   experimental_platform = "10x Chromium v3",
   side = "left",
-  control_group = "complement",
-  cached_fc_expression_info = NULL,
-  gene_list = NULL
+  control_group = "complement"
 )
 }
 \arguments{
 \item{selected_tiles}{Data frame with columns 'cells' and 'reads' for selected tiles}
+
+\item{fc_expression_df}{Data frame with fold change and expression info from extract_fc_expression_info()}
 
 \item{num_targets}{Number of targets}
 
@@ -36,25 +34,15 @@ calculate_power_curves(
 
 \item{fdr_target}{FDR target level}
 
-\item{fc_mean}{Fold-change mean}
-
-\item{fc_sd}{Fold-change SD}
-
 \item{prop_non_null}{Proportion of non-null pairs}
 
 \item{MOI}{Multiplicity of infection}
-
-\item{biological_system}{Biological system}
 
 \item{experimental_platform}{Experimental platform}
 
 \item{side}{Test sidedness ("left", "right", "both")}
 
 \item{control_group}{Control group type ("complement" or "nt_cells")}
-
-\item{cached_fc_expression_info}{Optional cached fold-change expression information (currently unused)}
-
-\item{gene_list}{Character vector of Ensembl gene IDs for analysis (optional)}
 }
 \value{
 List with power curves for selected tiles

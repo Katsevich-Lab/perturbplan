@@ -5,23 +5,22 @@
 \title{Calculate power grid for app heatmap visualization (lightweight)}
 \usage{
 calculate_power_grid(
+  fc_expression_df,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
   tpm_threshold = 10,
   fdr_target = 0.05,
-  fc_mean = 0.85,
-  fc_sd = 0.15,
   prop_non_null = 0.1,
   MOI = 10,
-  biological_system = "K562",
   experimental_platform = "10x Chromium v3",
   side = "left",
-  control_group = "complement",
-  gene_list = NULL
+  control_group = "complement"
 )
 }
 \arguments{
+\item{fc_expression_df}{Data frame with fold change and expression info from extract_fc_expression_info()}
+
 \item{num_targets}{Number of targets}
 
 \item{gRNAs_per_target}{Number of gRNAs per target}
@@ -32,23 +31,15 @@ calculate_power_grid(
 
 \item{fdr_target}{FDR target level}
 
-\item{fc_mean}{Fold-change mean}
-
-\item{fc_sd}{Fold-change SD}
-
 \item{prop_non_null}{Proportion of non-null pairs}
 
 \item{MOI}{Multiplicity of infection}
-
-\item{biological_system}{Biological system}
 
 \item{experimental_platform}{Experimental platform}
 
 \item{side}{Test sidedness ("left", "right", "both")}
 
 \item{control_group}{Control group type ("complement" or "nt_cells")}
-
-\item{gene_list}{Character vector of Ensembl gene IDs for analysis (optional)}
 }
 \value{
 List with power grid, cell/read sequences, and parameters
