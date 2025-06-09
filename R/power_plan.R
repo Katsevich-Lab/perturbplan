@@ -20,11 +20,13 @@ utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell"))
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
+#' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #'
 #' @return List with power grid, cell/read sequences, and parameters
 #' @export
 calculate_power_grid <- function(
   fc_expression_info,
+  library_info,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
@@ -51,6 +53,7 @@ calculate_power_grid <- function(
   power_results <- compute_power_grid_overall(
     cells_reads_df = cells_reads_df,
     fc_expression_info = fc_expression_info,
+    library_info = library_info,
     num_targets = num_targets,
     gRNAs_per_target = gRNAs_per_target,
     non_targeting_gRNAs = non_targeting_gRNAs,
@@ -95,6 +98,7 @@ calculate_power_grid <- function(
 #'
 #' @param selected_tiles Data frame with columns 'cells' and 'reads' for selected tiles
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
+#' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #' @param num_targets Number of targets
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
@@ -111,6 +115,7 @@ calculate_power_grid <- function(
 calculate_power_curves <- function(
   selected_tiles,
   fc_expression_info,
+  library_info,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
@@ -133,6 +138,7 @@ calculate_power_curves <- function(
   power_results <- compute_power_grid_full(
     cells_reads_df = cells_reads_df,
     fc_expression_info = fc_expression_info,
+    library_info = library_info,
     num_targets = num_targets,
     gRNAs_per_target = gRNAs_per_target,
     non_targeting_gRNAs = non_targeting_gRNAs,
@@ -164,6 +170,7 @@ calculate_power_curves <- function(
 #'
 #' @param cells_reads_df Data frame with columns num_total_cells and reads_per_cell
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
+#' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #' @param num_targets Number of targets to test
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
@@ -179,6 +186,7 @@ calculate_power_curves <- function(
 compute_power_grid_overall <- function(
     cells_reads_df,
     fc_expression_info,
+    library_info,
     num_targets = 100,
     gRNAs_per_target = 4,
     non_targeting_gRNAs = 10,
@@ -192,11 +200,9 @@ compute_power_grid_overall <- function(
 ){
 
   ########################## compute the library size ##########################
-  # Extract biological system from baseline expression data or use default
-  biological_system <- "K562"  # Could be made parameter if needed
-  read_UMI_info <- extract_library_info(biological_system = biological_system)
-  UMI_per_cell <- read_UMI_info$UMI_per_cell
-  variation <- read_UMI_info$variation
+  # Use passed library info (extracted upfront)
+  UMI_per_cell <- library_info$UMI_per_cell
+  variation <- library_info$variation
 
   # compute the library size
   cells_reads_df <- cells_reads_df |>
@@ -237,6 +243,7 @@ compute_power_grid_overall <- function(
 #'
 #' @param cells_reads_df Data frame with columns num_total_cells and reads_per_cell
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
+#' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #' @param num_targets Number of targets to test
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
@@ -254,6 +261,7 @@ compute_power_grid_overall <- function(
 compute_power_grid_full <- function(
     cells_reads_df,
     fc_expression_info,
+    library_info,
     num_targets = 100,
     gRNAs_per_target = 4,
     non_targeting_gRNAs = 10,
@@ -296,11 +304,9 @@ compute_power_grid_full <- function(
   expr_output_grid <- 10^seq(log10(expr_min), log10(expr_range[2]), length.out = expr_curve_points)
 
   ########################## compute the library size ##########################
-  # Extract biological system from baseline expression data or use default
-  biological_system <- "K562"  # Could be made parameter if needed
-  read_UMI_info <- extract_library_info(biological_system = biological_system)
-  UMI_per_cell <- read_UMI_info$UMI_per_cell
-  variation <- read_UMI_info$variation
+  # Use passed library info (extracted upfront)
+  UMI_per_cell <- library_info$UMI_per_cell
+  variation <- library_info$variation
 
   # compute the library size
   cells_reads_df <- cells_reads_df |>

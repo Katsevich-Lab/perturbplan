@@ -160,6 +160,7 @@ extract_baseline_expression <- function(biological_system = "K562"){
 #' @seealso 
 #' \code{\link{fit_read_UMI_curve}} for using these parameters
 #' \code{\link{library_computation}} for fitting these parameters from data
+#' @export
 extract_library_info <- function(biological_system = "K562"){
 
   # sample baseline expression based on biological system

@@ -81,12 +81,22 @@ create_power_server <- function(input, output, session) {
     )
   })
 
+  # Extract library information (UMI saturation parameters)
+  library_info <- reactive({
+    req(planned())
+    # Extract library parameters for biological system
+    perturbplan::extract_library_info(
+      biological_system = input$biological_system
+    )
+  })
+
   # Real power calculation using perturbplan package
   power_results <- reactive({
-    req(planned(), fc_expression_info())
-    # Call the package function with extracted expression info
+    req(planned(), fc_expression_info(), library_info())
+    # Call the package function with extracted expression and library info
     perturbplan::calculate_power_grid(
       fc_expression_info = fc_expression_info(),
+      library_info = library_info(),
       num_targets = input$num_targets,
       gRNAs_per_target = input$gRNAs_per_target, 
       non_targeting_gRNAs = input$non_targeting_gRNAs,
@@ -130,6 +140,7 @@ create_power_server <- function(input, output, session) {
   return(list(
     planned = planned,
     fc_expression_info = fc_expression_info,  # Add fc_expression_info for curves server
+    library_info = library_info,  # Add library_info for curves server
     power_results = power_results,
     cells_seq = cells_seq,
     reads_seq = reads_seq,

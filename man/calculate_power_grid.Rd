@@ -6,6 +6,7 @@
 \usage{
 calculate_power_grid(
   fc_expression_info,
+  library_info,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
@@ -20,6 +21,8 @@ calculate_power_grid(
 }
 \arguments{
 \item{fc_expression_info}{List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve}
+
+\item{library_info}{List from extract_library_info() containing UMI_per_cell and variation parameters}
 
 \item{num_targets}{Number of targets}
 
