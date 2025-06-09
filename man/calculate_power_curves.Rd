@@ -18,7 +18,8 @@ calculate_power_curves(
   biological_system = "K562",
   experimental_platform = "10x Chromium v3",
   side = "left",
-  control_group = "complement"
+  control_group = "complement",
+  cached_fc_expression_info = NULL
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ calculate_power_curves(
 \item{side}{Test sidedness ("left", "right", "both")}
 
 \item{control_group}{Control group type ("complement" or "nt_cells")}
+
+\item{cached_fc_expression_info}{Optional cached fold-change expression information (currently unused)}
 }
 \value{
 List with power curves for selected tiles

@@ -126,6 +126,17 @@ importFrom("stats", "setNames")
 importFrom("utils", "read.csv")
 ```
 
+## Parameter Naming Convention
+
+**IMPORTANT**: Use `tpm_threshold` instead of `tmp_threshold` everywhere in the package.
+
+- All function parameters should use `tpm_threshold`
+- All variable names should use `tpm_threshold`  
+- All documentation should reference `tpm_threshold`
+- UI inputs should use `"tpm_threshold"` as input ID
+
+This ensures consistency across the entire codebase and avoids confusion between "TPM" (Transcripts Per Million) and "tmp" (temporary).
+
 ## Development Notes
 
 - **Function Migration**: `.compute_underspecified_power_efficient()` has been replaced with `.compute_power_plan_efficient()` for better performance

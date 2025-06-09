@@ -117,6 +117,7 @@ calculate_power_grid <- function(
 #' @param experimental_platform Experimental platform
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
+#' @param cached_fc_expression_info Optional cached fold-change expression information (currently unused)
 #'
 #' @return List with power curves for selected tiles
 #' @export
@@ -134,7 +135,8 @@ calculate_power_curves <- function(
   biological_system = "K562",
   experimental_platform = "10x Chromium v3",
   side = "left",
-  control_group = "complement"
+  control_group = "complement",
+  cached_fc_expression_info = NULL
 ) {
 
   # Create cells_reads_df for selected tiles only
@@ -403,49 +405,25 @@ compute_power_grid_efficient <- function(
   # separated approach information
   fc_expression_df, expression_dispersion_curve, fc_output_grid, expr_output_grid, prop_non_null = 0.1){
 
-  ################ compute the treatment and control cells #####################
-  num_trt_cells <- gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
-  num_cntrl_cells <- round(switch(control_group,
-                                  complement = {
-                                    num_total_cells - num_trt_cells
-                                  },
-                                  nt_cells = {
-                                    non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
-                                  }))
-
-  ##############################################################################
-  #################### compute Monte Carlo integration ########################
-
-  # Use C++ function to compute test statistics for all Monte Carlo samples
-  mc_results <- compute_monte_carlo_teststat_cpp(
-    fc_expression_df = fc_expression_df,
-    library_size = library_size,
-    num_trt_cells = num_trt_cells,
-    num_cntrl_cells = num_cntrl_cells
+  ################ compute shared results (overall power, cutoff, cell counts) ################
+  lightweight_results <- .compute_power_plan_lightweight(
+    # experimental information
+    num_total_cells = num_total_cells, library_size = library_size, MOI = MOI,
+    num_targets = num_targets, gRNAs_per_target = gRNAs_per_target,
+    non_targeting_gRNAs = non_targeting_gRNAs,
+    # analysis information
+    multiple_testing_alpha = multiple_testing_alpha, multiple_testing_method = multiple_testing_method,
+    control_group = control_group, side = side,
+    # separated approach information
+    fc_expression_df = fc_expression_df, prop_non_null = prop_non_null,
+    return_full_results = TRUE
   )
-
-  # Extract vectors for Monte Carlo samples
-  mc_means <- mc_results$means
-  mc_sds <- mc_results$sds
-
-  ########################## compute the cutoff ################################
-  sig_cutoff <- switch(multiple_testing_method,
-                       BH = {
-                         compute_BH_plan(
-                           mean_list = mc_means,
-                           sd_list = mc_sds,
-                           side = side,
-                           multiple_testing_alpha = multiple_testing_alpha,
-                           prop_non_null = prop_non_null
-                         )
-                       })
-
-  ####################### compute overall power ################################
-  mc_powers <- rejection_computation_cpp(mean_list = mc_means,
-                                         sd_list = mc_sds,
-                                         side = side,
-                                         cutoff = sig_cutoff)
-  overall_power <- mean(mc_powers)
+  
+  # Extract results from lightweight computation
+  overall_power <- lightweight_results$overall_power
+  sig_cutoff <- lightweight_results$sig_cutoff
+  num_trt_cells <- lightweight_results$num_trt_cells
+  num_cntrl_cells <- lightweight_results$num_cntrl_cells
 
   ##############################################################################
   #################### compute output curves ###################################
@@ -490,8 +468,8 @@ compute_power_grid_efficient <- function(
 
 #' Internal function for lightweight power computation (overall power only)
 #'
-#' This function computes only overall power without expensive curve calculations.
-#' Used for heatmap generation where only overall power is needed.
+#' This function computes overall power, BH cutoff, and cell counts without expensive curve calculations.
+#' Used for heatmap generation and as a base for detailed curve computation.
 #'
 #' @param num_total_cells Total number of cells
 #' @param library_size Library size (reads per cell)
@@ -505,14 +483,15 @@ compute_power_grid_efficient <- function(
 #' @param side Test sidedness
 #' @param fc_expression_df Data frame with fold change and expression info
 #' @param prop_non_null Proportion of non-null hypotheses
-#' @return Overall power value (scalar)
+#' @param return_full_results If TRUE, return list with all intermediate results; if FALSE, return only overall power
+#' @return Overall power value (scalar) or list with full results depending on return_full_results
 .compute_power_plan_lightweight <- function(
     # experimental information
   num_total_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
   # analysis information
   multiple_testing_alpha = 0.05, multiple_testing_method = "BH", control_group = "complement", side = "left",
   # separated approach information
-  fc_expression_df, prop_non_null = 0.1){
+  fc_expression_df, prop_non_null = 0.1, return_full_results = FALSE){
 
   ################ compute the treatment and control cells #####################
   num_trt_cells <- gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
@@ -558,7 +537,16 @@ compute_power_grid_efficient <- function(
                                          cutoff = sig_cutoff)
   overall_power <- mean(mc_powers)
 
-  # return only the overall power (no curves)
-  return(overall_power)
+  # return either overall power only or full results
+  if (return_full_results) {
+    return(list(
+      overall_power = overall_power,
+      sig_cutoff = sig_cutoff,
+      num_trt_cells = num_trt_cells,
+      num_cntrl_cells = num_cntrl_cells
+    ))
+  } else {
+    return(overall_power)
+  }
 }
 

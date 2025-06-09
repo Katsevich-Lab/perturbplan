@@ -16,7 +16,8 @@
   control_group = "complement",
   side = "left",
   fc_expression_df,
-  prop_non_null = 0.1
+  prop_non_null = 0.1,
+  return_full_results = FALSE
 )
 }
 \arguments{
@@ -43,11 +44,13 @@
 \item{fc_expression_df}{Data frame with fold change and expression info}
 
 \item{prop_non_null}{Proportion of non-null hypotheses}
+
+\item{return_full_results}{If TRUE, return list with all intermediate results; if FALSE, return only overall power}
 }
 \value{
-Overall power value (scalar)
+Overall power value (scalar) or list with full results depending on return_full_results
 }
 \description{
-This function computes only overall power without expensive curve calculations.
-Used for heatmap generation where only overall power is needed.
+This function computes overall power, BH cutoff, and cell counts without expensive curve calculations.
+Used for heatmap generation and as a base for detailed curve computation.
 }
