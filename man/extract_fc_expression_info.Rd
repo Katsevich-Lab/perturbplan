@@ -19,11 +19,12 @@ extract_fc_expression_info(
 
 \item{biological_system}{Character. Biological system for baseline expression (default: "K562").}
 
-\item{B}{Integer. Number of Monte Carlo samples to generate (default: 200).}
+\item{B}{Integer. Number of Monte Carlo samples to generate when gene_list is NULL (default: 200).
+Ignored when gene_list is provided.}
 
 \item{gene_list}{Character vector. Optional list of Ensembl gene IDs to use for analysis.
-If provided, expression parameters will be extracted for these specific genes.
-If NULL (default), random sampling from baseline data is used.}
+If provided, expression parameters will be extracted for ALL specified genes (no sampling).
+If NULL (default), B genes are randomly sampled from baseline data.}
 }
 \value{
 A list with elements:
@@ -38,12 +39,16 @@ data to create a comprehensive dataset for Monte Carlo power analysis simulation
 It can handle both user-specified genes and random sampling scenarios.
 }
 \details{
-The function:
+The function operates in two modes:
+\itemize{
+\item \strong{Gene-specific mode} (gene_list provided): Uses ALL specified genes, no sampling
+\item \strong{Random sampling mode} (gene_list = NULL): Randomly samples B genes from baseline
+}
+
+In both modes:
 \itemize{
 \item Sets a random seed for reproducibility
-\item Samples fold change values from a normal distribution
-\item If gene_list is provided: extracts expression parameters for specified genes
-\item If gene_list is NULL: randomly samples expression parameters from baseline data
+\item Generates fold change values from a normal distribution (one per gene)
 \item Returns combined data for Monte Carlo integration
 }
 }

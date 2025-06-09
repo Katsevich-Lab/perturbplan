@@ -68,21 +68,32 @@ create_power_server <- function(input, output, session) {
     }
   })
 
+  # Extract fold-change and expression information first
+  fc_expression_info <- reactive({
+    req(planned())
+    # Extract expression information including gene list if provided
+    perturbplan::extract_fc_expression_info(
+      fold_change_mean = input$fc_mean,
+      fold_change_sd = input$fc_sd,
+      biological_system = input$biological_system,
+      B = 1000,  # Monte Carlo samples for good accuracy
+      gene_list = gene_list()  # Use uploaded gene list if available
+    )
+  })
+
   # Real power calculation using perturbplan package
   power_results <- reactive({
-    req(planned())
-    # Call the package function with current input values
+    req(planned(), fc_expression_info())
+    # Call the package function with extracted expression info
     perturbplan::calculate_power_grid(
+      fc_expression_info = fc_expression_info(),
       num_targets = input$num_targets,
       gRNAs_per_target = input$gRNAs_per_target, 
       non_targeting_gRNAs = input$non_targeting_gRNAs,
       tpm_threshold = input$tpm_threshold,
       fdr_target = input$fdr_target,
-      fc_mean = input$fc_mean,
-      fc_sd = input$fc_sd,
       prop_non_null = input$prop_non_null,
       MOI = input$MOI,
-      biological_system = input$biological_system,
       experimental_platform = input$experimental_platform,
       side = input$side,
       control_group = input$control_group
@@ -118,6 +129,7 @@ create_power_server <- function(input, output, session) {
   # Return all reactive values and functions for use by other modules
   return(list(
     planned = planned,
+    fc_expression_info = fc_expression_info,  # Add fc_expression_info for curves server
     power_results = power_results,
     cells_seq = cells_seq,
     reads_seq = reads_seq,

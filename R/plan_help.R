@@ -12,10 +12,11 @@ utils::globalVariables(c("response_id"))
 #' @param fold_change_mean Numeric. Mean of the fold change distribution.
 #' @param fold_change_sd Numeric. Standard deviation of the fold change distribution.
 #' @param biological_system Character. Biological system for baseline expression (default: "K562").
-#' @param B Integer. Number of Monte Carlo samples to generate (default: 200).
+#' @param B Integer. Number of Monte Carlo samples to generate when gene_list is NULL (default: 200).
+#'   Ignored when gene_list is provided.
 #' @param gene_list Character vector. Optional list of Ensembl gene IDs to use for analysis.
-#'   If provided, expression parameters will be extracted for these specific genes.
-#'   If NULL (default), random sampling from baseline data is used.
+#'   If provided, expression parameters will be extracted for ALL specified genes (no sampling).
+#'   If NULL (default), B genes are randomly sampled from baseline data.
 #'
 #' @return A list with elements:
 #' \describe{
@@ -24,16 +25,21 @@ utils::globalVariables(c("response_id"))
 #' }
 #'
 #' @details
-#' The function:
+#' The function operates in two modes:
+#' \itemize{
+#'   \item \strong{Gene-specific mode} (gene_list provided): Uses ALL specified genes, no sampling
+#'   \item \strong{Random sampling mode} (gene_list = NULL): Randomly samples B genes from baseline
+#' }
+#' 
+#' In both modes:
 #' \itemize{
 #'   \item Sets a random seed for reproducibility
-#'   \item Samples fold change values from a normal distribution
-#'   \item If gene_list is provided: extracts expression parameters for specified genes
-#'   \item If gene_list is NULL: randomly samples expression parameters from baseline data
+#'   \item Generates fold change values from a normal distribution (one per gene)
 #'   \item Returns combined data for Monte Carlo integration
 #' }
 #'
 #' @seealso \code{\link{extract_baseline_expression}} for baseline data extraction
+#' @export
 extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biological_system =  "K562", B = 200, gene_list = NULL){
 
   # set the random seed
@@ -44,7 +50,7 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
   
   # Handle gene-specific vs random sampling scenarios
   if (!is.null(gene_list)) {
-    # User provided specific genes - extract their expression parameters
+    # User provided specific genes - use ALL specified genes (no sampling)
     baseline_df <- baseline_expression_stats$baseline_expression
     
     # Check if baseline data has gene identifiers (assuming 'response_id' column exists)
@@ -55,30 +61,25 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
       
       # Check if we found any matching genes
       if (nrow(specified_genes_df) == 0) {
-        warning("No matching genes found in baseline expression data. Using random sampling instead.")
-        expression_df <- baseline_df |> dplyr::slice_sample(n = B)
+        stop("No matching genes found in baseline expression data. Please check gene IDs.")
       } else {
-        # Use specified genes, repeating if necessary to reach B samples
-        n_available <- nrow(specified_genes_df)
-        if (n_available >= B) {
-          expression_df <- specified_genes_df |> dplyr::slice_sample(n = B)
-        } else {
-          # Repeat genes if we have fewer than B
-          expression_df <- specified_genes_df[rep(seq_len(n_available), length.out = B), ]
-        }
+        # Use ALL specified genes (no sampling)
+        expression_df <- specified_genes_df
+        n_genes <- nrow(expression_df)
       }
     } else {
-      warning("Baseline expression data does not contain response_id column. Using random sampling instead.")
-      expression_df <- baseline_df |> dplyr::slice_sample(n = B)
+      stop("Baseline expression data does not contain response_id column. Cannot use specified gene list.")
     }
   } else {
-    # No specific genes provided - use random sampling
+    # No specific genes provided - use random sampling of B genes
     expression_df <- baseline_expression_stats$baseline_expression |> dplyr::slice_sample(n = B)
+    n_genes <- B
   }
   
   # Combine fold changes with expression parameters
+  # Generate fold changes to match the number of genes (either B or length of gene_list)
   fc_expression_df <- data.frame(
-    fold_change = stats::rnorm(n = B, mean = fold_change_mean, sd = fold_change_sd)
+    fold_change = stats::rnorm(n = n_genes, mean = fold_change_mean, sd = fold_change_sd)
   ) |>
     dplyr::bind_cols(expression_df)
 

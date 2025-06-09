@@ -4,7 +4,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
   
   # Compute detailed power curves only when needed (for selected tiles)
   selected_power_curves <- reactive({
-    req(power_data$planned(), selection_data$is_sel("tile"), nrow(selection_data$sel$tiles) > 0)
+    req(power_data$planned(), power_data$fc_expression_info(), selection_data$is_sel("tile"), nrow(selection_data$sel$tiles) > 0)
     
     # Create selected tiles data frame
     selected_tiles <- data.frame(
@@ -12,19 +12,17 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       reads = power_data$reads_seq()[selection_data$sel$tiles$col]
     )
     
-    # Compute power curves only for selected tiles
+    # Compute power curves only for selected tiles using the new workflow
     perturbplan::calculate_power_curves(
       selected_tiles = selected_tiles,
+      fc_expression_info = power_data$fc_expression_info(),  # Use extracted fc_expression_info
       num_targets = input$num_targets,
       gRNAs_per_target = input$gRNAs_per_target,
       non_targeting_gRNAs = input$non_targeting_gRNAs,
       tpm_threshold = input$tpm_threshold,
       fdr_target = input$fdr_target,
-      fc_mean = input$fc_mean,
-      fc_sd = input$fc_sd,
       prop_non_null = input$prop_non_null,
       MOI = input$MOI,
-      biological_system = input$biological_system,
       experimental_platform = input$experimental_platform,
       side = input$side,
       control_group = input$control_group
