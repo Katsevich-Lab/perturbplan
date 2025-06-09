@@ -21,7 +21,8 @@ compute_power_grid_full(
   control_group = "complement",
   B = 1000,
   fc_curve_points = 10,
-  expr_curve_points = 10
+  expr_curve_points = 10,
+  gene_list = NULL
 )
 }
 \arguments{
@@ -58,6 +59,8 @@ compute_power_grid_full(
 \item{fc_curve_points}{Number of points for fold change curve}
 
 \item{expr_curve_points}{Number of points for expression curve}
+
+\item{gene_list}{Character vector of Ensembl gene IDs for analysis (optional)}
 }
 \value{
 Data frame with power analysis results

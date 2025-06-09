@@ -19,7 +19,8 @@ compute_power_grid_overall(
   experimental_platform = "10x Chromium v3",
   side = "left",
   control_group = "complement",
-  B = 1000
+  B = 1000,
+  gene_list = NULL
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ compute_power_grid_overall(
 \item{control_group}{Control group type ("complement" or "nt_cells")}
 
 \item{B}{Number of Monte Carlo samples for integration}
+
+\item{gene_list}{Character vector of Ensembl gene IDs for analysis (optional)}
 }
 \value{
 Data frame with power analysis results (overall power only)

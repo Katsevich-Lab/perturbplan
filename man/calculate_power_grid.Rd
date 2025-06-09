@@ -17,7 +17,8 @@ calculate_power_grid(
   biological_system = "K562",
   experimental_platform = "10x Chromium v3",
   side = "left",
-  control_group = "complement"
+  control_group = "complement",
+  gene_list = NULL
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ calculate_power_grid(
 \item{side}{Test sidedness ("left", "right", "both")}
 
 \item{control_group}{Control group type ("complement" or "nt_cells")}
+
+\item{gene_list}{Character vector of Ensembl gene IDs for analysis (optional)}
 }
 \value{
 List with power grid, cell/read sequences, and parameters

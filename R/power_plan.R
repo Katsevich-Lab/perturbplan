@@ -22,6 +22,7 @@ utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell"))
 #' @param experimental_platform Experimental platform
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
+#' @param gene_list Character vector of Ensembl gene IDs for analysis (optional)
 #'
 #' @return List with power grid, cell/read sequences, and parameters
 #' @export
@@ -38,7 +39,8 @@ calculate_power_grid <- function(
   biological_system = "K562",
   experimental_platform = "10x Chromium v3",
   side = "left",
-  control_group = "complement"
+  control_group = "complement",
+  gene_list = NULL
 ) {
 
   # Create grid for heatmap visualization
@@ -67,7 +69,8 @@ calculate_power_grid <- function(
     experimental_platform = experimental_platform,
     side = side,
     control_group = control_group,
-    B = 1000  # Monte Carlo samples for good accuracy
+    B = 1000,  # Monte Carlo samples for good accuracy
+    gene_list = gene_list
   )
 
   # Transform to expected format for heatmap
@@ -118,6 +121,7 @@ calculate_power_grid <- function(
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
 #' @param cached_fc_expression_info Optional cached fold-change expression information (currently unused)
+#' @param gene_list Character vector of Ensembl gene IDs for analysis (optional)
 #'
 #' @return List with power curves for selected tiles
 #' @export
@@ -136,7 +140,8 @@ calculate_power_curves <- function(
   experimental_platform = "10x Chromium v3",
   side = "left",
   control_group = "complement",
-  cached_fc_expression_info = NULL
+  cached_fc_expression_info = NULL,
+  gene_list = NULL
 ) {
 
   # Create cells_reads_df for selected tiles only
@@ -163,7 +168,8 @@ calculate_power_curves <- function(
     control_group = control_group,
     B = 1000,  # Monte Carlo samples for good accuracy
     fc_curve_points = 10,  # Sufficient resolution for curves
-    expr_curve_points = 10
+    expr_curve_points = 10,
+    gene_list = gene_list
   )
 
   # Return power curves with cell/read information
@@ -196,6 +202,7 @@ calculate_power_curves <- function(
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
 #' @param B Number of Monte Carlo samples for integration
+#' @param gene_list Character vector of Ensembl gene IDs for analysis (optional)
 #' @return Data frame with power analysis results (overall power only)
 #' @export
 compute_power_grid_overall <- function(
@@ -213,14 +220,15 @@ compute_power_grid_overall <- function(
     experimental_platform = "10x Chromium v3",
     side = "left",
     control_group = "complement",
-    B = 1000
+    B = 1000,
+    gene_list = NULL
 ){
 
   ############### extract Monte Carlo samples for integration ##################
   set.seed(1)  # Reproducible results
   fc_expression_info <- extract_fc_expression_info(
     fold_change_mean = fc_mean, fold_change_sd = fc_sd,
-    biological_system = biological_system, B = B
+    biological_system = biological_system, B = B, gene_list = gene_list
   )
 
   ########################## compute the library size ##########################
@@ -282,6 +290,7 @@ compute_power_grid_overall <- function(
 #' @param B Number of Monte Carlo samples for integration
 #' @param fc_curve_points Number of points for fold change curve
 #' @param expr_curve_points Number of points for expression curve
+#' @param gene_list Character vector of Ensembl gene IDs for analysis (optional)
 #' @return Data frame with power analysis results
 #' @export
 compute_power_grid_full <- function(
@@ -301,14 +310,15 @@ compute_power_grid_full <- function(
     control_group = "complement",
     B = 1000,
     fc_curve_points = 10,
-    expr_curve_points = 10
+    expr_curve_points = 10,
+    gene_list = NULL
 ){
 
   ############### extract Monte Carlo samples for integration ##################
   set.seed(1)  # Reproducible results
   fc_expression_info <- extract_fc_expression_info(
     fold_change_mean = fc_mean, fold_change_sd = fc_sd,
-    biological_system = biological_system, B = B
+    biological_system = biological_system, B = B, gene_list = gene_list
   )
 
   # Define systematic output grids

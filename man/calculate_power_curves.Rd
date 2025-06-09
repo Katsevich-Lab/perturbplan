@@ -19,7 +19,8 @@ calculate_power_curves(
   experimental_platform = "10x Chromium v3",
   side = "left",
   control_group = "complement",
-  cached_fc_expression_info = NULL
+  cached_fc_expression_info = NULL,
+  gene_list = NULL
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ calculate_power_curves(
 \item{control_group}{Control group type ("complement" or "nt_cells")}
 
 \item{cached_fc_expression_info}{Optional cached fold-change expression information (currently unused)}
+
+\item{gene_list}{Character vector of Ensembl gene IDs for analysis (optional)}
 }
 \value{
 List with power curves for selected tiles

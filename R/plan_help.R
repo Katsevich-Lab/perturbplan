@@ -1,14 +1,21 @@
 
+# Suppress R CMD check warnings for variables used in dplyr contexts
+utils::globalVariables(c("gene_id"))
+
 #' Extract fold change and expression information for power analysis
 #'
 #' @description
 #' This function combines fold change effect size sampling with baseline expression
 #' data to create a comprehensive dataset for Monte Carlo power analysis simulations.
+#' It can handle both user-specified genes and random sampling scenarios.
 #'
 #' @param fold_change_mean Numeric. Mean of the fold change distribution.
 #' @param fold_change_sd Numeric. Standard deviation of the fold change distribution.
 #' @param biological_system Character. Biological system for baseline expression (default: "K562").
 #' @param B Integer. Number of Monte Carlo samples to generate (default: 200).
+#' @param gene_list Character vector. Optional list of Ensembl gene IDs to use for analysis.
+#'   If provided, expression parameters will be extracted for these specific genes.
+#'   If NULL (default), random sampling from baseline data is used.
 #'
 #' @return A list with elements:
 #' \describe{
@@ -21,22 +28,59 @@
 #' \itemize{
 #'   \item Sets a random seed for reproducibility
 #'   \item Samples fold change values from a normal distribution
-#'   \item Randomly samples expression parameters from baseline data
+#'   \item If gene_list is provided: extracts expression parameters for specified genes
+#'   \item If gene_list is NULL: randomly samples expression parameters from baseline data
 #'   \item Returns combined data for Monte Carlo integration
 #' }
 #'
 #' @seealso \code{\link{extract_baseline_expression}} for baseline data extraction
-extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biological_system =  "K562", B = 200){
+extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biological_system =  "K562", B = 200, gene_list = NULL){
 
   # set the random seed
   set.seed(1)
 
   ############## combine expression and effect size information ################
   baseline_expression_stats <- extract_baseline_expression(biological_system = biological_system)
+  
+  # Handle gene-specific vs random sampling scenarios
+  if (!is.null(gene_list)) {
+    # User provided specific genes - extract their expression parameters
+    baseline_df <- baseline_expression_stats$baseline_expression
+    
+    # Check if baseline data has gene identifiers (assuming 'gene_id' column exists)
+    if ("gene_id" %in% colnames(baseline_df)) {
+      # Filter for specified genes
+      specified_genes_df <- baseline_df |> 
+        dplyr::filter(gene_id %in% gene_list)
+      
+      # Check if we found any matching genes
+      if (nrow(specified_genes_df) == 0) {
+        warning("No matching genes found in baseline expression data. Using random sampling instead.")
+        expression_df <- baseline_df |> dplyr::slice_sample(n = B)
+      } else {
+        # Use specified genes, repeating if necessary to reach B samples
+        n_available <- nrow(specified_genes_df)
+        if (n_available >= B) {
+          expression_df <- specified_genes_df |> dplyr::slice_sample(n = B)
+        } else {
+          # Repeat genes if we have fewer than B
+          expression_df <- specified_genes_df[rep(seq_len(n_available), length.out = B), ]
+        }
+      }
+    } else {
+      warning("Baseline expression data does not contain gene identifiers. Using random sampling instead.")
+      expression_df <- baseline_df |> dplyr::slice_sample(n = B)
+    }
+  } else {
+    # No specific genes provided - use random sampling
+    expression_df <- baseline_expression_stats$baseline_expression |> dplyr::slice_sample(n = B)
+  }
+  
+  # Combine fold changes with expression parameters
   fc_expression_df <- data.frame(
     fold_change = stats::rnorm(n = B, mean = fold_change_mean, sd = fold_change_sd)
   ) |>
-    dplyr::bind_cols(baseline_expression_stats$baseline_expression |> dplyr::slice_sample(n = B))
+    dplyr::bind_cols(expression_df)
 
   ################## extract the expression-dispersion curve ###################
   expression_dispersion_curve <- baseline_expression_stats$expression_dispersion_curve

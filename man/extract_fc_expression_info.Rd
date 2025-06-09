@@ -8,7 +8,8 @@ extract_fc_expression_info(
   fold_change_mean,
   fold_change_sd,
   biological_system = "K562",
-  B = 200
+  B = 200,
+  gene_list = NULL
 )
 }
 \arguments{
@@ -19,6 +20,10 @@ extract_fc_expression_info(
 \item{biological_system}{Character. Biological system for baseline expression (default: "K562").}
 
 \item{B}{Integer. Number of Monte Carlo samples to generate (default: 200).}
+
+\item{gene_list}{Character vector. Optional list of Ensembl gene IDs to use for analysis.
+If provided, expression parameters will be extracted for these specific genes.
+If NULL (default), random sampling from baseline data is used.}
 }
 \value{
 A list with elements:
@@ -30,13 +35,15 @@ A list with elements:
 \description{
 This function combines fold change effect size sampling with baseline expression
 data to create a comprehensive dataset for Monte Carlo power analysis simulations.
+It can handle both user-specified genes and random sampling scenarios.
 }
 \details{
 The function:
 \itemize{
 \item Sets a random seed for reproducibility
 \item Samples fold change values from a normal distribution
-\item Randomly samples expression parameters from baseline data
+\item If gene_list is provided: extracts expression parameters for specified genes
+\item If gene_list is NULL: randomly samples expression parameters from baseline data
 \item Returns combined data for Monte Carlo integration
 }
 }
