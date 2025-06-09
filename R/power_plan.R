@@ -52,7 +52,7 @@ calculate_power_grid <- function(
   )
 
   # Call the lightweight power function (overall power only, no curves)
-  power_results <- compute_power_grid_lightweight(
+  power_results <- compute_power_grid_overall(
     cells_reads_df = cells_reads_df,
     num_targets = num_targets,
     gRNAs_per_target = gRNAs_per_target,
@@ -146,7 +146,7 @@ calculate_power_curves <- function(
   )
 
   # Call the detailed power function for selected tiles only
-  power_results <- compute_power_grid_efficient(
+  power_results <- compute_power_grid_full(
     cells_reads_df = cells_reads_df,
     num_targets = num_targets,
     gRNAs_per_target = gRNAs_per_target,
@@ -176,7 +176,7 @@ calculate_power_curves <- function(
   )
 }
 
-#' Compute lightweight power grid (overall power only, no curves)
+#' Compute power grid for overall power analysis (no curves)
 #'
 #' This function computes only overall power for each cell/read combination
 #' without the expensive curve calculations. Used for heatmap generation.
@@ -197,7 +197,8 @@ calculate_power_curves <- function(
 #' @param control_group Control group type ("complement" or "nt_cells")
 #' @param B Number of Monte Carlo samples for integration
 #' @return Data frame with power analysis results (overall power only)
-compute_power_grid_lightweight <- function(
+#' @export
+compute_power_grid_overall <- function(
     cells_reads_df,
     num_targets = 100,
     gRNAs_per_target = 4,
@@ -237,7 +238,7 @@ compute_power_grid_lightweight <- function(
   power_df <- cells_reads_df |>
     dplyr::rowwise() |>
     dplyr::mutate(
-      overall_power = .compute_power_plan_lightweight(
+      overall_power = compute_power_plan_overall(
         # experimental information
         num_total_cells = num_total_cells, library_size = library_size, MOI = MOI,
         num_targets = num_targets, gRNAs_per_target = gRNAs_per_target,
@@ -259,7 +260,7 @@ compute_power_grid_lightweight <- function(
 
 
 
-#' Compute power grid using efficient C++ test statistic computation
+#' Compute full power grid with curves using C++ test statistic computation
 #'
 #' This function uses C++ implementations for computational efficiency in power analysis
 #' for perturb-seq experiments across different experimental conditions.
@@ -283,7 +284,7 @@ compute_power_grid_lightweight <- function(
 #' @param expr_curve_points Number of points for expression curve
 #' @return Data frame with power analysis results
 #' @export
-compute_power_grid_efficient <- function(
+compute_power_grid_full <- function(
     cells_reads_df,
     num_targets = 100,
     gRNAs_per_target = 4,
@@ -348,7 +349,7 @@ compute_power_grid_efficient <- function(
     dplyr::rowwise() |>
     dplyr::mutate(
       power_output = list(
-        .compute_power_plan_efficient(
+        compute_power_plan_full(
           # experimental information
           num_total_cells = num_total_cells, library_size = library_size, MOI = MOI,
           num_targets = num_targets, gRNAs_per_target = gRNAs_per_target,
@@ -376,7 +377,7 @@ compute_power_grid_efficient <- function(
 
 
 
-#' Internal function for efficient separated power computation using C++ Monte Carlo
+#' Compute full power analysis with curves using C++ Monte Carlo
 #'
 #' This function replaces the R Monte Carlo for loop with C++ implementation
 #' for improved performance.
@@ -397,7 +398,8 @@ compute_power_grid_efficient <- function(
 #' @param expr_output_grid Grid points for expression curve
 #' @param prop_non_null Proportion of non-null hypotheses
 #' @return List with overall power and power curves
-.compute_power_plan_efficient <- function(
+#' @export
+compute_power_plan_full <- function(
     # experimental information
   num_total_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
   # analysis information
@@ -406,7 +408,7 @@ compute_power_grid_efficient <- function(
   fc_expression_df, expression_dispersion_curve, fc_output_grid, expr_output_grid, prop_non_null = 0.1){
 
   ################ compute shared results (overall power, cutoff, cell counts) ################
-  lightweight_results <- .compute_power_plan_lightweight(
+  lightweight_results <- compute_power_plan_overall(
     # experimental information
     num_total_cells = num_total_cells, library_size = library_size, MOI = MOI,
     num_targets = num_targets, gRNAs_per_target = gRNAs_per_target,
@@ -466,7 +468,7 @@ compute_power_grid_efficient <- function(
   ))
 }
 
-#' Internal function for lightweight power computation (overall power only)
+#' Compute overall power for power analysis (lightweight computation)
 #'
 #' This function computes overall power, BH cutoff, and cell counts without expensive curve calculations.
 #' Used for heatmap generation and as a base for detailed curve computation.
@@ -485,7 +487,8 @@ compute_power_grid_efficient <- function(
 #' @param prop_non_null Proportion of non-null hypotheses
 #' @param return_full_results If TRUE, return list with all intermediate results; if FALSE, return only overall power
 #' @return Overall power value (scalar) or list with full results depending on return_full_results
-.compute_power_plan_lightweight <- function(
+#' @export
+compute_power_plan_overall <- function(
     # experimental information
   num_total_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
   # analysis information
