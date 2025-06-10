@@ -72,9 +72,9 @@ create_selection_server <- function(input, output, session, power_data) {
   })
 
   # Debounced heatmap clicks to prevent flashing
-  heat_click_debounced <- reactive({
+  heat_click_debounced <- debounce(reactive({
     input$heat_click
-  }) %>% debounce(100)  # 100ms debounce delay
+  }), 100)  # 100ms debounce delay
   
   # Heatmap clicks
   observeEvent(heat_click_debounced(), {
