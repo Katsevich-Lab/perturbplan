@@ -27,7 +27,7 @@ Imports:
     shiny,
     openxlsx,
     ggplot2,
-    patchwork
+    ggside
 Suggests: 
     knitr,
     rmarkdown,

@@ -84,8 +84,11 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       }
     }
 
-    # Create data for marginal distributions
-    # Expression distribution (convert to TPM scale)
+    # Get power curve data for plots
+    dfs1 <- create_real_plot_data("expr") 
+    dfs2 <- create_real_plot_data("fc")
+    
+    # Get baseline expression data for marginal distribution
     expr_data <- data.frame(
       tpm = baseline_expression$relative_expression * 1e6
     )
@@ -94,80 +97,75 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     fc_mean <- input$fc_mean
     fc_sd <- input$fc_sd
     
-    # Create marginal plots separately
-    # Expression distribution histogram
-    p1_marginal <- ggplot(expr_data, aes(x = tpm)) +
-      geom_histogram(bins = 30, fill = "lightblue", alpha = 0.7, colour = "white") +
-      scale_x_log10() +
-      theme_minimal() +
-      theme(axis.text.x = element_blank(), 
-            axis.title.x = element_blank(),
-            axis.ticks.x = element_blank(),
-            panel.grid = element_blank(),
-            plot.margin = margin(0, 0, 0, 0)) +
-      labs(y = "Count")
+    # Create power curves with ggside marginal distributions
+    library(ggside)
     
-    # Fold-change normal distribution
-    fc_range <- if (nrow(create_real_plot_data("fc")) > 0) {
-      range(create_real_plot_data("fc")$x, na.rm = TRUE)
-    } else {
-      c(0.5, 1.5)
-    }
-    fc_seq <- seq(max(0.1, fc_range[1] - 0.5), fc_range[2] + 0.5, length.out = 100)
-    fc_density_data <- data.frame(
-      fc = fc_seq,
-      density = dnorm(fc_seq, mean = fc_mean, sd = fc_sd)
-    )
-    
-    p2_marginal <- ggplot(fc_density_data, aes(x = fc, y = density)) +
-      geom_line(colour = "darkred", size = 1) +
-      geom_area(alpha = 0.3, fill = "pink") +
-      theme_minimal() +
-      theme(axis.text.x = element_blank(),
-            axis.title.x = element_blank(), 
-            axis.ticks.x = element_blank(),
-            panel.grid = element_blank(),
-            plot.margin = margin(0, 0, 0, 0)) +
-      labs(y = "Density")
-
-    # Main power curve plots
-    dfs1 <- create_real_plot_data("expr")
+    # Expression power curve with marginal histogram
     if (nrow(dfs1) > 0) {
-      p1_main <- ggplot(dfs1, aes(x, Power, colour = label)) +
-        geom_line() +
+      p1 <- ggplot(dfs1, aes(x, Power, colour = label)) +
+        geom_line(linewidth = 1) +
         geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
-        scale_x_log10() +  # Log scale for TPM values
+        geom_xsidehistogram(data = expr_data, aes(x = tpm), 
+                           bins = 60, fill = "lightblue", alpha = 0.7, 
+                           inherit.aes = FALSE) +
+        scale_x_log10() +
+        scale_xsidey_continuous() +
         theme_bw(base_size = 16) +
-        theme(aspect.ratio = 1) +
+        theme(aspect.ratio = 1,
+              ggside.panel.scale = 0.3) +
         labs(x = "Expression Level (TPM)", y = "Power", colour = "Design (cells × reads/cell)")
     } else {
-      p1_main <- ggplot() + theme_void()
+      p1 <- ggplot() + theme_void()
     }
 
-    dfs2 <- create_real_plot_data("fc")
+    # Fold-change power curve with marginal histogram
     if (nrow(dfs2) > 0) {
-      p2_main <- ggplot(dfs2, aes(x, Power, colour = label)) +
-        geom_line() +
+      # Use actual sampled fold changes from fc_expression_info
+      fc_expression_df <- power_data$fc_expression_info()$fc_expression_df
+      
+      # Filter fold changes based on test side
+      if (input$side == "left") {
+        # Left-sided test: only show fold changes <= 1 (downregulation)
+        filtered_fc <- fc_expression_df$fold_change[fc_expression_df$fold_change <= 1]
+        x_limits <- c(min(dfs2$x, na.rm = TRUE), 1)
+      } else if (input$side == "right") {
+        # Right-sided test: only show fold changes >= 1 (upregulation)
+        filtered_fc <- fc_expression_df$fold_change[fc_expression_df$fold_change >= 1]
+        x_limits <- c(1, max(dfs2$x, na.rm = TRUE))
+      } else {
+        # Both-sided test: show all fold changes
+        filtered_fc <- fc_expression_df$fold_change
+        x_limits <- range(dfs2$x, na.rm = TRUE)
+      }
+      
+      fc_sample_data <- data.frame(fc = filtered_fc)
+      
+      p2 <- ggplot(dfs2, aes(x, Power, colour = label)) +
+        geom_line(linewidth = 1) +
         geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
+        geom_xsidehistogram(data = fc_sample_data, aes(x = fc), 
+                           bins = 60, fill = "pink", alpha = 0.7, inherit.aes = FALSE) +
+        scale_x_continuous(limits = x_limits) +
+        scale_xsidey_continuous() +
         theme_bw(base_size = 16) +
-        theme(aspect.ratio = 1) +
+        theme(aspect.ratio = 1,
+              ggside.panel.scale = 0.3) +
         labs(x = "Fold Change", y = "Power", colour = "Design (cells × reads/cell)")
+        
+      # Add vertical line at fold change = 1 for reference
+      if (input$side %in% c("left", "right")) {
+        p2 <- p2 + geom_vline(xintercept = 1, linetype = "dotted", colour = "darkgrey", alpha = 0.8)
+      }
     } else {
-      p2_main <- ggplot() + theme_void()
+      p2 <- ggplot() + theme_void()
     }
 
-    # Combine using patchwork-style layout
+    # Combine plots side by side with shared legend
     library(patchwork)
-    
-    # Create combined plots with marginals on top
-    p1_combined <- p1_marginal / p1_main + plot_layout(heights = c(1, 3))
-    p2_combined <- p2_marginal / p2_main + plot_layout(heights = c(1, 3))
-    
-    # Combine side by side with shared legend
-    (p1_combined | p2_combined) + 
+    (p1 | p2) + 
       plot_layout(guides = "collect") &
       theme(legend.position = "bottom")
-  })
+  }, height = 600)
   
   # Download handler for results
   output$download_results <- downloadHandler(

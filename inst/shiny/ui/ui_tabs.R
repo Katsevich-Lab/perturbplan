@@ -84,7 +84,7 @@ create_curves_tab <- function() {
         status = "primary",
         solidHeader = TRUE,
         width = 12,
-        plotOutput("pp_combined", height = "400px", width = "100%")
+        plotOutput("pp_combined", height = "600px", width = "100%")
       )
     )
   )
