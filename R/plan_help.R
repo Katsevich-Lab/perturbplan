@@ -118,15 +118,13 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
       stop("Baseline expression data does not contain response_id column. Cannot use specified gene list.")
     }
   } else {
-    # No specific genes provided - sample B genes uniformly from filtered pool
-    if (post_filter_n < B) {
-      warning("Fewer genes (", post_filter_n, ") available after TPM filtering than requested (", B, "). Using all available genes.")
-      expression_df <- filtered_baseline_df
-      n_genes <- post_filter_n
-    } else {
-      expression_df <- filtered_baseline_df |> dplyr::slice_sample(n = B)
-      n_genes <- B
-    }
+    # No specific genes provided - sample B genes uniformly from filtered pool with replacement
+    sampled_indices <- sample(seq_len(nrow(filtered_baseline_df)), 
+                             size = B, 
+                             replace = TRUE)
+    expression_df <- filtered_baseline_df[sampled_indices, ]
+    n_genes <- B
+    cat("Random mode with replacement: Sampled", B, "genes from", post_filter_n, "available genes\n")
   }
 
   # Combine fold changes with expression parameters
