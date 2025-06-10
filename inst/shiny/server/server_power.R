@@ -101,7 +101,6 @@ create_power_server <- function(input, output, session) {
       num_targets = input$num_targets,
       gRNAs_per_target = input$gRNAs_per_target, 
       non_targeting_gRNAs = input$non_targeting_gRNAs,
-      tpm_threshold = input$tpm_threshold,
       fdr_target = input$fdr_target,
       prop_non_null = input$prop_non_null,
       MOI = input$MOI,

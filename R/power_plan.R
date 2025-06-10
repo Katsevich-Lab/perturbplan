@@ -12,7 +12,6 @@ utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell"))
 #' @param num_targets Number of targets
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
-#' @param tpm_threshold Minimum TPM threshold
 #' @param fdr_target FDR target level
 #' @param prop_non_null Proportion of non-null pairs
 #' @param MOI Multiplicity of infection
@@ -30,7 +29,6 @@ calculate_power_grid <- function(
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
-  tpm_threshold = 10,
   fdr_target = 0.05,
   prop_non_null = 0.1,
   MOI = 10,
@@ -57,7 +55,6 @@ calculate_power_grid <- function(
     num_targets = num_targets,
     gRNAs_per_target = gRNAs_per_target,
     non_targeting_gRNAs = non_targeting_gRNAs,
-    tpm_threshold = tpm_threshold,
     fdr_target = fdr_target,
     prop_non_null = prop_non_null,
     MOI = MOI,
@@ -82,7 +79,6 @@ calculate_power_grid <- function(
       num_targets = num_targets,
       gRNAs_per_target = gRNAs_per_target,
       non_targeting_gRNAs = non_targeting_gRNAs,
-      tpm_threshold = tpm_threshold,
       fdr_target = fdr_target,
       prop_non_null = prop_non_null,
       MOI = MOI,
@@ -174,7 +170,6 @@ calculate_power_curves <- function(
 #' @param num_targets Number of targets to test
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
-#' @param tpm_threshold TPM threshold (currently unused)
 #' @param fdr_target Target false discovery rate
 #' @param prop_non_null Proportion of non-null hypotheses
 #' @param MOI Multiplicity of infection
@@ -190,7 +185,6 @@ compute_power_grid_overall <- function(
     num_targets = 100,
     gRNAs_per_target = 4,
     non_targeting_gRNAs = 10,
-    tpm_threshold = 10,
     fdr_target = 0.05,
     prop_non_null = 0.1,
     MOI = 10,

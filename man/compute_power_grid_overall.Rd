@@ -11,7 +11,6 @@ compute_power_grid_overall(
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
-  tpm_threshold = 10,
   fdr_target = 0.05,
   prop_non_null = 0.1,
   MOI = 10,
@@ -32,8 +31,6 @@ compute_power_grid_overall(
 \item{gRNAs_per_target}{Number of gRNAs per target}
 
 \item{non_targeting_gRNAs}{Number of non-targeting gRNAs}
-
-\item{tpm_threshold}{TPM threshold (currently unused)}
 
 \item{fdr_target}{Target false discovery rate}
 
