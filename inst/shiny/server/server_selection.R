@@ -110,8 +110,12 @@ create_selection_server <- function(input, output, session, power_data) {
   })
   
   observeEvent(input$go_overall, {
-    dest <- if (is_sel("tile")) "per_pair" else "overall_slice"
-    updateTabsetPanel(session, "main_tabs", selected = dest)
+    if (is_sel("tile")) {
+      updateTabsetPanel(session, "main_tabs", selected = "per_pair")
+    } else {
+      updateTabsetPanel(session, "main_tabs", selected = "overall_power")
+      updateTabsetPanel(session, "overall_subtabs", selected = "overall_slice")
+    }
   })
 
   # Return selection state and helper functions for use by other modules

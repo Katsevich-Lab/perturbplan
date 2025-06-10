@@ -1,26 +1,55 @@
 # Tab panel UI modules for different views
 
-create_heatmap_tab <- function() {
+create_overall_power_tab <- function() {
   tabPanel(
-    "Overall power (heatmap)",
-    value = "overall_heatmap",
+    "Overall power",
+    value = "overall_power",
     fluidRow(
       box(
-        title = "Power versus number of cells and reads per cell",
         status = "primary",
         solidHeader = TRUE,
         width = 8,
+        height = "570px",
         
-        # Message before planning
-        conditionalPanel(
-          condition = "output.need_plan",
-          h4("Select your parameters and click \"Plan\"")
-        ),
-        
-        # Heatmap (after Plan)
-        conditionalPanel(
-          condition = "!output.need_plan",
-          plotOutput("heat", height = 460, click = "heat_click")
+        # Sub-tabs inside the box
+        tabsetPanel(
+          id = "overall_subtabs",
+          
+          # Heatmap sub-tab
+          tabPanel(
+            "Heatmap",
+            value = "overall_heatmap",
+            
+            # Message before planning
+            conditionalPanel(
+              condition = "output.need_plan",
+              h4("Select your parameters and click \"Plan\"")
+            ),
+            
+            # Heatmap (after Plan)
+            conditionalPanel(
+              condition = "!output.need_plan",
+              plotOutput("heat", height = 480, click = "heat_click")
+            )
+          ),
+          
+          # Slice sub-tab
+          tabPanel(
+            "Slice",
+            value = "overall_slice",
+            
+            # Message when no slices selected
+            conditionalPanel(
+              condition = "output.need_plan || !output.slice_available",
+              h4("Select slices to plot on the heatmap")
+            ),
+            
+            # Slice plot (when slices are available)
+            conditionalPanel(
+              condition = "!output.need_plan && output.slice_available",
+              plotOutput("slice_plot", height = 480, click = "slice_click")
+            )
+          )
         )
       ),
       
@@ -30,45 +59,33 @@ create_heatmap_tab <- function() {
           status = "info", 
           solidHeader = TRUE,
           width = 4,
+          height = "570px",
           
-          radioButtons(
-            "mode", "Drill down by:",
-            c("Number of cells (click one or more rows)" = "cells",
-              "Reads per cell (click one or more columns)" = "reads", 
-              "Both (click one or more tiles)" = "tile"),
-            selected = "cells"
+          # Heatmap-specific controls (only show when on heatmap tab)
+          conditionalPanel(
+            condition = "input.overall_subtabs == 'overall_heatmap'",
+            radioButtons(
+              "mode", "Drill down by:",
+              c("Number of cells (click one or more rows)" = "cells",
+                "Reads per cell (click one or more columns)" = "reads", 
+                "Both (click one or more tiles)" = "tile"),
+              selected = "cells"
+            ),
+            uiOutput("overall_box_ui"),
+            actionButton("go_overall", "Go", class = "btn-primary", width = "100%"),
+            br(), br(),
+            actionButton("clear", "Clear", width = "100%")
           ),
-          uiOutput("overall_box_ui"),
-          actionButton("go_overall", "Go", class = "btn-primary", width = "100%"),
-          br(), br(),
-          actionButton("clear", "Clear", width = "100%")
+          
+          # Slice-specific controls (only show when on slice tab)
+          conditionalPanel(
+            condition = "input.overall_subtabs == 'overall_slice'",
+            uiOutput("slice_box_ui"),
+            actionButton("go_slice", "Go", class = "btn-primary", width = "100%"),
+            br(), br(),
+            actionButton("slice_clear", "Clear", width = "100%")
+          )
         )
-      )
-    )
-  )
-}
-
-create_slice_tab <- function() {
-  tabPanel(
-    "Overall power (slice)",
-    value = "overall_slice",
-    fluidRow(
-      box(
-        title = textOutput("slice_title"),
-        status = "primary",
-        solidHeader = TRUE,
-        width = 8,
-        plotOutput("slice_plot", height = 460, click = "slice_click")
-      ),
-      
-      box(
-        status = "info",
-        solidHeader = TRUE, 
-        width = 4,
-        uiOutput("slice_box_ui"),
-        actionButton("go_slice", "Go", class = "btn-primary", width = "100%"),
-        br(), br(),
-        actionButton("slice_clear", "Clear", width = "100%")
       )
     )
   )
@@ -76,27 +93,27 @@ create_slice_tab <- function() {
 
 create_curves_tab <- function() {
   tabPanel(
-    "Power over TPM & FC",
+    "Drill-down power",
     value = "per_pair",
     fluidRow(
       box(
-        title = "Power over TPM & FC",
         status = "primary",
         solidHeader = TRUE,
         width = 8,
+        height = "570px",
         
         # Subtabs for different plot types
         tabsetPanel(
           id = "curves_subtabs",
           tabPanel(
-            "Expression (TPM)",
+            "Expression",
             value = "tpm_plot",
-            plotOutput("pp_tpm", height = "600px", width = "100%")
+            plotOutput("pp_tpm", height = "480px", width = "100%")
           ),
           tabPanel(
             "Fold Change",
             value = "fc_plot", 
-            plotOutput("pp_fc", height = "600px", width = "100%")
+            plotOutput("pp_fc", height = "480px", width = "100%")
           )
         )
       ),
@@ -108,6 +125,7 @@ create_curves_tab <- function() {
           status = "info",
           solidHeader = TRUE,
           width = 4,
+          height = "570px",
           
           radioButtons(
             "curves_display_mode", "Display designs:",
@@ -125,8 +143,7 @@ create_curves_tab <- function() {
 create_main_tabs <- function() {
   tabsetPanel(
     id = "main_tabs",
-    create_heatmap_tab(),
-    create_slice_tab(),
+    create_overall_power_tab(),
     create_curves_tab()
   )
 }

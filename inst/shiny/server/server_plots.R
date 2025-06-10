@@ -46,6 +46,12 @@ create_plots_server <- function(input, output, session, power_data, selection_da
     p
   })
 
+  # Check if slice is available (has selections)
+  output$slice_available <- reactive({
+    power_data$planned() && !is.null(selection_data$slice_mode()) && length(selection_data$sel$idx) > 0
+  })
+  outputOptions(output, "slice_available", suspendWhenHidden = FALSE)
+
   # Slice tab UI
   output$slice_box_ui <- renderUI({
     req(power_data$planned(), !is.null(selection_data$slice_mode()))
@@ -72,6 +78,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
       sub <- subset(df, cells %in% power_data$cells_seq()[selection_data$sel$idx])
       ggplot(sub,aes(reads,power,colour=factor(cells)))+
         geom_line()+
+        geom_point()+
         geom_hline(yintercept=0.8,linetype="dashed",colour="grey") +
         geom_vline(xintercept=selection_data$slice_x(),colour="red")+
         theme_bw(base_size = 16)+
@@ -81,6 +88,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
       sub <- subset(df, reads %in% power_data$reads_seq()[selection_data$sel$idx])
       ggplot(sub,aes(cells,power,colour=factor(reads)))+
         geom_line()+
+        geom_point()+
         geom_hline(yintercept=0.8,linetype="dashed",colour="grey") +
         geom_vline(xintercept=selection_data$slice_x(),colour="red")+
         theme_bw(base_size = 16)+

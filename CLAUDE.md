@@ -125,6 +125,11 @@ The Shiny app provides an intuitive interface for specifying perturbation-gene p
 
 ### UI Organization
 
+The application features a streamlined two-tab structure:
+
+1. **Overall Power**: Unified tab with sub-tabs for "Heatmap" and "Slice" views
+2. **Drill-down Power**: Detailed power curve analysis for selected experimental conditions
+
 Analysis choices are ordered for logical workflow:
 1. **Perturbation-gene pairs to analyze**: Random/Custom dropdown
 2. **Minimum TPM threshold**: Gene expression filtering
@@ -134,17 +139,31 @@ Analysis choices are ordered for logical workflow:
 
 ### Power Visualization Interface
 
-The "Power over TPM & FC" tab provides detailed power curve analysis with:
+#### Overall Power Tab
+- **Heatmap Sub-tab**: Interactive power heatmap with click-to-select functionality
+  - Drill-down controls for cells, reads per cell, or both (tiles)
+  - Context-sensitive sidebar showing only relevant controls
+- **Slice Sub-tab**: Line plots showing power curves for selected heatmap slices
+  - Conditional display: shows instruction message when no slices selected
+  - Interactive point selection with multiple selection support
 
-- **Tabbed Interface**: Separate tabs for "Expression (TPM)" and "Fold Change" plots
+#### Drill-down Power Tab
+Provides detailed power curve analysis with:
+
+- **Tabbed Interface**: Separate tabs for "Expression" and "Fold Change" plots
 - **Display Options**: Control box with three visualization modes:
-  - "All together": All experimental designs on a single plot
+  - "All together": All experimental designs on a single plot with:
+    - Color representing number of cells
+    - Linetype and point shape representing reads per cell
+    - Legends positioned on the right for optimal space usage
+    - Clean legend labels (no redundant "reads/cell" text)
   - "Facet over cells": Horizontal panels separated by cell count, colored by reads per cell
   - "Facet over reads per cell": Horizontal panels separated by reads per cell, colored by cell count
 - **Interactive Features**: 
   - ggside marginal histograms showing distribution of expression/fold change values
+  - Points added to all line plots for better data visibility
   - Square aspect ratio panels for optimal viewing
-  - Clean legend labels without redundant text
+  - Consistent 570px box heights across all tabs
 - **Performance Optimization**: Default 10×10 grid (instead of 20×20) for faster computation
 
 ### File Validation
@@ -153,6 +172,23 @@ The "Power over TPM & FC" tab provides detailed power curve analysis with:
 - Provides clear error messages for format issues
 - Shows loading status: "Loaded X pairs (Y unique genes)"
 - Warns about genes filtered out due to low TPM
+
+### Excel Download Organization
+
+The results Excel file is organized with numbered sheets for logical reading:
+
+1. **1_Parameters**: Analysis settings and input parameters
+2. **2_Power_Grid**: Main heatmap results (cells × reads per cell power grid)
+3. **3_Gene_List**: Input gene list (if custom pairs provided)
+4. **4_Selected_Designs**: Information about drill-down selections
+5. **5_Fold_Change_Power**: Detailed fold change power curves
+6. **6_Expression_Power**: Detailed expression (TPM) power curves
+
+Each sheet uses logical column ordering:
+- **Design** column shows "cells × reads" format for easy identification
+- **Cells** and **Reads_per_Cell** as separate numeric columns for analysis
+- **Data columns** (Expression_TPM, Fold_Change, Power) follow design info
+- **Clear naming**: Descriptive column headers without redundancy
 
 ## Testing
 

@@ -131,20 +131,40 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       display_mode <- if(is.null(input$curves_display_mode)) "all_together" else input$curves_display_mode
       
       if (display_mode == "all_together") {
-        # Original plot - all designs together
-        ggplot(dfs1, aes(x, Power, colour = label)) +
+        # Create factor variables for cells (color) and reads per cell (linetype and shape)
+        dfs1$cells_factor <- factor(dfs1$cells,
+                                   levels = sort(unique(dfs1$cells)),
+                                   labels = paste0(sort(unique(dfs1$cells)), " cells"))
+        dfs1$reads_factor <- factor(dfs1$reads,
+                                   levels = sort(unique(dfs1$reads)),
+                                   labels = sort(unique(dfs1$reads)))
+        
+        # Create shape mapping (cycle through available shapes)
+        unique_reads <- sort(unique(dfs1$reads))
+        shape_values <- c(16, 17, 15, 18, 3, 4, 8, 7, 9, 10, 11, 12, 13, 14)[1:length(unique_reads)]
+        names(shape_values) <- unique_reads
+        
+        # Create linetype mapping
+        linetype_values <- rep(c("solid", "dashed", "dotted", "dotdash", "longdash", "twodash"), length.out = length(unique_reads))
+        names(linetype_values) <- unique_reads
+        
+        ggplot(dfs1, aes(x, Power, colour = cells_factor, linetype = reads_factor, shape = reads_factor)) +
           geom_line(linewidth = 1) +
+          geom_point(size = 2) +
           geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
           geom_xsidehistogram(data = expr_data, aes(x = tpm), 
                              bins = 60, fill = "lightblue", alpha = 0.7, 
                              inherit.aes = FALSE) +
           scale_x_log10() +
           scale_xsidey_continuous() +
+          scale_shape_manual(values = shape_values) +
+          scale_linetype_manual(values = linetype_values) +
           theme_bw(base_size = 16) +
           theme(aspect.ratio = 1,
                 ggside.panel.scale = 0.3,
-                legend.position = "bottom") +
-          labs(x = "Expression Level (TPM)", y = "Power", colour = "Design (cells × reads/cell)")
+                legend.position = "right") +
+          labs(x = "Expression Level (TPM)", y = "Power", 
+               colour = "Number of cells", linetype = "Reads per cell", shape = "Reads per cell")
         
       } else if (display_mode == "facet_cells") {
         # Facet by number of cells (horizontal panels)
@@ -159,6 +179,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         
         ggplot(dfs1, aes(x, Power, colour = reads_factor)) +
           geom_line(linewidth = 1) +
+          geom_point() +
           geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
           geom_xsidehistogram(data = expr_data, aes(x = tpm), 
                              bins = 60, fill = "lightblue", alpha = 0.7, 
@@ -186,6 +207,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         
         ggplot(dfs1, aes(x, Power, colour = cells_factor)) +
           geom_line(linewidth = 1) +
+          geom_point() +
           geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
           geom_xsidehistogram(data = expr_data, aes(x = tpm), 
                              bins = 60, fill = "lightblue", alpha = 0.7, 
@@ -203,7 +225,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     } else {
       ggplot() + theme_void()
     }
-  }, height = 600)
+  }, height = 480)
 
   # Fold Change plot  
   output$pp_fc <- renderPlot({
@@ -243,6 +265,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       
       base_plot <- ggplot(dfs2, aes(x, Power, colour = label)) +
         geom_line(linewidth = 1) +
+        geom_point() +
         geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
         geom_xsidehistogram(data = fc_sample_data, aes(x = fc), 
                            bins = 60, fill = "pink", alpha = 0.7, inherit.aes = FALSE) +
@@ -256,12 +279,40 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       }
       
       if (display_mode == "all_together") {
-        # Original plot - all designs together
-        base_plot +
+        # Create factor variables for cells (color) and reads per cell (linetype and shape)
+        dfs2$cells_factor <- factor(dfs2$cells,
+                                   levels = sort(unique(dfs2$cells)),
+                                   labels = paste0(sort(unique(dfs2$cells)), " cells"))
+        dfs2$reads_factor <- factor(dfs2$reads,
+                                   levels = sort(unique(dfs2$reads)),
+                                   labels = sort(unique(dfs2$reads)))
+        
+        # Create shape mapping (cycle through available shapes)
+        unique_reads <- sort(unique(dfs2$reads))
+        shape_values <- c(16, 17, 15, 18, 3, 4, 8, 7, 9, 10, 11, 12, 13, 14)[1:length(unique_reads)]
+        names(shape_values) <- unique_reads
+        
+        # Create linetype mapping
+        linetype_values <- rep(c("solid", "dashed", "dotted", "dotdash", "longdash", "twodash"), length.out = length(unique_reads))
+        names(linetype_values) <- unique_reads
+        
+        ggplot(dfs2, aes(x, Power, colour = cells_factor, linetype = reads_factor, shape = reads_factor)) +
+          geom_line(linewidth = 1) +
+          geom_point(size = 2) +
+          geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
+          geom_xsidehistogram(data = fc_sample_data, aes(x = fc), 
+                             bins = 60, fill = "pink", alpha = 0.7, inherit.aes = FALSE) +
+          scale_x_continuous(limits = x_limits) +
+          scale_xsidey_continuous(name = "Pair count") +
+          scale_shape_manual(values = shape_values) +
+          scale_linetype_manual(values = linetype_values) +
+          labs(x = "Fold Change", y = "Power", 
+               colour = "Number of cells", linetype = "Reads per cell", shape = "Reads per cell") +
+          {if (input$side %in% c("left", "right")) geom_vline(xintercept = 1, linetype = "dotted", colour = "darkgrey", alpha = 0.8)} +
           theme_bw(base_size = 16) +
           theme(aspect.ratio = 1,
                 ggside.panel.scale = 0.3,
-                legend.position = "bottom")
+                legend.position = "right")
         
       } else if (display_mode == "facet_cells") {
         # Facet by number of cells (horizontal panels)
@@ -276,6 +327,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         
         base_plot <- ggplot(dfs2, aes(x, Power, colour = reads_factor)) +
           geom_line(linewidth = 1) +
+          geom_point() +
           geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
           geom_xsidehistogram(data = fc_sample_data, aes(x = fc), 
                              bins = 60, fill = "pink", alpha = 0.7, inherit.aes = FALSE) +
@@ -309,6 +361,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
                                    
         base_plot <- ggplot(dfs2, aes(x, Power, colour = cells_factor)) +
           geom_line(linewidth = 1) +
+          geom_point() +
           geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
           geom_xsidehistogram(data = fc_sample_data, aes(x = fc), 
                              bins = 60, fill = "pink", alpha = 0.7, inherit.aes = FALSE) +
@@ -332,7 +385,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     } else {
       ggplot() + theme_void()
     }
-  }, height = 600)
+  }, height = 480)
   
   # Download handler for results
   output$download_results <- downloadHandler(
@@ -348,11 +401,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       # Create a workbook
       wb <- openxlsx::createWorkbook()
       
-      # Add power grid sheet
-      openxlsx::addWorksheet(wb, "Power_Grid")
-      openxlsx::writeData(wb, "Power_Grid", power_data_results$power_grid)
-      
-      # Add parameters sheet
+      # 1. Add parameters sheet first (most important for understanding the analysis)
       params_df <- data.frame(
         Parameter = c(
           "Number of targets", "gRNAs per target", "Non-targeting gRNAs",
@@ -369,64 +418,84 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         stringsAsFactors = FALSE
       )
       
-      openxlsx::addWorksheet(wb, "Parameters")
-      openxlsx::writeData(wb, "Parameters", params_df)
+      openxlsx::addWorksheet(wb, "1_Parameters")
+      openxlsx::writeData(wb, "1_Parameters", params_df)
       
-      # Add gene list if uploaded
+      # 2. Add power grid sheet (main results)
+      openxlsx::addWorksheet(wb, "2_Power_Grid")
+      openxlsx::writeData(wb, "2_Power_Grid", power_data_results$power_grid)
+      
+      # 3. Add gene list if uploaded
       if (!is.null(power_data$gene_list()) && length(power_data$gene_list()) > 0) {
         gene_list_df <- data.frame(
-          Gene_Name = power_data$gene_list(),
+          Gene_ID = power_data$gene_list(),
           stringsAsFactors = FALSE
         )
-        openxlsx::addWorksheet(wb, "Gene_List")
-        openxlsx::writeData(wb, "Gene_List", gene_list_df)
+        openxlsx::addWorksheet(wb, "3_Gene_List")
+        openxlsx::writeData(wb, "3_Gene_List", gene_list_df)
       }
       
-      # Add power curves if available
+      # 4. Add power curves if available (detailed drill-down results)
       if (selection_data$is_sel("tile") && nrow(selection_data$sel$tiles) > 0) {
         curves_data <- selected_power_curves()
         
-        # Add tiles info
-        openxlsx::addWorksheet(wb, "Selected_Tiles")
-        openxlsx::writeData(wb, "Selected_Tiles", curves_data$tiles_info)
+        # Add tiles info first with logical column order
+        tiles_info_clean <- data.frame(
+          Design = paste0(curves_data$tiles_info$cells, " × ", curves_data$tiles_info$reads),
+          Cells = curves_data$tiles_info$cells,
+          Reads_per_Cell = curves_data$tiles_info$reads,
+          stringsAsFactors = FALSE
+        )
+        openxlsx::addWorksheet(wb, "4_Selected_Designs")
+        openxlsx::writeData(wb, "4_Selected_Designs", tiles_info_clean)
         
-        # Add fold-change curves
+        # 5. Add fold-change power curves with logical column order
         if (!is.null(curves_data$power_curves$fc_curves)) {
           fc_combined <- do.call(rbind, lapply(seq_along(curves_data$power_curves$fc_curves), function(i) {
             fc_data <- curves_data$power_curves$fc_curves[[i]]
             if (!is.null(fc_data) && nrow(fc_data) > 0) {
-              fc_data$tile_index <- i
-              fc_data$cells <- curves_data$tiles_info$cells[i]
-              fc_data$reads <- curves_data$tiles_info$reads[i]
-              return(fc_data)
+              # Reorder columns logically
+              fc_clean <- data.frame(
+                Design = paste0(curves_data$tiles_info$cells[i], " × ", curves_data$tiles_info$reads[i]),
+                Cells = curves_data$tiles_info$cells[i],
+                Reads_per_Cell = curves_data$tiles_info$reads[i],
+                Fold_Change = fc_data$fold_change,
+                Power = fc_data$power,
+                stringsAsFactors = FALSE
+              )
+              return(fc_clean)
             }
             return(NULL)
           }))
           
           if (!is.null(fc_combined) && nrow(fc_combined) > 0) {
-            openxlsx::addWorksheet(wb, "FC_Power_Curves")
-            openxlsx::writeData(wb, "FC_Power_Curves", fc_combined)
+            openxlsx::addWorksheet(wb, "5_Fold_Change_Power")
+            openxlsx::writeData(wb, "5_Fold_Change_Power", fc_combined)
           }
         }
         
-        # Add expression curves
+        # 6. Add expression power curves with logical column order
         if (!is.null(curves_data$power_curves$expr_curves)) {
           expr_combined <- do.call(rbind, lapply(seq_along(curves_data$power_curves$expr_curves), function(i) {
             expr_data <- curves_data$power_curves$expr_curves[[i]]
             if (!is.null(expr_data) && nrow(expr_data) > 0) {
-              expr_data$tile_index <- i
-              expr_data$cells <- curves_data$tiles_info$cells[i]
-              expr_data$reads <- curves_data$tiles_info$reads[i]
-              # Convert to TPM scale
-              expr_data$TPM <- expr_data$relative_expression * 1e6
-              return(expr_data)
+              # Reorder columns logically
+              expr_clean <- data.frame(
+                Design = paste0(curves_data$tiles_info$cells[i], " × ", curves_data$tiles_info$reads[i]),
+                Cells = curves_data$tiles_info$cells[i],
+                Reads_per_Cell = curves_data$tiles_info$reads[i],
+                Expression_TPM = expr_data$relative_expression * 1e6,
+                Power = expr_data$power,
+                stringsAsFactors = FALSE
+              )
+              return(expr_clean)
             }
             return(NULL)
           }))
           
           if (!is.null(expr_combined) && nrow(expr_combined) > 0) {
-            openxlsx::addWorksheet(wb, "TPM_Power_Curves")
-            openxlsx::writeData(wb, "TPM_Power_Curves", expr_combined)
+            openxlsx::addWorksheet(wb, "6_Expression_Power")
+            openxlsx::writeData(wb, "6_Expression_Power", expr_combined)
           }
         }
       }
