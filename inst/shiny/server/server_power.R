@@ -9,6 +9,7 @@ create_power_server <- function(input, output, session) {
   
   # Gene list file upload handling
   gene_list <- reactiveVal(NULL)
+  target_list <- reactiveVal(NULL)  # Store targets from uploaded CSV
   
   observeEvent(input$gene_list_file, {
     req(input$gene_list_file, input$gene_list_mode == "custom")
@@ -33,22 +34,27 @@ create_power_server <- function(input, output, session) {
         
         # Extract gene list preserving duplicates
         genes <- as.character(uploaded_data$response_id)
+        targets <- as.character(uploaded_data$grna_target)
         
-        # Clean the gene list
+        # Clean the gene list and targets
         genes <- trimws(genes)  # Remove whitespace
         genes <- genes[genes != ""]  # Remove empty lines
+        targets <- trimws(targets)
+        targets <- targets[targets != ""]
         # Note: NOT removing duplicates - preserve multiplicity
         
-        # Store the gene list
+        # Store the gene list and targets
         gene_list(genes)
+        target_list(targets)
         
         # Calculate statistics for status
         total_pairs <- length(genes)
         unique_genes <- length(unique(genes))
+        unique_targets <- length(unique(targets))
         
         # Update status
         output$gene_list_status <- renderText({
-          sprintf("Loaded %d pairs (%d unique genes)", total_pairs, unique_genes)
+          sprintf("Loaded %d pairs (%d unique genes, %d unique targets)", total_pairs, unique_genes, unique_targets)
         })
         
         output$gene_list_uploaded <- reactive(TRUE)
@@ -57,6 +63,7 @@ create_power_server <- function(input, output, session) {
       } else {
         showNotification("Please upload a CSV file with grna_target and response_id columns", type = "error")
         gene_list(NULL)
+        target_list(NULL)
         output$gene_list_uploaded <- reactive(FALSE)
         outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
       }
@@ -64,6 +71,7 @@ create_power_server <- function(input, output, session) {
     }, error = function(e) {
       showNotification(paste("Error reading file:", e$message), type = "error")
       gene_list(NULL)
+      target_list(NULL)
       output$gene_list_uploaded <- reactive(FALSE)
       outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
     })
@@ -73,6 +81,7 @@ create_power_server <- function(input, output, session) {
   observe({
     if (is.null(input$gene_list_file) || input$gene_list_mode == "random") {
       gene_list(NULL)
+      target_list(NULL)
       output$gene_list_uploaded <- reactive(FALSE)
       outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
     }
@@ -82,6 +91,7 @@ create_power_server <- function(input, output, session) {
   observeEvent(input$gene_list_mode, {
     if (input$gene_list_mode == "random") {
       gene_list(NULL)
+      target_list(NULL)
       output$gene_list_uploaded <- reactive(FALSE)
       outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
     }
@@ -117,7 +127,11 @@ create_power_server <- function(input, output, session) {
     perturbplan::calculate_power_grid(
       fc_expression_info = fc_expression_info(),
       library_info = library_info(),
-      num_targets = input$num_targets,
+      num_targets = if(input$gene_list_mode == "custom" && !is.null(target_list())) {
+        length(unique(target_list()))  # Use actual unique targets from CSV
+      } else {
+        input$num_targets  # Use user input for random mode
+      },
       gRNAs_per_target = input$gRNAs_per_target, 
       non_targeting_gRNAs = input$non_targeting_gRNAs,
       fdr_target = input$fdr_target,
