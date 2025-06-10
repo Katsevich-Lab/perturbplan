@@ -38,6 +38,10 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     curves_results <- selected_power_curves()
     tiles_info <- curves_results$tiles_info
     
+    # Get baseline expression data for marginal distribution
+    fc_expression_info <- power_data$fc_expression_info()
+    baseline_expression <- fc_expression_info$fc_expression_df
+    
     # Extract power curve data for selected tiles  
     create_real_plot_data <- function(curve_type) {
       power_curves <- curves_results$power_curves
@@ -80,31 +84,66 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       }
     }
 
-    # First plot: Power vs TPM (real data)
+    # Create data for marginal distributions
+    # Expression distribution (convert to TPM scale)
+    expr_data <- data.frame(
+      tpm = baseline_expression$relative_expression * 1e6
+    )
+    
+    # Fold change distribution parameters (from input)
+    fc_mean <- input$fc_mean
+    fc_sd <- input$fc_sd
+    
+    # First plot: Power vs TPM with marginal expression distribution
     dfs1 <- create_real_plot_data("expr")
-    p1 <- ggplot(dfs1, aes(x, Power, colour = label)) +
-      geom_line() +
-      geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
-      scale_x_log10() +  # Log scale for TPM values
-      theme_bw(base_size = 16) +
-      theme(aspect.ratio = 1) +
-      labs(x = "Expression Level (TPM)", y = "Power", colour = "Design (cells × reads/cell)")
+    if (nrow(dfs1) > 0) {
+      p1_base <- ggplot(dfs1, aes(x, Power, colour = label)) +
+        geom_line() +
+        geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
+        scale_x_log10() +  # Log scale for TPM values
+        theme_bw(base_size = 16) +
+        theme(aspect.ratio = 1) +
+        labs(x = "Expression Level (TPM)", y = "Power", colour = "Design (cells × reads/cell)")
+      
+      # Add marginal expression histogram using ggMarginal
+      p1 <- ggExtra::ggMarginal(p1_base, 
+                                type = "histogram", 
+                                data = expr_data, 
+                                x = tpm,
+                                xparams = list(bins = 30, fill = "lightblue", alpha = 0.7),
+                                margins = "x")
+    } else {
+      p1 <- ggplot() + theme_void()
+    }
 
-    # Second plot: Power vs Fold‐change (real data)
+    # Second plot: Power vs Fold-change with marginal normal distribution
     dfs2 <- create_real_plot_data("fc")
-    p2 <- ggplot(dfs2, aes(x, Power, colour = label)) +
-      geom_line() +
-      geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
-      theme_bw(base_size = 16) +
-      theme(aspect.ratio = 1) +
-      labs(x = "Fold Change",
-           y = "Power",
-           colour = "Design (cells × reads/cell)")
+    if (nrow(dfs2) > 0) {
+      p2_base <- ggplot(dfs2, aes(x, Power, colour = label)) +
+        geom_line() +
+        geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
+        theme_bw(base_size = 16) +
+        theme(aspect.ratio = 1) +
+        labs(x = "Fold Change", y = "Power", colour = "Design (cells × reads/cell)")
+      
+      # Add marginal normal distribution using stat_function
+      p2 <- ggExtra::ggMarginal(p2_base,
+                                type = "density",
+                                xparams = list(
+                                  stat = "function",
+                                  fun = function(x) dnorm(x, mean = fc_mean, sd = fc_sd),
+                                  colour = "darkred",
+                                  size = 1,
+                                  fill = "pink",
+                                  alpha = 0.3
+                                ),
+                                margins = "x")
+    } else {
+      p2 <- ggplot() + theme_void()
+    }
 
-    # Combine with shared legend below
-    (p1 + p2) +
-      plot_layout(ncol = 2, guides = "collect") &
-      theme(legend.position = "bottom")
+    # Combine plots side by side
+    gridExtra::grid.arrange(p1, p2, ncol = 2)
   })
   
   # Download handler for results

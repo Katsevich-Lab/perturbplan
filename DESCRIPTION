@@ -25,7 +25,10 @@ Imports:
     Matrix,
     sceptre,
     shiny,
-    openxlsx
+    openxlsx,
+    ggplot2,
+    ggExtra,
+    gridExtra
 Suggests: 
     knitr,
     rmarkdown,
