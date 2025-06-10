@@ -11,41 +11,51 @@ create_power_server <- function(input, output, session) {
   gene_list <- reactiveVal(NULL)
   
   observeEvent(input$gene_list_file, {
-    req(input$gene_list_file)
+    req(input$gene_list_file, input$gene_list_mode == "custom")
     
     tryCatch({
-      # Read the uploaded file
+      # Read the uploaded CSV file
       file_ext <- tools::file_ext(input$gene_list_file$name)
       
-      if (file_ext %in% c("csv", "txt")) {
-        # Try reading as CSV first, then as simple text
-        if (file_ext == "csv") {
-          uploaded_data <- read.csv(input$gene_list_file$datapath, 
-                                  header = FALSE, 
-                                  stringsAsFactors = FALSE)
-          genes <- as.character(uploaded_data[,1])
-        } else {
-          genes <- readLines(input$gene_list_file$datapath)
+      if (file_ext == "csv") {
+        # Read CSV with headers
+        uploaded_data <- read.csv(input$gene_list_file$datapath, 
+                                stringsAsFactors = FALSE)
+        
+        # Validate required columns
+        if (!all(c("grna_target", "response_id") %in% colnames(uploaded_data))) {
+          showNotification("CSV must contain 'grna_target' and 'response_id' columns", type = "error")
+          gene_list(NULL)
+          output$gene_list_uploaded <- reactive(FALSE)
+          outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
+          return()
         }
+        
+        # Extract gene list preserving duplicates
+        genes <- as.character(uploaded_data$response_id)
         
         # Clean the gene list
         genes <- trimws(genes)  # Remove whitespace
         genes <- genes[genes != ""]  # Remove empty lines
-        genes <- unique(genes)  # Remove duplicates
+        # Note: NOT removing duplicates - preserve multiplicity
         
         # Store the gene list
         gene_list(genes)
         
+        # Calculate statistics for status
+        total_pairs <- length(genes)
+        unique_genes <- length(unique(genes))
+        
         # Update status
         output$gene_list_status <- renderText({
-          sprintf("Loaded %d unique genes", length(genes))
+          sprintf("Loaded %d pairs (%d unique genes)", total_pairs, unique_genes)
         })
         
         output$gene_list_uploaded <- reactive(TRUE)
         outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
         
       } else {
-        showNotification("Please upload a CSV or TXT file", type = "error")
+        showNotification("Please upload a CSV file with grna_target and response_id columns", type = "error")
         gene_list(NULL)
         output$gene_list_uploaded <- reactive(FALSE)
         outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
@@ -59,9 +69,18 @@ create_power_server <- function(input, output, session) {
     })
   })
   
-  # Reset gene list when file is removed
+  # Reset gene list when file is removed or mode changes to random
   observe({
-    if (is.null(input$gene_list_file)) {
+    if (is.null(input$gene_list_file) || input$gene_list_mode == "random") {
+      gene_list(NULL)
+      output$gene_list_uploaded <- reactive(FALSE)
+      outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
+    }
+  })
+  
+  # Reset gene list when switching to random mode
+  observeEvent(input$gene_list_mode, {
+    if (input$gene_list_mode == "random") {
       gene_list(NULL)
       output$gene_list_uploaded <- reactive(FALSE)
       outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
@@ -77,7 +96,7 @@ create_power_server <- function(input, output, session) {
       fold_change_sd = input$fc_sd,
       biological_system = input$biological_system,
       B = 1000,  # Monte Carlo samples for good accuracy
-      gene_list = gene_list(),  # Use uploaded gene list if available
+      gene_list = if(input$gene_list_mode == "custom") gene_list() else NULL,  # Use gene list only in custom mode
       tpm_threshold = input$tpm_threshold  # Apply TPM filtering
     )
   })

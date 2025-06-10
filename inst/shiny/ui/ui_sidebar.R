@@ -43,46 +43,54 @@ create_sidebar <- function() {
         tags$div(
           id = "analysis-content",
           style = "padding: 15px;",
-          numericInput("tpm_threshold", "Minimum TPM threshold:", 10, 0, 10, 0.5),
-          numericInput("fdr_target", "FDR target level:", 0.05, 0.001, 0.1, 0.001),
-          selectInput("side", "Test side:", 
-                      choices = c("Left (knockdown)" = "left", 
-                                 "Right (overexpression)" = "right"), 
-                      selected = "left"),
-          selectInput("control_group", "Control group:", 
-                      choices = c("Complement cells" = "complement", 
-                                 "Non-targeting cells" = "nt_cells"), 
-                      selected = "complement"),
-          br(),
-          tags$div(
-            style = "border-top: 1px solid #ddd; padding-top: 15px; margin-top: 10px;",
-            tags$label("Gene list (optional):", style = "font-weight: bold; color: #333;"),
-            br(),
-            tags$small("Upload a CSV file with Ensembl gene names to analyze (one gene per row)", 
-                      style = "color: #666; font-style: italic;"),
-            br(),
+          # Perturbation-gene pairs to analyze
+          selectInput("gene_list_mode", "Perturbation-gene pairs to analyze:",
+                     choices = c("Random" = "random", "Custom" = "custom"),
+                     selected = "random"),
+          conditionalPanel(
+            condition = "input.gene_list_mode == 'custom'",
             tags$div(
               style = "background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 3px; padding: 6px; margin: 5px 0;",
               tags$small(
                 tags$i(class = "fa fa-info-circle", style = "color: #856404; margin-right: 3px;"),
-                tags$strong("Note: "), "Only Ensembl gene IDs are accepted (e.g., ENSG00000141510)",
+                tags$strong("Format: "), "CSV with 'grna_target' and 'response_id' columns (Ensembl gene IDs)",
                 style = "color: #856404; font-size: 11px;"
               )
             ),
-            br(), br(),
-            fileInput("gene_list_file", 
-                     label = NULL,
-                     accept = c(".csv", ".txt"),
-                     placeholder = "Choose CSV file..."),
+            tags$div(
+              style = "margin-bottom: 15px;",
+              fileInput("gene_list_file", 
+                       label = NULL,
+                       accept = c(".csv"),
+                       placeholder = "Choose CSV file...")
+            ),
             conditionalPanel(
               condition = "output.gene_list_uploaded",
               tags$div(
-                style = "background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 8px; margin-top: 5px;",
+                style = "background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
                 tags$i(class = "fa fa-check-circle", style = "color: #155724; margin-right: 5px;"),
                 textOutput("gene_list_status", inline = TRUE)
               )
             )
-          )
+          ),
+          
+          # Minimum TPM threshold
+          numericInput("tpm_threshold", "Minimum TPM threshold:", 10, 0, 10, 0.5),
+          
+          # Test side
+          selectInput("side", "Test side:", 
+                      choices = c("Left (knockdown)" = "left", 
+                                 "Right (overexpression)" = "right"), 
+                      selected = "left"),
+          
+          # Control group
+          selectInput("control_group", "Control group:", 
+                      choices = c("Complement cells" = "complement", 
+                                 "Non-targeting cells" = "nt_cells"), 
+                      selected = "complement"),
+          
+          # FDR target level
+          numericInput("fdr_target", "FDR target level:", 0.05, 0.001, 0.1, 0.001)
         )
       ),
       

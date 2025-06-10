@@ -78,21 +78,50 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
   ################# sample/subset genes from filtered pool ###################
   # Handle gene-specific vs random sampling scenarios from the filtered pool
   if (!is.null(gene_list)) {
-    # User provided specific genes - extract from filtered pool
+    # User provided specific genes - extract from filtered pool with duplicate handling
     if ("response_id" %in% colnames(filtered_baseline_df)) {
-      # Filter for specified genes from the TPM-filtered pool
-      specified_genes_df <- filtered_baseline_df |>
-        dplyr::filter(response_id %in% gene_list)
-
+      
+      # Check for duplicates and use appropriate strategy
+      gene_weights <- table(gene_list)
+      unique_genes <- names(gene_weights)
+      
+      # Filter baseline data for unique genes that passed TPM filtering
+      unique_genes_df <- filtered_baseline_df |>
+        dplyr::filter(response_id %in% unique_genes)
+      
       # Check if we found any matching genes in the filtered pool
-      if (nrow(specified_genes_df) == 0) {
+      if (nrow(unique_genes_df) == 0) {
         stop("No matching genes found in TPM-filtered baseline expression data. Genes may be below TPM threshold or not in dataset.")
-      } else {
-        # Use ALL specified genes that passed TPM filtering
-        expression_df <- specified_genes_df
-        n_genes <- nrow(expression_df)
-        cat("Gene-specific mode: Using", n_genes, "specified genes that passed TPM filtering\n")
       }
+      
+      # Check which requested genes were not found
+      found_genes <- unique_genes_df$response_id
+      missing_genes <- setdiff(unique_genes, found_genes)
+      if (length(missing_genes) > 0) {
+        warning("Some requested genes were filtered out: ", paste(missing_genes, collapse = ", "))
+      }
+      
+      if (any(gene_weights[found_genes] > 1)) {
+        # Has duplicates - use weighted sampling approach
+        weights <- as.numeric(gene_weights[found_genes])
+        
+        # Sample with replacement according to weights
+        sampled_indices <- sample(seq_len(nrow(unique_genes_df)), 
+                                size = sum(gene_weights[found_genes]), 
+                                prob = weights, 
+                                replace = TRUE)
+        
+        expression_df <- unique_genes_df[sampled_indices, ]
+        n_genes <- nrow(expression_df)
+        cat("Gene-specific mode with duplicates: Using", length(found_genes), "unique genes with weighted sampling for", n_genes, "total pairs\n")
+        
+      } else {
+        # No duplicates - use simple filtering
+        expression_df <- unique_genes_df
+        n_genes <- nrow(expression_df)
+        cat("Gene-specific mode: Using", n_genes, "unique genes that passed TPM filtering\n")
+      }
+      
     } else {
       stop("Baseline expression data does not contain response_id column. Cannot use specified gene list.")
     }
