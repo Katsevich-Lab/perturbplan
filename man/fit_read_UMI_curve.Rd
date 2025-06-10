@@ -28,8 +28,6 @@ accounting for:
 \item UMI saturation at high read depths
 \item Platform-specific technical biases
 }
-
-The relationship follows: UMI = UMI_per_cell * (1 - exp(-reads_per_cell / (UMI_per_cell * variation)))
 }
 \seealso{
 \code{\link{extract_library_info}} for obtaining curve parameters
