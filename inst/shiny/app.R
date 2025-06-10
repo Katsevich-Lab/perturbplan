@@ -3,6 +3,7 @@
 
 library(shiny)
 library(shinydashboard)
+library(shinydashboardPlus)
 library(shinyBS)
 library(shinyjs)
 library(ggplot2)

@@ -5,14 +5,13 @@ create_header <- function() {
     title = "PerturbPlan",
     tags$li(
       class = "dropdown",
-      style = "margin: 8px 10px 0 0;",
+      style = "float: right; margin-right: 20px;",
       conditionalPanel(
         condition = "!output.need_plan",
         downloadButton(
           "download_results",
           "Download Results",
-          class = "btn-primary",
-          style = "background-color: white; color: #3c8dbc; border: 1px solid #3c8dbc; margin-top: 7px;"
+          class = "btn-primary"
         )
       )
     )

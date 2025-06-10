@@ -79,11 +79,12 @@ perturbplan::launch_app()
 1. User provides:
    - Cell counts per gRNA
    - Baseline expression statistics
-   - Discovery pairs (perturbation-gene combinations to test)
+   - Perturbation-gene pairs to analyze (Random mode or Custom CSV with `grna_target`, `response_id` columns)
    - Analysis parameters (control group, test side, QC thresholds)
 
 2. The package:
-   - Validates inputs
+   - Validates inputs and CSV format (if Custom mode)
+   - Handles gene multiplicity using weighted sampling for duplicate genes in pairs
    - Computes QC-aware library sizes
    - Calculates test statistic distributions using C++
    - Estimates power for each perturbation-gene pair
@@ -98,6 +99,7 @@ perturbplan::launch_app()
 - **Modular Design**: Separate functions for parameter estimation, QC computation, and power analysis allow flexible workflows
 - **Shiny Interface**: Provides non-programmatic access via `inst/shiny/app.R`
 - **C++ Optimization**: Monte Carlo loops implemented in C++ for significant performance improvements
+- **Weighted Sampling**: Preserves gene multiplicity from perturbation-gene pairs using efficient weighted sampling instead of row duplication
 
 ## Performance
 
@@ -106,6 +108,36 @@ The package has been optimized for computational efficiency:
 - **C++ Monte Carlo**: `.compute_power_plan_efficient()` replaces the older R-based `.compute_underspecified_power_efficient()` with C++ implementations
 - **Batch Processing**: Monte Carlo samples processed in batch using `compute_monte_carlo_teststat_cpp()`
 - **Efficient Curves**: Power curves computed using optimized C++ functions (`compute_fc_curve_cpp`, `compute_expression_curve_cpp`)
+- **Memory-Efficient Sampling**: Uses weighted sampling for gene multiplicity instead of duplicating rows, reducing memory usage while preserving statistical correctness
+
+## Shiny Application Features
+
+### Perturbation-Gene Pairs Analysis
+
+The Shiny app provides an intuitive interface for specifying perturbation-gene pairs:
+
+- **Random Mode**: Randomly samples genes from the baseline expression dataset
+- **Custom Mode**: Accepts CSV files with user-specified perturbation-gene pairs
+  - Required format: CSV with `grna_target` and `response_id` columns
+  - `response_id` must contain Ensembl gene IDs (e.g., ENSG00000141510)
+  - Preserves gene multiplicity: genes appearing in multiple pairs get proportional weight in power calculations
+  - Example file: `inst/extdata/sample_pairs.csv`
+
+### UI Organization
+
+Analysis choices are ordered for logical workflow:
+1. **Perturbation-gene pairs to analyze**: Random/Custom dropdown
+2. **Minimum TPM threshold**: Gene expression filtering
+3. **Test side**: Left (knockdown), Right (overexpression)
+4. **Control group**: Complement cells vs Non-targeting cells  
+5. **FDR target level**: Multiple testing correction threshold
+
+### File Validation
+
+- Validates CSV format and required columns
+- Provides clear error messages for format issues
+- Shows loading status: "Loaded X pairs (Y unique genes)"
+- Warns about genes filtered out due to low TPM
 
 ## Testing
 

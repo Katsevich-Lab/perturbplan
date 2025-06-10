@@ -8,9 +8,9 @@ source("ui/ui_tabs.R")
 
 # Main UI composition
 ui <- dashboardPage(
-  create_header(),
-  create_sidebar(),
-  dashboardBody(
+  header = create_header(),
+  sidebar = create_sidebar(),
+  body = dashboardBody(
     create_styles(),
     create_main_tabs()
   )

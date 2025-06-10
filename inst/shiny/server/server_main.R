@@ -19,4 +19,7 @@ server <- function(input, output, session) {
   
   # Initialize curves and download module
   create_curves_server(input, output, session, power_data, selection_data)
+  
+  # Prevent download button from being suspended when hidden
+  outputOptions(output, "download_results", suspendWhenHidden = FALSE)
 }
