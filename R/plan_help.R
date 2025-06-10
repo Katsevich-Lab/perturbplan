@@ -16,7 +16,7 @@ utils::globalVariables(c("response_id"))
 #' @param gene_list Character vector. Optional list of Ensembl gene IDs to use for analysis.
 #'   If provided, expression parameters will be extracted for ALL specified genes (no sampling).
 #'   If NULL (default), B genes are randomly sampled from baseline data.
-#' @param tpm_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression 
+#' @param tpm_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
 #'   levels below tpm_threshold/1e6 are filtered out before power calculation.
 #'
 #' @return A list with elements:
@@ -31,10 +31,10 @@ utils::globalVariables(c("response_id"))
 #'   \item \strong{Gene-specific mode} (gene_list provided): Uses ALL specified genes, no sampling
 #'   \item \strong{Random sampling mode} (gene_list = NULL): Randomly samples B genes from baseline
 #' }
-#' 
+#'
 #' In both modes:
 #' \itemize{
-#'   \item Sets a random seed for reproducibility  
+#'   \item Sets a random seed for reproducibility
 #'   \item Filters genes below TPM threshold (relative_expression < tpm_threshold/1e6)
 #'   \item Generates fold change values from a normal distribution (one per gene)
 #'   \item Returns combined data for Monte Carlo integration
@@ -50,23 +50,23 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
   ############## combine expression and effect size information ################
   baseline_expression_stats <- extract_baseline_expression(biological_system = biological_system)
   baseline_df <- baseline_expression_stats$baseline_expression
-  
+
   #################### apply TPM threshold filtering FIRST ###################
   # Convert TPM threshold to relative expression scale (TPM / 1e6)
   tpm_threshold_relative <- tpm_threshold / 1e6
-  
+
   # Filter the full baseline dataset by TPM threshold first
   if ("relative_expression" %in% colnames(baseline_df)) {
     pre_filter_n <- nrow(baseline_df)
-    filtered_baseline_df <- baseline_df |> 
+    filtered_baseline_df <- baseline_df |>
       dplyr::filter(relative_expression >= tpm_threshold_relative)
     post_filter_n <- nrow(filtered_baseline_df)
-    
+
     # Check if we have any genes left after filtering
     if (post_filter_n == 0) {
       stop("No genes remain after TPM threshold filtering. Consider lowering tpm_threshold.")
     }
-    
+
     # Print filtering summary
     cat("TPM filtering: Kept", post_filter_n, "out of", pre_filter_n, "genes (threshold:", tpm_threshold, "TPM)\n")
   } else {
@@ -74,16 +74,16 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
     filtered_baseline_df <- baseline_df
     post_filter_n <- nrow(filtered_baseline_df)
   }
-  
+
   ################# sample/subset genes from filtered pool ###################
   # Handle gene-specific vs random sampling scenarios from the filtered pool
   if (!is.null(gene_list)) {
     # User provided specific genes - extract from filtered pool
     if ("response_id" %in% colnames(filtered_baseline_df)) {
       # Filter for specified genes from the TPM-filtered pool
-      specified_genes_df <- filtered_baseline_df |> 
+      specified_genes_df <- filtered_baseline_df |>
         dplyr::filter(response_id %in% gene_list)
-      
+
       # Check if we found any matching genes in the filtered pool
       if (nrow(specified_genes_df) == 0) {
         stop("No matching genes found in TPM-filtered baseline expression data. Genes may be below TPM threshold or not in dataset.")
@@ -107,7 +107,7 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
       n_genes <- B
     }
   }
-  
+
   # Combine fold changes with expression parameters
   # Generate fold changes to match the number of genes (after filtering and sampling)
   fc_expression_df <- data.frame(
@@ -189,7 +189,7 @@ extract_baseline_expression <- function(biological_system = "K562"){
 #' These parameters are used in \code{\link{fit_read_UMI_curve}} to convert
 #' read depth to effective library size.
 #'
-#' @seealso 
+#' @seealso
 #' \code{\link{fit_read_UMI_curve}} for using these parameters
 #' \code{\link{library_computation}} for fitting these parameters from data
 #' @export
@@ -205,10 +205,13 @@ extract_library_info <- function(biological_system = "K562"){
 
          })
 
+  # Extract scalar values from named vector
+  params <- library_info$S_M_curve_params
+
   # return the data frame with the susbampled rows
   return(list(
-    UMI_per_cell = library_info$S_M_curve_params["UMI_per_cell"],
-    variation = library_info$S_M_curve_params["variation"]
+    UMI_per_cell = unname(as.numeric(params[["UMI_per_cell"]])),
+    variation = unname(as.numeric(params[["variation"]]))
   ))
 }
 
@@ -233,14 +236,14 @@ extract_library_info <- function(biological_system = "K562"){
 #'   \item Platform-specific technical biases
 #' }
 #'
-#' The relationship follows: UMI = UMI_per_cell * (1 - exp(-reads_per_cell / (UMI_per_cell * variation)))
 #'
 #' @seealso \code{\link{extract_library_info}} for obtaining curve parameters
 #' @export
 fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
 
-  # Apply the saturation curve transformation
-  effective_UMI <- UMI_per_cell * (1 - exp(-reads_per_cell / (UMI_per_cell * variation)))
-  
+  # Apply the saturation curve transformation with proper S-M curve formula
+  effective_UMI <- UMI_per_cell * (1 - exp(-reads_per_cell / UMI_per_cell) *
+                                     (1 + variation * reads_per_cell^2 / (2 * UMI_per_cell^2)))
+
   return(effective_UMI)
 }
