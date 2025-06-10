@@ -75,13 +75,13 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
     post_filter_n <- nrow(filtered_baseline_df)
   }
 
-  ################# sample/subset genes from filtered pool ###################
-  # Handle gene-specific vs random sampling scenarios from the filtered pool
+  ################# sample B genes from filtered pool with importance weights ###################
+  # Always sample B genes, but use importance sampling when gene_list is provided
   if (!is.null(gene_list)) {
-    # User provided specific genes - extract from filtered pool with duplicate handling
+    # User provided specific genes - use importance sampling based on gene weights
     if ("response_id" %in% colnames(filtered_baseline_df)) {
       
-      # Check for duplicates and use appropriate strategy
+      # Calculate gene weights from the original gene list
       gene_weights <- table(gene_list)
       unique_genes <- names(gene_weights)
       
@@ -101,32 +101,24 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
         warning("Some requested genes were filtered out: ", paste(missing_genes, collapse = ", "))
       }
       
-      if (any(gene_weights[found_genes] > 1)) {
-        # Has duplicates - use weighted sampling approach
-        weights <- as.numeric(gene_weights[found_genes])
-        
-        # Sample with replacement according to weights
-        sampled_indices <- sample(seq_len(nrow(unique_genes_df)), 
-                                size = sum(gene_weights[found_genes]), 
-                                prob = weights, 
-                                replace = TRUE)
-        
-        expression_df <- unique_genes_df[sampled_indices, ]
-        n_genes <- nrow(expression_df)
-        cat("Gene-specific mode with duplicates: Using", length(found_genes), "unique genes with weighted sampling for", n_genes, "total pairs\n")
-        
-      } else {
-        # No duplicates - use simple filtering
-        expression_df <- unique_genes_df
-        n_genes <- nrow(expression_df)
-        cat("Gene-specific mode: Using", n_genes, "unique genes that passed TPM filtering\n")
-      }
+      # Use importance sampling: sample B genes based on weights from found genes
+      weights <- as.numeric(gene_weights[found_genes])
+      
+      # Sample B genes with replacement according to importance weights
+      sampled_indices <- sample(seq_len(nrow(unique_genes_df)), 
+                              size = B, 
+                              prob = weights, 
+                              replace = TRUE)
+      
+      expression_df <- unique_genes_df[sampled_indices, ]
+      n_genes <- B
+      cat("Gene-specific mode with importance sampling: Using", length(found_genes), "unique genes, sampled", B, "times with weights\n")
       
     } else {
       stop("Baseline expression data does not contain response_id column. Cannot use specified gene list.")
     }
   } else {
-    # No specific genes provided - sample B genes from filtered pool
+    # No specific genes provided - sample B genes uniformly from filtered pool
     if (post_filter_n < B) {
       warning("Fewer genes (", post_filter_n, ") available after TPM filtering than requested (", B, "). Using all available genes.")
       expression_df <- filtered_baseline_df
