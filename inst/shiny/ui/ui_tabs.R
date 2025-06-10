@@ -83,8 +83,40 @@ create_curves_tab <- function() {
         title = "Power over TPM & FC",
         status = "primary",
         solidHeader = TRUE,
-        width = 12,
-        plotOutput("pp_combined", height = "600px", width = "100%")
+        width = 8,
+        
+        # Subtabs for different plot types
+        tabsetPanel(
+          id = "curves_subtabs",
+          tabPanel(
+            "Expression (TPM)",
+            value = "tpm_plot",
+            plotOutput("pp_tpm", height = "600px", width = "100%")
+          ),
+          tabPanel(
+            "Fold Change",
+            value = "fc_plot", 
+            plotOutput("pp_fc", height = "600px", width = "100%")
+          )
+        )
+      ),
+      
+      # Control box for display options
+      conditionalPanel(
+        condition = "output.curves_available",
+        box(
+          status = "info",
+          solidHeader = TRUE,
+          width = 4,
+          
+          radioButtons(
+            "curves_display_mode", "Display designs:",
+            c("All together" = "all_together",
+              "Facet over cells" = "facet_cells", 
+              "Facet over reads per cell" = "facet_reads"),
+            selected = "all_together"
+          )
+        )
       )
     )
   )

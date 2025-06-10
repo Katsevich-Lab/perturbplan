@@ -38,8 +38,8 @@ calculate_power_grid <- function(
 ) {
 
   # Create grid for heatmap visualization
-  cells_seq <- round(seq(5000, 50000, length.out = 20))
-  reads_seq <- round(seq(2000, 50000, length.out = 20))
+  cells_seq <- round(seq(5000, 50000, length.out = 10))
+  reads_seq <- round(seq(2000, 50000, length.out = 10))
 
   # Create cells-reads data frame for power calculation
   cells_reads_df <- expand.grid(

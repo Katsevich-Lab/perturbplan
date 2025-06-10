@@ -132,6 +132,21 @@ Analysis choices are ordered for logical workflow:
 4. **Control group**: Complement cells vs Non-targeting cells  
 5. **FDR target level**: Multiple testing correction threshold
 
+### Power Visualization Interface
+
+The "Power over TPM & FC" tab provides detailed power curve analysis with:
+
+- **Tabbed Interface**: Separate tabs for "Expression (TPM)" and "Fold Change" plots
+- **Display Options**: Control box with three visualization modes:
+  - "All together": All experimental designs on a single plot
+  - "Facet over cells": Horizontal panels separated by cell count, colored by reads per cell
+  - "Facet over reads per cell": Horizontal panels separated by reads per cell, colored by cell count
+- **Interactive Features**: 
+  - ggside marginal histograms showing distribution of expression/fold change values
+  - Square aspect ratio panels for optimal viewing
+  - Clean legend labels without redundant text
+- **Performance Optimization**: Default 10×10 grid (instead of 20×20) for faster computation
+
 ### File Validation
 
 - Validates CSV format and required columns
@@ -174,3 +189,4 @@ This ensures consistency across the entire codebase and avoids confusion between
 - **Function Migration**: `.compute_underspecified_power_efficient()` has been replaced with `.compute_power_plan_efficient()` for better performance
 - **C++ Priority**: When possible, use C++ implementations over R loops for computationally intensive operations
 - **Grid Analysis**: Use `compute_power_grid_efficient()` for systematic power analysis across experimental conditions
+- **ggside Faceting**: When using ggplot2 faceting with ggside histograms, convert numeric faceting variables to factors explicitly to avoid "Can't combine factor and double" errors. Use `factor()` with proper levels and labels before `facet_grid()`.

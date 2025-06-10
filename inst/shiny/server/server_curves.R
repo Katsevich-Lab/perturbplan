@@ -2,6 +2,12 @@
 
 create_curves_server <- function(input, output, session, power_data, selection_data) {
   
+  # Show curves control box when curves are available
+  output$curves_available <- reactive({
+    power_data$planned() && selection_data$is_sel("tile") && nrow(selection_data$sel$tiles) > 0
+  })
+  outputOptions(output, "curves_available", suspendWhenHidden = FALSE)
+  
   # Compute detailed power curves only when needed (for selected tiles)
   selected_power_curves <- reactive({
     req(power_data$planned(), power_data$fc_expression_info(), power_data$library_info(), selection_data$is_sel("tile"), nrow(selection_data$sel$tiles) > 0)
@@ -30,93 +36,187 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     )
   })
 
-  # Per-pair plots with real power curves
-  output$pp_combined <- renderPlot({
+  # Helper function to extract power curve data for plots
+  create_real_plot_data <- function(curve_type, curves_results) {
+    power_curves <- curves_results$power_curves
+    tiles_info <- curves_results$tiles_info
+    
+    # Ensure tiles_info columns are numeric to prevent factor/numeric mismatch
+    tiles_info$cells <- as.numeric(as.character(tiles_info$cells))
+    tiles_info$reads <- as.numeric(as.character(tiles_info$reads))
+    
+    dfs <- Map(function(i) {
+      # Get curve data for this tile
+      if (curve_type == "fc") {
+        curve_data <- power_curves$fc_curves[[i]]
+      } else {
+        curve_data <- power_curves$expr_curves[[i]]
+      }
+      
+      if (!is.null(curve_data) && nrow(curve_data) > 0) {
+        # Extract values and ensure they're numeric
+        cells_val <- as.numeric(tiles_info$cells[i])
+        reads_val <- as.numeric(tiles_info$reads[i])
+        
+        if (curve_type == "fc") {
+          # Create data frame with explicit numeric columns
+          df <- data.frame(
+            x = as.numeric(curve_data$fold_change),
+            Power = as.numeric(curve_data$power),
+            label = as.character(sprintf("%d × %d", cells_val, reads_val)),
+            cells = rep(cells_val, length(curve_data$fold_change)),
+            reads = rep(reads_val, length(curve_data$fold_change)),
+            stringsAsFactors = FALSE
+          )
+          # Ensure columns are the right type
+          df$cells <- as.numeric(df$cells)
+          df$reads <- as.numeric(df$reads)
+          df
+        } else {
+          # Convert relative_expression to TPM scale
+          tpm_values <- curve_data$relative_expression * 1e6
+          df <- data.frame(
+            x = as.numeric(tpm_values),
+            Power = as.numeric(curve_data$power),
+            label = as.character(sprintf("%d × %d", cells_val, reads_val)),
+            cells = rep(cells_val, length(tpm_values)),
+            reads = rep(reads_val, length(tpm_values)),
+            stringsAsFactors = FALSE
+          )
+          # Ensure columns are the right type
+          df$cells <- as.numeric(df$cells)
+          df$reads <- as.numeric(df$reads)
+          df
+        }
+      } else {
+        data.frame(x = numeric(0), Power = numeric(0), label = character(0), 
+                  cells = numeric(0), reads = numeric(0), stringsAsFactors = FALSE)
+      }
+    }, seq_len(nrow(tiles_info)))
+    
+    # Combine all valid data frames
+    valid_dfs <- dfs[sapply(dfs, nrow) > 0]
+    if (length(valid_dfs) > 0) {
+      do.call(rbind, valid_dfs)
+    } else {
+      data.frame(x = numeric(0), Power = numeric(0), label = character(0), 
+                cells = numeric(0), reads = numeric(0), stringsAsFactors = FALSE)
+    }
+  }
+
+  # TPM (Expression) plot
+  output$pp_tpm <- renderPlot({
     req(power_data$planned(), selection_data$is_sel("tile"))
 
     # Get power curves for selected tiles
     curves_results <- selected_power_curves()
-    tiles_info <- curves_results$tiles_info
     
     # Get baseline expression data for marginal distribution
     fc_expression_info <- power_data$fc_expression_info()
     baseline_expression <- fc_expression_info$fc_expression_df
     
-    # Extract power curve data for selected tiles  
-    create_real_plot_data <- function(curve_type) {
-      power_curves <- curves_results$power_curves
-      
-      dfs <- Map(function(i) {
-        # Get curve data for this tile
-        if (curve_type == "fc") {
-          curve_data <- power_curves$fc_curves[[i]]
-        } else {
-          curve_data <- power_curves$expr_curves[[i]]
-        }
-        
-        if (!is.null(curve_data) && nrow(curve_data) > 0) {
-          if (curve_type == "fc") {
-            data.frame(
-              x = curve_data$fold_change,
-              Power = curve_data$power,
-              label = sprintf("%d × %d", tiles_info$cells[i], tiles_info$reads[i])
-            )
-          } else {
-            # Convert relative_expression to TPM scale
-            tpm_values <- curve_data$relative_expression * 1e6
-            data.frame(
-              x = tpm_values,
-              Power = curve_data$power,
-              label = sprintf("%d × %d", tiles_info$cells[i], tiles_info$reads[i])
-            )
-          }
-        } else {
-          data.frame(x = numeric(0), Power = numeric(0), label = character(0))
-        }
-      }, seq_len(nrow(tiles_info)))
-      
-      # Combine all valid data frames
-      valid_dfs <- dfs[sapply(dfs, nrow) > 0]
-      if (length(valid_dfs) > 0) {
-        do.call(rbind, valid_dfs)
-      } else {
-        data.frame(x = numeric(0), Power = numeric(0), label = character(0))
-      }
-    }
-
-    # Get power curve data for plots
-    dfs1 <- create_real_plot_data("expr") 
-    dfs2 <- create_real_plot_data("fc")
+    # Get power curve data for expression plot
+    dfs1 <- create_real_plot_data("expr", curves_results)
     
     # Get baseline expression data for marginal distribution
     expr_data <- data.frame(
       tpm = baseline_expression$relative_expression * 1e6
     )
     
-    # Fold change distribution parameters (from input)
-    fc_mean <- input$fc_mean
-    fc_sd <- input$fc_sd
-    
     # Create power curves with ggside marginal distributions
     library(ggside)
     
     # Expression power curve with marginal histogram
     if (nrow(dfs1) > 0) {
-      p1 <- ggplot(dfs1, aes(x, Power, colour = label)) +
-        geom_line(linewidth = 1) +
-        geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
-        geom_xsidehistogram(data = expr_data, aes(x = tpm), 
-                           bins = 60, fill = "lightblue", alpha = 0.7, 
-                           inherit.aes = FALSE) +
-        scale_x_log10() +
-        scale_xsidey_continuous() +
-        theme_bw(base_size = 16) +
-        theme(aspect.ratio = 1,
-              ggside.panel.scale = 0.3) +
-        labs(x = "Expression Level (TPM)", y = "Power", colour = "Design (cells × reads/cell)")
+      display_mode <- if(is.null(input$curves_display_mode)) "all_together" else input$curves_display_mode
+      
+      if (display_mode == "all_together") {
+        # Original plot - all designs together
+        ggplot(dfs1, aes(x, Power, colour = label)) +
+          geom_line(linewidth = 1) +
+          geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
+          geom_xsidehistogram(data = expr_data, aes(x = tpm), 
+                             bins = 60, fill = "lightblue", alpha = 0.7, 
+                             inherit.aes = FALSE) +
+          scale_x_log10() +
+          scale_xsidey_continuous() +
+          theme_bw(base_size = 16) +
+          theme(aspect.ratio = 1,
+                ggside.panel.scale = 0.3,
+                legend.position = "bottom") +
+          labs(x = "Expression Level (TPM)", y = "Power", colour = "Design (cells × reads/cell)")
+        
+      } else if (display_mode == "facet_cells") {
+        # Facet by number of cells (horizontal panels)
+        # Convert cells to factor for faceting to avoid ggplot2 internal issues
+        dfs1$cells_factor <- factor(dfs1$cells, 
+                                   levels = sort(unique(dfs1$cells)),
+                                   labels = paste0("cells: ", sort(unique(dfs1$cells))))
+        # Create reads factor for coloring
+        dfs1$reads_factor <- factor(dfs1$reads,
+                                   levels = sort(unique(dfs1$reads)),
+                                   labels = sort(unique(dfs1$reads)))
+        
+        ggplot(dfs1, aes(x, Power, colour = reads_factor)) +
+          geom_line(linewidth = 1) +
+          geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
+          geom_xsidehistogram(data = expr_data, aes(x = tpm), 
+                             bins = 60, fill = "lightblue", alpha = 0.7, 
+                             inherit.aes = FALSE) +
+          facet_grid(. ~ cells_factor) +
+          scale_x_log10() +
+          scale_xsidey_continuous() +
+          theme_bw(base_size = 14) +
+          theme(ggside.panel.scale = 0.2,
+                legend.position = "bottom",
+                strip.text = element_text(size = 12),
+                aspect.ratio = 1) +
+          labs(x = "Expression Level (TPM)", y = "Power", colour = "Reads per cell")
+        
+      } else if (display_mode == "facet_reads") {
+        # Facet by reads per cell (horizontal panels)
+        # Convert reads to factor for faceting to avoid ggplot2 internal issues
+        dfs1$reads_factor <- factor(dfs1$reads,
+                                   levels = sort(unique(dfs1$reads)),
+                                   labels = paste0("reads: ", sort(unique(dfs1$reads))))
+        # Create cells factor for coloring
+        dfs1$cells_factor <- factor(dfs1$cells,
+                                   levels = sort(unique(dfs1$cells)),
+                                   labels = sort(unique(dfs1$cells)))
+        
+        ggplot(dfs1, aes(x, Power, colour = cells_factor)) +
+          geom_line(linewidth = 1) +
+          geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
+          geom_xsidehistogram(data = expr_data, aes(x = tpm), 
+                             bins = 60, fill = "lightblue", alpha = 0.7, 
+                             inherit.aes = FALSE) +
+          facet_grid(. ~ reads_factor) +
+          scale_x_log10() +
+          scale_xsidey_continuous() +
+          theme_bw(base_size = 14) +
+          theme(ggside.panel.scale = 0.2,
+                legend.position = "bottom",
+                strip.text = element_text(size = 12),
+                aspect.ratio = 1) +
+          labs(x = "Expression Level (TPM)", y = "Power", colour = "Number of cells")
+      }
     } else {
-      p1 <- ggplot() + theme_void()
+      ggplot() + theme_void()
     }
+  }, height = 600)
+
+  # Fold Change plot  
+  output$pp_fc <- renderPlot({
+    req(power_data$planned(), selection_data$is_sel("tile"))
+
+    # Get power curves for selected tiles
+    curves_results <- selected_power_curves()
+    
+    # Get power curve data for fold change plot
+    dfs2 <- create_real_plot_data("fc", curves_results)
+    
+    # Create power curves with ggside marginal distributions
+    library(ggside)
 
     # Fold-change power curve with marginal histogram
     if (nrow(dfs2) > 0) {
@@ -139,32 +239,99 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       }
       
       fc_sample_data <- data.frame(fc = filtered_fc)
+      display_mode <- if(is.null(input$curves_display_mode)) "all_together" else input$curves_display_mode
       
-      p2 <- ggplot(dfs2, aes(x, Power, colour = label)) +
+      base_plot <- ggplot(dfs2, aes(x, Power, colour = label)) +
         geom_line(linewidth = 1) +
         geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
         geom_xsidehistogram(data = fc_sample_data, aes(x = fc), 
                            bins = 60, fill = "pink", alpha = 0.7, inherit.aes = FALSE) +
         scale_x_continuous(limits = x_limits) +
-        scale_xsidey_continuous() +
-        theme_bw(base_size = 16) +
-        theme(aspect.ratio = 1,
-              ggside.panel.scale = 0.3) +
+        scale_xsidey_continuous(name = "Pair count") +
         labs(x = "Fold Change", y = "Power", colour = "Design (cells × reads/cell)")
-        
+      
       # Add vertical line at fold change = 1 for reference
       if (input$side %in% c("left", "right")) {
-        p2 <- p2 + geom_vline(xintercept = 1, linetype = "dotted", colour = "darkgrey", alpha = 0.8)
+        base_plot <- base_plot + geom_vline(xintercept = 1, linetype = "dotted", colour = "darkgrey", alpha = 0.8)
+      }
+      
+      if (display_mode == "all_together") {
+        # Original plot - all designs together
+        base_plot +
+          theme_bw(base_size = 16) +
+          theme(aspect.ratio = 1,
+                ggside.panel.scale = 0.3,
+                legend.position = "bottom")
+        
+      } else if (display_mode == "facet_cells") {
+        # Facet by number of cells (horizontal panels)
+        # Convert cells to factor for faceting to avoid ggplot2 internal issues
+        dfs2$cells_factor <- factor(dfs2$cells,
+                                   levels = sort(unique(dfs2$cells)),
+                                   labels = paste0("cells: ", sort(unique(dfs2$cells))))
+        # Create reads factor for coloring
+        dfs2$reads_factor <- factor(dfs2$reads,
+                                   levels = sort(unique(dfs2$reads)),
+                                   labels = sort(unique(dfs2$reads)))
+        
+        base_plot <- ggplot(dfs2, aes(x, Power, colour = reads_factor)) +
+          geom_line(linewidth = 1) +
+          geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
+          geom_xsidehistogram(data = fc_sample_data, aes(x = fc), 
+                             bins = 60, fill = "pink", alpha = 0.7, inherit.aes = FALSE) +
+          scale_x_continuous(limits = x_limits) +
+          scale_xsidey_continuous() +
+          labs(x = "Fold Change", y = "Power", colour = "Reads per cell")
+        
+        # Add vertical line at fold change = 1 for reference
+        if (input$side %in% c("left", "right")) {
+          base_plot <- base_plot + geom_vline(xintercept = 1, linetype = "dotted", colour = "darkgrey", alpha = 0.8)
+        }
+        
+        base_plot +
+          facet_grid(. ~ cells_factor) +
+          theme_bw(base_size = 14) +
+          theme(ggside.panel.scale = 0.2,
+                legend.position = "bottom",
+                strip.text = element_text(size = 12),
+                aspect.ratio = 1)
+        
+      } else if (display_mode == "facet_reads") {
+        # Facet by reads per cell (horizontal panels)
+        # Convert reads to factor for faceting to avoid ggplot2 internal issues
+        dfs2$reads_factor <- factor(dfs2$reads,
+                                   levels = sort(unique(dfs2$reads)),
+                                   labels = paste0("reads: ", sort(unique(dfs2$reads))))
+        # Create cells factor for coloring
+        dfs2$cells_factor <- factor(dfs2$cells,
+                                   levels = sort(unique(dfs2$cells)),
+                                   labels = sort(unique(dfs2$cells)))
+                                   
+        base_plot <- ggplot(dfs2, aes(x, Power, colour = cells_factor)) +
+          geom_line(linewidth = 1) +
+          geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
+          geom_xsidehistogram(data = fc_sample_data, aes(x = fc), 
+                             bins = 60, fill = "pink", alpha = 0.7, inherit.aes = FALSE) +
+          scale_x_continuous(limits = x_limits) +
+          scale_xsidey_continuous() +
+          labs(x = "Fold Change", y = "Power", colour = "Number of cells")
+        
+        # Add vertical line at fold change = 1 for reference
+        if (input$side %in% c("left", "right")) {
+          base_plot <- base_plot + geom_vline(xintercept = 1, linetype = "dotted", colour = "darkgrey", alpha = 0.8)
+        }
+        
+        base_plot +
+          facet_grid(. ~ reads_factor) +
+          theme_bw(base_size = 14) +
+          theme(ggside.panel.scale = 0.2,
+                legend.position = "bottom",
+                strip.text = element_text(size = 12),
+                aspect.ratio = 1)
       }
     } else {
-      p2 <- ggplot() + theme_void()
+      ggplot() + theme_void()
     }
-
-    # Combine plots side by side with shared legend
-    library(patchwork)
-    (p1 | p2) + 
-      plot_layout(guides = "collect") &
-      theme(legend.position = "bottom")
   }, height = 600)
   
   # Download handler for results
