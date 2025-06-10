@@ -8,9 +8,10 @@ create_plots_server <- function(input, output, session, power_data, selection_da
                   aes(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax),
                   inherit.aes=FALSE,colour="red",linewidth=1,fill=NA)
   
-  output$heat <- renderPlot({
+  # Base heatmap (no selection dependency to prevent flashing)
+  base_heatmap <- reactive({
     req(power_data$planned())
-    p <- ggplot(power_data$gridDF(),aes(reads,cells,fill=power))+
+    ggplot(power_data$gridDF(),aes(reads,cells,fill=power))+
       geom_tile(colour=NA)+
       scale_x_continuous(expand = c(0, 0)) +
       scale_y_continuous(expand = c(0, 0)) +
@@ -18,30 +19,44 @@ create_plots_server <- function(input, output, session, power_data, selection_da
       theme(panel.grid=element_blank(),
             aspect.ratio = 1)+
       labs(x="Reads per cell",y="Number of cells",fill="Power")
+  })
+  
+  # Selection overlay (isolated from base heatmap)
+  selection_overlay <- reactive({
+    req(power_data$planned())
+    
     if (selection_data$is_sel("row") && length(selection_data$sel$idx)) {
-      rect <- data.frame(
+      data.frame(
         xmin=min(power_data$reads_seq())-power_data$dreads()/2,
         xmax=max(power_data$reads_seq())+power_data$dreads()/2,
         ymin=power_data$cells_seq()[selection_data$sel$idx]-power_data$dcells()/2,
         ymax=power_data$cells_seq()[selection_data$sel$idx]+power_data$dcells()/2
       )
-      p <- draw_rects(rect,p)
     } else if (selection_data$is_sel("col") && length(selection_data$sel$idx)) {
-      rect <- data.frame(
+      data.frame(
         xmin=power_data$reads_seq()[selection_data$sel$idx]-power_data$dreads()/2,
         xmax=power_data$reads_seq()[selection_data$sel$idx]+power_data$dreads()/2,
         ymin=min(power_data$cells_seq())-power_data$dcells()/2,
         ymax=max(power_data$cells_seq())+power_data$dcells()/2
       )
-      p <- draw_rects(rect,p)
     } else if (selection_data$is_sel("tile") && nrow(selection_data$sel$tiles)) {
-      rect <- data.frame(
+      data.frame(
         xmin=power_data$reads_seq()[selection_data$sel$tiles$col]-power_data$dreads()/2,
         xmax=power_data$reads_seq()[selection_data$sel$tiles$col]+power_data$dreads()/2,
         ymin=power_data$cells_seq()[selection_data$sel$tiles$row]-power_data$dcells()/2,
         ymax=power_data$cells_seq()[selection_data$sel$tiles$row]+power_data$dcells()/2
       )
-      p <- draw_rects(rect,p)
+    } else {
+      NULL
+    }
+  })
+  
+  # Main heatmap output (combines base + overlay efficiently)
+  output$heat <- renderPlot({
+    p <- base_heatmap()
+    overlay <- selection_overlay()
+    if (!is.null(overlay)) {
+      p <- draw_rects(overlay, p)
     }
     p
   })

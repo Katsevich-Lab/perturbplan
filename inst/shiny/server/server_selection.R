@@ -71,11 +71,17 @@ create_selection_server <- function(input, output, session, power_data) {
     }
   })
 
+  # Debounced heatmap clicks to prevent flashing
+  heat_click_debounced <- reactive({
+    input$heat_click
+  }) %>% debounce(100)  # 100ms debounce delay
+  
   # Heatmap clicks
-  observeEvent(input$heat_click, {
-    req(power_data$planned())
-    r <- which.min(abs(power_data$cells_seq() - input$heat_click$y))
-    c <- which.min(abs(power_data$reads_seq() - input$heat_click$x))
+  observeEvent(heat_click_debounced(), {
+    click_data <- heat_click_debounced()
+    req(power_data$planned(), !is.null(click_data))
+    r <- which.min(abs(power_data$cells_seq() - click_data$y))
+    c <- which.min(abs(power_data$reads_seq() - click_data$x))
     if (input$mode=="cells") {
       sel$type <- "row"; sel$idx <- toggle(sel$idx,r); slice_mode("row")
       updateTextInput(session,"overall_points",
