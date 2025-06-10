@@ -94,56 +94,79 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     fc_mean <- input$fc_mean
     fc_sd <- input$fc_sd
     
-    # First plot: Power vs TPM with marginal expression distribution
+    # Create marginal plots separately
+    # Expression distribution histogram
+    p1_marginal <- ggplot(expr_data, aes(x = tpm)) +
+      geom_histogram(bins = 30, fill = "lightblue", alpha = 0.7, colour = "white") +
+      scale_x_log10() +
+      theme_minimal() +
+      theme(axis.text.x = element_blank(), 
+            axis.title.x = element_blank(),
+            axis.ticks.x = element_blank(),
+            panel.grid = element_blank(),
+            plot.margin = margin(0, 0, 0, 0)) +
+      labs(y = "Count")
+    
+    # Fold-change normal distribution
+    fc_range <- if (nrow(create_real_plot_data("fc")) > 0) {
+      range(create_real_plot_data("fc")$x, na.rm = TRUE)
+    } else {
+      c(0.5, 1.5)
+    }
+    fc_seq <- seq(max(0.1, fc_range[1] - 0.5), fc_range[2] + 0.5, length.out = 100)
+    fc_density_data <- data.frame(
+      fc = fc_seq,
+      density = dnorm(fc_seq, mean = fc_mean, sd = fc_sd)
+    )
+    
+    p2_marginal <- ggplot(fc_density_data, aes(x = fc, y = density)) +
+      geom_line(colour = "darkred", size = 1) +
+      geom_area(alpha = 0.3, fill = "pink") +
+      theme_minimal() +
+      theme(axis.text.x = element_blank(),
+            axis.title.x = element_blank(), 
+            axis.ticks.x = element_blank(),
+            panel.grid = element_blank(),
+            plot.margin = margin(0, 0, 0, 0)) +
+      labs(y = "Density")
+
+    # Main power curve plots
     dfs1 <- create_real_plot_data("expr")
     if (nrow(dfs1) > 0) {
-      p1_base <- ggplot(dfs1, aes(x, Power, colour = label)) +
+      p1_main <- ggplot(dfs1, aes(x, Power, colour = label)) +
         geom_line() +
         geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
         scale_x_log10() +  # Log scale for TPM values
         theme_bw(base_size = 16) +
         theme(aspect.ratio = 1) +
         labs(x = "Expression Level (TPM)", y = "Power", colour = "Design (cells × reads/cell)")
-      
-      # Add marginal expression histogram using ggMarginal
-      p1 <- ggExtra::ggMarginal(p1_base, 
-                                type = "histogram", 
-                                data = expr_data, 
-                                x = tpm,
-                                xparams = list(bins = 30, fill = "lightblue", alpha = 0.7),
-                                margins = "x")
     } else {
-      p1 <- ggplot() + theme_void()
+      p1_main <- ggplot() + theme_void()
     }
 
-    # Second plot: Power vs Fold-change with marginal normal distribution
     dfs2 <- create_real_plot_data("fc")
     if (nrow(dfs2) > 0) {
-      p2_base <- ggplot(dfs2, aes(x, Power, colour = label)) +
+      p2_main <- ggplot(dfs2, aes(x, Power, colour = label)) +
         geom_line() +
         geom_hline(yintercept = 0.8, linetype = "dashed", colour = "grey") +
         theme_bw(base_size = 16) +
         theme(aspect.ratio = 1) +
         labs(x = "Fold Change", y = "Power", colour = "Design (cells × reads/cell)")
-      
-      # Add marginal normal distribution using stat_function
-      p2 <- ggExtra::ggMarginal(p2_base,
-                                type = "density",
-                                xparams = list(
-                                  stat = "function",
-                                  fun = function(x) dnorm(x, mean = fc_mean, sd = fc_sd),
-                                  colour = "darkred",
-                                  size = 1,
-                                  fill = "pink",
-                                  alpha = 0.3
-                                ),
-                                margins = "x")
     } else {
-      p2 <- ggplot() + theme_void()
+      p2_main <- ggplot() + theme_void()
     }
 
-    # Combine plots side by side
-    gridExtra::grid.arrange(p1, p2, ncol = 2)
+    # Combine using patchwork-style layout
+    library(patchwork)
+    
+    # Create combined plots with marginals on top
+    p1_combined <- p1_marginal / p1_main + plot_layout(heights = c(1, 3))
+    p2_combined <- p2_marginal / p2_main + plot_layout(heights = c(1, 3))
+    
+    # Combine side by side with shared legend
+    (p1_combined | p2_combined) + 
+      plot_layout(guides = "collect") &
+      theme(legend.position = "bottom")
   })
   
   # Download handler for results
