@@ -287,8 +287,8 @@ compute_power_grid_full <- function(
     # For right-sided tests (overexpression), use FC > 1
     fc_output_grid <- seq(1, max(fc_range[2], 2), length.out = fc_curve_points)
   } else {
-    # For two-sided tests, use full range
-    fc_output_grid <- seq(fc_range[1], fc_range[2], length.out = fc_curve_points)
+    # For two-sided tests, use range starting from 1
+    fc_output_grid <- seq(1, max(fc_range[2], 2), length.out = fc_curve_points)
   }
 
   # Use log-spaced points for gene expression evaluation grid, starting from TPM threshold

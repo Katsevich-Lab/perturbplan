@@ -80,7 +80,8 @@ create_sidebar <- function() {
           # Test side
           selectInput("side", "Test side:", 
                       choices = c("Left (knockdown)" = "left", 
-                                 "Right (overexpression)" = "right"), 
+                                 "Right (overexpression)" = "right",
+                                 "Both (two-sided)" = "both"), 
                       selected = "left"),
           
           # Control group
