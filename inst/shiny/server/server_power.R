@@ -83,36 +83,20 @@ create_power_server <- function(input, output, session) {
           prop_filtered_by_tpm <- length(genes_filtered_by_tpm) / unique_genes_uploaded
           prop_available <- length(genes_after_filtering) / unique_genes_uploaded
           
-          # Create detailed status message
-          status_msg <- sprintf("Loaded %d pairs (%d unique genes, %d unique targets)", 
+          # Create comprehensive status message
+          basic_msg <- sprintf("Loaded %d pairs (%d unique genes, %d unique targets)", 
                                total_pairs, unique_genes_uploaded, unique_targets)
           
           filtering_msg <- sprintf("Gene filtering: %.1f%% not in database, %.1f%% filtered by TPM threshold (≥%d), %.1f%% available for analysis",
                                   prop_not_in_database * 100, prop_filtered_by_tpm * 100, input$tpm_threshold, prop_available * 100)
           
-          # Update status with both messages
+          # Combine messages for inline display
+          combined_msg <- paste(basic_msg, filtering_msg, sep = "<br/>")
+          
+          # Update status with combined message in UI
           output$gene_list_status <- renderUI({
-            HTML(paste(status_msg, filtering_msg, sep = "<br/>"))
+            HTML(combined_msg)
           })
-          
-          # Show warnings for significant filtering
-          if (prop_not_in_database > 0.1) {  # More than 10% missing
-            showNotification(
-              paste0("Warning: ", round(prop_not_in_database * 100, 1), "% of unique genes (", length(genes_not_in_database), 
-                     " genes) were not found in the ", input$biological_system, " expression database."),
-              type = "warning",
-              duration = 6
-            )
-          }
-          
-          if (prop_filtered_by_tpm > 0.1) {  # More than 10% filtered by TPM
-            showNotification(
-              paste0("Warning: ", round(prop_filtered_by_tpm * 100, 1), "% of unique genes (", length(genes_filtered_by_tpm), 
-                     " genes) were filtered out due to TPM threshold ≥ ", input$tpm_threshold, "."),
-              type = "warning", 
-              duration = 6
-            )
-          }
           
         }, error = function(e) {
           # Fallback to basic status if filtering analysis fails
