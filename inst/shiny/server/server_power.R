@@ -54,8 +54,8 @@ create_power_server <- function(input, output, session) {
         
         # Analyze TPM filtering and gene availability
         tryCatch({
-          # Get baseline expression data to check gene availability
-          baseline_expression_stats <- perturbplan::extract_baseline_expression(biological_system = input$biological_system)
+          # Get baseline expression data to check gene availability (using unexported function)
+          baseline_expression_stats <- perturbplan:::extract_baseline_expression(biological_system = input$biological_system)
           baseline_df <- baseline_expression_stats$baseline_expression
           
           # Apply TPM threshold filtering
