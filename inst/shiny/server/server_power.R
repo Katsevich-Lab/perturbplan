@@ -60,6 +60,17 @@ create_power_server <- function(input, output, session) {
         output$gene_list_uploaded <- reactive(TRUE)
         outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
         
+        # Check for target count mismatch and show warning if needed
+        if (!is.null(input$num_targets) && unique_targets != input$num_targets) {
+          showNotification(
+            paste0("Warning: CSV file contains ", unique_targets, " unique targets, ",
+                   "but experimental choice specifies ", input$num_targets, " targets. ",
+                   "The analysis will use the ", unique_targets, " targets from the CSV file."),
+            type = "warning",
+            duration = 8  # Show warning for 8 seconds
+          )
+        }
+        
       } else {
         showNotification("Please upload a CSV file with grna_target and response_id columns", type = "error")
         gene_list(NULL)
@@ -94,6 +105,24 @@ create_power_server <- function(input, output, session) {
       target_list(NULL)
       output$gene_list_uploaded <- reactive(FALSE)
       outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
+    }
+  })
+  
+  # Check for target count mismatch when num_targets changes (for custom mode)
+  observeEvent(input$num_targets, {
+    # Only check if in custom mode and a file is uploaded
+    if (input$gene_list_mode == "custom" && !is.null(target_list()) && length(target_list()) > 0) {
+      unique_targets_uploaded <- length(unique(target_list()))
+      
+      if (unique_targets_uploaded != input$num_targets) {
+        showNotification(
+          paste0("Warning: CSV file contains ", unique_targets_uploaded, " unique targets, ",
+                 "but experimental choice specifies ", input$num_targets, " targets. ",
+                 "The analysis will use the ", unique_targets_uploaded, " targets from the CSV file."),
+          type = "warning",
+          duration = 8  # Show warning for 8 seconds
+        )
+      }
     }
   })
 
