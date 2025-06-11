@@ -99,9 +99,10 @@ create_power_server <- function(input, output, session) {
           })
           
         }, error = function(e) {
-          # Fallback to basic status if filtering analysis fails
+          # Show error for debugging and fallback to basic status
           output$gene_list_status <- renderUI({
-            HTML(sprintf("Loaded %d pairs (%d unique genes, %d unique targets)", total_pairs, unique_genes_uploaded, unique_targets))
+            HTML(sprintf("Loaded %d pairs (%d unique genes, %d unique targets)<br/><em style='color:red;'>Filtering analysis failed: %s</em>", 
+                        total_pairs, unique_genes_uploaded, unique_targets, e$message))
           })
         })
         
