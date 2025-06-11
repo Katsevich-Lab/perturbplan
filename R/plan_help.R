@@ -140,7 +140,8 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
   # return the data frame
   return(list(
     fc_expression_df = fc_expression_df,
-    expression_dispersion_curve = expression_dispersion_curve
+    expression_dispersion_curve = expression_dispersion_curve,
+    fold_change_mean = fold_change_mean  # Include for adaptive grid generation
   ))
 }
 

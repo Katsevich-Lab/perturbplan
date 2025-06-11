@@ -274,21 +274,40 @@ compute_power_grid_full <- function(
   set.seed(1)  # Reproducible results
   fc_expression_df <- fc_expression_info$fc_expression_df
   expression_dispersion_curve <- fc_expression_info$expression_dispersion_curve
+  fold_change_mean <- fc_expression_info$fold_change_mean
 
   # Define systematic output grids
   fc_range <- range(fc_expression_df$fold_change)
   expr_range <- range(fc_expression_df$relative_expression)
 
-  # Use directional fold change grid based on test sidedness
+  # Use adaptive fold change grid based on fold_change_mean and test sidedness
   if (side == "left") {
-    # For left-sided tests (knockdown), use FC < 1
-    fc_output_grid <- seq(min(fc_range[1], 0.5), 1, length.out = fc_curve_points)
+    # For left-sided tests (knockdown), focus on FC < 1
+    if (fold_change_mean < 1) {
+      # Mean suggests knockdown effects, focus on range below 1
+      fc_output_grid <- seq(min(fc_range[1], 0.5), 1, length.out = fc_curve_points)
+    } else {
+      # Mean > 1 but testing left side, still focus below 1 but start from mean
+      fc_output_grid <- seq(min(fc_range[1], fold_change_mean - 0.5), 1, length.out = fc_curve_points)
+    }
   } else if (side == "right") {
-    # For right-sided tests (overexpression), use FC > 1
-    fc_output_grid <- seq(1, max(fc_range[2], 2), length.out = fc_curve_points)
+    # For right-sided tests (overexpression), focus on FC > 1
+    if (fold_change_mean > 1) {
+      # Mean suggests overexpression effects, focus on range above 1
+      fc_output_grid <- seq(1, max(fc_range[2], fold_change_mean + 0.5), length.out = fc_curve_points)
+    } else {
+      # Mean < 1 but testing right side, still focus above 1
+      fc_output_grid <- seq(1, max(fc_range[2], 2), length.out = fc_curve_points)
+    }
   } else {
-    # For two-sided tests, use range starting from 1
-    fc_output_grid <- seq(1, max(fc_range[2], 2), length.out = fc_curve_points)
+    # For two-sided tests, adapt based on fold_change_mean
+    if (fold_change_mean < 1) {
+      # Mean suggests knockdown, focus on range below and around 1
+      fc_output_grid <- seq(min(fc_range[1], 0.5), max(1.5, fc_range[2]), length.out = fc_curve_points)
+    } else {
+      # Mean suggests overexpression, focus on range above and around 1
+      fc_output_grid <- seq(min(0.5, fc_range[1]), max(fc_range[2], fold_change_mean + 0.5), length.out = fc_curve_points)
+    }
   }
 
   # Use log-spaced points for gene expression evaluation grid, starting from TPM threshold
