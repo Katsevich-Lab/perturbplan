@@ -255,9 +255,17 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         filtered_fc <- fc_expression_df$fold_change[fc_expression_df$fold_change >= 1]
         x_limits <- c(1, max(dfs2$x, na.rm = TRUE))
       } else {
-        # Both-sided test: show all fold changes
-        filtered_fc <- fc_expression_df$fold_change
-        x_limits <- range(dfs2$x, na.rm = TRUE)
+        # Both-sided test: use same limits as either left or right based on fold_change_mean
+        fold_change_mean <- power_data$fc_expression_info()$fold_change_mean
+        if (fold_change_mean < 1) {
+          # Use left-side limits (knockdown range)
+          filtered_fc <- fc_expression_df$fold_change[fc_expression_df$fold_change <= 1]
+          x_limits <- c(min(dfs2$x, na.rm = TRUE), 1)
+        } else {
+          # Use right-side limits (overexpression range)
+          filtered_fc <- fc_expression_df$fold_change[fc_expression_df$fold_change >= 1]
+          x_limits <- c(1, max(dfs2$x, na.rm = TRUE))
+        }
       }
       
       fc_sample_data <- data.frame(fc = filtered_fc)
