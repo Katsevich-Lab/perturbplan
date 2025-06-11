@@ -24,14 +24,14 @@ Imports:
     utils,
     Matrix,
     sceptre,
-    shiny,
-    openxlsx,
-    ggplot2,
-    ggside
+    shiny
 Suggests: 
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    openxlsx,
+    ggplot2,
+    ggside
 Config/testthat/edition: 3
 LinkingTo: 
     PoissonBinomial,
