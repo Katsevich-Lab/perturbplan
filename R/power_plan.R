@@ -300,13 +300,13 @@ compute_power_grid_full <- function(
       fc_output_grid <- seq(1, max(fc_range[2], 2), length.out = fc_curve_points)
     }
   } else {
-    # For two-sided tests, adapt based on fold_change_mean
+    # For both-sided tests, use same grid as either left or right based on fold_change_mean
     if (fold_change_mean < 1) {
-      # Mean suggests knockdown, focus on range below and around 1
-      fc_output_grid <- seq(min(fc_range[1], 0.5), max(1.5, fc_range[2]), length.out = fc_curve_points)
+      # Use left-side grid (knockdown range)
+      fc_output_grid <- seq(min(fc_range[1], 0.5), 1, length.out = fc_curve_points)
     } else {
-      # Mean suggests overexpression, focus on range above and around 1
-      fc_output_grid <- seq(min(0.5, fc_range[1]), max(fc_range[2], fold_change_mean + 0.5), length.out = fc_curve_points)
+      # Use right-side grid (overexpression range)
+      fc_output_grid <- seq(1, max(fc_range[2], fold_change_mean + 0.5), length.out = fc_curve_points)
     }
   }
 
