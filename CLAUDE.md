@@ -226,3 +226,14 @@ This ensures consistency across the entire codebase and avoids confusion between
 - **C++ Priority**: When possible, use C++ implementations over R loops for computationally intensive operations
 - **Grid Analysis**: Use `compute_power_grid_efficient()` for systematic power analysis across experimental conditions
 - **ggside Faceting**: When using ggplot2 faceting with ggside histograms, convert numeric faceting variables to factors explicitly to avoid "Can't combine factor and double" errors. Use `factor()` with proper levels and labels before `facet_grid()`.
+
+## Git Workflow Requirements
+
+**IMPORTANT**: When commit and push is requested, the **entire repository** should be committed and pushed, not just specific changes.
+
+- **Complete Sync**: After commit and push, there should be **no difference** between the local directory and remote repository
+- **Clean Working Tree**: `git status` should show a clean working tree after pushing
+- **Full Commit**: Use `git add .` to stage all changes before committing, unless specifically instructed to commit only particular files
+- **Repository Consistency**: The remote repository should always reflect the complete current state of the local development environment
+
+This ensures repository consistency and prevents issues with uncommitted changes being left behind during development sessions.
