@@ -69,7 +69,7 @@ create_sidebar <- function() {
                 class = "file-upload-success",
                 style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
                 tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
-                textOutput("gene_list_status", inline = TRUE)
+                htmlOutput("gene_list_status", inline = TRUE)
               )
             )
           ),

@@ -49,12 +49,76 @@ create_power_server <- function(input, output, session) {
         
         # Calculate statistics for status
         total_pairs <- length(genes)
-        unique_genes <- length(unique(genes))
+        unique_genes_uploaded <- length(unique(genes))
         unique_targets <- length(unique(targets))
         
-        # Update status
-        output$gene_list_status <- renderText({
-          sprintf("Loaded %d pairs (%d unique genes, %d unique targets)", total_pairs, unique_genes, unique_targets)
+        # Analyze TPM filtering and gene availability
+        tryCatch({
+          # Get baseline expression data to check gene availability
+          baseline_expression_stats <- perturbplan::extract_baseline_expression(biological_system = input$biological_system)
+          baseline_df <- baseline_expression_stats$baseline_expression
+          
+          # Apply TPM threshold filtering
+          tpm_threshold_relative <- input$tpm_threshold / 1e6
+          if ("relative_expression" %in% colnames(baseline_df)) {
+            filtered_baseline_df <- baseline_df |>
+              dplyr::filter(relative_expression >= tpm_threshold_relative)
+          } else {
+            filtered_baseline_df <- baseline_df
+          }
+          
+          # Check which genes are found in the database before and after filtering
+          unique_genes_list <- unique(genes)
+          
+          # Genes found in original database
+          genes_in_database <- unique_genes_list[unique_genes_list %in% baseline_df$response_id]
+          genes_not_in_database <- setdiff(unique_genes_list, genes_in_database)
+          
+          # Genes found after TPM filtering
+          genes_after_filtering <- unique_genes_list[unique_genes_list %in% filtered_baseline_df$response_id]
+          genes_filtered_by_tpm <- setdiff(genes_in_database, genes_after_filtering)
+          
+          # Calculate proportions
+          prop_not_in_database <- length(genes_not_in_database) / unique_genes_uploaded
+          prop_filtered_by_tpm <- length(genes_filtered_by_tpm) / unique_genes_uploaded
+          prop_available <- length(genes_after_filtering) / unique_genes_uploaded
+          
+          # Create detailed status message
+          status_msg <- sprintf("Loaded %d pairs (%d unique genes, %d unique targets)", 
+                               total_pairs, unique_genes_uploaded, unique_targets)
+          
+          filtering_msg <- sprintf("Gene filtering: %.1f%% not in database, %.1f%% filtered by TPM threshold (≥%d), %.1f%% available for analysis",
+                                  prop_not_in_database * 100, prop_filtered_by_tpm * 100, input$tpm_threshold, prop_available * 100)
+          
+          # Update status with both messages
+          output$gene_list_status <- renderUI({
+            HTML(paste(status_msg, filtering_msg, sep = "<br/>"))
+          })
+          
+          # Show warnings for significant filtering
+          if (prop_not_in_database > 0.1) {  # More than 10% missing
+            showNotification(
+              paste0("Warning: ", round(prop_not_in_database * 100, 1), "% of unique genes (", length(genes_not_in_database), 
+                     " genes) were not found in the ", input$biological_system, " expression database."),
+              type = "warning",
+              duration = 6
+            )
+          }
+          
+          if (prop_filtered_by_tpm > 0.1) {  # More than 10% filtered by TPM
+            showNotification(
+              paste0("Warning: ", round(prop_filtered_by_tpm * 100, 1), "% of unique genes (", length(genes_filtered_by_tpm), 
+                     " genes) were filtered out due to TPM threshold ≥ ", input$tpm_threshold, "."),
+              type = "warning", 
+              duration = 6
+            )
+          }
+          
+        }, error = function(e) {
+          # Fallback to basic status if filtering analysis fails
+          output$gene_list_status <- renderUI({
+            HTML(sprintf("Loaded %d pairs (%d unique genes, %d unique targets)", total_pairs, unique_genes_uploaded, unique_targets))
+          })
         })
         
         output$gene_list_uploaded <- reactive(TRUE)
