@@ -175,6 +175,95 @@ create_power_server <- function(input, output, session) {
     }
   })
 
+  # Baseline expression file upload handling
+  custom_baseline <- reactiveVal(NULL)
+  
+  observeEvent(input$baseline_file, {
+    req(input$baseline_file, input$baseline_choice == "custom")
+    
+    tryCatch({
+      # Read the uploaded CSV file
+      file_ext <- tools::file_ext(input$baseline_file$name)
+      
+      if (file_ext == "csv") {
+        # Read CSV with headers
+        uploaded_data <- read.csv(input$baseline_file$datapath, 
+                                stringsAsFactors = FALSE)
+        
+        # Validate the custom baseline data
+        validation_result <- validate_custom_baseline(uploaded_data, input$baseline_file$name)
+        
+        if (validation_result$valid) {
+          # Create baseline expression list structure matching extract_baseline_expression output
+          baseline_list <- list(
+            baseline_expression = validation_result$data,
+            expression_dispersion_curve = function(v) {
+              # Default dispersion curve if not provided
+              # This matches the typical dispersion relationship in scRNA-seq data
+              pmax(0.01, 0.1 + 0.5 / sqrt(v))  # Simple mean-variance relationship
+            }
+          )
+          
+          custom_baseline(baseline_list)
+          
+          # Create success message with summary and warnings
+          status_msg <- validation_result$summary
+          if (length(validation_result$warnings) > 0) {
+            warning_msg <- paste0("<br/><em style='color:orange;'>", 
+                                paste(validation_result$warnings, collapse = "<br/>"), 
+                                "</em>")
+            status_msg <- paste0(status_msg, warning_msg)
+          }
+          
+          # Update status display
+          output$baseline_status <- renderUI({
+            HTML(status_msg)
+          })
+          
+          output$baseline_uploaded <- reactive(TRUE)
+          outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
+          
+        } else {
+          # Show validation errors
+          error_msg <- paste0("Validation failed:<br/>", 
+                            paste(validation_result$errors, collapse = "<br/>"))
+          
+          output$baseline_status <- renderUI({
+            HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
+          })
+          
+          custom_baseline(NULL)
+          output$baseline_uploaded <- reactive(FALSE)
+          outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
+        }
+        
+      } else {
+        showNotification("Please upload a CSV file with required baseline expression columns", type = "error")
+        custom_baseline(NULL)
+        output$baseline_uploaded <- reactive(FALSE)
+        outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
+      }
+      
+    }, error = function(e) {
+      showNotification(paste("Error reading baseline file:", e$message), type = "error")
+      output$baseline_status <- renderUI({
+        HTML(paste0("<em style='color:red;'>Error reading file: ", e$message, "</em>"))
+      })
+      custom_baseline(NULL)
+      output$baseline_uploaded <- reactive(FALSE)
+      outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
+    })
+  })
+  
+  # Reset custom baseline when choice changes to default or file is removed
+  observe({
+    if (is.null(input$baseline_file) || input$baseline_choice == "default") {
+      custom_baseline(NULL)
+      output$baseline_uploaded <- reactive(FALSE)
+      outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
+    }
+  })
+
   # Extract fold-change and expression information first
   fc_expression_info <- reactive({
     req(planned())
@@ -185,7 +274,8 @@ create_power_server <- function(input, output, session) {
       biological_system = input$biological_system,
       B = 1000,  # Monte Carlo samples for good accuracy
       gene_list = if(input$gene_list_mode == "custom") gene_list() else NULL,  # Use gene list only in custom mode
-      tpm_threshold = input$tpm_threshold  # Apply TPM filtering
+      tpm_threshold = input$tpm_threshold,  # Apply TPM filtering
+      custom_baseline_data = if(input$baseline_choice == "custom") custom_baseline() else NULL  # Use custom baseline if provided
     )
   })
 

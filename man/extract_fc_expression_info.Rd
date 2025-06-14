@@ -10,7 +10,8 @@ extract_fc_expression_info(
   biological_system = "K562",
   B = 200,
   gene_list = NULL,
-  tpm_threshold = 10
+  tpm_threshold = 10,
+  custom_baseline_data = NULL
 )
 }
 \arguments{
@@ -29,6 +30,11 @@ If NULL (default), B genes are randomly sampled from baseline data.}
 
 \item{tpm_threshold}{Numeric. Minimum TPM threshold (default: 10). Genes with expression
 levels below tpm_threshold/1e6 are filtered out before power calculation.}
+
+\item{custom_baseline_data}{List. Optional custom baseline expression data with same structure
+as extract_baseline_expression() output. If provided, this data is used instead of the
+default biological_system data. Must contain baseline_expression data frame and
+expression_dispersion_curve function.}
 }
 \value{
 A list with elements:

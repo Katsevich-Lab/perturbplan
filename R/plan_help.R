@@ -18,6 +18,10 @@ utils::globalVariables(c("response_id"))
 #'   If NULL (default), B genes are randomly sampled from baseline data.
 #' @param tpm_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
 #'   levels below tpm_threshold/1e6 are filtered out before power calculation.
+#' @param custom_baseline_data List. Optional custom baseline expression data with same structure
+#'   as extract_baseline_expression() output. If provided, this data is used instead of the
+#'   default biological_system data. Must contain baseline_expression data frame and
+#'   expression_dispersion_curve function.
 #'
 #' @return A list with elements:
 #' \describe{
@@ -42,13 +46,18 @@ utils::globalVariables(c("response_id"))
 #'
 #' @seealso \code{\link{extract_baseline_expression}} for baseline data extraction
 #' @export
-extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biological_system =  "K562", B = 200, gene_list = NULL, tpm_threshold = 10){
+extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biological_system =  "K562", B = 200, gene_list = NULL, tpm_threshold = 10, custom_baseline_data = NULL){
 
   # set the random seed
   set.seed(1)
 
   ############## combine expression and effect size information ################
-  baseline_expression_stats <- extract_baseline_expression(biological_system = biological_system)
+  # Use custom baseline data if provided, otherwise use default biological system data
+  if (!is.null(custom_baseline_data)) {
+    baseline_expression_stats <- custom_baseline_data
+  } else {
+    baseline_expression_stats <- extract_baseline_expression(biological_system = biological_system)
+  }
   baseline_df <- baseline_expression_stats$baseline_expression
 
   #################### apply TPM threshold filtering FIRST ###################
@@ -183,6 +192,138 @@ extract_baseline_expression <- function(biological_system = "K562"){
 
   # return the data frame with the susbampled rows
   return(baseline_expression_list)
+}
+
+#' Validate custom baseline expression data
+#'
+#' @description
+#' This function validates that custom baseline expression data has the required
+#' structure and data types for use in power analysis.
+#'
+#' @param data Data frame containing custom baseline expression data
+#' @param file_path Character. Optional file path for error messages (default: "uploaded file")
+#'
+#' @return List with validation results:
+#' \describe{
+#'   \item{valid}{Logical. TRUE if data passes all validation checks}
+#'   \item{data}{Data frame. Cleaned and validated data (if valid=TRUE)}
+#'   \item{errors}{Character vector. Error messages (if valid=FALSE)}
+#'   \item{warnings}{Character vector. Warning messages}
+#'   \item{summary}{Character. Summary statistics for display}
+#' }
+#'
+#' @details
+#' Required columns:
+#' - response_id: Character vector of gene IDs (preferably Ensembl IDs)
+#' - relative_expression: Numeric vector of expression values (TPM/1e6 scale)
+#' - expression_size: Numeric vector of dispersion parameters (positive values)
+#'
+#' @export
+validate_custom_baseline <- function(data, file_path = "uploaded file") {
+  
+  errors <- character(0)
+  warnings <- character(0)
+  
+  # Check if data is a data frame
+  if (!is.data.frame(data)) {
+    errors <- c(errors, "Data must be a data frame")
+    return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
+  }
+  
+  # Check required columns exist
+  required_cols <- c("response_id", "relative_expression", "expression_size")
+  missing_cols <- setdiff(required_cols, colnames(data))
+  if (length(missing_cols) > 0) {
+    errors <- c(errors, paste("Missing required columns:", paste(missing_cols, collapse = ", ")))
+  }
+  
+  # If missing required columns, return early
+  if (length(errors) > 0) {
+    return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
+  }
+  
+  # Check data types and values
+  if (!is.character(data$response_id) && !is.factor(data$response_id)) {
+    errors <- c(errors, "response_id column must be character or factor")
+  }
+  
+  if (!is.numeric(data$relative_expression)) {
+    errors <- c(errors, "relative_expression column must be numeric")
+  } else {
+    # Check for negative values
+    if (any(data$relative_expression < 0, na.rm = TRUE)) {
+      errors <- c(errors, "relative_expression values must be non-negative")
+    }
+    # Check for extremely large values (potential TPM instead of relative scale)
+    if (any(data$relative_expression > 1, na.rm = TRUE)) {
+      max_val <- max(data$relative_expression, na.rm = TRUE)
+      warnings <- c(warnings, paste0("Some relative_expression values > 1 (max: ", round(max_val, 4), 
+                                    "). Ensure values are on TPM/1e6 scale, not raw TPM."))
+    }
+  }
+  
+  if (!is.numeric(data$expression_size)) {
+    errors <- c(errors, "expression_size column must be numeric")
+  } else {
+    # Check for non-positive values
+    if (any(data$expression_size <= 0, na.rm = TRUE)) {
+      errors <- c(errors, "expression_size values must be positive")
+    }
+  }
+  
+  # Check for missing values
+  for (col in required_cols) {
+    if (any(is.na(data[[col]]))) {
+      na_count <- sum(is.na(data[[col]]))
+      errors <- c(errors, paste0("Column '", col, "' contains ", na_count, " missing values"))
+    }
+  }
+  
+  # Check for duplicate gene IDs
+  if (any(duplicated(data$response_id))) {
+    dup_count <- sum(duplicated(data$response_id))
+    warnings <- c(warnings, paste0(dup_count, " duplicate gene IDs found. Only first occurrence will be used."))
+    data <- data[!duplicated(data$response_id), ]
+  }
+  
+  # Check for reasonable number of genes
+  n_genes <- nrow(data)
+  if (n_genes < 100) {
+    warnings <- c(warnings, paste0("Only ", n_genes, " genes provided. Consider using more genes for robust analysis."))
+  }
+  
+  # Validate Ensembl gene ID format (warn if not)
+  ensembl_pattern <- "^ENSG[0-9]{11}$"
+  non_ensembl <- !grepl(ensembl_pattern, data$response_id)
+  if (any(non_ensembl)) {
+    non_ensembl_count <- sum(non_ensembl)
+    warnings <- c(warnings, paste0(non_ensembl_count, " gene IDs do not match Ensembl format (ENSGXXXXXXXXXXX)"))
+  }
+  
+  # Create summary statistics
+  if (length(errors) == 0) {
+    # Convert relative expression back to TPM for display
+    tpm_values <- data$relative_expression * 1e6
+    summary_text <- paste0(
+      "Loaded custom baseline expression (", formatC(n_genes, format = "d", big.mark = ","), " genes)<br/>",
+      "Average TPM: ", round(mean(tpm_values, na.rm = TRUE), 1), 
+      ", Range: ", round(min(tpm_values, na.rm = TRUE), 1), " - ", round(max(tpm_values, na.rm = TRUE), 1), "<br/>",
+      "Expression size range: ", round(min(data$expression_size, na.rm = TRUE), 2), 
+      " - ", round(max(data$expression_size, na.rm = TRUE), 2)
+    )
+  } else {
+    summary_text <- ""
+  }
+  
+  # Return validation results
+  valid <- length(errors) == 0
+  return(list(
+    valid = valid,
+    data = if (valid) data else NULL,
+    errors = errors,
+    warnings = warnings,
+    summary = summary_text
+  ))
 }
 
 #' Extract library size parameters by biological system
