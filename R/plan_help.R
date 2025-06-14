@@ -469,11 +469,7 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
     tpm_values <- baseline_df$relative_expression * 1e6
     summary_text <- paste0(
       "Loaded custom baseline expression (", formatC(n_genes, format = "d", big.mark = ","), " genes)<br/>",
-      "Average TPM: ", round(mean(tpm_values, na.rm = TRUE), 1), 
-      ", Range: ", round(min(tpm_values, na.rm = TRUE), 1), " - ", round(max(tpm_values, na.rm = TRUE), 1), "<br/>",
-      "Expression size range: ", round(min(baseline_df$expression_size, na.rm = TRUE), 2), 
-      " - ", round(max(baseline_df$expression_size, na.rm = TRUE), 2), "<br/>",
-      "Expression dispersion curve: Function provided"
+      "Average TPM: ", round(mean(tpm_values, na.rm = TRUE), 1)
     )
   } else {
     summary_text <- ""
