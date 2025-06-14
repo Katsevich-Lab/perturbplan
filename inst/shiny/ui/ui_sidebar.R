@@ -161,49 +161,41 @@ create_sidebar <- function() {
                 htmlOutput("baseline_status", inline = TRUE)
               )
             )
-          )
-        ),
-        
-        # Library size parameters (collapsible)
-        tags$div(
-          style = "border-radius: 4px; margin-bottom: 5px;",
-          tags$div(
-            id = "library-header",
-            style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
-            onclick = "toggleSection('library-content', 'library-chevron')",
-            tags$i(id = "library-chevron", class = "fa fa-chevron-right", style = "margin-right: 8px;"),
-            tags$strong("Library size parameters")
           ),
-          tags$div(
-            id = "library-content",
-            style = "padding: 15px; display: none;",
-            selectInput("library_choice", "Library parameters:",
-                       choices = c("Default" = "default", "Custom" = "custom"),
-                       selected = "default"),
-            conditionalPanel(
-              condition = "input.library_choice == 'custom'",
-              tags$div(
-                style = "font-size: 11px; color: #666; margin-bottom: 8px;",
-                "Upload RDS file with UMI_per_cell and variation parameters"
+          
+          # Library parameters choice (parallel to baseline expression)
+          tags$hr(style = "margin: 15px 0; border-color: #ddd;"),
+          
+          selectInput("library_choice", "Library parameters:",
+                     choices = c("Default" = "default", "Custom" = "custom"),
+                     selected = "default"),
+          
+          # Conditional panel for custom library upload
+          conditionalPanel(
+            condition = "input.library_choice == 'custom'",
+            tags$div(
+              class = "file-upload-info",
+              style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
+              tags$small(
+                tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
+                tags$strong("Format: "), "RDS file with UMI_per_cell and variation parameters",
+                style = "font-size: 11px;"
               )
             ),
+            tags$div(
+              style = "margin-bottom: 15px;",
+              fileInput("library_file", 
+                       label = NULL,
+                       accept = c(".rds", ".RDS"),
+                       placeholder = "Choose RDS file...")
+            ),
             conditionalPanel(
-              condition = "input.library_choice == 'custom'",
+              condition = "output.library_uploaded",
               tags$div(
-                style = "margin-bottom: 15px;",
-                fileInput("library_file", 
-                         label = NULL,
-                         accept = c(".rds", ".RDS"),
-                         placeholder = "Choose RDS file...")
-              ),
-              conditionalPanel(
-                condition = "output.library_uploaded",
-                tags$div(
-                  class = "file-upload-success",
-                  style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
-                  tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
-                  htmlOutput("library_status", inline = TRUE)
-                )
+                class = "file-upload-success",
+                style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
+                tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
+                htmlOutput("library_status", inline = TRUE)
               )
             )
           )
