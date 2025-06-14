@@ -178,7 +178,7 @@ create_sidebar <- function() {
               style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
               tags$small(
                 tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
-                tags$strong("Format: "), "RDS file with UMI_per_cell and variation parameters",
+                tags$strong("Format: "), "RDS file with same structure as extract_library_info() output",
                 style = "font-size: 11px;"
               )
             ),
