@@ -220,6 +220,104 @@ importFrom("utils", "read.csv")
 
 This ensures consistency across the entire codebase and avoids confusion between "TPM" (Transcripts Per Million) and "tmp" (temporary).
 
+## Custom Baseline Expression Upload
+
+The Shiny application supports uploading custom baseline expression data instead of using the default biological system data (K562). This allows users to perform power analysis with their own expression profiles.
+
+### Using Custom Baseline Expression
+
+1. **Navigate to "Pilot data choice" tab** in the sidebar
+2. **Select "Custom"** for baseline expression
+3. **Upload an RDS file** with the required structure (see below)
+4. **Proceed with analysis** - all power calculations will use your custom data
+
+### Required RDS File Structure
+
+The RDS file must contain a list with exactly two elements:
+
+```r
+custom_baseline <- list(
+  baseline_expression = data.frame(
+    response_id = c("ENSG00000141510", "ENSG00000157764", ...),    # Ensembl gene IDs
+    relative_expression = c(1.23e-05, 4.56e-06, ...),             # TPM/1e6 scale
+    expression_size = c(0.45, 1.23, ...)                          # Dispersion parameters
+  ),
+  expression_dispersion_curve = function(v) {                     # Dispersion function
+    pmax(0.01, 0.1 + 0.5 / sqrt(v))
+  }
+)
+
+# Save as RDS file
+saveRDS(custom_baseline, "my_custom_baseline.rds")
+```
+
+### Data Requirements
+
+**baseline_expression data frame:**
+- **response_id**: Character vector of gene IDs (preferably Ensembl format: ENSGXXXXXXXXXXX)
+- **relative_expression**: Numeric vector of expression levels on TPM/1e6 scale (i.e., raw TPM divided by 1,000,000)
+- **expression_size**: Numeric vector of positive dispersion parameters 
+- **No missing values** in any column
+- **Unique gene IDs** (duplicates will be removed, keeping first occurrence)
+
+**expression_dispersion_curve function:**
+- Must accept a numeric vector and return dispersion values of the same length
+- Should model the mean-variance relationship in your expression data
+- Example: `function(v) pmax(0.01, 0.1 + 0.5 / sqrt(v))`
+
+### Creating Custom Baseline Files
+
+#### Method 1: From Existing Data
+```r
+# Load the package and default data
+library(perturbplan)
+default_data <- extract_baseline_expression("K562")
+
+# Subset or modify as needed
+my_baseline <- default_data$baseline_expression[1:2000, ]  # Use first 2000 genes
+
+# Create custom baseline structure
+custom_baseline <- list(
+  baseline_expression = my_baseline,
+  expression_dispersion_curve = default_data$expression_dispersion_curve
+)
+
+# Save as RDS
+saveRDS(custom_baseline, "my_custom_baseline.rds")
+```
+
+#### Method 2: From Scratch
+Use the example script at `inst/extdata/create_custom_baseline_example.R` for guidance on creating baseline data from your own expression measurements.
+
+### File Validation
+
+The application automatically validates uploaded RDS files and provides detailed error messages for:
+- Incorrect file structure or missing elements
+- Invalid data types or value ranges
+- Missing values or duplicate gene IDs
+- File size limits (50MB maximum)
+- R version compatibility issues
+
+### Integration with Analysis Workflow
+
+Custom baseline expression data integrates seamlessly with all analysis features:
+- **Compatible with both Random and Custom gene list modes**
+- **Works with all analysis parameters** (test side, control group, FDR levels)
+- **Included in Excel downloads** with clear documentation of data source
+- **Supports all visualization features** (heatmaps, power curves, drill-down analysis)
+
+### Performance Considerations
+
+- **File size**: Keep RDS files under 50MB for optimal performance
+- **Gene count**: 1,000-10,000 genes typically provide good balance of comprehensiveness and speed
+- **Memory usage**: Large datasets may require more RAM for analysis
+
+### Example Files
+
+Pre-built example files are available:
+- `inst/extdata/example_custom_baseline.rds`: Subset of default K562 data (1,000 genes)
+- `inst/extdata/create_custom_baseline_example.R`: Script for creating custom files
+
 ## Development Notes
 
 - **Function Migration**: `.compute_underspecified_power_efficient()` has been replaced with `.compute_power_plan_efficient()` for better performance

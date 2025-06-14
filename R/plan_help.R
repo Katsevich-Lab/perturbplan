@@ -358,7 +358,11 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
   
   # Check if data is a list
   if (!is.list(data)) {
-    errors <- c(errors, "RDS data must be a list with 'baseline_expression' and 'expression_dispersion_curve' elements")
+    if (is.data.frame(data)) {
+      errors <- c(errors, "Uploaded file contains a data frame, but should be a list. Please use the data frame as 'baseline_expression' element within a list structure.")
+    } else {
+      errors <- c(errors, paste("RDS data must be a list, but received:", class(data)[1], ". Please check the file structure."))
+    }
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
   

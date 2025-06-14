@@ -181,6 +181,19 @@ create_power_server <- function(input, output, session) {
   observeEvent(input$baseline_file, {
     req(input$baseline_file, input$baseline_choice == "custom")
     
+    # Check file size (limit to 50MB for RDS files)
+    file_size_mb <- file.size(input$baseline_file$datapath) / (1024^2)
+    if (file_size_mb > 50) {
+      showNotification(
+        paste("File size (", round(file_size_mb, 1), "MB) exceeds the 50MB limit. Please use a smaller dataset."),
+        type = "error", duration = 10
+      )
+      custom_baseline(NULL)
+      output$baseline_uploaded <- reactive(FALSE)
+      outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
+      return()
+    }
+    
     tryCatch({
       # Read the uploaded RDS file
       file_ext <- tolower(tools::file_ext(input$baseline_file$name))
@@ -234,9 +247,20 @@ create_power_server <- function(input, output, session) {
       }
       
     }, error = function(e) {
-      showNotification(paste("Error reading baseline file:", e$message), type = "error")
+      # Enhanced error handling for different types of errors
+      error_msg <- if (grepl("cannot open the connection", e$message, ignore.case = TRUE)) {
+        "Cannot read the uploaded file. Please ensure it's a valid RDS file."
+      } else if (grepl("magic number", e$message, ignore.case = TRUE) || grepl("format", e$message, ignore.case = TRUE)) {
+        "File appears to be corrupted or not a valid RDS file. Please check the file format."
+      } else if (grepl("version", e$message, ignore.case = TRUE)) {
+        "RDS file was created with a newer version of R. Please re-save the file with your current R version."
+      } else {
+        paste("Error reading baseline file:", e$message)
+      }
+      
+      showNotification(error_msg, type = "error", duration = 10)
       output$baseline_status <- renderUI({
-        HTML(paste0("<em style='color:red;'>Error reading file: ", e$message, "</em>"))
+        HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
       })
       custom_baseline(NULL)
       output$baseline_uploaded <- reactive(FALSE)
