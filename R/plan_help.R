@@ -326,6 +326,166 @@ validate_custom_baseline <- function(data, file_path = "uploaded file") {
   ))
 }
 
+#' Validate custom baseline expression RDS data
+#'
+#' @description
+#' This function validates that custom baseline expression RDS data has the required
+#' structure matching the output of extract_baseline_expression().
+#'
+#' @param data List object from RDS file containing baseline expression data
+#' @param file_path Character. Optional file path for error messages (default: "uploaded file")
+#'
+#' @return List with validation results:
+#' \describe{
+#'   \item{valid}{Logical. TRUE if data passes all validation checks}
+#'   \item{data}{List. Validated data structure (if valid=TRUE)}
+#'   \item{errors}{Character vector. Error messages (if valid=FALSE)}
+#'   \item{warnings}{Character vector. Warning messages}
+#'   \item{summary}{Character. Summary statistics for display}
+#' }
+#'
+#' @details
+#' Required structure:
+#' - List with two elements: 'baseline_expression' and 'expression_dispersion_curve'
+#' - baseline_expression: Data frame with columns 'response_id', 'relative_expression', 'expression_size'
+#' - expression_dispersion_curve: Function that takes a numeric vector and returns dispersion values
+#'
+#' @export
+validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
+  
+  errors <- character(0)
+  warnings <- character(0)
+  
+  # Check if data is a list
+  if (!is.list(data)) {
+    errors <- c(errors, "RDS data must be a list with 'baseline_expression' and 'expression_dispersion_curve' elements")
+    return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
+  }
+  
+  # Check required list elements exist
+  required_elements <- c("baseline_expression", "expression_dispersion_curve")
+  missing_elements <- setdiff(required_elements, names(data))
+  if (length(missing_elements) > 0) {
+    errors <- c(errors, paste("Missing required list elements:", paste(missing_elements, collapse = ", ")))
+  }
+  
+  # If missing required elements, return early
+  if (length(errors) > 0) {
+    return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
+  }
+  
+  # Validate baseline_expression data frame
+  baseline_df <- data$baseline_expression
+  if (!is.data.frame(baseline_df)) {
+    errors <- c(errors, "baseline_expression must be a data frame")
+  } else {
+    # Check required columns exist
+    required_cols <- c("response_id", "relative_expression", "expression_size")
+    missing_cols <- setdiff(required_cols, colnames(baseline_df))
+    if (length(missing_cols) > 0) {
+      errors <- c(errors, paste("baseline_expression missing columns:", paste(missing_cols, collapse = ", ")))
+    } else {
+      # Validate column data types and values
+      if (!is.character(baseline_df$response_id) && !is.factor(baseline_df$response_id)) {
+        errors <- c(errors, "response_id column must be character or factor")
+      }
+      
+      if (!is.numeric(baseline_df$relative_expression)) {
+        errors <- c(errors, "relative_expression column must be numeric")
+      } else {
+        if (any(baseline_df$relative_expression < 0, na.rm = TRUE)) {
+          errors <- c(errors, "relative_expression values must be non-negative")
+        }
+        if (any(baseline_df$relative_expression > 1, na.rm = TRUE)) {
+          max_val <- max(baseline_df$relative_expression, na.rm = TRUE)
+          warnings <- c(warnings, paste0("Some relative_expression values > 1 (max: ", round(max_val, 4), 
+                                        "). Ensure values are on TPM/1e6 scale, not raw TPM."))
+        }
+      }
+      
+      if (!is.numeric(baseline_df$expression_size)) {
+        errors <- c(errors, "expression_size column must be numeric")
+      } else {
+        if (any(baseline_df$expression_size <= 0, na.rm = TRUE)) {
+          errors <- c(errors, "expression_size values must be positive")
+        }
+      }
+      
+      # Check for missing values
+      for (col in required_cols) {
+        if (any(is.na(baseline_df[[col]]))) {
+          na_count <- sum(is.na(baseline_df[[col]]))
+          errors <- c(errors, paste0("baseline_expression column '", col, "' contains ", na_count, " missing values"))
+        }
+      }
+      
+      # Check for duplicate gene IDs
+      if (any(duplicated(baseline_df$response_id))) {
+        dup_count <- sum(duplicated(baseline_df$response_id))
+        warnings <- c(warnings, paste0(dup_count, " duplicate gene IDs found. Only first occurrence will be used."))
+        baseline_df <- baseline_df[!duplicated(baseline_df$response_id), ]
+        data$baseline_expression <- baseline_df
+      }
+    }
+  }
+  
+  # Validate expression_dispersion_curve function
+  if (!is.function(data$expression_dispersion_curve)) {
+    errors <- c(errors, "expression_dispersion_curve must be a function")
+  } else {
+    # Test if the function works with a numeric input
+    tryCatch({
+      test_result <- data$expression_dispersion_curve(c(1, 10, 100))
+      if (!is.numeric(test_result) || length(test_result) != 3) {
+        errors <- c(errors, "expression_dispersion_curve must return numeric values of same length as input")
+      }
+    }, error = function(e) {
+      errors <- c(errors, paste("expression_dispersion_curve function error:", e$message))
+    })
+  }
+  
+  # Create summary statistics
+  if (length(errors) == 0 && is.data.frame(baseline_df)) {
+    n_genes <- nrow(baseline_df)
+    
+    # Check for reasonable number of genes
+    if (n_genes < 100) {
+      warnings <- c(warnings, paste0("Only ", n_genes, " genes provided. Consider using more genes for robust analysis."))
+    }
+    
+    # Validate Ensembl gene ID format (warn if not)
+    ensembl_pattern <- "^ENSG[0-9]{11}$"
+    non_ensembl <- !grepl(ensembl_pattern, baseline_df$response_id)
+    if (any(non_ensembl)) {
+      non_ensembl_count <- sum(non_ensembl)
+      warnings <- c(warnings, paste0(non_ensembl_count, " gene IDs do not match Ensembl format (ENSGXXXXXXXXXXX)"))
+    }
+    
+    # Convert relative expression back to TPM for display
+    tpm_values <- baseline_df$relative_expression * 1e6
+    summary_text <- paste0(
+      "Loaded custom baseline expression (", formatC(n_genes, format = "d", big.mark = ","), " genes)<br/>",
+      "Average TPM: ", round(mean(tpm_values, na.rm = TRUE), 1), 
+      ", Range: ", round(min(tpm_values, na.rm = TRUE), 1), " - ", round(max(tpm_values, na.rm = TRUE), 1), "<br/>",
+      "Expression size range: ", round(min(baseline_df$expression_size, na.rm = TRUE), 2), 
+      " - ", round(max(baseline_df$expression_size, na.rm = TRUE), 2), "<br/>",
+      "Expression dispersion curve: Function provided"
+    )
+  } else {
+    summary_text <- ""
+  }
+  
+  # Return validation results
+  valid <- length(errors) == 0
+  return(list(
+    valid = valid,
+    data = if (valid) data else NULL,
+    errors = errors,
+    warnings = warnings,
+    summary = summary_text
+  ))
+}
+
 #' Extract library size parameters by biological system
 #'
 #' @description

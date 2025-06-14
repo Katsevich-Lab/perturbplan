@@ -128,44 +128,37 @@ create_sidebar <- function() {
           id = "pilot-content",
           style = "padding: 15px;",
           
-          # Baseline expression sub-section
-          tags$div(
-            style = "margin-bottom: 15px;",
-            tags$h5("Baseline expression", style = "margin-bottom: 10px; font-weight: bold;"),
-            
-            # Default vs Custom choice
-            radioButtons("baseline_choice", 
-                        label = NULL,
-                        choices = c("Default" = "default", "Custom" = "custom"),
-                        selected = "default"),
-            
-            # Conditional panel for custom baseline upload
+          # Baseline expression choice
+          selectInput("baseline_choice", "Baseline expression:",
+                     choices = c("Default" = "default", "Custom" = "custom"),
+                     selected = "default"),
+          
+          # Conditional panel for custom baseline upload
+          conditionalPanel(
+            condition = "input.baseline_choice == 'custom'",
+            tags$div(
+              class = "file-upload-info",
+              style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
+              tags$small(
+                tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
+                tags$strong("Format: "), "RDS file with same structure as extract_baseline_expression() output",
+                style = "font-size: 11px;"
+              )
+            ),
+            tags$div(
+              style = "margin-bottom: 15px;",
+              fileInput("baseline_file", 
+                       label = NULL,
+                       accept = c(".rds", ".RDS"),
+                       placeholder = "Choose RDS file...")
+            ),
             conditionalPanel(
-              condition = "input.baseline_choice == 'custom'",
+              condition = "output.baseline_uploaded",
               tags$div(
-                class = "file-upload-info",
-                style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
-                tags$small(
-                  tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
-                  tags$strong("Format: "), "CSV with 'response_id', 'relative_expression', 'expression_size' columns",
-                  style = "font-size: 11px;"
-                )
-              ),
-              tags$div(
-                style = "margin-bottom: 15px;",
-                fileInput("baseline_file", 
-                         label = NULL,
-                         accept = c(".csv"),
-                         placeholder = "Choose CSV file...")
-              ),
-              conditionalPanel(
-                condition = "output.baseline_uploaded",
-                tags$div(
-                  class = "file-upload-success",
-                  style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
-                  tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
-                  htmlOutput("baseline_status", inline = TRUE)
-                )
+                class = "file-upload-success",
+                style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
+                tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
+                htmlOutput("baseline_status", inline = TRUE)
               )
             )
           )

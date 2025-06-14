@@ -182,29 +182,18 @@ create_power_server <- function(input, output, session) {
     req(input$baseline_file, input$baseline_choice == "custom")
     
     tryCatch({
-      # Read the uploaded CSV file
-      file_ext <- tools::file_ext(input$baseline_file$name)
+      # Read the uploaded RDS file
+      file_ext <- tolower(tools::file_ext(input$baseline_file$name))
       
-      if (file_ext == "csv") {
-        # Read CSV with headers
-        uploaded_data <- read.csv(input$baseline_file$datapath, 
-                                stringsAsFactors = FALSE)
+      if (file_ext == "rds") {
+        # Read RDS file
+        uploaded_data <- readRDS(input$baseline_file$datapath)
         
-        # Validate the custom baseline data
-        validation_result <- validate_custom_baseline(uploaded_data, input$baseline_file$name)
+        # Validate the custom baseline data structure
+        validation_result <- validate_custom_baseline_rds(uploaded_data, input$baseline_file$name)
         
         if (validation_result$valid) {
-          # Create baseline expression list structure matching extract_baseline_expression output
-          baseline_list <- list(
-            baseline_expression = validation_result$data,
-            expression_dispersion_curve = function(v) {
-              # Default dispersion curve if not provided
-              # This matches the typical dispersion relationship in scRNA-seq data
-              pmax(0.01, 0.1 + 0.5 / sqrt(v))  # Simple mean-variance relationship
-            }
-          )
-          
-          custom_baseline(baseline_list)
+          custom_baseline(validation_result$data)
           
           # Create success message with summary and warnings
           status_msg <- validation_result$summary
@@ -238,7 +227,7 @@ create_power_server <- function(input, output, session) {
         }
         
       } else {
-        showNotification("Please upload a CSV file with required baseline expression columns", type = "error")
+        showNotification("Please upload an RDS file with the required baseline expression structure", type = "error")
         custom_baseline(NULL)
         output$baseline_uploaded <- reactive(FALSE)
         outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)

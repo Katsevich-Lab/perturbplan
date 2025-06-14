@@ -329,22 +329,22 @@ create_styles <- function() {
       }
       
       /* Collapsible section headers in sidebar */
-      #exp-header, #analysis-header, #effects-header {
+      #exp-header, #analysis-header, #effects-header, #pilot-header {
         background-color: var(--section-header) !important;
         color: white !important;
         border-bottom: 1px solid rgba(255,255,255,0.2) !important;
       }
       
-      #exp-header:hover, #analysis-header:hover, #effects-header:hover {
+      #exp-header:hover, #analysis-header:hover, #effects-header:hover, #pilot-header:hover {
         background-color: #3E5A73 !important;
       }
       
-      #exp-chevron, #analysis-chevron, #effects-chevron {
+      #exp-chevron, #analysis-chevron, #effects-chevron, #pilot-chevron {
         color: white !important;
       }
       
       /* Section containers - reduced spacing */
-      #experimental-content, #analysis-content, #effects-content {
+      #experimental-content, #analysis-content, #effects-content, #pilot-content {
         background-color: var(--light-bg) !important;
         border: 1px solid var(--border-light) !important;
         border-radius: 0 0 4px 4px !important;
@@ -353,11 +353,11 @@ create_styles <- function() {
       }
       
       /* Ensure all text within sidebar sections is dark and readable */
-      #experimental-content *, #analysis-content *, #effects-content * {
+      #experimental-content *, #analysis-content *, #effects-content *, #pilot-content * {
         color: #212529 !important;
       }
       
-      #experimental-content label, #analysis-content label, #effects-content label {
+      #experimental-content label, #analysis-content label, #effects-content label, #pilot-content label {
         color: #212529 !important;
         font-weight: 500 !important;
       }
@@ -493,8 +493,8 @@ create_styles <- function() {
         console.log('toggleSection called with:', contentId, chevronId);
         
         // First, collapse all other sections
-        var allSections = ['experimental-content', 'analysis-content', 'effects-content'];
-        var allChevrons = ['exp-chevron', 'analysis-chevron', 'effects-chevron'];
+        var allSections = ['experimental-content', 'analysis-content', 'effects-content', 'pilot-content'];
+        var allChevrons = ['exp-chevron', 'analysis-chevron', 'effects-chevron', 'pilot-chevron'];
         
         for (var i = 0; i < allSections.length; i++) {
           var section = document.getElementById(allSections[i]);
@@ -526,25 +526,30 @@ create_styles <- function() {
           var exp = document.getElementById('experimental-content');
           var analysis = document.getElementById('analysis-content');
           var effects = document.getElementById('effects-content');
+          var pilot = document.getElementById('pilot-content');
           
           var expChevron = document.getElementById('exp-chevron');
           var analysisChevron = document.getElementById('analysis-chevron');
           var effectsChevron = document.getElementById('effects-chevron');
+          var pilotChevron = document.getElementById('pilot-chevron');
           
           console.log('Elements found:', exp ? 'exp-yes' : 'exp-no', 
                                        analysis ? 'analysis-yes' : 'analysis-no',
-                                       effects ? 'effects-yes' : 'effects-no');
+                                       effects ? 'effects-yes' : 'effects-no',
+                                       pilot ? 'pilot-yes' : 'pilot-no');
           
-          if (exp && analysis && effects) {
+          if (exp && analysis && effects && pilot) {
             // Set initial state: only experimental section open
             exp.style.display = 'block';
             analysis.style.display = 'none';
             effects.style.display = 'none';
+            pilot.style.display = 'none';
             
             // Set chevron states
             if (expChevron) expChevron.className = 'fa fa-chevron-down';
             if (analysisChevron) analysisChevron.className = 'fa fa-chevron-right';
             if (effectsChevron) effectsChevron.className = 'fa fa-chevron-right';
+            if (pilotChevron) pilotChevron.className = 'fa fa-chevron-right';
             
             console.log('Initial states set');
           } else {
