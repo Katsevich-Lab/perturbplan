@@ -417,6 +417,12 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         paste("Default (", input$biological_system, ")", sep = "")
       }
       
+      library_info <- if (!is.null(input$library_choice) && input$library_choice == "custom") {
+        "Custom (uploaded RDS file)"
+      } else {
+        paste("Default (", input$biological_system, ")", sep = "")
+      }
+      
       gene_list_info <- if (!is.null(input$gene_list_mode) && input$gene_list_mode == "custom") {
         "Custom (uploaded CSV file)"
       } else {
@@ -428,14 +434,14 @@ create_curves_server <- function(input, output, session, power_data, selection_d
           "Number of targets", "gRNAs per target", "Non-targeting gRNAs",
           "TPM threshold", "FDR target", "Fold-change mean", "Fold-change SD",
           "Proportion non-null", "MOI", "Biological system", "Experimental platform",
-          "Test side", "Control group", "Baseline expression", "Gene list mode"
+          "Test side", "Control group", "Baseline expression", "Library parameters", "Gene list mode"
         ),
         Value = c(
           input$num_targets, input$gRNAs_per_target, input$non_targeting_gRNAs,
           input$tpm_threshold, input$fdr_target, input$fc_mean, input$fc_sd,
           input$prop_non_null, input$MOI, input$biological_system, 
           input$experimental_platform, input$side, input$control_group,
-          baseline_info, gene_list_info
+          baseline_info, library_info, gene_list_info
         ),
         stringsAsFactors = FALSE
       )

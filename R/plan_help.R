@@ -494,6 +494,8 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
 #'
 #' @param biological_system Character. Biological system identifier (default: "K562").
 #' Currently supports "K562" cells.
+#' @param custom_library_data List. Optional custom library data with UMI_per_cell and variation parameters.
+#' If provided, this data will be used instead of the biological_system data.
 #'
 #' @return A list with elements:
 #' \describe{
@@ -507,11 +509,23 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
 #' These parameters are used in \code{\link{fit_read_UMI_curve}} to convert
 #' read depth to effective library size.
 #'
+#' When custom_library_data is provided, it should be a list with:
+#' \itemize{
+#'   \item UMI_per_cell: Maximum UMI per cell parameter (positive numeric)
+#'   \item variation: Variation parameter for PCR bias (positive numeric)
+#' }
+#'
 #' @seealso
 #' \code{\link{fit_read_UMI_curve}} for using these parameters
 #' \code{\link{library_computation}} for fitting these parameters from data
+#' \code{\link{validate_custom_library_rds}} for custom data validation
 #' @export
-extract_library_info <- function(biological_system = "K562"){
+extract_library_info <- function(biological_system = "K562", custom_library_data = NULL){
+
+  # Use custom library data if provided, otherwise use default biological system data
+  if (!is.null(custom_library_data)) {
+    return(custom_library_data)
+  }
 
   # sample baseline expression based on biological system
   switch(biological_system,
@@ -530,6 +544,109 @@ extract_library_info <- function(biological_system = "K562"){
   return(list(
     UMI_per_cell = unname(as.numeric(params[["UMI_per_cell"]])),
     variation = unname(as.numeric(params[["variation"]]))
+  ))
+}
+
+#' Validate custom library RDS file structure and content
+#'
+#' @description
+#' This function validates that an uploaded RDS file contains valid library parameters 
+#' with the correct structure and value ranges for power analysis.
+#'
+#' @param data The loaded RDS data to validate
+#' @param filename Character. The original filename for error reporting (optional)
+#'
+#' @return A list with validation results:
+#' \describe{
+#'   \item{valid}{Logical. TRUE if validation passed}
+#'   \item{data}{The validated data if valid, NULL otherwise}
+#'   \item{errors}{Character vector of error messages}
+#'   \item{warnings}{Character vector of warning messages}
+#'   \item{summary}{Character. HTML summary for display}
+#' }
+#'
+#' @details
+#' Expected RDS structure:
+#' \code{
+#' list(
+#'   UMI_per_cell = numeric_value,  # Positive number
+#'   variation = numeric_value      # Positive number between 0 and 1
+#' )
+#' }
+#'
+#' @export
+validate_custom_library_rds <- function(data, filename = "uploaded file") {
+  errors <- character(0)
+  warnings <- character(0)
+  
+  # Check if data is a list
+  if (!is.list(data)) {
+    errors <- c(errors, "RDS file must contain a list object")
+    return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
+  }
+  
+  # Check required elements
+  required_elements <- c("UMI_per_cell", "variation")
+  missing_elements <- setdiff(required_elements, names(data))
+  if (length(missing_elements) > 0) {
+    errors <- c(errors, paste("Missing required elements:", paste(missing_elements, collapse = ", ")))
+  }
+  
+  # Check for unexpected elements
+  unexpected_elements <- setdiff(names(data), required_elements)
+  if (length(unexpected_elements) > 0) {
+    warnings <- c(warnings, paste("Unexpected elements will be ignored:", paste(unexpected_elements, collapse = ", ")))
+  }
+  
+  # Validate UMI_per_cell
+  if ("UMI_per_cell" %in% names(data)) {
+    umi_val <- data$UMI_per_cell
+    if (!is.numeric(umi_val) || length(umi_val) != 1) {
+      errors <- c(errors, "UMI_per_cell must be a single numeric value")
+    } else if (is.na(umi_val) || !is.finite(umi_val)) {
+      errors <- c(errors, "UMI_per_cell cannot be NA or infinite")
+    } else if (umi_val <= 0) {
+      errors <- c(errors, "UMI_per_cell must be positive")
+    } else if (umi_val < 1000) {
+      warnings <- c(warnings, "UMI_per_cell is unusually low (< 1000)")
+    } else if (umi_val > 50000) {
+      warnings <- c(warnings, "UMI_per_cell is unusually high (> 50000)")
+    }
+  }
+  
+  # Validate variation
+  if ("variation" %in% names(data)) {
+    var_val <- data$variation
+    if (!is.numeric(var_val) || length(var_val) != 1) {
+      errors <- c(errors, "variation must be a single numeric value")
+    } else if (is.na(var_val) || !is.finite(var_val)) {
+      errors <- c(errors, "variation cannot be NA or infinite")
+    } else if (var_val <= 0) {
+      errors <- c(errors, "variation must be positive")
+    } else if (var_val > 1) {
+      warnings <- c(warnings, "variation parameter is unusually high (> 1)")
+    }
+  }
+  
+  # Generate summary if validation passed
+  if (length(errors) == 0) {
+    summary_text <- paste0(
+      "Loaded custom library parameters<br/>",
+      "UMI per cell: ", formatC(data$UMI_per_cell, format = "d", big.mark = ","), "<br/>",
+      "Variation: ", round(data$variation, 3)
+    )
+  } else {
+    summary_text <- ""
+  }
+  
+  # Return validation results
+  valid <- length(errors) == 0
+  return(list(
+    valid = valid,
+    data = if (valid) data else NULL,
+    errors = errors,
+    warnings = warnings,
+    summary = summary_text
   ))
 }
 

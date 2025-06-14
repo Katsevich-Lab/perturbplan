@@ -318,6 +318,111 @@ Pre-built example files are available:
 - `inst/extdata/example_custom_baseline.rds`: Subset of default K562 data (1,000 genes)
 - `inst/extdata/create_custom_baseline_example.R`: Script for creating custom files
 
+## Custom Library Parameters Upload
+
+The Shiny application supports uploading custom library parameters instead of using the default biological system data (K562). This allows users to perform power analysis with their own UMI saturation and PCR bias parameters.
+
+### Using Custom Library Parameters
+
+1. **Navigate to "Pilot data choice" tab** in the sidebar
+2. **Expand "Library size parameters" section**
+3. **Select "Custom"** for library parameters
+4. **Upload an RDS file** with the required structure (see below)
+5. **Proceed with analysis** - all power calculations will use your custom parameters
+
+### Required RDS File Structure
+
+The RDS file must contain a list with exactly two elements:
+
+```r
+custom_library <- list(
+  UMI_per_cell = 15000,    # Maximum UMI per cell parameter (positive numeric)
+  variation = 0.25         # Variation parameter for PCR bias (positive numeric)
+)
+
+# Save as RDS file
+saveRDS(custom_library, "my_custom_library.rds")
+```
+
+### Data Requirements
+
+**Library parameters:**
+- **UMI_per_cell**: Maximum UMI per cell parameter from saturation curve fitting (typically 1000-50000)
+- **variation**: Variation parameter characterizing PCR amplification bias (typically 0.1-1.0)
+- **Both parameters** must be positive single numeric values
+- **No missing values** allowed
+
+### Data Validation
+
+The application automatically validates uploaded RDS files and provides detailed error messages for:
+- Incorrect file structure or missing elements
+- Invalid data types or value ranges
+- Missing values or non-finite numbers
+- File size limits (50MB maximum)
+- R version compatibility issues
+
+### Creating Custom Library Files
+
+#### Method 1: From Default Parameters
+```r
+# Load the package and default data
+library(perturbplan)
+default_library <- extract_library_info("K562")
+
+# Modify parameters as needed
+custom_library <- list(
+  UMI_per_cell = default_library$UMI_per_cell * 1.5,  # 50% higher capacity
+  variation = default_library$variation * 0.8         # 20% lower bias
+)
+
+# Save as RDS
+saveRDS(custom_library, "modified_k562_library.rds")
+```
+
+#### Method 2: From Your Own Measurements
+```r
+# Based on your saturation curve fitting results
+custom_library <- list(
+  UMI_per_cell = 18000,    # Your measured UMI capacity
+  variation = 0.22         # Your measured PCR bias
+)
+
+# Validate before saving
+validation_result <- validate_custom_library_rds(custom_library)
+if (validation_result$valid) {
+  saveRDS(custom_library, "my_measured_library.rds")
+} else {
+  cat("Validation errors:", paste(validation_result$errors, collapse = ", "))
+}
+```
+
+### Integration with Analysis Workflow
+
+Custom library parameters integrate seamlessly with all analysis features:
+- **Compatible with both Random and Custom gene list modes**
+- **Works with all analysis parameters** (test side, control group, FDR levels)
+- **Included in Excel downloads** with clear documentation of parameter source
+- **Supports all visualization features** (heatmaps, power curves, drill-down analysis)
+
+### Performance Considerations
+
+- **File size**: Keep RDS files small for optimal performance
+- **Parameter ranges**: Extreme values may affect analysis speed or accuracy
+- **Memory usage**: Large parameter differences from defaults may require more computation time
+
+### Example Files
+
+Pre-built example files are available:
+- `inst/extdata/example_custom_library.rds`: Simple example with moderate parameters
+- `inst/extdata/create_custom_library_example.R`: Script for creating custom files
+
+### Summary Display
+
+When custom library parameters are loaded, the application displays:
+"Loaded custom library parameters  
+UMI per cell: XX,XXX  
+Variation: X.XXX"
+
 ## Development Notes
 
 - **Function Migration**: `.compute_underspecified_power_efficient()` has been replaced with `.compute_power_plan_efficient()` for better performance

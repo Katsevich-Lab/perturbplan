@@ -4,11 +4,14 @@
 \alias{extract_library_info}
 \title{Extract library size parameters by biological system}
 \usage{
-extract_library_info(biological_system = "K562")
+extract_library_info(biological_system = "K562", custom_library_data = NULL)
 }
 \arguments{
 \item{biological_system}{Character. Biological system identifier (default: "K562").
 Currently supports "K562" cells.}
+
+\item{custom_library_data}{List. Optional custom library data with UMI_per_cell and variation parameters.
+If provided, this data will be used instead of the biological_system data.}
 }
 \value{
 A list with elements:
@@ -26,8 +29,15 @@ The function loads system-specific library parameters fitted from
 single-cell RNA-seq data using the saturation-magnitude (S-M) curve model.
 These parameters are used in \code{\link{fit_read_UMI_curve}} to convert
 read depth to effective library size.
+
+When custom_library_data is provided, it should be a list with:
+\itemize{
+\item UMI_per_cell: Maximum UMI per cell parameter (positive numeric)
+\item variation: Variation parameter for PCR bias (positive numeric)
+}
 }
 \seealso{
 \code{\link{fit_read_UMI_curve}} for using these parameters
 \code{\link{library_computation}} for fitting these parameters from data
+\code{\link{validate_custom_library_rds}} for custom data validation
 }

@@ -162,6 +162,51 @@ create_sidebar <- function() {
               )
             )
           )
+        ),
+        
+        # Library size parameters (collapsible)
+        tags$div(
+          style = "border-radius: 4px; margin-bottom: 5px;",
+          tags$div(
+            id = "library-header",
+            style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
+            onclick = "toggleSection('library-content', 'library-chevron')",
+            tags$i(id = "library-chevron", class = "fa fa-chevron-right", style = "margin-right: 8px;"),
+            tags$strong("Library size parameters")
+          ),
+          tags$div(
+            id = "library-content",
+            style = "padding: 15px; display: none;",
+            selectInput("library_choice", "Library parameters:",
+                       choices = c("Default" = "default", "Custom" = "custom"),
+                       selected = "default"),
+            conditionalPanel(
+              condition = "input.library_choice == 'custom'",
+              tags$div(
+                style = "font-size: 11px; color: #666; margin-bottom: 8px;",
+                "Upload RDS file with UMI_per_cell and variation parameters"
+              )
+            ),
+            conditionalPanel(
+              condition = "input.library_choice == 'custom'",
+              tags$div(
+                style = "margin-bottom: 15px;",
+                fileInput("library_file", 
+                         label = NULL,
+                         accept = c(".rds", ".RDS"),
+                         placeholder = "Choose RDS file...")
+              ),
+              conditionalPanel(
+                condition = "output.library_uploaded",
+                tags$div(
+                  class = "file-upload-success",
+                  style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
+                  tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
+                  htmlOutput("library_status", inline = TRUE)
+                )
+              )
+            )
+          )
         )
       ),
       

@@ -268,12 +268,100 @@ create_power_server <- function(input, output, session) {
     })
   })
   
+  # Library parameters file upload handling
+  custom_library <- reactiveVal(NULL)
+  
+  observeEvent(input$library_file, {
+    req(input$library_file, input$library_choice == "custom")
+    
+    # Check file size (limit to 50MB for RDS files)
+    file_size_mb <- file.size(input$library_file$datapath) / (1024^2)
+    if (file_size_mb > 50) {
+      showNotification(
+        paste("File size (", round(file_size_mb, 1), "MB) exceeds the 50MB limit. Please use a smaller dataset."),
+        type = "error", duration = 10
+      )
+      return()
+    }
+    
+    tryCatch({
+      # Read RDS file and validate
+      uploaded_data <- readRDS(input$library_file$datapath)
+      validation_result <- perturbplan::validate_custom_library_rds(uploaded_data, input$library_file$name)
+      
+      if (validation_result$valid) {
+        # Store the validated custom library data
+        custom_library(validation_result$data)
+        
+        # Create success message with summary and warnings
+        status_msg <- validation_result$summary
+        if (length(validation_result$warnings) > 0) {
+          warning_msg <- paste0("<br/><em style='color:orange;'>", 
+                              paste(validation_result$warnings, collapse = "<br/>"), 
+                              "</em>")
+          status_msg <- paste0(status_msg, warning_msg)
+        }
+        
+        # Update status display
+        output$library_status <- renderUI({
+          HTML(status_msg)
+        })
+        
+        showNotification("Library parameters loaded successfully!", type = "message", duration = 5)
+        output$library_uploaded <- reactive(TRUE)
+        outputOptions(output, "library_uploaded", suspendWhenHidden = FALSE)
+        
+      } else {
+        # Show validation errors
+        error_msg <- paste0("Validation failed:<br/>", 
+                          paste(validation_result$errors, collapse = "<br/>"))
+        
+        output$library_status <- renderUI({
+          HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
+        })
+        
+        custom_library(NULL)
+        output$library_uploaded <- reactive(FALSE)
+        outputOptions(output, "library_uploaded", suspendWhenHidden = FALSE)
+      }
+      
+    }, error = function(e) {
+      # Enhanced error handling for different types of errors
+      error_msg <- if (grepl("cannot open the connection", e$message, ignore.case = TRUE)) {
+        "Cannot read the uploaded file. Please ensure it's a valid RDS file."
+      } else if (grepl("magic number", e$message, ignore.case = TRUE) || grepl("format", e$message, ignore.case = TRUE)) {
+        "File appears to be corrupted or not a valid RDS file. Please check the file format."
+      } else if (grepl("version", e$message, ignore.case = TRUE)) {
+        "RDS file was created with a newer version of R. Please recreate the file with your current R version."
+      } else {
+        paste("Error reading library file:", e$message)
+      }
+      
+      showNotification(error_msg, type = "error", duration = 10)
+      output$library_status <- renderUI({
+        HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
+      })
+      custom_library(NULL)
+      output$library_uploaded <- reactive(FALSE)
+      outputOptions(output, "library_uploaded", suspendWhenHidden = FALSE)
+    })
+  })
+  
   # Reset custom baseline when choice changes to default or file is removed
   observe({
     if (is.null(input$baseline_file) || input$baseline_choice == "default") {
       custom_baseline(NULL)
       output$baseline_uploaded <- reactive(FALSE)
       outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
+    }
+  })
+  
+  # Reset custom library when choice changes to default or file is removed
+  observe({
+    if (is.null(input$library_file) || input$library_choice == "default") {
+      custom_library(NULL)
+      output$library_uploaded <- reactive(FALSE)
+      outputOptions(output, "library_uploaded", suspendWhenHidden = FALSE)
     }
   })
 
@@ -295,9 +383,10 @@ create_power_server <- function(input, output, session) {
   # Extract library information (UMI saturation parameters)
   library_info <- reactive({
     req(planned())
-    # Extract library parameters for biological system
+    # Extract library parameters for biological system or use custom data
     perturbplan::extract_library_info(
-      biological_system = input$biological_system
+      biological_system = input$biological_system,
+      custom_library_data = if(input$library_choice == "custom") custom_library() else NULL
     )
   })
 
