@@ -633,7 +633,7 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
     summary_text <- paste0(
       "Loaded custom library parameters<br/>",
       "UMI per cell: ", formatC(data$UMI_per_cell, format = "d", big.mark = ","), "<br/>",
-      "Variation: ", round(data$variation, 3)
+      "Variation: ", formatC(data$variation, format = "e")
     )
   } else {
     summary_text <- ""

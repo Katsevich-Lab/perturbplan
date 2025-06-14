@@ -421,7 +421,7 @@ Pre-built example files are available:
 When custom library parameters are loaded, the application displays:
 "Loaded custom library parameters  
 UMI per cell: XX,XXX  
-Variation: X.XXX"
+Variation: X.XXXe-XX"
 
 ## Development Notes
 
