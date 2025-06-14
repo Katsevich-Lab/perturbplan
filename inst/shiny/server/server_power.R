@@ -190,7 +190,7 @@ create_power_server <- function(input, output, session) {
         uploaded_data <- readRDS(input$baseline_file$datapath)
         
         # Validate the custom baseline data structure
-        validation_result <- validate_custom_baseline_rds(uploaded_data, input$baseline_file$name)
+        validation_result <- perturbplan::validate_custom_baseline_rds(uploaded_data, input$baseline_file$name)
         
         if (validation_result$valid) {
           custom_baseline(validation_result$data)
