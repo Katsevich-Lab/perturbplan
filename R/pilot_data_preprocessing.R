@@ -48,6 +48,9 @@ obtain_qc_response_data <- function(path_to_gene_expression) {
 #' @param eps Numeric, convergence tolerance (default = `(.Machine$double.eps)^(1/4)`).
 #' @param rough Logical, if `TRUE` skip refinement and return pilot estimate.
 #'
+#' @importClassesFrom Matrix CsparseMatrix dgCMatrix lgCMatrix ngCMatrix
+#' @importMethodsFrom Matrix `[`
+#'
 #' @return Scalar numeric – clipped dispersion estimate.
 #' @noRd
 obtain_expression_information <- function(response_matrix,

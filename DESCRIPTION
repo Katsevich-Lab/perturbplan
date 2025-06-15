@@ -25,6 +25,7 @@ Imports:
     Matrix,
     sceptre,
     shiny
+    Matrix
 Suggests: 
     knitr,
     rmarkdown,
