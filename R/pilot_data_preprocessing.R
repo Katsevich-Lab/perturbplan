@@ -50,73 +50,47 @@ obtain_qc_response_data <- function(path_to_gene_expression) {
 #'
 #' @return Scalar numeric – clipped dispersion estimate.
 #' @noRd
-obtain_dispersion <- function(y,
-                              mu,
-                              dfr   = length(y) - 1L,
-                              limit = 50L,
-                              eps   = (.Machine$double.eps)^(1 / 4),
-                              rough = FALSE) {
-
-  theta_raw <- compute_theta_cpp(
-    y     = y,
-    mu    = mu,
-    dfr   = dfr,
-    limit = limit,
-    eps   = eps,
-    rough = rough
-  )
-
-  ## hard-clip for safety
-  theta <- max(min(theta_raw, 1e3), 0.01)
-  theta
-}
-
-#' Gene-level expression summary and NB dispersion
-#'
-#' Quickly screens genes by TPM, then returns each gene's relative expression
-#' and its NB dispersion (`theta`) estimated across cells.
-#'
-#' @param response_matrix **genes × cells** numeric or sparse matrix
-#'   (e.g. raw UMI counts; **rows are genes / columns are cells**).
-#' @param TPM_thres Numeric ≥ 0. TPM cut-off to keep a gene (default = 1).
-#' @param rough Logical, passed to \code{obtain_dispersion()}; if `TRUE` uses
-#'   the pilot estimator only (faster, less precise).
-#'
-#' @return A data.frame with one row per retained gene and columns
-#'   \itemize{
-#'     \item \code{response_id} – row name of the gene.
-#'     \item \code{relative_expression} – proportion of total counts.
-#'     \item \code{expression_size} – estimated NB θ̂.}
-#' @export
 obtain_expression_information <- function(response_matrix,
-                                          TPM_thres = 1,
+                                          TPM_thres = 0,
                                           rough     = FALSE) {
 
   ## 1. library size per cell
   library_size <- Matrix::colSums(response_matrix)
 
-  ## 2. gene-level total counts & TPM
-  gene_sum  <- Matrix::rowSums(response_matrix)
-  rel_expr  <- gene_sum / sum(gene_sum)          # proportion
-  TPM       <- rel_expr * 1e6
+  ## 2. gene-level totals & TPM
+  gene_sum <- Matrix::rowSums(response_matrix)
+  rel_expr <- gene_sum / sum(gene_sum)
+  TPM      <- rel_expr * 1e6
 
   keep_gene <- names(TPM)[TPM >= TPM_thres]
+  if (length(keep_gene) == 0)
+    stop("No genes pass TPM threshold")
 
-  ## 3. per-gene dispersion (parallel via furrr if user pre-sets plan())
-  gene_info <- data.frame(response_id = keep_gene, stringsAsFactors = FALSE) |>
-    dplyr::mutate(
-      relative_expression = rel_expr[response_id],
-      expression_size = furrr::future_map_dbl(
-        response_id,
-        ~ obtain_dispersion(
-          y  = as.numeric(response_matrix[.x, , drop = FALSE]),
-          mu = library_size * rel_expr[.x],
-          rough = rough
-        )
-      )
-    )
+  ## 3. map gene names → integer row indices  (fast lookup)
+  row_map       <- setNames(seq_len(nrow(response_matrix)),
+                            rownames(response_matrix))
+  gene_row_idx  <- unname(row_map[keep_gene])
 
-  gene_info
+  ## 4. parallel estimation of theta
+  theta_vec <- future.apply::future_sapply(
+    seq_along(gene_row_idx),
+    function(i) {
+      g_idx <- gene_row_idx[i]
+      y     <- as.numeric(response_matrix[g_idx, , drop = FALSE])
+      mu    <- library_size * rel_expr[g_idx]
+      th    <- obtain_dispersion(y, mu, rough = rough)
+      max(min(th, 1e3), 0.01)   # clip
+    },
+    future.seed = TRUE
+  )
+
+  ## 5. assemble result
+  data.frame(
+    response_id         = keep_gene,
+    relative_expression = rel_expr[gene_row_idx],
+    expression_size     = theta_vec,
+    stringsAsFactors    = FALSE
+  )
 }
 
 
