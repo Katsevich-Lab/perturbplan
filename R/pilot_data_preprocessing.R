@@ -19,10 +19,10 @@ NULL
 #' @export
 obtain_qc_response_data <- function(path_to_gene_expression) {
   # Read sparse matrix (.mtx) and convert to efficient format
-  response_matrix <- as(Matrix::readMM(file.path(path_to_gene_expression, "/matrix.mtx.gz")), "CsparseMatrix")
+  response_matrix <- as(Matrix::readMM(file.path(path_to_gene_expression, "matrix.mtx.gz")), "CsparseMatrix")
 
   # Read features (gene names)
-  genes <- data.table::fread(file.path(path_to_gene_expression, "/features.tsv.gz"), header = FALSE)
+  genes <- data.table::fread(file.path(path_to_gene_expression, "features.tsv.gz"), header = FALSE)
   gene_names <- genes$V2
 
   # Apply QC: remove empty, NA, or duplicated gene names
@@ -109,7 +109,7 @@ obtain_expression_information <- function(response_matrix,
       expression_size = furrr::future_map_dbl(
         response_id,
         ~ obtain_dispersion(
-          y  = response_matrix[.x, ],
+          y  = as.numeric(response_matrix[.x, , drop = FALSE]),
           mu = library_size * rel_expr[.x],
           rough = rough
         )
