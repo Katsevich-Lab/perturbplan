@@ -29,6 +29,10 @@ compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_m
     .Call(`_perturbplan_compute_distribution_teststat_fixed_es_cpp`, fold_change, expression_mean, expression_size, num_trt_cells, num_cntrl_cells, num_cells)
 }
 
+compute_theta_cpp <- function(y, mu, dfr, limit, eps, rough) {
+    .Call(`_perturbplan_compute_theta_cpp`, y, mu, dfr, limit, eps, rough)
+}
+
 compute_fc_curve_cpp <- function(fc_output_grid, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, side, cutoff) {
     .Call(`_perturbplan_compute_fc_curve_cpp`, fc_output_grid, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, side, cutoff)
 }

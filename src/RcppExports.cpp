@@ -117,6 +117,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_theta_cpp
+double compute_theta_cpp(NumericVector y, NumericVector mu, double dfr, int limit, double eps, bool rough);
+RcppExport SEXP _perturbplan_compute_theta_cpp(SEXP ySEXP, SEXP muSEXP, SEXP dfrSEXP, SEXP limitSEXP, SEXP epsSEXP, SEXP roughSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< double >::type dfr(dfrSEXP);
+    Rcpp::traits::input_parameter< int >::type limit(limitSEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< bool >::type rough(roughSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_theta_cpp(y, mu, dfr, limit, eps, rough));
+    return rcpp_result_gen;
+END_RCPP
+}
 // compute_fc_curve_cpp
 DataFrame compute_fc_curve_cpp(NumericVector fc_output_grid, DataFrame fc_expression_df, double library_size, double num_trt_cells, double num_cntrl_cells, std::string side, double cutoff);
 RcppExport SEXP _perturbplan_compute_fc_curve_cpp(SEXP fc_output_gridSEXP, SEXP fc_expression_dfSEXP, SEXP library_sizeSEXP, SEXP num_trt_cellsSEXP, SEXP num_cntrl_cellsSEXP, SEXP sideSEXP, SEXP cutoffSEXP) {
@@ -175,6 +191,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_compute_BH_plan", (DL_FUNC) &_perturbplan_compute_BH_plan, 5},
     {"_perturbplan_compute_QC_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_QC_fixed_es_cpp, 7},
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
+    {"_perturbplan_compute_theta_cpp", (DL_FUNC) &_perturbplan_compute_theta_cpp, 6},
     {"_perturbplan_compute_fc_curve_cpp", (DL_FUNC) &_perturbplan_compute_fc_curve_cpp, 7},
     {"_perturbplan_compute_expression_curve_cpp", (DL_FUNC) &_perturbplan_compute_expression_curve_cpp, 8},
     {"_perturbplan_compute_monte_carlo_teststat_cpp", (DL_FUNC) &_perturbplan_compute_monte_carlo_teststat_cpp, 4},

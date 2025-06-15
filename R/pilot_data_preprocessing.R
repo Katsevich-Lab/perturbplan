@@ -19,7 +19,7 @@ NULL
 #' @export
 obtain_qc_response_data <- function(path_to_gene_expression) {
   # Read sparse matrix (.mtx) and convert to efficient format
-  response_matrix <- as(Matrix::readMM(file.path(path_to_gene_expression, "/matrix.mtx.gz")), "dgCMatrix")
+  response_matrix <- as(Matrix::readMM(file.path(path_to_gene_expression, "/matrix.mtx.gz")), "CsparseMatrix")
 
   # Read features (gene names)
   genes <- data.table::fread(file.path(path_to_gene_expression, "/features.tsv.gz"), header = FALSE)
@@ -38,55 +38,85 @@ obtain_qc_response_data <- function(path_to_gene_expression) {
   return(response_matrix)
 }
 
-
-#' Obtain gene-level expression and filtering information based on TPM.
+#' Fast dispersion (theta) estimator for a single response
 #'
-#' @param TPM_thres TPM threshold for gene filtering (default = 10).
-#' @param response_matrix Expression matrix (genes × cells).
-#' @param cell_covariates Optional cell-level covariates. If NULL, uses log-library size.
+#' @param y Numeric vector – raw counts for one gene across cells.
+#' @param mu Numeric vector – Poisson means for the same cells.
+#' @param dfr Integer scalar – residual degrees of freedom
+#'   (default `length(y) - 1L`).
+#' @param limit Integer, max Newton iterations (default = 50).
+#' @param eps Numeric, convergence tolerance (default = `(.Machine$double.eps)^(1/4)`).
+#' @param rough Logical, if `TRUE` skip refinement and return pilot estimate.
 #'
-#' @return A data frame of genes with relative expression and estimated size (theta).
-#' @export
-obtain_expression_information <- function(TPM_thres = 10, response_matrix,
-                                          cell_covariates = NULL) {
+#' @return Scalar numeric – clipped dispersion estimate.
+#' @noRd
+obtain_dispersion <- function(y,
+                              mu,
+                              dfr   = length(y) - 1L,
+                              limit = 50L,
+                              eps   = (.Machine$double.eps)^(1 / 4),
+                              rough = FALSE) {
 
-  # Construct default covariates if missing
-  if (is.null(cell_covariates)) {
-    cell_covariates <- data.frame(
-      intercept = 1,  # required by sceptre
-      log_sum_expression = log(Matrix::colSums(response_matrix) + 1),
-      stringsAsFactors = FALSE
-    )
-  }
-
-  # Compute gene-level expression (no chunking needed)
-  sum_expression <- Matrix::rowSums(response_matrix)
-
-  # Normalize to TPM
-  relative_expression <- sum_expression / sum(sum_expression)
-  TPM <- relative_expression * 1e6
-
-  # Filter genes by TPM threshold
-  tpm_filtered_genes <- names(TPM)[TPM >= TPM_thres]
-
-  # Compute expression size (theta) for filtered genes
-  gene_info <- data.frame(
-    response_id = tpm_filtered_genes,
-    stringsAsFactors = FALSE
-  ) |> dplyr::mutate(
-    relative_expression = relative_expression[response_id],
-    expression_size = unlist(sapply(
-      setNames(tpm_filtered_genes, tpm_filtered_genes),
-      function(response_id) {
-        sceptre:::perform_response_precomputation(
-          response_matrix[response_id, ],
-          covariate_matrix = as.matrix(cell_covariates)
-        )$theta
-      }
-    ))
+  theta_raw <- compute_theta_cpp(
+    y     = y,
+    mu    = mu,
+    dfr   = dfr,
+    limit = limit,
+    eps   = eps,
+    rough = rough
   )
 
-  return(gene_info)
+  ## hard-clip for safety
+  theta <- max(min(theta_raw, 1e3), 0.01)
+  theta
+}
+
+#' Gene-level expression summary and NB dispersion
+#'
+#' Quickly screens genes by TPM, then returns each gene's relative expression
+#' and its NB dispersion (`theta`) estimated across cells.
+#'
+#' @param response_matrix **genes × cells** numeric or sparse matrix
+#'   (e.g. raw UMI counts; **rows are genes / columns are cells**).
+#' @param TPM_thres Numeric ≥ 0. TPM cut-off to keep a gene (default = 1).
+#' @param rough Logical, passed to \code{obtain_dispersion()}; if `TRUE` uses
+#'   the pilot estimator only (faster, less precise).
+#'
+#' @return A data.frame with one row per retained gene and columns
+#'   \itemize{
+#'     \item \code{response_id} – row name of the gene.
+#'     \item \code{relative_expression} – proportion of total counts.
+#'     \item \code{expression_size} – estimated NB θ̂.}
+#' @export
+obtain_expression_information <- function(response_matrix,
+                                          TPM_thres = 1,
+                                          rough     = FALSE) {
+
+  ## 1. library size per cell
+  library_size <- Matrix::colSums(response_matrix)
+
+  ## 2. gene-level total counts & TPM
+  gene_sum  <- Matrix::rowSums(response_matrix)
+  rel_expr  <- gene_sum / sum(gene_sum)          # proportion
+  TPM       <- rel_expr * 1e6
+
+  keep_gene <- names(TPM)[TPM >= TPM_thres]
+
+  ## 3. per-gene dispersion (parallel via furrr if user pre-sets plan())
+  gene_info <- data.frame(response_id = keep_gene, stringsAsFactors = FALSE) |>
+    dplyr::mutate(
+      relative_expression = rel_expr[response_id],
+      expression_size = furrr::future_map_dbl(
+        response_id,
+        ~ obtain_dispersion(
+          y  = response_matrix[.x, ],
+          mu = library_size * rel_expr[.x],
+          rough = rough
+        )
+      )
+    )
+
+  gene_info
 }
 
 

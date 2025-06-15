@@ -2,24 +2,27 @@
 % Please edit documentation in R/pilot_data_preprocessing.R
 \name{obtain_expression_information}
 \alias{obtain_expression_information}
-\title{Obtain gene-level expression and filtering information based on TPM.}
+\title{Gene-level expression summary and NB dispersion}
 \usage{
-obtain_expression_information(
-  TPM_thres = 10,
-  response_matrix,
-  cell_covariates = NULL
-)
+obtain_expression_information(response_matrix, TPM_thres = 1, rough = FALSE)
 }
 \arguments{
-\item{TPM_thres}{TPM threshold for gene filtering (default = 10).}
+\item{response_matrix}{\strong{genes × cells} numeric or sparse matrix
+(e.g. raw UMI counts; \strong{rows are genes / columns are cells}).}
 
-\item{response_matrix}{Expression matrix (genes × cells).}
+\item{TPM_thres}{Numeric ≥ 0. TPM cut-off to keep a gene (default = 1).}
 
-\item{cell_covariates}{Optional cell-level covariates. If NULL, uses log-library size.}
+\item{rough}{Logical, passed to \code{obtain_dispersion()}; if \code{TRUE} uses
+the pilot estimator only (faster, less precise).}
 }
 \value{
-A data frame of genes with relative expression and estimated size (theta).
+A data.frame with one row per retained gene and columns
+\itemize{
+\item \code{response_id} – row name of the gene.
+\item \code{relative_expression} – proportion of total counts.
+\item \code{expression_size} – estimated NB θ̂.}
 }
 \description{
-Obtain gene-level expression and filtering information based on TPM.
+Quickly screens genes by TPM, then returns each gene's relative expression
+and its NB dispersion (\code{theta}) estimated across cells.
 }
