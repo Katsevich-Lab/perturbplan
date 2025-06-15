@@ -6,7 +6,6 @@
     GNU Fortran (GCC) 12.2.0
 * running under: macOS Ventura 13.4
 * using session charset: UTF-8
-* using option ‘--no-manual’
 * checking for file ‘./DESCRIPTION’ ... ERROR
 Required fields missing or empty:
   ‘Author’ ‘Maintainer’
