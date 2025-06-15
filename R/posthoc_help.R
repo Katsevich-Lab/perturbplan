@@ -38,7 +38,7 @@ var_nb <- function(mean, size){
 #'     tests (accounting for QC failures)
 #' }
 #'
-#' @seealso 
+#' @seealso
 #' \code{\link{BH_cutoff_bisection}} for the BH-specific implementation
 #' \code{\link{compute_power_posthoc}} for the main power analysis function
 #' @export
@@ -97,7 +97,7 @@ BH_cutoff_bisection <- function(mean_list, sd_list, side, multiple_testing_alpha
 #' @details
 #' The FDP is computed as:
 #' \deqn{FDP = \frac{E[\text{False Discoveries}]}{E[\text{Total Discoveries}]}}
-#' 
+#'
 #' where:
 #' \itemize{
 #'   \item False discoveries are assumed to follow the null distribution
@@ -105,7 +105,7 @@ BH_cutoff_bisection <- function(mean_list, sd_list, side, multiple_testing_alpha
 #'   \item QC failure probabilities are incorporated into the calculations
 #' }
 #'
-#' @seealso 
+#' @seealso
 #' \code{\link{adjusted_cutoff}} for computing appropriate cutoffs
 #' \code{\link{rejection_computation}} for computing rejection probabilities
 #' @export
@@ -156,38 +156,38 @@ rejection_computation <- function(mean_list, sd_list, side, cutoff){
 }
 
 
-# #' Compute the score test statistic.
-# #'
-# #' @param X Treatment/control indicator.
-# #' @param Y Outcome for two groups.
-# #' @param size_parameter Size parameter.
-# #'
-# #' @return Score test statistic.
-# #' @export
+#' Compute the score test statistic.
+#'
+#' @param X Treatment/control indicator.
+#' @param Y Outcome for two groups.
+#' @param expression_size Size parameter.
+#'
+#' @return Score test statistic.
+#' @export
 
-# score_test <- function(X, Y, size_parameter){
-#
-#   # compute the number of treat and number of control group
-#   n_trt <- sum(X == 1)
-#   n_ctl <- sum(X == 0)
-#
-#   # compute the sample-mean
-#   trt_mean <- mean(Y[X == 1])
-#   ctl_mean <- mean(Y[X == 0])
-#
-#   # compute the pooled sample mean
-#   pooled_mean <- mean(Y)
-#
-#   # compute the numerator and denominator of the test statistic
-#   test_stat_numerator <- trt_mean - ctl_mean
-#   test_stat_denominator <- sqrt(pooled_mean * (1 + pooled_mean / size_parameter)) * sqrt(1 / n_trt + 1 / n_ctl)
-#
-#   # compute the test statistic
-#   test_stat <- test_stat_numerator / test_stat_denominator
-#
-#   # return the score test statistic
-#   return(test_stat)
-# }
+score_test <- function(X, Y, expression_size){
+
+  # compute the number of treat and number of control group
+  n_trt <- sum(X == 1)
+  n_ctl <- sum(X == 0)
+
+  # compute the sample-mean
+  trt_mean <- mean(Y[X == 1])
+  ctl_mean <- mean(Y[X == 0])
+
+  # compute the pooled sample mean
+  pooled_mean <- mean(Y)
+
+  # compute the numerator and denominator of the test statistic
+  test_stat_numerator <- trt_mean - ctl_mean
+  test_stat_denominator <- sqrt(pooled_mean * (1 + pooled_mean / expression_size)) * sqrt(1 / n_trt + 1 / n_ctl)
+
+  # compute the test statistic
+  test_stat <- test_stat_numerator / test_stat_denominator
+
+  # return the score test statistic
+  return(test_stat)
+}
 
 #' Compute asymptotic distribution of score test statistic
 #'
@@ -223,7 +223,7 @@ rejection_computation <- function(mean_list, sd_list, side, cutoff){
 #' The score test statistic follows an asymptotically normal distribution
 #' under both null and alternative hypotheses.
 #'
-#' @seealso 
+#' @seealso
 #' \code{\link{var_nb}} for negative binomial variance calculation
 #' \code{\link{rejection_computation}} for computing power from these distributions
 #' @export
