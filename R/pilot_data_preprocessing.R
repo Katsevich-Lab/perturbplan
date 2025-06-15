@@ -78,7 +78,7 @@ obtain_expression_information <- function(response_matrix,
       g_idx <- gene_row_idx[i]
       y     <- as.numeric(response_matrix[g_idx, , drop = FALSE])
       mu    <- library_size * rel_expr[g_idx]
-      th    <- obtain_dispersion(y, mu, rough = rough)
+      th    <- compute_theta_cpp(y, mu, rough = rough)
       max(min(th, 1e3), 0.01)   # clip
     },
     future.seed = TRUE
