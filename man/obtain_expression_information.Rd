@@ -4,7 +4,7 @@
 \alias{obtain_expression_information}
 \title{Estimate Gene Expression Metrics from a Sparse Expression Matrix}
 \usage{
-obtain_expression_information(response_matrix, TPM_thres = 0, rough = FALSE)
+obtain_expression_information(response_matrix, TPM_thres = 1, rough = FALSE)
 }
 \arguments{
 \item{response_matrix}{A \code{CsparseMatrix} object representing gene-by-cell expression values.

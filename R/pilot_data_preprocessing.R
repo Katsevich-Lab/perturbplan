@@ -19,7 +19,7 @@ NULL
 #' @export
 obtain_qc_response_data <- function(path_to_gene_expression) {
   # Read sparse matrix (.mtx) and convert to efficient format
-  response_matrix <- as(Matrix::readMM(file.path(path_to_gene_expression, "matrix.mtx.gz")), "CsparseMatrix")
+  response_matrix <- as(Matrix::readMM(file.path(path_to_gene_expression, "matrix.mtx.gz")), "dgCMatrix")
 
   # Read features (gene names)
   genes <- data.table::fread(file.path(path_to_gene_expression, "features.tsv.gz"), header = FALSE)
@@ -66,7 +66,7 @@ obtain_qc_response_data <- function(path_to_gene_expression) {
 #' @importClassesFrom Matrix CsparseMatrix dgCMatrix
 #' @export
 obtain_expression_information <- function(response_matrix,
-                                          TPM_thres = 0,
+                                          TPM_thres = 1,
                                           rough     = FALSE) {
 
   ## 1. library size per cell
@@ -81,33 +81,22 @@ obtain_expression_information <- function(response_matrix,
   if (length(keep_gene) == 0)
     stop("No genes pass TPM threshold")
 
-  ## 3. map gene names → integer row indices  (fast lookup)
-  row_map       <- setNames(seq_len(nrow(response_matrix)),
-                            rownames(response_matrix))
-  gene_row_idx  <- unname(row_map[keep_gene])
-
-  ## 4. parallel estimation of theta
-  theta_vec <- future.apply::future_sapply(
-    seq_along(gene_row_idx),
-    function(i) {
-      g_idx <- gene_row_idx[i]
-      y     <- as.numeric(response_matrix[g_idx, , drop = FALSE])
-      mu    <- library_size * rel_expr[g_idx]
-      th    <- compute_theta_cpp(y, mu,
-                                 dfr = length(y)-1,
-                                 limit = 50,
-                                 eps = (.Machine$double.eps)^(1 / 4),
-                                 rough = rough)
-      max(min(th, 1e3), 0.01)   # clip
-    },
-    future.seed = TRUE
+  ## 3. parallel estimation of theta
+  theta_vec <- theta_batch_cpp(
+    response_matrix,
+    library_size,
+    rel_expr,
+    rough = rough,
+    n_threads = parallel::detectCores()
   )
 
-  ## 5. assemble result
+  names(theta_vec) <- rownames(response_matrix)
+
+  ## 4. assemble result
   data.frame(
     response_id         = keep_gene,
-    relative_expression = rel_expr[gene_row_idx],
-    expression_size     = theta_vec,
+    relative_expression = rel_expr[keep_gene],
+    expression_size     = theta_vec[keep_gene],
     stringsAsFactors    = FALSE
   )
 }

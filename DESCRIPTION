@@ -24,7 +24,8 @@ Imports:
     utils,
     Matrix,
     sceptre,
-    shiny
+    shiny,
+    RcppEigen
 Suggests: 
     knitr,
     rmarkdown,
@@ -35,4 +36,5 @@ Suggests:
 Config/testthat/edition: 3
 LinkingTo: 
     PoissonBinomial,
-    Rcpp
+    Rcpp,
+    RcppEigen

@@ -33,6 +33,10 @@ compute_theta_cpp <- function(y, mu, dfr, limit, eps, rough) {
     .Call(`_perturbplan_compute_theta_cpp`, y, mu, dfr, limit, eps, rough)
 }
 
+theta_batch_cpp <- function(Y, library_size, rel_expr, rough = FALSE, n_threads = 0L) {
+    .Call(`_perturbplan_theta_batch_cpp`, Y, library_size, rel_expr, rough, n_threads)
+}
+
 compute_fc_curve_cpp <- function(fc_output_grid, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, side, cutoff) {
     .Call(`_perturbplan_compute_fc_curve_cpp`, fc_output_grid, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, side, cutoff)
 }
