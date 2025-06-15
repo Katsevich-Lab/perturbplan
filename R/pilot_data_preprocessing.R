@@ -38,21 +38,33 @@ obtain_qc_response_data <- function(path_to_gene_expression) {
   return(response_matrix)
 }
 
-#' Fast dispersion (theta) estimator for a single response
+#' Estimate Gene Expression Metrics from a Sparse Expression Matrix
 #'
-#' @param y Numeric vector – raw counts for one gene across cells.
-#' @param mu Numeric vector – Poisson means for the same cells.
-#' @param dfr Integer scalar – residual degrees of freedom
-#'   (default `length(y) - 1L`).
-#' @param limit Integer, max Newton iterations (default = 50).
-#' @param eps Numeric, convergence tolerance (default = `(.Machine$double.eps)^(1/4)`).
-#' @param rough Logical, if `TRUE` skip refinement and return pilot estimate.
+#' This function processes a gene-by-cell sparse expression matrix (e.g., read from a `.mtx` file),
+#' computes relative expression (TPM), filters genes by a TPM threshold, and estimates the
+#' expression-size (theta) for each retained gene using a fast parallel method.
 #'
-#' @importClassesFrom Matrix CsparseMatrix dgCMatrix lgCMatrix ngCMatrix
-#' @importMethodsFrom Matrix `[`
+#' @param response_matrix A \code{CsparseMatrix} object representing gene-by-cell expression values.
+#'        Usually read with \code{Matrix::readMM()} and coerced via \code{as(., "CsparseMatrix")}.
+#' @param TPM_thres A numeric threshold for filtering genes by TPM (Transcripts Per Million).
+#'        Genes with TPM below this value will be excluded. Default is 0.
+#' @param rough Logical; if \code{TRUE}, use a faster but rougher estimation method for theta.
+#'        Default is \code{FALSE}.
 #'
-#' @return Scalar numeric – clipped dispersion estimate.
-#' @noRd
+#' @return A \code{data.frame} with the following columns:
+#' \describe{
+#'   \item{response_id}{Character vector of gene names passing the TPM threshold.}
+#'   \item{relative_expression}{Numeric vector of each gene's relative expression (as a proportion).}
+#'   \item{expression_size}{Estimated expression-size parameter \eqn{\theta} for each gene.}
+#' }
+#'
+#' @details
+#' The theta parameter is clipped to the interval [0.01, 1e3] to avoid numerical instability.
+#'
+#' @importMethodsFrom Matrix [
+#' @importFrom Matrix rowSums colSums
+#' @importClassesFrom Matrix CsparseMatrix dgCMatrix
+#' @export
 obtain_expression_information <- function(response_matrix,
                                           TPM_thres = 0,
                                           rough     = FALSE) {
