@@ -86,7 +86,7 @@ obtain_expression_information <- function(response_matrix,
   ## 3. parallel estimation of theta
   print(paste0("Start dispersion estimation at ", Sys.time()))
   n_threads <- as.integer(Sys.getenv("NSLOTS", unset = "1"))
-  theta_vec <- theta_batch_eigen_optimized(
+  theta_vec <- theta_batch_cpp(
     response_matrix[keep_gene, , drop = FALSE],
     library_size,
     rel_expr[keep_gene],

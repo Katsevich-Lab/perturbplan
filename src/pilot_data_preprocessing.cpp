@@ -77,7 +77,7 @@ inline double theta_refined_row(double                           t0,
 //  Vectorised front-end exposed to R
 // ─────────────────────────────────────────────────────────────────────────────
 // [[Rcpp::export]]
-Rcpp::NumericVector theta_batch_eigen_optimized(
+Rcpp::NumericVector theta_batch_cpp(
         const Eigen::MappedSparseMatrix<double>& Y,
         const Rcpp::NumericVector&        library_size,
         const Rcpp::NumericVector&        rel_expr,

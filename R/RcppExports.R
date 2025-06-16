@@ -29,8 +29,8 @@ compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_m
     .Call(`_perturbplan_compute_distribution_teststat_fixed_es_cpp`, fold_change, expression_mean, expression_size, num_trt_cells, num_cntrl_cells, num_cells)
 }
 
-theta_batch_eigen_optimized <- function(Y, library_size, rel_expr, rough = FALSE, n_threads = 0L) {
-    .Call(`_perturbplan_theta_batch_eigen_optimized`, Y, library_size, rel_expr, rough, n_threads)
+theta_batch_cpp <- function(Y, library_size, rel_expr, rough = FALSE, n_threads = 0L) {
+    .Call(`_perturbplan_theta_batch_cpp`, Y, library_size, rel_expr, rough, n_threads)
 }
 
 compute_fc_curve_cpp <- function(fc_output_grid, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, side, cutoff) {

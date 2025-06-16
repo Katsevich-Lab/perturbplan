@@ -118,9 +118,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// theta_batch_eigen_optimized
-Rcpp::NumericVector theta_batch_eigen_optimized(const Eigen::MappedSparseMatrix<double>& Y, const Rcpp::NumericVector& library_size, const Rcpp::NumericVector& rel_expr, bool rough, int n_threads);
-RcppExport SEXP _perturbplan_theta_batch_eigen_optimized(SEXP YSEXP, SEXP library_sizeSEXP, SEXP rel_exprSEXP, SEXP roughSEXP, SEXP n_threadsSEXP) {
+// theta_batch_cpp
+Rcpp::NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y, const Rcpp::NumericVector& library_size, const Rcpp::NumericVector& rel_expr, bool rough, int n_threads);
+RcppExport SEXP _perturbplan_theta_batch_cpp(SEXP YSEXP, SEXP library_sizeSEXP, SEXP rel_exprSEXP, SEXP roughSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -129,7 +129,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type rel_expr(rel_exprSEXP);
     Rcpp::traits::input_parameter< bool >::type rough(roughSEXP);
     Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(theta_batch_eigen_optimized(Y, library_size, rel_expr, rough, n_threads));
+    rcpp_result_gen = Rcpp::wrap(theta_batch_cpp(Y, library_size, rel_expr, rough, n_threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -191,7 +191,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_compute_BH_plan", (DL_FUNC) &_perturbplan_compute_BH_plan, 5},
     {"_perturbplan_compute_QC_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_QC_fixed_es_cpp, 7},
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
-    {"_perturbplan_theta_batch_eigen_optimized", (DL_FUNC) &_perturbplan_theta_batch_eigen_optimized, 5},
+    {"_perturbplan_theta_batch_cpp", (DL_FUNC) &_perturbplan_theta_batch_cpp, 5},
     {"_perturbplan_compute_fc_curve_cpp", (DL_FUNC) &_perturbplan_compute_fc_curve_cpp, 7},
     {"_perturbplan_compute_expression_curve_cpp", (DL_FUNC) &_perturbplan_compute_expression_curve_cpp, 8},
     {"_perturbplan_compute_monte_carlo_teststat_cpp", (DL_FUNC) &_perturbplan_compute_monte_carlo_teststat_cpp, 4},
