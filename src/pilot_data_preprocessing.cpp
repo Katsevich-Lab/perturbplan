@@ -7,102 +7,117 @@
 
 using namespace Rcpp;
 using Eigen::VectorXd;
-using Eigen::SparseVector;
 
-// Rough estimate of dispersion (theta)
-double theta_rough(const SparseVector<double>& y,
-                   const VectorXd&             mu) {
-  const int n = mu.size();
-  const int nnz = y.nonZeros();
-  const double* y_val = y.valuePtr();
-  const int* y_idx = y.innerIndexPtr();
+// ─────────────────────────────────────────────────────────────────────────────
+//  Rough dispersion estimate for one sparse row (no temporary SparseVector)
+// ─────────────────────────────────────────────────────────────────────────────
+inline double theta_rough_row(const Eigen::MappedSparseMatrix<double>& Y,
+                              int                               row,
+                              const VectorXd&                   mu) {
+  const int n   = mu.size();
+  double     ss = 0.0;                // sum of squared residuals
+  int        nz = 0;                  // number of non-zero entries
 
-  double sum_sq = 0.0;
-
-#pragma omp simd reduction(+:sum_sq)
-  for (int i = 0; i < nnz; ++i) {
-    const int j = y_idx[i];
-    const double res = y_val[i] / mu[j] - 1.0;
-    sum_sq += res * res;
+  for (Eigen::MappedSparseMatrix<double>::InnerIterator it(Y, row); it; ++it) {
+    const int    j   = it.index();        // column index
+    const double res = it.value() / mu[j] - 1.0;
+    ss += res * res;
+    ++nz;
   }
-
-  // Add (n - nnz) terms for zero entries, where (0/mu - 1)^2 = 1
-  sum_sq += static_cast<double>(n - nnz);
-
-  return static_cast<double>(n) / sum_sq;
+  ss += static_cast<double>(n - nz);       // contribution of zeros
+  return static_cast<double>(n) / ss;      // rough theta
 }
 
-// Refined moment-based Newton iteration
-double theta_refined(double                     t0,
-                     const SparseVector<double>& y,
-                     const VectorXd&             mu,
-                     double                      dfr,
-                     int                         limit,
-                     double                      eps) {
-  const int n = mu.size();
-  const int nnz = y.nonZeros();
-  const double* y_val = y.valuePtr();
-  const int* y_idx = y.innerIndexPtr();
+// ─────────────────────────────────────────────────────────────────────────────
+//  Refined Newton iteration (one row)
+// ─────────────────────────────────────────────────────────────────────────────
+inline double theta_refined_row(double                           t0,
+                                const Eigen::MappedSparseMatrix<double>& Y,
+                                int                               row,
+                                const VectorXd&                   mu,
+                                double                            dfr,
+                                int                               limit,
+                                double                            eps) {
+  const int n   = mu.size();
+  const auto* val_ptr = Y.valuePtr();   // direct raw pointers
+  const auto* idx_ptr = Y.innerIndexPtr();
 
   for (int iter = 0; iter < limit; ++iter) {
     t0 = std::fabs(t0);
     double num = 0.0, den = 0.0;
+    int    nz  = 0;
 
-#pragma omp simd reduction(+:num,den)
-    for (int i = 0; i < nnz; ++i) {
-      const int j = y_idx[i];
-      const double diff = y_val[i] - mu[j];
-      num += (diff * diff) / (mu[j] + mu[j] * mu[j] / t0);
-      den += (diff * diff) / std::pow(mu[j] + t0, 2);
+    for (Eigen::MappedSparseMatrix<double>::InnerIterator it(Y, row); it; ++it) {
+      const int    j    = it.index();
+      const double diff = it.value() - mu[j];
+      const double mu_j = mu[j];
+
+      num += (diff * diff) / (mu_j + mu_j * mu_j / t0);
+      den += (diff * diff) / std::pow(mu_j + t0, 2);
+      ++nz;
     }
 
-    // Approximate zero entries by assuming their mu is average
-    double mu_avg = mu.sum() / static_cast<double>(n);
-    const int n0 = n - nnz;
-    if (n0 > 0) {
-      double diff0_sq = mu_avg * mu_avg;
-      num += n0 * (diff0_sq / (mu_avg + mu_avg * mu_avg / t0));
-      den += n0 * (diff0_sq / std::pow(mu_avg + t0, 2));
+    // aggregate contribution from zero cells
+    const int n0 = n - nz;
+    if (n0) {
+      const double mu_avg   = mu.mean();
+      const double diff0sq  = mu_avg * mu_avg;
+      num += n0 * (diff0sq / (mu_avg + mu_avg * mu_avg / t0));
+      den += n0 * (diff0sq / std::pow(mu_avg + t0, 2));
     }
 
-    double delta = (num - dfr) / den;
+    const double delta = (num - dfr) / den;
     if (std::fabs(delta) < eps) break;
     t0 -= delta;
   }
-
   return t0;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  Vectorised front-end exposed to R
+// ─────────────────────────────────────────────────────────────────────────────
 // [[Rcpp::export]]
-NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y,
-                              const NumericVector& library_size,
-                              const NumericVector& rel_expr,
-                              bool rough = false,
-                              int n_threads = 0) {
-  const int G = Y.rows(); // number of genes
-  const int C = Y.cols(); // number of cells
+Rcpp::NumericVector theta_batch_eigen_optimized(
+        const Eigen::MappedSparseMatrix<double>& Y,
+        const Rcpp::NumericVector&        library_size,
+        const Rcpp::NumericVector&        rel_expr,
+        bool                              rough      = false,
+        int                               n_threads  = 0) {
+
+  const int G   = Y.rows();                   // genes
+  const int C   = Y.cols();                   // cells
   const double eps = std::pow(DBL_EPSILON, 0.25);
-  NumericVector theta(G);
+
+  Rcpp::NumericVector theta(G);
+
+  // map once, reuse in every loop
+  const VectorXd lib_vec = Eigen::Map<const VectorXd>(library_size.begin(), C);
 
 #ifdef HAS_OPENMP
-  if (n_threads > 0)
-    omp_set_num_threads(n_threads);
-#pragma omp parallel for schedule(static)
+  if (n_threads > 0) omp_set_num_threads(n_threads);
+#pragma omp parallel
 #endif
-  for (int g = 0; g < G; ++g) {
-    // Sparse vector for gene g
-    SparseVector<double, Eigen::ColMajor> y = Y.row(g);
+  {
+    VectorXd mu(C);                 // thread-local working buffer
 
-    // Expected counts for gene g across cells
-    const VectorXd mu = Eigen::Map<const VectorXd>(library_size.begin(), C) * rel_expr[g];
+#ifdef HAS_OPENMP
+#pragma omp for schedule(static)
+#endif
+    for (int g = 0; g < G; ++g) {
+      // compute mu for this gene (dense, one vector multiply)
+      mu = lib_vec * rel_expr[g];
 
-    // Estimate dispersion
-    double t0 = theta_rough(y, mu);
-    double t_est = rough ? t0 : theta_refined(t0, y, mu, C - 1, 50, eps);
+      // rough estimate
+      double t_est = theta_rough_row(Y, g, mu);
 
-    // Clip result for numerical stability
-    theta[g] = std::max(0.01, std::min(t_est, 1e3));
+      // optional refined Newton iteration
+      if (!rough)
+        t_est = theta_refined_row(t_est, Y, g, mu,
+                                  /*dfr=*/C - 1, /*limit=*/50, eps);
+
+      // clip to stable range
+      theta[g] = std::max(0.01, std::min(t_est, 1e3));
+    }
   }
-
   return theta;
 }
