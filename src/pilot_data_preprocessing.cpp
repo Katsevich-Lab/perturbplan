@@ -13,57 +13,89 @@ using Rcpp::NumericVector;
 /*--------------------------------------------------------------
  *  Rough moment estimator of the size parameter
  *--------------------------------------------------------------*/
-double theta_rough(const SparseVector<double>& y,
-                   const VectorXd&             mu)
+double theta_rough(const Eigen::SparseVector<double>& y,
+                   const Eigen::VectorXd&             mu)
 {
-  const int n = mu.size();
-  double numer = static_cast<double>(n);
+  const int n  = mu.size();
+  const int nz = y.nonZeros();
+
   double denom = 0.0;
 
-  // iterate only over non-zero entries of y
-  for (SparseVector<double>::InnerIterator it(y); it; ++it) {
-    const int    j   = it.index();
-    const double res = it.value() / mu[j] - 1.0;
-    denom += res * res;
+  // ----- 1. non-zero cells (y != 0) --------------------------------
+  // Iterate over raw pointers instead of InnerIterator
+  const double* y_val = y.valuePtr();
+  const auto* y_idx = y.innerIndexPtr();
+  for (int k = 0; k < nz; ++k, ++y_val, ++y_idx) {
+    const int    j   = *y_idx;          // column index
+    const double ratio = (*y_val) * (1.0 / mu[j]);   // one multiplication
+    const double diff  = ratio - 1.0;
+    denom += diff * diff;
   }
-  // add zeros where y == 0
-  const int nz = y.nonZeros();
-  denom += (n - nz);   // because (0/mu - 1)^2 = 1
 
-  return numer / denom;
+  // ----- 2. zero cells (y == 0) ------------------------------------
+  // (0 / mu − 1)^2 == 1  → simply add their count
+  denom += static_cast<double>(n - nz);
+
+  // ----- 3. return rough estimate ----------------------------------
+  return static_cast<double>(n) / denom;
 }
 
 /*--------------------------------------------------------------
  *  Refined Newton iteration (moment-matching)
  *--------------------------------------------------------------*/
-double theta_refined(double                     t0,
-                     const SparseVector<double>& y,
-                     const VectorXd&             mu,
-                     double                      dfr,
-                     int                         limit,
-                     double                      eps)
+double theta_refined(double                          t0,
+                     const Eigen::SparseVector<double>& y,
+                     const Eigen::VectorXd&            mu,
+                     double                           dfr,
+                     int                              limit,
+                     double                           eps)
 {
+  const int n  = mu.size();
+  const int nz = y.nonZeros();
+
+  // Pre-allocate arrays of reciprocals for the current t0
+  // (updated each Newton step)
+  Eigen::VectorXd mu_recip = mu.cwiseInverse();            // 1 / mu
+  Eigen::VectorXd mu_sq    = mu.array().square();          // mu^2
+
   for (int iter = 0; iter < limit; ++iter) {
     t0 = std::fabs(t0);
 
-    // compute the two sums needed for Newton step
-    double num = 0.0, den = 0.0;
-    for (SparseVector<double>::InnerIterator it(y); it; ++it) {
-      const int    j   = it.index();
-      const double diff = it.value() - mu[j];
-      const double denom = mu[j] + mu[j] * mu[j] / t0;
+    double num = 0.0;   // numerator   Σ (diff^2 / denom)
+    double den = 0.0;   // denominator Σ (diff^2 / (mu + t0)^2)
+
+    // ---------- 1. non-zero cells only ------------------------
+    const double* y_val = y.valuePtr();
+    const auto* y_idx = y.innerIndexPtr();
+    for (int k = 0; k < nz; ++k, ++y_val, ++y_idx) {
+      const int    j   = *y_idx;
+      const double diff = (*y_val) - mu[j];
+
+      // denom = mu + mu^2 / t0  -> use reciprocal to save division
+      const double denom   = mu[j] + mu_sq[j] * (1.0 / t0);
+      const double denom2  = std::pow(mu[j] + t0, 2.0);
+
       num += (diff * diff) / denom;
-      den += (diff * diff) / std::pow(mu[j] + t0, 2);
-    }
-    // add zero cells (y == 0)
-    const int n0 = mu.size() - y.nonZeros();
-    for (int k = 0; k < n0; ++k) {
-      // diff = -mu  -> diff^2 = mu^2
-      // y==0 so index not needed, treat in aggregate
-      // approximate by mean of mu to avoid loop overhead
+      den += (diff * diff) / denom2;
     }
 
-    double delta = (num - dfr) / den;
+    // ---------- 2. zero cells (y == 0)  -----------------------
+    // diff = -mu   => diff^2 = mu^2
+    const int n_zero = n - nz;
+    if (n_zero > 0) {
+      // Use the mean of mu and mu^2 to approximate the aggregate
+      const double mean_mu   = mu.mean();
+      const double mean_mu2  = mu_sq.mean();
+
+      const double diff2  = mean_mu2;              // (0 - mu)^2
+      const double denomZ = mean_mu + mean_mu2 / t0;
+      const double denom2Z = std::pow(mean_mu + t0, 2.0);
+
+      num += n_zero * (diff2 / denomZ);
+      den += n_zero * (diff2 / denom2Z);
+    }
+
+    const double delta = (num - dfr) / den;
     if (std::fabs(delta) < eps) break;
     t0 -= delta;
   }
