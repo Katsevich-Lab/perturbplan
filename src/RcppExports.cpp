@@ -119,7 +119,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // theta_batch_cpp
-Rcpp::NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y, const NumericVector& library_size, const NumericVector& rel_expr, bool rough, int n_threads);
+NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y, const NumericVector& library_size, const NumericVector& rel_expr, bool rough, int n_threads);
 RcppExport SEXP _perturbplan_theta_batch_cpp(SEXP YSEXP, SEXP library_sizeSEXP, SEXP rel_exprSEXP, SEXP roughSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
