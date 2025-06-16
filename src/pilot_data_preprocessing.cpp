@@ -1,5 +1,9 @@
 // [[Rcpp::depends(RcppEigen)]]
 #include <RcppEigen.h>
+#include <boost/math/special_functions/digamma.hpp>
+#include <boost/math/special_functions/polygamma.hpp>
+#include <cmath>
+#include <algorithm>     // for std::clamp
 
 #ifdef HAS_OPENMP
   #include <omp.h>
@@ -29,47 +33,129 @@ inline double theta_rough_row(const Eigen::MappedSparseMatrix<double>& Y,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Refined Newton iteration (one row)
+//  Refined Newton iteration (one row)  — with step damping
 // ─────────────────────────────────────────────────────────────────────────────
-inline double theta_refined_row(double                           t0,
+inline double theta_refined_row(double                                  t0,
                                 const Eigen::MappedSparseMatrix<double>& Y,
-                                int                               row,
-                                const VectorXd&                   mu,
-                                double                            dfr,
-                                int                               limit,
-                                double                            eps) {
-  const int n   = mu.size();
-  const auto* val_ptr = Y.valuePtr();   // direct raw pointers
-  const auto* idx_ptr = Y.innerIndexPtr();
+                                int                                      row,
+                                const VectorXd&                          mu,
+                                int                                      limit = 50,
+                                double                                   eps   = 1e-8)
+{
+  const int n = mu.size();
 
   for (int iter = 0; iter < limit; ++iter) {
-    t0 = std::fabs(t0);
+    t0 = std::fabs(t0);                       // keep θ positive
+
     double num = 0.0, den = 0.0;
     int    nz  = 0;
 
+    // ---------- non-zero counts --------------------------------------------
     for (Eigen::MappedSparseMatrix<double>::InnerIterator it(Y, row); it; ++it) {
-      const int    j    = it.index();
+      const int    j   = it.index();
       const double diff = it.value() - mu[j];
-      const double mu_j = mu[j];
+      const double mj   = mu[j];
 
-      num += (diff * diff) / (mu_j + mu_j * mu_j / t0);
-      den += (diff * diff) / std::pow(mu_j + t0, 2);
+      num += (diff * diff) / (mj + mj * mj / t0);
+      den += (diff * diff) / std::pow(mj + t0, 2);
       ++nz;
     }
 
-    // aggregate contribution from zero cells
+    // ---------- zero counts -------------------------------------------------
     const int n0 = n - nz;
     if (n0) {
-      const double mu_avg   = mu.mean();
-      const double diff0sq  = mu_avg * mu_avg;
+      const double mu_avg  = mu.mean();
+      const double diff0sq = mu_avg * mu_avg;
+
       num += n0 * (diff0sq / (mu_avg + mu_avg * mu_avg / t0));
       den += n0 * (diff0sq / std::pow(mu_avg + t0, 2));
     }
 
-    const double delta = (num - dfr) / den;
-    if (std::fabs(delta) < eps) break;
-    t0 -= delta;
+    // ---------- Newton step with damping -----------------------------------
+    if (std::fabs(den) < 1e-12) break;          // avoid division blow-up
+    double step = (num - static_cast<double>(n - 1)) / den;
+
+    // step size limitation
+    step = std::clamp(step, -5.0, 5.0);
+
+    if (std::fabs(step) < eps * (1.0 + t0))     // convergence
+      break;
+
+    t0 -= step;
   }
+
+  // guard against NaN / Inf
+  if (!std::isfinite(t0)) t0 = 1.0;
+  return t0;
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Newton–Raphson MLE of dispersion (single sparse row, Boost digamma)
+// ─────────────────────────────────────────────────────────────────────────────
+inline double theta_mle_row(double                                  t0,
+                            const Eigen::MappedSparseMatrix<double>&Y,
+                            int                                     row,
+                            const VectorXd&                         mu,
+                            int                                     limit  = 100,
+                            double                                  eps    = 1e-8)
+{
+  const int n = mu.size();
+  using boost::math::digamma;
+  using boost::math::polygamma;          // polygamma(1,x) = trigamma(x)
+
+  for (int iter = 0; iter < limit; ++iter) {
+    t0 = std::fabs(t0);                  // keep positive
+
+    double score = 0.0, info = 0.0;
+    int    nz    = 0;
+
+    // ----- non-zero counts ---------------------------------------------------
+    for (Eigen::MappedSparseMatrix<double>::InnerIterator it(Y, row); it; ++it) {
+      const int    j  = it.index();
+      const double y  = it.value();
+      const double mj = mu[j];
+
+      score += digamma(y + t0) - digamma(t0)
+             + std::log(t0) + 1.0
+             - std::log(t0 + mj)
+             - (y + t0) / (t0 + mj);
+
+      info  += polygamma(1, y + t0) - polygamma(1, t0)
+             + 1.0 / t0
+             - 2.0 / (t0 + mj)
+             + (y + t0) / std::pow(t0 + mj, 2);
+
+      ++nz;
+    }
+
+    // ----- zero counts -------------------------------------------------------
+    const int n0 = n - nz;
+    if (n0) {
+      const double mu_avg = mu.mean();
+
+      score += n0 * ( std::log(t0) + 1.0
+                    - std::log(t0 + mu_avg)
+                    - t0 / (t0 + mu_avg) );
+
+      info  += n0 * ( 1.0 / t0
+                    - 2.0 / (t0 + mu_avg)
+                    + t0 / std::pow(t0 + mu_avg, 2) );
+    }
+
+    // ----- Newton step with damping -----------------------------------------
+    if (std::fabs(info) < 1e-9) break;         // singular → give up
+    double step = score / info;
+    step = std::clamp(step, -5.0, 5.0);        // cap huge jumps
+
+    if (std::fabs(step) < eps * (1.0 + t0))    // converged
+      break;
+
+    t0 -= step;
+  }
+
+  // final guard
+  if (!std::isfinite(t0)) t0 = 1.0;
   return t0;
 }
 
@@ -108,15 +194,17 @@ Rcpp::NumericVector theta_batch_cpp(
       mu = lib_vec * rel_expr[g];
 
       // rough estimate
-      double t_est = theta_rough_row(Y, g, mu);
+      double t_0 = theta_rough_row(Y, g, mu);
+      double t_est = t_0;
 
       // optional refined Newton iteration
       if (!rough)
-        t_est = theta_refined_row(t_est, Y, g, mu,
-                                  /*dfr=*/C - 1, /*limit=*/50, eps);
+        t_est = theta_mle_row(t_0, Y, g, mu);
+      else
+        t_est = theta_refined_row(t_0, Y, g, mu);
 
       // clip to stable range
-      theta[g] = std::max(0.01, std::min(t_est, 1e3));
+      theta[g] = t_est;
     }
   }
   return theta;

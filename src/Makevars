@@ -3,6 +3,8 @@ CXX_STD = CXX17
 # Optimization flags
 PKG_CXXFLAGS = -O3 -march=native -mtune=native -ffast-math
 
+PKG_CXXFLAGS += -I/usr/include
+
 # Check whether OpenMP is available
 OPENMP_CXXFLAGS = -fopenmp
 OPENMP_LIBS = -fopenmp

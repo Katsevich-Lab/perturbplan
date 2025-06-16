@@ -37,4 +37,5 @@ Config/testthat/edition: 3
 LinkingTo: 
     PoissonBinomial,
     Rcpp,
-    RcppEigen
+    RcppEigen,
+    BH
