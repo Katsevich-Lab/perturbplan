@@ -118,31 +118,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_theta_cpp
-double compute_theta_cpp(NumericVector y, NumericVector mu, double dfr, int limit, double eps, bool rough);
-RcppExport SEXP _perturbplan_compute_theta_cpp(SEXP ySEXP, SEXP muSEXP, SEXP dfrSEXP, SEXP limitSEXP, SEXP epsSEXP, SEXP roughSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type mu(muSEXP);
-    Rcpp::traits::input_parameter< double >::type dfr(dfrSEXP);
-    Rcpp::traits::input_parameter< int >::type limit(limitSEXP);
-    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
-    Rcpp::traits::input_parameter< bool >::type rough(roughSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_theta_cpp(y, mu, dfr, limit, eps, rough));
-    return rcpp_result_gen;
-END_RCPP
-}
 // theta_batch_cpp
-Rcpp::NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y, const Rcpp::NumericVector& library_size, const Rcpp::NumericVector& rel_expr, bool rough, int n_threads);
+Rcpp::NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y, const NumericVector& library_size, const NumericVector& rel_expr, bool rough, int n_threads);
 RcppExport SEXP _perturbplan_theta_batch_cpp(SEXP YSEXP, SEXP library_sizeSEXP, SEXP rel_exprSEXP, SEXP roughSEXP, SEXP n_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const Eigen::MappedSparseMatrix<double>& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type library_size(library_sizeSEXP);
-    Rcpp::traits::input_parameter< const Rcpp::NumericVector& >::type rel_expr(rel_exprSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type library_size(library_sizeSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type rel_expr(rel_exprSEXP);
     Rcpp::traits::input_parameter< bool >::type rough(roughSEXP);
     Rcpp::traits::input_parameter< int >::type n_threads(n_threadsSEXP);
     rcpp_result_gen = Rcpp::wrap(theta_batch_cpp(Y, library_size, rel_expr, rough, n_threads));
@@ -207,7 +191,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_compute_BH_plan", (DL_FUNC) &_perturbplan_compute_BH_plan, 5},
     {"_perturbplan_compute_QC_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_QC_fixed_es_cpp, 7},
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
-    {"_perturbplan_compute_theta_cpp", (DL_FUNC) &_perturbplan_compute_theta_cpp, 6},
     {"_perturbplan_theta_batch_cpp", (DL_FUNC) &_perturbplan_theta_batch_cpp, 5},
     {"_perturbplan_compute_fc_curve_cpp", (DL_FUNC) &_perturbplan_compute_fc_curve_cpp, 7},
     {"_perturbplan_compute_expression_curve_cpp", (DL_FUNC) &_perturbplan_compute_expression_curve_cpp, 8},

@@ -8,7 +8,6 @@
 using namespace Rcpp;
 using Eigen::VectorXd;
 using Eigen::SparseVector;
-using Eigen::MappedSparseMatrix;
 using Rcpp::NumericVector;
 
 /*--------------------------------------------------------------
@@ -75,7 +74,7 @@ double theta_refined(double                     t0,
  *  Vectorised entry point
  *--------------------------------------------------------------*/
 // [[Rcpp::export]]
-Rcpp::NumericVector theta_batch_cpp(const MappedSparseMatrix<double>& Y,
+Rcpp::NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y,
                                     const NumericVector&             library_size,
                                     const NumericVector&             rel_expr,
                                     bool                              rough      = false,
