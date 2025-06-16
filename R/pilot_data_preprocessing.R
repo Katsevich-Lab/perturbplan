@@ -70,7 +70,7 @@ obtain_expression_information <- function(response_matrix,
                                           rough     = FALSE) {
 
   ## 1. library size per cell
-  print(paste0("Start relative expression calculation at", Sys.time()))
+  print(paste0("Start relative expression calculation at ", Sys.time()))
   library_size <- Matrix::colSums(response_matrix)
 
   ## 2. gene-level totals & TPM
@@ -79,21 +79,21 @@ obtain_expression_information <- function(response_matrix,
   TPM      <- rel_expr * 1e6
 
   keep_gene <- names(TPM)[TPM >= TPM_thres]
-  print(paste0("Finish relative expression calculation at", Sys.time()))
+  print(paste0("Finish relative expression calculation at ", Sys.time()))
   if (length(keep_gene) == 0)
     stop("No genes pass TPM threshold")
 
   ## 3. parallel estimation of theta
-  print(paste0("Start dispersion estimation at", Sys.time()))
+  print(paste0("Start dispersion estimation at ", Sys.time()))
   n_threads <- as.integer(Sys.getenv("NSLOTS", unset = "1"))
-  theta_vec <- theta_batch_cpp(
+  theta_vec <- theta_batch_eigen_optimized(
     response_matrix[keep_gene, , drop = FALSE],
     library_size,
     rel_expr[keep_gene],
     rough = rough,
     n_threads = n_threads
   )
-  print(paste0("Finish dispersion estimation at", Sys.time()))
+  print(paste0("Finish dispersion estimation at ", Sys.time()))
   ## 4. assemble result
   data.frame(
     response_id         = keep_gene,
