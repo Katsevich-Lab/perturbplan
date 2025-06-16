@@ -89,7 +89,7 @@ Rcpp::NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y,
 #ifdef HAS_OPENMP
   if (n_threads > 0)
     omp_set_num_threads(n_threads);
-#pragma omp parallel for schedule(dynamic, 32)
+#pragma omp parallel for schedule(static)
 #endif
   for (int g = 0; g < G; ++g) {
 
