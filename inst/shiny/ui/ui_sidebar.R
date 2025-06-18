@@ -6,7 +6,7 @@ create_sidebar <- function() {
     tags$div(
       style = "padding: 10px; max-height: 90vh; overflow-y: auto;",
       
-      # Experimental choices (collapsible)
+      # Experimental setup (collapsible)
       tags$div(
         style = "border-radius: 4px; margin-bottom: 5px;",
         tags$div(
@@ -14,13 +14,101 @@ create_sidebar <- function() {
           style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
           onclick = "toggleSection('experimental-content', 'exp-chevron')",
           tags$i(id = "exp-chevron", class = "fa fa-chevron-down", style = "margin-right: 8px;"),
-          tags$strong("Experimental choices")
+          tags$strong("Experimental setup")
         ),
         tags$div(
           id = "experimental-content",
           style = "padding: 15px;",
           selectInput("biological_system", "Biological system:", c("K562")),
           selectInput("experimental_platform", "Experimental platform:", c("10x Chromium v3")),
+          
+          # Baseline expression choice
+          selectInput("baseline_choice", "Baseline expression:",
+                     choices = c("Default" = "default", "Custom" = "custom"),
+                     selected = "default"),
+          
+          # Conditional panel for custom baseline upload
+          conditionalPanel(
+            condition = "input.baseline_choice == 'custom'",
+            tags$div(
+              class = "file-upload-info",
+              style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
+              tags$small(
+                tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
+                tags$strong("Format: "), "RDS file with same structure as extract_baseline_expression() output",
+                style = "font-size: 11px;"
+              )
+            ),
+            tags$div(
+              style = "margin-bottom: 15px;",
+              fileInput("baseline_file", 
+                       label = NULL,
+                       accept = c(".rds", ".RDS"),
+                       placeholder = "Choose RDS file...")
+            ),
+            conditionalPanel(
+              condition = "output.baseline_uploaded",
+              tags$div(
+                class = "file-upload-success",
+                style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
+                tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
+                htmlOutput("baseline_status", inline = TRUE)
+              )
+            )
+          ),
+          
+          # Library parameters choice (parallel to baseline expression)
+          tags$hr(style = "margin: 15px 0; border-color: #ddd;"),
+          
+          selectInput("library_choice", "Library parameters:",
+                     choices = c("Default" = "default", "Custom" = "custom"),
+                     selected = "default"),
+          
+          # Conditional panel for custom library upload
+          conditionalPanel(
+            condition = "input.library_choice == 'custom'",
+            tags$div(
+              class = "file-upload-info",
+              style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
+              tags$small(
+                tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
+                tags$strong("Format: "), "RDS file with same structure as extract_library_info() output",
+                style = "font-size: 11px;"
+              )
+            ),
+            tags$div(
+              style = "margin-bottom: 15px;",
+              fileInput("library_file", 
+                       label = NULL,
+                       accept = c(".rds", ".RDS"),
+                       placeholder = "Choose RDS file...")
+            ),
+            conditionalPanel(
+              condition = "output.library_uploaded",
+              tags$div(
+                class = "file-upload-success",
+                style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
+                tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
+                htmlOutput("library_status", inline = TRUE)
+              )
+            )
+          )
+        )
+      ),
+      
+      # Perturbation choices (collapsible)
+      tags$div(
+        style = "border-radius: 4px; margin-bottom: 5px;",
+        tags$div(
+          id = "perturbation-header",
+          style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
+          onclick = "toggleSection('perturbation-content', 'perturbation-chevron')",
+          tags$i(id = "perturbation-chevron", class = "fa fa-chevron-right", style = "margin-right: 8px;"),
+          tags$strong("Perturbation choices")
+        ),
+        tags$div(
+          id = "perturbation-content",
+          style = "padding: 15px;",
           numericInput("MOI", "MOI:", 10, 1, 30, 0.5),
           numericInput("num_targets", "Number of targets:", 100, 1, 1000),
           numericInput("gRNAs_per_target", "Number of gRNAs per target:", 4, 1, 10),
@@ -111,94 +199,6 @@ create_sidebar <- function() {
           numericInput("fc_mean", "Fold-change mean:", 0.85, 1.1, 10, 0.05),
           numericInput("fc_sd", "Fold-change SD:", 0.15, 0.1, 5, 0.05),
           numericInput("prop_non_null", "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
-        )
-      ),
-      
-      # Pilot data choice (collapsible)
-      tags$div(
-        style = "border-radius: 4px; margin-bottom: 5px;",
-        tags$div(
-          id = "pilot-header",
-          style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
-          onclick = "toggleSection('pilot-content', 'pilot-chevron')",
-          tags$i(id = "pilot-chevron", class = "fa fa-chevron-right", style = "margin-right: 8px;"),
-          tags$strong("Pilot data choice")
-        ),
-        tags$div(
-          id = "pilot-content",
-          style = "padding: 15px;",
-          
-          # Baseline expression choice
-          selectInput("baseline_choice", "Baseline expression:",
-                     choices = c("Default" = "default", "Custom" = "custom"),
-                     selected = "default"),
-          
-          # Conditional panel for custom baseline upload
-          conditionalPanel(
-            condition = "input.baseline_choice == 'custom'",
-            tags$div(
-              class = "file-upload-info",
-              style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
-              tags$small(
-                tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
-                tags$strong("Format: "), "RDS file with same structure as extract_baseline_expression() output",
-                style = "font-size: 11px;"
-              )
-            ),
-            tags$div(
-              style = "margin-bottom: 15px;",
-              fileInput("baseline_file", 
-                       label = NULL,
-                       accept = c(".rds", ".RDS"),
-                       placeholder = "Choose RDS file...")
-            ),
-            conditionalPanel(
-              condition = "output.baseline_uploaded",
-              tags$div(
-                class = "file-upload-success",
-                style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
-                tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
-                htmlOutput("baseline_status", inline = TRUE)
-              )
-            )
-          ),
-          
-          # Library parameters choice (parallel to baseline expression)
-          tags$hr(style = "margin: 15px 0; border-color: #ddd;"),
-          
-          selectInput("library_choice", "Library parameters:",
-                     choices = c("Default" = "default", "Custom" = "custom"),
-                     selected = "default"),
-          
-          # Conditional panel for custom library upload
-          conditionalPanel(
-            condition = "input.library_choice == 'custom'",
-            tags$div(
-              class = "file-upload-info",
-              style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
-              tags$small(
-                tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
-                tags$strong("Format: "), "RDS file with same structure as extract_library_info() output",
-                style = "font-size: 11px;"
-              )
-            ),
-            tags$div(
-              style = "margin-bottom: 15px;",
-              fileInput("library_file", 
-                       label = NULL,
-                       accept = c(".rds", ".RDS"),
-                       placeholder = "Choose RDS file...")
-            ),
-            conditionalPanel(
-              condition = "output.library_uploaded",
-              tags$div(
-                class = "file-upload-success",
-                style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
-                tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
-                htmlOutput("library_status", inline = TRUE)
-              )
-            )
-          )
         )
       ),
       
