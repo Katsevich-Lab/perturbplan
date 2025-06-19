@@ -440,3 +440,22 @@ Variation: X.XXXe-XX"
 - **Repository Consistency**: The remote repository should always reflect the complete current state of the local development environment
 
 This ensures repository consistency and prevents issues with uncommitted changes being left behind during development sessions.
+
+## Shiny UI Tab Modification Guidelines
+
+**IMPORTANT**: When making modifications to tabs in the Shiny UI, always ensure changes align with existing patterns:
+
+- **Tab Header Colors**: Follow the established color scheme defined in CSS selectors (e.g., `#exp-header`, `#perturbation-header`, `#analysis-header`, `#effects-header`)
+- **Collapsibility**: Maintain the collapsible functionality with proper JavaScript integration
+- **CSS Consistency**: Update all relevant CSS selectors and JavaScript arrays when adding/removing/modifying tabs
+- **Pattern Matching**: New tabs should follow the exact same structure as existing tabs:
+  - Header styling with hover effects
+  - Chevron icons with proper rotation
+  - Content containers with consistent padding and background
+  - Display states (`display: none` for collapsed, `display: block` for expanded)
+
+When adding or modifying tabs, check:
+1. CSS selectors in `ui_styles.R` include the new tab IDs
+2. JavaScript arrays (`allSections`, `allChevrons`) are updated
+3. Initial state setup includes the new tab
+4. Color scheme and hover effects match existing tabs

@@ -299,7 +299,11 @@ summary_h5_data <- function(QC_data){
 #'
 #' @inheritParams library_computation
 #'
-#' @return Named vector of average total UMI per cell and UMI variation.
+#' @return A list with elements:
+#' \describe{
+#'   \item{UMI_per_cell}{Total UMI per cell parameter}
+#'   \item{variation}{Variation parameter characterizing PCR bias}
+#' }
 #' @export
 
 library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
@@ -307,9 +311,10 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
   total_UMIs <- stats::coef(library_model)["total_UMIs"]
   umi_variation <- stats::coef(library_model)["D2"]
 
-  return(
-    stats::setNames(c(total_UMIs, umi_variation), c("umi_per_cell", "umi_variation"))
-  )
+  return(list(
+    UMI_per_cell = unname(as.numeric(total_UMIs)),
+    variation = unname(as.numeric(umi_variation))
+  ))
 }
 
 

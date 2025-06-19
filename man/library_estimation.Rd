@@ -17,7 +17,11 @@ Must be between 0 and 1.}
 Represents the variation parameter in the saturation curve.}
 }
 \value{
-Named vector of average total UMI per cell and UMI variation.
+A list with elements:
+\describe{
+\item{UMI_per_cell}{Total UMI per cell parameter}
+\item{variation}{Variation parameter characterizing PCR bias}
+}
 }
 \description{
 Compute the average total UMI per cell and UMI variation parameters.

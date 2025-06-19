@@ -14,8 +14,8 @@ input_check_power_function(
   fold_change_sd = NULL,
   num_planned_cells = NULL,
   control_group = NULL,
-  umi_per_cell = NULL,
-  umi_variation = NULL,
+  UMI_per_cell = NULL,
+  variation = NULL,
   side = NULL,
   multiple_testing_method = NULL,
   multiple_testing_alpha = NULL,
@@ -57,10 +57,10 @@ of cells before losses in library preparation.}
 \code{"complement"} or \code{"nt_cells"}. This is passed to
 \code{compute_power_posthoc}.}
 
-\item{umi_per_cell}{A numeric value specifying the theoretical saturation level (in UMIs)
+\item{UMI_per_cell}{A numeric value specifying the theoretical saturation level (in UMIs)
 for each cell.}
 
-\item{umi_variation}{A numeric value controlling how overdispersion in UMIs per read
+\item{variation}{A numeric value controlling how overdispersion in UMIs per read
 is modeled.}
 
 \item{side}{(Optional) A character string specifying the side of the test, either

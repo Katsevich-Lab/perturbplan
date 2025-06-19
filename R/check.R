@@ -244,8 +244,8 @@ input_check_power_function <- function(
     fold_change_sd = NULL,
     num_planned_cells = NULL,
     control_group = NULL,
-    umi_per_cell = NULL,
-    umi_variation = NULL,
+    UMI_per_cell = NULL,
+    variation = NULL,
     side = NULL,
     multiple_testing_method = NULL,
     multiple_testing_alpha = NULL,
@@ -275,11 +275,11 @@ input_check_power_function <- function(
   if (is.null(num_planned_cells) || !is.numeric(num_planned_cells) || num_planned_cells <= 0) {
     stop("`num_planned_cells` must be a positive numeric value.")
   }
-  if (is.null(umi_per_cell) || !is.numeric(umi_per_cell) || umi_per_cell <= 0) {
-    stop("`umi_per_cell` must be a positive numeric value.")
+  if (is.null(UMI_per_cell) || !is.numeric(UMI_per_cell) || UMI_per_cell <= 0) {
+    stop("`UMI_per_cell` must be a positive numeric value.")
   }
-  if (is.null(umi_variation) || !is.numeric(umi_variation) || umi_variation < 0 || umi_variation > 1) {
-    stop("`umi_variation` must be a numeric value in [0,1].")
+  if (is.null(variation) || !is.numeric(variation) || variation < 0 || variation > 1) {
+    stop("`variation` must be a numeric value in [0,1].")
   }
 
   ###################### Effect Sizes Checks ######################

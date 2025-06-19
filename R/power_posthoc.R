@@ -194,9 +194,9 @@ compute_power_posthoc <- function(
 #' @param control_group A character string specifying the control group, either
 #'   \code{"complement"} or \code{"nt_cells"}. This is passed to
 #'   \code{compute_power_posthoc}.
-#' @param umi_per_cell A numeric value specifying the theoretical saturation level (in UMIs)
+#' @param UMI_per_cell A numeric value specifying the theoretical saturation level (in UMIs)
 #'   for each cell.
-#' @param umi_variation A numeric value controlling how overdispersion in UMIs per read
+#' @param variation A numeric value controlling how overdispersion in UMIs per read
 #'   is modeled.
 #' @param side (Optional) A character string specifying the side of the test, either
 #'   \code{"left"}, \code{"right"}, or \code{"both"}. Defaults to \code{"both"}.
@@ -233,7 +233,7 @@ power_function <- function(
     ######################## specify the power-determining parameters ##########
     cells_per_grna, baseline_relative_expression_stats,
     fold_change_mean, fold_change_sd, num_planned_cells, control_group,
-    umi_per_cell, umi_variation,
+    UMI_per_cell, variation,
 
     ###################### specify test-related parameters #####################
     side = "both", multiple_testing_method = "BH", multiple_testing_alpha = 0.1,
@@ -251,8 +251,8 @@ power_function <- function(
   reads_per_cell <- num_total_reads*mapping_efficiency/num_total_cells
 
   # compute the averaged library size with read per cell
-  avg_library_size <- umi_per_cell * (1 - exp(-reads_per_cell / umi_per_cell) *
-                                        (1 + umi_variation * reads_per_cell^2 / (2*umi_per_cell^2)))
+  avg_library_size <- UMI_per_cell * (1 - exp(-reads_per_cell / UMI_per_cell) *
+                                        (1 + variation * reads_per_cell^2 / (2*UMI_per_cell^2)))
 
   ####### perform power calculation with power-determining parameters ##########
 

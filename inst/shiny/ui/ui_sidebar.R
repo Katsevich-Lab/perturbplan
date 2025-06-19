@@ -104,7 +104,7 @@ create_sidebar <- function() {
           style = "padding: 10px 15px; cursor: pointer; border-radius: 4px 4px 0 0;",
           onclick = "toggleSection('perturbation-content', 'perturbation-chevron')",
           tags$i(id = "perturbation-chevron", class = "fa fa-chevron-right", style = "margin-right: 8px;"),
-          tags$strong("Perturbation choices")
+          tags$strong("Perturbation design")
         ),
         tags$div(
           id = "perturbation-content",
