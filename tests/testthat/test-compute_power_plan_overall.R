@@ -25,9 +25,12 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   side <- "both"
   prop_non_null <- 0.3
   
+  # Calculate treatment cells first
+  num_trt_cells <- gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+  
   # Get integrated result
   integrated_result <- compute_power_plan_overall(
-    num_total_cells = num_total_cells,
+    num_trt_cells = num_trt_cells,
     library_size = library_size,
     MOI = MOI,
     num_targets = num_targets,
@@ -52,7 +55,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   
   # Manual calculation step 1: Cell count allocation
   # Replicate exact logic from the function
-  manual_num_trt_cells <- gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+  manual_num_trt_cells <- num_trt_cells
   manual_num_cntrl_cells <- switch(control_group,
                                   complement = {
                                     num_total_cells - manual_num_trt_cells
@@ -110,7 +113,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   
   # Test simple return mode consistency
   simple_result <- compute_power_plan_overall(
-    num_total_cells = num_total_cells,
+    num_trt_cells = num_trt_cells,
     library_size = library_size,
     MOI = MOI,
     num_targets = num_targets,
@@ -130,7 +133,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   
   # Test different control group method
   integrated_result_nt <- compute_power_plan_overall(
-    num_total_cells = num_total_cells,
+    num_trt_cells = num_trt_cells,
     library_size = library_size,
     MOI = MOI,
     num_targets = num_targets,
@@ -158,7 +161,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   # Test different test sides
   for (test_side in c("left", "right", "both")) {
     side_result <- compute_power_plan_overall(
-      num_total_cells = num_total_cells,
+      num_trt_cells = num_trt_cells,
       library_size = library_size,
       fc_expression_df = fc_expression_df,
       side = test_side,

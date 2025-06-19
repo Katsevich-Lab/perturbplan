@@ -20,7 +20,7 @@ compute_power_grid_overall(
 )
 }
 \arguments{
-\item{cells_reads_df}{Data frame with columns num_total_cells and reads_per_cell}
+\item{cells_reads_df}{Data frame with columns num_total_cells, reads_per_cell, and num_trt_cells}
 
 \item{fc_expression_info}{List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve}
 

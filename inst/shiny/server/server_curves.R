@@ -55,7 +55,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       
       if (!is.null(curve_data) && nrow(curve_data) > 0) {
         # Extract values and ensure they're numeric
-        cells_val <- as.numeric(tiles_info$cells[i])
+        cells_val <- round(as.numeric(tiles_info$cells[i]))
         reads_val <- as.numeric(tiles_info$reads[i])
         
         if (curve_type == "fc") {
@@ -134,7 +134,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         # Create factor variables for cells (color) and reads per cell (linetype and shape)
         dfs1$cells_factor <- factor(dfs1$cells,
                                    levels = sort(unique(dfs1$cells)),
-                                   labels = paste0(sort(unique(dfs1$cells)), " cells"))
+                                   labels = paste0(sort(unique(dfs1$cells)), " treatment cells"))
         dfs1$reads_factor <- factor(dfs1$reads,
                                    levels = sort(unique(dfs1$reads)),
                                    labels = sort(unique(dfs1$reads)))
@@ -164,14 +164,14 @@ create_curves_server <- function(input, output, session, power_data, selection_d
                 ggside.panel.scale = 0.3,
                 legend.position = "right") +
           labs(x = "Expression Level (TPM)", y = "Power", 
-               colour = "Number of cells", linetype = "Reads per cell", shape = "Reads per cell")
+               colour = "Number of treatment cells", linetype = "Reads per cell", shape = "Reads per cell")
         
       } else if (display_mode == "facet_cells") {
         # Facet by number of cells (horizontal panels)
         # Convert cells to factor for faceting to avoid ggplot2 internal issues
         dfs1$cells_factor <- factor(dfs1$cells, 
                                    levels = sort(unique(dfs1$cells)),
-                                   labels = paste0("cells: ", sort(unique(dfs1$cells))))
+                                   labels = paste0("treatment cells: ", sort(unique(dfs1$cells))))
         # Create reads factor for coloring
         dfs1$reads_factor <- factor(dfs1$reads,
                                    levels = sort(unique(dfs1$reads)),
@@ -220,7 +220,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
                 legend.position = "bottom",
                 strip.text = element_text(size = 12),
                 aspect.ratio = 1) +
-          labs(x = "Expression Level (TPM)", y = "Power", colour = "Number of cells")
+          labs(x = "Expression Level (TPM)", y = "Power", colour = "Number of treatment cells")
       }
     } else {
       ggplot() + theme_void()
@@ -290,7 +290,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         # Create factor variables for cells (color) and reads per cell (linetype and shape)
         dfs2$cells_factor <- factor(dfs2$cells,
                                    levels = sort(unique(dfs2$cells)),
-                                   labels = paste0(sort(unique(dfs2$cells)), " cells"))
+                                   labels = paste0(sort(unique(dfs2$cells)), " treatment cells"))
         dfs2$reads_factor <- factor(dfs2$reads,
                                    levels = sort(unique(dfs2$reads)),
                                    labels = sort(unique(dfs2$reads)))
@@ -315,7 +315,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
           scale_shape_manual(values = shape_values) +
           scale_linetype_manual(values = linetype_values) +
           labs(x = "Fold Change", y = "Power", 
-               colour = "Number of cells", linetype = "Reads per cell", shape = "Reads per cell") +
+               colour = "Number of treatment cells", linetype = "Reads per cell", shape = "Reads per cell") +
           {if (input$side %in% c("left", "right")) geom_vline(xintercept = 1, linetype = "dotted", colour = "darkgrey", alpha = 0.8)} +
           theme_bw(base_size = 16) +
           theme(aspect.ratio = 1,
@@ -327,7 +327,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         # Convert cells to factor for faceting to avoid ggplot2 internal issues
         dfs2$cells_factor <- factor(dfs2$cells,
                                    levels = sort(unique(dfs2$cells)),
-                                   labels = paste0("cells: ", sort(unique(dfs2$cells))))
+                                   labels = paste0("treatment cells: ", sort(unique(dfs2$cells))))
         # Create reads factor for coloring
         dfs2$reads_factor <- factor(dfs2$reads,
                                    levels = sort(unique(dfs2$reads)),
@@ -375,7 +375,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
                              bins = 60, fill = "pink", alpha = 0.7, inherit.aes = FALSE) +
           scale_x_continuous(limits = x_limits) +
           scale_xsidey_continuous() +
-          labs(x = "Fold Change", y = "Power", colour = "Number of cells")
+          labs(x = "Fold Change", y = "Power", colour = "Number of treatment cells")
         
         # Add vertical line at fold change = 1 for reference
         if (input$side %in% c("left", "right")) {
@@ -450,8 +450,12 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       openxlsx::writeData(wb, "1_Parameters", params_df)
       
       # 2. Add power grid sheet (main results)
+      # Rename columns to be more descriptive
+      power_grid_clean <- power_data_results$power_grid
+      colnames(power_grid_clean) <- c("Treatment_Cells", "Reads_per_Cell", "Power")
+      
       openxlsx::addWorksheet(wb, "2_Power_Grid")
-      openxlsx::writeData(wb, "2_Power_Grid", power_data_results$power_grid)
+      openxlsx::writeData(wb, "2_Power_Grid", power_grid_clean)
       
       # 3. Add gene list if uploaded
       if (!is.null(power_data$gene_list()) && length(power_data$gene_list()) > 0) {
@@ -469,8 +473,8 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         
         # Add tiles info first with logical column order
         tiles_info_clean <- data.frame(
-          Design = paste0(curves_data$tiles_info$cells, " × ", curves_data$tiles_info$reads),
-          Cells = curves_data$tiles_info$cells,
+          Design = paste0(round(curves_data$tiles_info$cells), " × ", curves_data$tiles_info$reads),
+          Treatment_Cells = round(curves_data$tiles_info$cells),
           Reads_per_Cell = curves_data$tiles_info$reads,
           stringsAsFactors = FALSE
         )
@@ -484,8 +488,8 @@ create_curves_server <- function(input, output, session, power_data, selection_d
             if (!is.null(fc_data) && nrow(fc_data) > 0) {
               # Reorder columns logically
               fc_clean <- data.frame(
-                Design = paste0(curves_data$tiles_info$cells[i], " × ", curves_data$tiles_info$reads[i]),
-                Cells = curves_data$tiles_info$cells[i],
+                Design = paste0(round(curves_data$tiles_info$cells[i]), " × ", curves_data$tiles_info$reads[i]),
+                Treatment_Cells = round(curves_data$tiles_info$cells[i]),
                 Reads_per_Cell = curves_data$tiles_info$reads[i],
                 Fold_Change = fc_data$fold_change,
                 Power = fc_data$power,
@@ -509,8 +513,8 @@ create_curves_server <- function(input, output, session, power_data, selection_d
             if (!is.null(expr_data) && nrow(expr_data) > 0) {
               # Reorder columns logically
               expr_clean <- data.frame(
-                Design = paste0(curves_data$tiles_info$cells[i], " × ", curves_data$tiles_info$reads[i]),
-                Cells = curves_data$tiles_info$cells[i],
+                Design = paste0(round(curves_data$tiles_info$cells[i]), " × ", curves_data$tiles_info$reads[i]),
+                Treatment_Cells = round(curves_data$tiles_info$cells[i]),
                 Reads_per_Cell = curves_data$tiles_info$reads[i],
                 Expression_TPM = expr_data$relative_expression * 1e6,
                 Power = expr_data$power,

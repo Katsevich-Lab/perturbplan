@@ -1,7 +1,7 @@
 # Power calculation function using optimized approach for Shiny app integration
 
 # Suppress R CMD check warnings for variables used in dplyr contexts
-utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell"))
+utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell", "num_trt_cells"))
 
 #' Calculate power grid for app heatmap visualization (lightweight)
 #'
@@ -45,7 +45,10 @@ calculate_power_grid <- function(
   cells_reads_df <- expand.grid(
     num_total_cells = cells_seq,
     reads_per_cell = reads_seq
-  )
+  ) |>
+    dplyr::mutate(
+      num_trt_cells = gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+    )
 
   # Call the lightweight power function (overall power only, no curves)
   power_results <- compute_power_grid_overall(
@@ -65,7 +68,7 @@ calculate_power_grid <- function(
 
   # Transform to expected format for heatmap
   power_grid <- data.frame(
-    cells = power_results$num_total_cells,
+    cells = round(power_results$num_trt_cells),  # Display treatment cells as integers
     reads = power_results$reads_per_cell,
     power = power_results$overall_power
   )
@@ -73,7 +76,7 @@ calculate_power_grid <- function(
   # Return structure compatible with Shiny app
   list(
     power_grid = power_grid,
-    cells_seq = cells_seq,
+    cells_seq = sort(unique(power_grid$cells)),  # Treatment cell sequence for axis
     reads_seq = reads_seq,
     parameters = list(
       num_targets = num_targets,
@@ -128,7 +131,10 @@ calculate_power_curves <- function(
   cells_reads_df <- data.frame(
     num_total_cells = selected_tiles$cells,
     reads_per_cell = selected_tiles$reads
-  )
+  ) |>
+    dplyr::mutate(
+      num_trt_cells = gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+    )
 
   # Call the detailed power function for selected tiles only
   power_results <- compute_power_grid_full(
@@ -164,7 +170,7 @@ calculate_power_curves <- function(
 #' This function computes only overall power for each cell/read combination
 #' without the expensive curve calculations. Used for heatmap generation.
 #'
-#' @param cells_reads_df Data frame with columns num_total_cells and reads_per_cell
+#' @param cells_reads_df Data frame with columns num_total_cells, reads_per_cell, and num_trt_cells
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #' @param num_targets Number of targets to test
@@ -210,7 +216,7 @@ compute_power_grid_overall <- function(
     dplyr::mutate(
       overall_power = compute_power_plan_overall(
         # experimental information
-        num_total_cells = num_total_cells, library_size = library_size, MOI = MOI,
+        num_trt_cells = num_trt_cells, library_size = library_size, MOI = MOI,
         num_targets = num_targets, gRNAs_per_target = gRNAs_per_target,
         non_targeting_gRNAs = non_targeting_gRNAs,
         # analysis information
@@ -235,7 +241,7 @@ compute_power_grid_overall <- function(
 #' This function uses C++ implementations for computational efficiency in power analysis
 #' for perturb-seq experiments across different experimental conditions.
 #'
-#' @param cells_reads_df Data frame with columns num_total_cells and reads_per_cell
+#' @param cells_reads_df Data frame with columns num_total_cells, reads_per_cell, and num_trt_cells
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #' @param num_targets Number of targets to test
@@ -334,7 +340,7 @@ compute_power_grid_full <- function(
       power_output = list(
         compute_power_plan_full(
           # experimental information
-          num_total_cells = num_total_cells, library_size = library_size, MOI = MOI,
+          num_trt_cells = num_trt_cells, library_size = library_size, MOI = MOI,
           num_targets = num_targets, gRNAs_per_target = gRNAs_per_target,
           non_targeting_gRNAs = non_targeting_gRNAs,
           # analysis information
@@ -365,7 +371,7 @@ compute_power_grid_full <- function(
 #' This function replaces the R Monte Carlo for loop with C++ implementation
 #' for improved performance.
 #'
-#' @param num_total_cells Total number of cells
+#' @param num_trt_cells Number of treatment cells
 #' @param library_size Library size (reads per cell)
 #' @param MOI Multiplicity of infection
 #' @param num_targets Number of targets
@@ -384,7 +390,7 @@ compute_power_grid_full <- function(
 #' @export
 compute_power_plan_full <- function(
     # experimental information
-  num_total_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
+  num_trt_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
   # analysis information
   multiple_testing_alpha = 0.05, multiple_testing_method = "BH", control_group = "complement", side = "left",
   # separated approach information
@@ -393,7 +399,7 @@ compute_power_plan_full <- function(
   ################ compute shared results (overall power, cutoff, cell counts) ################
   lightweight_results <- compute_power_plan_overall(
     # experimental information
-    num_total_cells = num_total_cells, library_size = library_size, MOI = MOI,
+    num_trt_cells = num_trt_cells, library_size = library_size, MOI = MOI,
     num_targets = num_targets, gRNAs_per_target = gRNAs_per_target,
     non_targeting_gRNAs = non_targeting_gRNAs,
     # analysis information
@@ -456,7 +462,7 @@ compute_power_plan_full <- function(
 #' This function computes overall power, BH cutoff, and cell counts without expensive curve calculations.
 #' Used for heatmap generation and as a base for detailed curve computation.
 #'
-#' @param num_total_cells Total number of cells
+#' @param num_trt_cells Number of treatment cells
 #' @param library_size Library size (reads per cell)
 #' @param MOI Multiplicity of infection
 #' @param num_targets Number of targets
@@ -473,14 +479,16 @@ compute_power_plan_full <- function(
 #' @export
 compute_power_plan_overall <- function(
     # experimental information
-  num_total_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
+  num_trt_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
   # analysis information
   multiple_testing_alpha = 0.05, multiple_testing_method = "BH", control_group = "complement", side = "left",
   # separated approach information
   fc_expression_df, prop_non_null = 0.1, return_full_results = FALSE){
 
-  ################ compute the treatment and control cells #####################
-  num_trt_cells <- gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+  ################ compute the control cells #####################
+  # Treatment cells already provided as parameter
+  # Calculate total cells from treatment cells for control group calculation
+  num_total_cells <- num_trt_cells * (num_targets * gRNAs_per_target + non_targeting_gRNAs) / (gRNAs_per_target * MOI)
   num_cntrl_cells <- round(switch(control_group,
                                   complement = {
                                     num_total_cells - num_trt_cells

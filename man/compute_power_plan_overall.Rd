@@ -5,7 +5,7 @@
 \title{Compute overall power for power analysis (lightweight computation)}
 \usage{
 compute_power_plan_overall(
-  num_total_cells,
+  num_trt_cells,
   library_size,
   MOI = 10,
   num_targets = 100,
@@ -21,7 +21,7 @@ compute_power_plan_overall(
 )
 }
 \arguments{
-\item{num_total_cells}{Total number of cells}
+\item{num_trt_cells}{Number of treatment cells}
 
 \item{library_size}{Library size (reads per cell)}
 

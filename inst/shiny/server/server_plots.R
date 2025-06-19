@@ -18,7 +18,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
       theme_bw(base_size = 16)+
       theme(panel.grid=element_blank(),
             aspect.ratio = 1)+
-      labs(x="Reads per cell",y="Number of cells",fill="Power")
+      labs(x="Reads per cell",y="Number of treatment cells",fill="Power")
   })
   
   # Selection overlay (isolated from base heatmap)
@@ -72,7 +72,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
     req(power_data$planned(), !is.null(selection_data$slice_mode()))
     lab <- if (identical(selection_data$slice_mode(),"row"))
       "Drill down by number of reads / cell:<br/>(click to select multiple points)"
-    else "Drill down by number of cells:<br/>(click to select multiple points)"
+    else "Drill down by number of treatment cells:<br/>(click to select multiple points)"
     textInput("slice_points", HTML(lab),
               if (length(selection_data$slice_x())) paste(selection_data$slice_x(), collapse=", ") else "")
   })
@@ -82,7 +82,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
     if (identical(selection_data$slice_mode(),"row"))
       sprintf("Power versus reads per cell")
     else if (identical(selection_data$slice_mode(),"col"))
-      sprintf("Power vs number of cells")
+      sprintf("Power vs number of treatment cells")
     else "Slice view"
   })
   
@@ -98,7 +98,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
         geom_vline(xintercept=selection_data$slice_x(),colour="red")+
         theme_bw(base_size = 16)+
         theme(aspect.ratio = 1) +
-        labs(x="Reads per cell",y="Power",colour="Cells")
+        labs(x="Reads per cell",y="Power",colour="Treatment cells")
     } else {
       sub <- subset(df, reads %in% power_data$reads_seq()[selection_data$sel$idx])
       ggplot(sub,aes(cells,power,colour=factor(reads)))+
@@ -108,7 +108,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
         geom_vline(xintercept=selection_data$slice_x(),colour="red")+
         theme_bw(base_size = 16)+
         theme(aspect.ratio = 1) +
-        labs(x="Number of cells",y="Power",colour="Reads")
+        labs(x="Number of treatment cells",y="Power",colour="Reads")
     }
   })
 

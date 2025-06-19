@@ -23,9 +23,7 @@ Imports:
     methods,
     utils,
     Matrix,
-    sceptre,
-    shiny,
-    RcppEigen
+    shiny
 Suggests: 
     knitr,
     rmarkdown,

@@ -66,7 +66,7 @@ create_overall_power_tab <- function() {
             condition = "input.overall_subtabs == 'overall_heatmap'",
             radioButtons(
               "mode", "Drill down by:",
-              c("Number of cells (click one or more rows)" = "cells",
+              c("Number of treatment cells (click one or more rows)" = "cells",
                 "Reads per cell (click one or more columns)" = "reads", 
                 "Both (click one or more tiles)" = "tile"),
               selected = "cells"
@@ -130,7 +130,7 @@ create_curves_tab <- function() {
           radioButtons(
             "curves_display_mode", "Display designs:",
             c("All together" = "all_together",
-              "Facet over cells" = "facet_cells", 
+              "Facet over treatment cells" = "facet_cells", 
               "Facet over reads per cell" = "facet_reads"),
             selected = "all_together"
           )
