@@ -650,6 +650,119 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
   ))
 }
 
+#' Validate combined pilot data RDS file structure
+#'
+#' @description
+#' This function validates the structure of a combined pilot data RDS file that contains
+#' both baseline expression data and library parameters in a single list.
+#'
+#' @param data A list object loaded from an RDS file, expected to contain:
+#'   \itemize{
+#'     \item baseline_expression: A list with baseline expression data and dispersion curve
+#'     \item library_parameters: A list with UMI_per_cell and variation parameters
+#'   }
+#' @param file_path Character. Path or description of the uploaded file for error messages.
+#'
+#' @return A list with elements:
+#' \describe{
+#'   \item{valid}{Logical indicating if validation passed}
+#'   \item{data}{The validated data (if valid) or NULL}
+#'   \item{errors}{Character vector of error messages}
+#'   \item{warnings}{Character vector of warning messages}
+#'   \item{summary}{HTML-formatted summary text for display}
+#' }
+#'
+#' @details
+#' This function validates the overall structure of the combined pilot data, then
+#' delegates validation of individual components to \code{\link{validate_custom_baseline_rds}}
+#' and \code{\link{validate_custom_library_rds}}.
+#'
+#' Expected structure:
+#' \preformatted{
+#' list(
+#'   baseline_expression = list(
+#'     baseline_expression = data.frame(...),
+#'     expression_dispersion_curve = function(v) {...}
+#'   ),
+#'   library_parameters = list(
+#'     UMI_per_cell = numeric_value,
+#'     variation = numeric_value
+#'   )
+#' )
+#' }
+#'
+#' @seealso
+#' \code{\link{validate_custom_baseline_rds}} for baseline expression validation
+#' \code{\link{validate_custom_library_rds}} for library parameter validation
+#' @export
+validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
+  
+  errors <- character(0)
+  warnings <- character(0)
+  summary_parts <- character(0)
+  
+  # Check if data is a list
+  if (!is.list(data)) {
+    errors <- c(errors, paste("RDS data must be a list, but received:", class(data)[1]))
+    return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
+  }
+  
+  # Check required top-level elements
+  required_elements <- c("baseline_expression", "library_parameters")
+  missing_elements <- setdiff(required_elements, names(data))
+  if (length(missing_elements) > 0) {
+    errors <- c(errors, paste("Missing required list elements:", paste(missing_elements, collapse = ", ")))
+    errors <- c(errors, "Expected structure: list(baseline_expression = ..., library_parameters = ...)")
+    return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
+  }
+  
+  # Check for unexpected top-level elements
+  unexpected_elements <- setdiff(names(data), required_elements)
+  if (length(unexpected_elements) > 0) {
+    warnings <- c(warnings, paste("Unexpected top-level elements will be ignored:", paste(unexpected_elements, collapse = ", ")))
+  }
+  
+  # Validate baseline_expression component
+  baseline_result <- validate_custom_baseline_rds(data$baseline_expression, 
+                                                  paste0(file_path, " > baseline_expression"))
+  
+  # Validate library_parameters component  
+  library_result <- validate_custom_library_rds(data$library_parameters,
+                                                paste0(file_path, " > library_parameters"))
+  
+  # Combine validation results
+  all_errors <- c(errors, baseline_result$errors, library_result$errors)
+  all_warnings <- c(warnings, baseline_result$warnings, library_result$warnings)
+  
+  # Create combined summary
+  if (baseline_result$valid && library_result$valid) {
+    summary_parts <- c(baseline_result$summary, library_result$summary)
+    combined_summary <- paste(summary_parts, collapse = "<br/>")
+  } else {
+    combined_summary <- ""
+  }
+  
+  # Overall validation status
+  valid <- length(all_errors) == 0
+  
+  # Prepare validated data
+  validated_data <- NULL
+  if (valid) {
+    validated_data <- list(
+      baseline_expression = baseline_result$data,
+      library_parameters = library_result$data
+    )
+  }
+  
+  return(list(
+    valid = valid,
+    data = validated_data,
+    errors = all_errors,
+    warnings = all_warnings,
+    summary = combined_summary
+  ))
+}
+
 #' Compute effective library size from read depth using UMI saturation curve
 #'
 #' @description

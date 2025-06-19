@@ -175,14 +175,15 @@ create_power_server <- function(input, output, session) {
     }
   })
 
-  # Baseline expression file upload handling
+  # Combined pilot data file upload handling
   custom_baseline <- reactiveVal(NULL)
+  custom_library <- reactiveVal(NULL)
   
-  observeEvent(input$baseline_file, {
-    req(input$baseline_file, input$baseline_choice == "custom")
+  observeEvent(input$pilot_data_file, {
+    req(input$pilot_data_file, input$pilot_data_choice == "custom")
     
     # Check file size (limit to 50MB for RDS files)
-    file_size_mb <- file.size(input$baseline_file$datapath) / (1024^2)
+    file_size_mb <- file.size(input$pilot_data_file$datapath) / (1024^2)
     if (file_size_mb > 50) {
       showNotification(
         paste("File size (", round(file_size_mb, 1), "MB) exceeds the 50MB limit. Please use a smaller dataset."),
@@ -196,17 +197,19 @@ create_power_server <- function(input, output, session) {
     
     tryCatch({
       # Read the uploaded RDS file
-      file_ext <- tolower(tools::file_ext(input$baseline_file$name))
+      file_ext <- tolower(tools::file_ext(input$pilot_data_file$name))
       
       if (file_ext == "rds") {
         # Read RDS file
-        uploaded_data <- readRDS(input$baseline_file$datapath)
+        uploaded_data <- readRDS(input$pilot_data_file$datapath)
         
-        # Validate the custom baseline data structure
-        validation_result <- perturbplan::validate_custom_baseline_rds(uploaded_data, input$baseline_file$name)
+        # Validate the combined pilot data structure
+        validation_result <- perturbplan::validate_combined_pilot_data(uploaded_data, input$pilot_data_file$name)
         
         if (validation_result$valid) {
-          custom_baseline(validation_result$data)
+          # Extract components from validated data
+          custom_baseline(validation_result$data$baseline_expression)
+          custom_library(validation_result$data$library_parameters)
           
           # Create success message with summary and warnings
           status_msg <- validation_result$summary
@@ -218,32 +221,34 @@ create_power_server <- function(input, output, session) {
           }
           
           # Update status display
-          output$baseline_status <- renderUI({
+          output$pilot_data_status <- renderUI({
             HTML(status_msg)
           })
           
-          output$baseline_uploaded <- reactive(TRUE)
-          outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
+          output$pilot_data_uploaded <- reactive(TRUE)
+          outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
           
         } else {
           # Show validation errors
           error_msg <- paste0("Validation failed:<br/>", 
                             paste(validation_result$errors, collapse = "<br/>"))
           
-          output$baseline_status <- renderUI({
+          output$pilot_data_status <- renderUI({
             HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
           })
           
           custom_baseline(NULL)
-          output$baseline_uploaded <- reactive(FALSE)
-          outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
+          custom_library(NULL)
+          output$pilot_data_uploaded <- reactive(FALSE)
+          outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
         }
         
       } else {
-        showNotification("Please upload an RDS file with the required baseline expression structure", type = "error")
+        showNotification("Please upload an RDS file with the required pilot data structure", type = "error")
         custom_baseline(NULL)
-        output$baseline_uploaded <- reactive(FALSE)
-        outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
+        custom_library(NULL)
+        output$pilot_data_uploaded <- reactive(FALSE)
+        outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
       }
       
     }, error = function(e) {
@@ -259,109 +264,23 @@ create_power_server <- function(input, output, session) {
       }
       
       showNotification(error_msg, type = "error", duration = 10)
-      output$baseline_status <- renderUI({
+      output$pilot_data_status <- renderUI({
         HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
       })
       custom_baseline(NULL)
-      output$baseline_uploaded <- reactive(FALSE)
-      outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
-    })
-  })
-  
-  # Library parameters file upload handling
-  custom_library <- reactiveVal(NULL)
-  
-  observeEvent(input$library_file, {
-    req(input$library_file, input$library_choice == "custom")
-    
-    # Check file size (limit to 50MB for RDS files)
-    file_size_mb <- file.size(input$library_file$datapath) / (1024^2)
-    if (file_size_mb > 50) {
-      showNotification(
-        paste("File size (", round(file_size_mb, 1), "MB) exceeds the 50MB limit. Please use a smaller dataset."),
-        type = "error", duration = 10
-      )
-      return()
-    }
-    
-    tryCatch({
-      # Read RDS file and validate
-      uploaded_data <- readRDS(input$library_file$datapath)
-      validation_result <- perturbplan::validate_custom_library_rds(uploaded_data, input$library_file$name)
-      
-      if (validation_result$valid) {
-        # Store the validated custom library data
-        custom_library(validation_result$data)
-        
-        # Create success message with summary and warnings
-        status_msg <- validation_result$summary
-        if (length(validation_result$warnings) > 0) {
-          warning_msg <- paste0("<br/><em style='color:orange;'>", 
-                              paste(validation_result$warnings, collapse = "<br/>"), 
-                              "</em>")
-          status_msg <- paste0(status_msg, warning_msg)
-        }
-        
-        # Update status display
-        output$library_status <- renderUI({
-          HTML(status_msg)
-        })
-        
-        showNotification("Library parameters loaded successfully!", type = "message", duration = 5)
-        output$library_uploaded <- reactive(TRUE)
-        outputOptions(output, "library_uploaded", suspendWhenHidden = FALSE)
-        
-      } else {
-        # Show validation errors
-        error_msg <- paste0("Validation failed:<br/>", 
-                          paste(validation_result$errors, collapse = "<br/>"))
-        
-        output$library_status <- renderUI({
-          HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
-        })
-        
-        custom_library(NULL)
-        output$library_uploaded <- reactive(FALSE)
-        outputOptions(output, "library_uploaded", suspendWhenHidden = FALSE)
-      }
-      
-    }, error = function(e) {
-      # Enhanced error handling for different types of errors
-      error_msg <- if (grepl("cannot open the connection", e$message, ignore.case = TRUE)) {
-        "Cannot read the uploaded file. Please ensure it's a valid RDS file."
-      } else if (grepl("magic number", e$message, ignore.case = TRUE) || grepl("format", e$message, ignore.case = TRUE)) {
-        "File appears to be corrupted or not a valid RDS file. Please check the file format."
-      } else if (grepl("version", e$message, ignore.case = TRUE)) {
-        "RDS file was created with a newer version of R. Please recreate the file with your current R version."
-      } else {
-        paste("Error reading library file:", e$message)
-      }
-      
-      showNotification(error_msg, type = "error", duration = 10)
-      output$library_status <- renderUI({
-        HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
-      })
       custom_library(NULL)
-      output$library_uploaded <- reactive(FALSE)
-      outputOptions(output, "library_uploaded", suspendWhenHidden = FALSE)
+      output$pilot_data_uploaded <- reactive(FALSE)
+      outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
     })
   })
   
-  # Reset custom baseline when choice changes to default or file is removed
+  # Reset pilot data when choice changes to default or file is removed
   observe({
-    if (is.null(input$baseline_file) || input$baseline_choice == "default") {
+    if (is.null(input$pilot_data_file) || input$pilot_data_choice == "default") {
       custom_baseline(NULL)
-      output$baseline_uploaded <- reactive(FALSE)
-      outputOptions(output, "baseline_uploaded", suspendWhenHidden = FALSE)
-    }
-  })
-  
-  # Reset custom library when choice changes to default or file is removed
-  observe({
-    if (is.null(input$library_file) || input$library_choice == "default") {
       custom_library(NULL)
-      output$library_uploaded <- reactive(FALSE)
-      outputOptions(output, "library_uploaded", suspendWhenHidden = FALSE)
+      output$pilot_data_uploaded <- reactive(FALSE)
+      outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
     }
   })
 
@@ -376,17 +295,17 @@ create_power_server <- function(input, output, session) {
       B = 1000,  # Monte Carlo samples for good accuracy
       gene_list = if(input$gene_list_mode == "custom") gene_list() else NULL,  # Use gene list only in custom mode
       tpm_threshold = input$tpm_threshold,  # Apply TPM filtering
-      custom_baseline_data = if(input$baseline_choice == "custom") custom_baseline() else NULL  # Use custom baseline if provided
+      custom_baseline_data = if(input$pilot_data_choice == "custom") custom_baseline() else NULL  # Use custom baseline if provided
     )
   })
 
   # Extract library information (UMI saturation parameters)
   library_info <- reactive({
     req(planned())
-    # Extract library parameters for biological system or use custom data
+    # Extract library parameters for biological system or use custom data from pilot data
     perturbplan::extract_library_info(
       biological_system = input$biological_system,
-      custom_library_data = if(input$library_choice == "custom") custom_library() else NULL
+      custom_library_data = if(input$pilot_data_choice == "custom") custom_library() else NULL
     )
   })
 

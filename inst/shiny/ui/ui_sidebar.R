@@ -22,74 +22,37 @@ create_sidebar <- function() {
           selectInput("biological_system", "Biological system:", c("K562")),
           selectInput("experimental_platform", "Experimental platform:", c("10x Chromium v3")),
           
-          # Baseline expression choice
-          selectInput("baseline_choice", "Baseline expression:",
+          # Pilot data choice (combines baseline expression and library parameters)
+          selectInput("pilot_data_choice", "Pilot data:",
                      choices = c("Default" = "default", "Custom" = "custom"),
                      selected = "default"),
           
-          # Conditional panel for custom baseline upload
+          # Conditional panel for custom pilot data upload
           conditionalPanel(
-            condition = "input.baseline_choice == 'custom'",
+            condition = "input.pilot_data_choice == 'custom'",
             tags$div(
               class = "file-upload-info",
               style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
               tags$small(
                 tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
-                tags$strong("Format: "), "RDS file with same structure as extract_baseline_expression() output",
+                tags$strong("Format: "), "Combined RDS file with baseline expression and library parameters",
                 style = "font-size: 11px;"
               )
             ),
             tags$div(
               style = "margin-bottom: 15px;",
-              fileInput("baseline_file", 
+              fileInput("pilot_data_file", 
                        label = NULL,
                        accept = c(".rds", ".RDS"),
-                       placeholder = "Choose RDS file...")
+                       placeholder = "Choose pilot data RDS file...")
             ),
             conditionalPanel(
-              condition = "output.baseline_uploaded",
+              condition = "output.pilot_data_uploaded",
               tags$div(
                 class = "file-upload-success",
                 style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
                 tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
-                htmlOutput("baseline_status", inline = TRUE)
-              )
-            )
-          ),
-          
-          # Library parameters choice (parallel to baseline expression)
-          tags$hr(style = "margin: 15px 0; border-color: #ddd;"),
-          
-          selectInput("library_choice", "Library parameters:",
-                     choices = c("Default" = "default", "Custom" = "custom"),
-                     selected = "default"),
-          
-          # Conditional panel for custom library upload
-          conditionalPanel(
-            condition = "input.library_choice == 'custom'",
-            tags$div(
-              class = "file-upload-info",
-              style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
-              tags$small(
-                tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
-                tags$strong("Format: "), "RDS file with same structure as extract_library_info() output",
-                style = "font-size: 11px;"
-              )
-            ),
-            tags$div(
-              style = "margin-bottom: 15px;",
-              fileInput("library_file", 
-                       label = NULL,
-                       accept = c(".rds", ".RDS"),
-                       placeholder = "Choose RDS file...")
-            ),
-            conditionalPanel(
-              condition = "output.library_uploaded",
-              tags$div(
-                class = "file-upload-success",
-                style = "border-radius: 4px; padding: 8px; margin: 0 0 15px 0;",
-                tags$i(class = "fa fa-check-circle", style = "margin-right: 5px;"),
-                htmlOutput("library_status", inline = TRUE)
+                htmlOutput("pilot_data_status", inline = TRUE)
               )
             )
           )

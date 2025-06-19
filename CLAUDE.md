@@ -220,206 +220,147 @@ importFrom("utils", "read.csv")
 
 This ensures consistency across the entire codebase and avoids confusion between "TPM" (Transcripts Per Million) and "tmp" (temporary).
 
-## Custom Baseline Expression Upload
+## Combined Pilot Data Upload
 
-The Shiny application supports uploading custom baseline expression data instead of using the default biological system data (K562). This allows users to perform power analysis with their own expression profiles.
+The Shiny application supports uploading combined pilot data that includes both baseline expression and library parameters in a single RDS file. This ensures consistency between these components and simplifies the upload process.
 
-### Using Custom Baseline Expression
+### Using Combined Pilot Data
 
-1. **Navigate to "Pilot data choice" tab** in the sidebar
-2. **Select "Custom"** for baseline expression
-3. **Upload an RDS file** with the required structure (see below)
+1. **Navigate to "Experimental setup" section** in the sidebar
+2. **Select "Custom"** for pilot data
+3. **Upload an RDS file** with the required combined structure (see below)
 4. **Proceed with analysis** - all power calculations will use your custom data
 
 ### Required RDS File Structure
 
-The RDS file must contain a list with exactly two elements:
+The RDS file must contain a list with exactly two named elements:
 
 ```r
-custom_baseline <- list(
-  baseline_expression = data.frame(
-    response_id = c("ENSG00000141510", "ENSG00000157764", ...),    # Ensembl gene IDs
-    relative_expression = c(1.23e-05, 4.56e-06, ...),             # TPM/1e6 scale
-    expression_size = c(0.45, 1.23, ...)                          # Dispersion parameters
+combined_pilot_data <- list(
+  baseline_expression = list(
+    baseline_expression = data.frame(
+      response_id = c("ENSG00000141510", "ENSG00000157764", ...),    # Ensembl gene IDs
+      relative_expression = c(1.23e-05, 4.56e-06, ...),             # TPM/1e6 scale
+      expression_size = c(0.45, 1.23, ...)                          # Dispersion parameters
+    ),
+    expression_dispersion_curve = function(v) {                     # Dispersion function
+      pmax(0.01, 0.1 + 0.5 / sqrt(v))
+    }
   ),
-  expression_dispersion_curve = function(v) {                     # Dispersion function
-    pmax(0.01, 0.1 + 0.5 / sqrt(v))
-  }
+  library_parameters = list(
+    UMI_per_cell = 15000,    # Maximum UMI per cell parameter (positive numeric)
+    variation = 0.25         # Variation parameter for PCR bias (positive numeric)
+  )
 )
 
 # Save as RDS file
-saveRDS(custom_baseline, "my_custom_baseline.rds")
+saveRDS(combined_pilot_data, "my_combined_pilot_data.rds")
 ```
 
 ### Data Requirements
 
-**baseline_expression data frame:**
-- **response_id**: Character vector of gene IDs (preferably Ensembl format: ENSGXXXXXXXXXXX)
-- **relative_expression**: Numeric vector of expression levels on TPM/1e6 scale (i.e., raw TPM divided by 1,000,000)
-- **expression_size**: Numeric vector of positive dispersion parameters 
-- **No missing values** in any column
-- **Unique gene IDs** (duplicates will be removed, keeping first occurrence)
+**baseline_expression component:**
+- **baseline_expression**: Data frame with required columns:
+  - **response_id**: Character vector of gene IDs (preferably Ensembl format: ENSGXXXXXXXXXXX)
+  - **relative_expression**: Numeric vector of expression levels on TPM/1e6 scale (i.e., raw TPM divided by 1,000,000)
+  - **expression_size**: Numeric vector of positive dispersion parameters 
+  - **No missing values** in any column
+  - **Unique gene IDs** (duplicates will be removed, keeping first occurrence)
+- **expression_dispersion_curve**: Function that accepts a numeric vector and returns dispersion values of the same length
 
-**expression_dispersion_curve function:**
-- Must accept a numeric vector and return dispersion values of the same length
-- Should model the mean-variance relationship in your expression data
-- Example: `function(v) pmax(0.01, 0.1 + 0.5 / sqrt(v))`
+**library_parameters component:**
+- **UMI_per_cell**: Maximum UMI per cell parameter from saturation curve fitting (typically 1000-50000)
+- **variation**: Variation parameter characterizing PCR amplification bias (typically 0.1-1.0)
+- **Both parameters** must be positive single numeric values
+- **No missing values** allowed
 
-### Creating Custom Baseline Files
+### Creating Combined Pilot Data Files
 
-#### Method 1: From Existing Data
+#### Method 1: From Default Data
 ```r
 # Load the package and default data
 library(perturbplan)
-default_data <- extract_baseline_expression("K562")
+baseline_data <- extract_baseline_expression("K562")
+library_data <- extract_library_info("K562")
 
-# Subset or modify as needed
-my_baseline <- default_data$baseline_expression[1:2000, ]  # Use first 2000 genes
-
-# Create custom baseline structure
-custom_baseline <- list(
-  baseline_expression = my_baseline,
-  expression_dispersion_curve = default_data$expression_dispersion_curve
+# Combine into the expected structure
+combined_pilot_data <- list(
+  baseline_expression = baseline_data,
+  library_parameters = library_data
 )
 
 # Save as RDS
-saveRDS(custom_baseline, "my_custom_baseline.rds")
+saveRDS(combined_pilot_data, "my_combined_pilot_data.rds")
 ```
 
-#### Method 2: From Scratch
-Use the example script at `inst/extdata/create_custom_baseline_example.R` for guidance on creating baseline data from your own expression measurements.
+#### Method 2: From Your Own Measurements
+```r
+# Create your own baseline expression data
+my_baseline <- list(
+  baseline_expression = data.frame(
+    response_id = c("ENSG00000141510", "ENSG00000157764"),
+    relative_expression = c(1.23e-05, 4.56e-06),
+    expression_size = c(0.45, 1.23)
+  ),
+  expression_dispersion_curve = function(v) pmax(0.01, 0.1 + 0.5 / sqrt(v))
+)
+
+# Create your own library parameters
+my_library <- list(
+  UMI_per_cell = 18000,
+  variation = 0.22
+)
+
+# Combine and save
+combined_pilot_data <- list(
+  baseline_expression = my_baseline,
+  library_parameters = my_library
+)
+
+saveRDS(combined_pilot_data, "my_custom_pilot_data.rds")
+```
+
+#### Method 3: Using the Example Script
+Use the example script at `inst/extdata/create_combined_pilot_example.R` for guidance on creating combined pilot data files.
 
 ### File Validation
 
-The application automatically validates uploaded RDS files and provides detailed error messages for:
-- Incorrect file structure or missing elements
-- Invalid data types or value ranges
+The application automatically validates uploaded RDS files using `validate_combined_pilot_data()` and provides detailed error messages for:
+- Incorrect overall file structure or missing top-level elements
+- Invalid baseline expression data (delegates to `validate_custom_baseline_rds()`)
+- Invalid library parameters (delegates to `validate_custom_library_rds()`)
 - Missing values or duplicate gene IDs
 - File size limits (50MB maximum)
 - R version compatibility issues
 
 ### Integration with Analysis Workflow
 
-Custom baseline expression data integrates seamlessly with all analysis features:
+Combined pilot data integrates seamlessly with all analysis features:
 - **Compatible with both Random and Custom gene list modes**
 - **Works with all analysis parameters** (test side, control group, FDR levels)
 - **Included in Excel downloads** with clear documentation of data source
 - **Supports all visualization features** (heatmaps, power curves, drill-down analysis)
+- **Ensures consistency** between baseline expression and library parameters from the same experiment
 
 ### Performance Considerations
 
 - **File size**: Keep RDS files under 50MB for optimal performance
 - **Gene count**: 1,000-10,000 genes typically provide good balance of comprehensiveness and speed
 - **Memory usage**: Large datasets may require more RAM for analysis
-
-### Example Files
-
-Pre-built example files are available:
-- `inst/extdata/example_custom_baseline.rds`: Subset of default K562 data (1,000 genes)
-- `inst/extdata/create_custom_baseline_example.R`: Script for creating custom files
-
-## Custom Library Parameters Upload
-
-The Shiny application supports uploading custom library parameters instead of using the default biological system data (K562). This allows users to perform power analysis with their own UMI saturation and PCR bias parameters.
-
-### Using Custom Library Parameters
-
-1. **Navigate to "Pilot data choice" tab** in the sidebar
-2. **Expand "Library size parameters" section**
-3. **Select "Custom"** for library parameters
-4. **Upload an RDS file** with the required structure (see below)
-5. **Proceed with analysis** - all power calculations will use your custom parameters
-
-### Required RDS File Structure
-
-The RDS file must contain a list with exactly two elements:
-
-```r
-custom_library <- list(
-  UMI_per_cell = 15000,    # Maximum UMI per cell parameter (positive numeric)
-  variation = 0.25         # Variation parameter for PCR bias (positive numeric)
-)
-
-# Save as RDS file
-saveRDS(custom_library, "my_custom_library.rds")
-```
-
-### Data Requirements
-
-**Library parameters:**
-- **UMI_per_cell**: Maximum UMI per cell parameter from saturation curve fitting (typically 1000-50000)
-- **variation**: Variation parameter characterizing PCR amplification bias (typically 0.1-1.0)
-- **Both parameters** must be positive single numeric values
-- **No missing values** allowed
-
-### Data Validation
-
-The application automatically validates uploaded RDS files and provides detailed error messages for:
-- Incorrect file structure or missing elements
-- Invalid data types or value ranges
-- Missing values or non-finite numbers
-- File size limits (50MB maximum)
-- R version compatibility issues
-
-### Creating Custom Library Files
-
-#### Method 1: From Default Parameters
-```r
-# Load the package and default data
-library(perturbplan)
-default_library <- extract_library_info("K562")
-
-# Modify parameters as needed
-custom_library <- list(
-  UMI_per_cell = default_library$UMI_per_cell * 1.5,  # 50% higher capacity
-  variation = default_library$variation * 0.8         # 20% lower bias
-)
-
-# Save as RDS
-saveRDS(custom_library, "modified_k562_library.rds")
-```
-
-#### Method 2: From Your Own Measurements
-```r
-# Based on your saturation curve fitting results
-custom_library <- list(
-  UMI_per_cell = 18000,    # Your measured UMI capacity
-  variation = 0.22         # Your measured PCR bias
-)
-
-# Validate before saving
-validation_result <- validate_custom_library_rds(custom_library)
-if (validation_result$valid) {
-  saveRDS(custom_library, "my_measured_library.rds")
-} else {
-  cat("Validation errors:", paste(validation_result$errors, collapse = ", "))
-}
-```
-
-### Integration with Analysis Workflow
-
-Custom library parameters integrate seamlessly with all analysis features:
-- **Compatible with both Random and Custom gene list modes**
-- **Works with all analysis parameters** (test side, control group, FDR levels)
-- **Included in Excel downloads** with clear documentation of parameter source
-- **Supports all visualization features** (heatmaps, power curves, drill-down analysis)
-
-### Performance Considerations
-
-- **File size**: Keep RDS files small for optimal performance
 - **Parameter ranges**: Extreme values may affect analysis speed or accuracy
-- **Memory usage**: Large parameter differences from defaults may require more computation time
 
 ### Example Files
 
 Pre-built example files are available:
-- `inst/extdata/example_custom_library.rds`: Simple example with moderate parameters
-- `inst/extdata/create_custom_library_example.R`: Script for creating custom files
+- `inst/extdata/example_combined_pilot_data.rds`: Combined K562 baseline and library data
+- `inst/extdata/create_combined_pilot_example.R`: Script for creating combined files
 
 ### Summary Display
 
-When custom library parameters are loaded, the application displays:
-"Loaded custom library parameters  
+When combined pilot data is loaded successfully, the application displays:
+"Loaded custom baseline expression (X,XXX genes)  
+Average TPM: XX.X  
+Loaded custom library parameters  
 UMI per cell: XX,XXX  
 Variation: X.XXXe-XX"
 
