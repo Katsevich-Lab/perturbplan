@@ -442,53 +442,17 @@ compute_power_plan_overall <- function(
   # separated approach information
   fc_expression_df, prop_non_null = 0.1, return_full_results = FALSE){
 
-  ################ cell counts are pre-computed and passed as parameters #####################
-  # num_trt_cells and num_cntrl_cells are already computed in higher-level functions
-
-  ##############################################################################
-  #################### compute Monte Carlo integration ########################
-
-  # Use C++ function to compute test statistics for all Monte Carlo samples
-  mc_results <- compute_monte_carlo_teststat_cpp(
+  # Call the C++ implementation for improved performance
+  return(compute_power_plan_overall_cpp(
     fc_expression_df = fc_expression_df,
     library_size = library_size,
     num_trt_cells = num_trt_cells,
-    num_cntrl_cells = num_cntrl_cells
-  )
-
-  # Extract vectors for Monte Carlo samples
-  mc_means <- mc_results$means
-  mc_sds <- mc_results$sds
-
-  ########################## compute the cutoff ################################
-  sig_cutoff <- switch(multiple_testing_method,
-                       BH = {
-                         compute_BH_plan(
-                           mean_list = mc_means,
-                           sd_list = mc_sds,
-                           side = side,
-                           multiple_testing_alpha = multiple_testing_alpha,
-                           prop_non_null = prop_non_null
-                         )
-                       })
-
-  ####################### compute overall power ################################
-  mc_powers <- rejection_computation_cpp(mean_list = mc_means,
-                                         sd_list = mc_sds,
-                                         side = side,
-                                         cutoff = sig_cutoff)
-  overall_power <- mean(mc_powers)
-
-  # return either overall power only or full results
-  if (return_full_results) {
-    return(list(
-      overall_power = overall_power,
-      sig_cutoff = sig_cutoff,
-      num_trt_cells = num_trt_cells,
-      num_cntrl_cells = num_cntrl_cells
-    ))
-  } else {
-    return(overall_power)
-  }
+    num_cntrl_cells = num_cntrl_cells,
+    multiple_testing_alpha = multiple_testing_alpha,
+    multiple_testing_method = multiple_testing_method,
+    side = side,
+    prop_non_null = prop_non_null,
+    return_full_results = return_full_results
+  ))
 }
 
