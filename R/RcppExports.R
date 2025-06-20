@@ -96,6 +96,41 @@ generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variati
     .Call(`_perturbplan_generate_reads_grid_cpp`, experimental_platform, UMI_per_cell, variation, grid_size)
 }
 
+#' Compute overall power for power analysis (C++)
+#'
+#' @description
+#' C++ implementation of compute_power_plan_overall that provides significant 
+#' performance improvements for power analysis computations.
+#'
+#' @param fc_expression_df DataFrame with fold change and expression info
+#' @param library_size Numeric. Effective library size
+#' @param num_trt_cells Numeric. Number of treatment cells  
+#' @param num_cntrl_cells Numeric. Number of control cells
+#' @param multiple_testing_alpha Numeric. FDR target level (default 0.05)
+#' @param multiple_testing_method String. Method ("BH" only supported)
+#' @param side String. Test sidedness ("left", "right", "both")
+#' @param prop_non_null Numeric. Proportion of non-null hypotheses (default 0.1)
+#' @param return_full_results Logical. Return full results or just overall power
+#'
+#' @return Numeric overall power (if return_full_results=FALSE) or List with full results
+#'
+#' @details
+#' This C++ implementation orchestrates existing optimized C++ functions:
+#' \itemize{
+#'   \item compute_monte_carlo_teststat_cpp(): Monte Carlo test statistics
+#'   \item compute_BH_plan(): Benjamini-Hochberg significance cutoff
+#'   \item rejection_computation_cpp(): Power calculations
+#' }
+#' 
+#' The function provides identical results to the R version while offering
+#' significant performance improvements by eliminating R function call overhead.
+#'
+#' @seealso \code{\link{compute_power_plan_overall}} for R version
+#' @export
+compute_power_plan_overall_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha = 0.05, multiple_testing_method = "BH", side = "left", prop_non_null = 0.1, return_full_results = FALSE) {
+    .Call(`_perturbplan_compute_power_plan_overall_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha, multiple_testing_method, side, prop_non_null, return_full_results)
+}
+
 theta_batch_cpp <- function(Y, library_size, rel_expr, rough = FALSE, n_threads = 0L) {
     .Call(`_perturbplan_theta_batch_cpp`, Y, library_size, rel_expr, rough, n_threads)
 }

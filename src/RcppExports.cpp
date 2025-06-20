@@ -158,6 +158,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_power_plan_overall_cpp
+SEXP compute_power_plan_overall_cpp(DataFrame fc_expression_df, double library_size, double num_trt_cells, double num_cntrl_cells, double multiple_testing_alpha, std::string multiple_testing_method, std::string side, double prop_non_null, bool return_full_results);
+RcppExport SEXP _perturbplan_compute_power_plan_overall_cpp(SEXP fc_expression_dfSEXP, SEXP library_sizeSEXP, SEXP num_trt_cellsSEXP, SEXP num_cntrl_cellsSEXP, SEXP multiple_testing_alphaSEXP, SEXP multiple_testing_methodSEXP, SEXP sideSEXP, SEXP prop_non_nullSEXP, SEXP return_full_resultsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type fc_expression_df(fc_expression_dfSEXP);
+    Rcpp::traits::input_parameter< double >::type library_size(library_sizeSEXP);
+    Rcpp::traits::input_parameter< double >::type num_trt_cells(num_trt_cellsSEXP);
+    Rcpp::traits::input_parameter< double >::type num_cntrl_cells(num_cntrl_cellsSEXP);
+    Rcpp::traits::input_parameter< double >::type multiple_testing_alpha(multiple_testing_alphaSEXP);
+    Rcpp::traits::input_parameter< std::string >::type multiple_testing_method(multiple_testing_methodSEXP);
+    Rcpp::traits::input_parameter< std::string >::type side(sideSEXP);
+    Rcpp::traits::input_parameter< double >::type prop_non_null(prop_non_nullSEXP);
+    Rcpp::traits::input_parameter< bool >::type return_full_results(return_full_resultsSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_power_plan_overall_cpp(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha, multiple_testing_method, side, prop_non_null, return_full_results));
+    return rcpp_result_gen;
+END_RCPP
+}
 // theta_batch_cpp
 Rcpp::NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y, const Rcpp::NumericVector& library_size, const Rcpp::NumericVector& rel_expr, bool rough, int n_threads);
 RcppExport SEXP _perturbplan_theta_batch_cpp(SEXP YSEXP, SEXP library_sizeSEXP, SEXP rel_exprSEXP, SEXP roughSEXP, SEXP n_threadsSEXP) {
@@ -234,6 +253,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_fit_read_UMI_curve_cpp", (DL_FUNC) &_perturbplan_fit_read_UMI_curve_cpp, 3},
     {"_perturbplan_identify_library_size_range_cpp", (DL_FUNC) &_perturbplan_identify_library_size_range_cpp, 3},
     {"_perturbplan_generate_reads_grid_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_cpp, 4},
+    {"_perturbplan_compute_power_plan_overall_cpp", (DL_FUNC) &_perturbplan_compute_power_plan_overall_cpp, 9},
     {"_perturbplan_theta_batch_cpp", (DL_FUNC) &_perturbplan_theta_batch_cpp, 5},
     {"_perturbplan_compute_fc_curve_cpp", (DL_FUNC) &_perturbplan_compute_fc_curve_cpp, 7},
     {"_perturbplan_compute_expression_curve_cpp", (DL_FUNC) &_perturbplan_compute_expression_curve_cpp, 8},
