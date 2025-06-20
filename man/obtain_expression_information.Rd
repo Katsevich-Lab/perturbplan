@@ -2,33 +2,37 @@
 % Please edit documentation in R/pilot_data_preprocessing.R
 \name{obtain_expression_information}
 \alias{obtain_expression_information}
-\title{Estimate Gene Expression Metrics from a Sparse Expression Matrix}
+\title{Estimate gene-level dispersion (theta)}
 \usage{
-obtain_expression_information(response_matrix, TPM_thres = 1, rough = FALSE)
+obtain_expression_information(
+  response_matrix,
+  TPM_thres = 1,
+  rough = FALSE,
+  n_threads = NULL
+)
 }
 \arguments{
-\item{response_matrix}{A \code{CsparseMatrix} object representing gene-by-cell expression values.
-Usually read with \code{Matrix::readMM()} and coerced via \code{as(., "CsparseMatrix")}.}
+\item{response_matrix}{\code{CsparseMatrix} (genes × cells).}
 
-\item{TPM_thres}{A numeric threshold for filtering genes by TPM (Transcripts Per Million).
-Genes with TPM below this value will be excluded. Default is 0.}
+\item{TPM_thres}{Numeric. Filter threshold on TPM. Default \code{1}.}
 
-\item{rough}{Logical; if \code{TRUE}, use a faster but rougher estimation method for theta.
-Default is \code{FALSE}.}
+\item{rough}{Logical. If \code{TRUE}, use rough C++ estimator; otherwise use
+refined/MLE. Default \code{FALSE}.}
+
+\item{n_threads}{Integer controlling parallelism:
+\itemize{
+\item \code{NULL} – auto-detect (prefer \env{NSLOTS}, else local cores)
+\item \code{NA}   – force use of \env{NSLOTS}
+\item positive integer – user-supplied core count
+}}
 }
 \value{
-A \code{data.frame} with the following columns:
 \describe{
-\item{response_id}{Character vector of gene names passing the TPM threshold.}
-\item{relative_expression}{Numeric vector of each gene's relative expression (as a proportion).}
-\item{expression_size}{Estimated expression-size parameter \eqn{\theta} for each gene.}
+\item{response_id}{Gene symbol passing the TPM filter}
+\item{relative_expression}{Proportion of total counts}
+\item{expression_size}{Estimated dispersion \eqn{\theta}}
 }
 }
 \description{
-This function processes a gene-by-cell sparse expression matrix (e.g., read from a \code{.mtx} file),
-computes relative expression (TPM), filters genes by a TPM threshold, and estimates the
-expression-size (theta) for each retained gene using a fast parallel method.
-}
-\details{
-The theta parameter is clipped to the interval \link{0.01, 1e3} to avoid numerical instability.
+Estimate gene-level dispersion (theta)
 }

@@ -3,98 +3,99 @@
 #' @importFrom utils read.csv
 NULL
 
-#' Load and QC gene expression matrix from Cell Ranger .mtx format
+#' @importFrom methods as
+#' @importFrom stats setNames coef predict
+#' @importFrom utils read.csv
+#' @importFrom Matrix readMM rowSums colSums
+#' @importClassesFrom Matrix CsparseMatrix dgCMatrix
+#' @importFrom data.table fread
+#' @importFrom dplyr filter bind_rows arrange
+#' @importFrom minpack.lm nlsLM
+NULL
+
+#' Load and QC gene expression matrix from Cell Ranger output
 #'
 #' @description
-#' This function reads a sparse expression matrix from a Cell Ranger output directory
-#' (in `.mtx` format) and performs quality control by removing genes with missing,
-#' empty, or duplicated names.
+#' Reads a sparse gene-by-cell matrix (\code{matrix.mtx.gz}) together with
+#' feature annotations from a Cell Ranger run folder. The required files are
+#' located in the sub-directory \code{outs/filtered_feature_bc_matrix/}.
 #'
-#' @param path_to_gene_expression Character. Path to the folder containing
-#' `matrix.mtx.gz`, `features.tsv.gz`, and `barcodes.tsv.gz`.
+#' @param path_to_cellranger_output Character. Path to an SRR-named folder
+#'   (e.g. \code{"SRR12345678"}). This folder must contain:
+#'   \itemize{
+#'     \item \code{outs/filtered_feature_bc_matrix/matrix.mtx.gz}
+#'     \item \code{outs/filtered_feature_bc_matrix/features.tsv.gz}
+#'     \item \code{outs/filtered_feature_bc_matrix/barcodes.tsv.gz}
+#'   }
 #'
-#' @return A sparse gene-by-cell expression matrix of class `dgCMatrix`, where
-#' only genes with valid and unique names are retained. Row names are set to gene symbols.
-#'
+#' @return A \code{dgCMatrix} (genes × cells) with cleaned, unique row names.
 #' @export
-obtain_qc_response_data <- function(path_to_gene_expression) {
-  # Read sparse matrix (.mtx) and convert to efficient format
-  response_matrix <- as(Matrix::readMM(file.path(path_to_gene_expression, "matrix.mtx.gz")), "dgCMatrix")
-
-  # Read features (gene names)
-  genes <- data.table::fread(file.path(path_to_gene_expression, "features.tsv.gz"), header = FALSE)
+obtain_qc_response_data <- function(path_to_cellranger_output) {
+  mat_dir <- file.path(path_to_cellranger_output, "outs", "filtered_feature_bc_matrix")
+  response_matrix <- as(Matrix::readMM(file.path(mat_dir, "matrix.mtx.gz")), "dgCMatrix")
+  genes <- data.table::fread(file.path(mat_dir, "features.tsv.gz"), header = FALSE)
   gene_names <- genes$V2
-
-  # Apply QC: remove empty, NA, or duplicated gene names
-  valid_idx <- which(!is.na(gene_names) & gene_names != "" & !duplicated(gene_names))
-
-  # Subset response_matrix and gene_names
-  gene_names <- gene_names[valid_idx]
-  response_matrix <- response_matrix[valid_idx, , drop = FALSE]
-
-  # Assign cleaned gene names to matrix
-  rownames(response_matrix) <- gene_names
-
-  return(response_matrix)
+  keep <- which(!is.na(gene_names) & nzchar(gene_names) & !duplicated(gene_names))
+  response_matrix <- response_matrix[keep, , drop = FALSE]
+  rownames(response_matrix) <- gene_names[keep]
+  response_matrix
 }
 
-#' Estimate Gene Expression Metrics from a Sparse Expression Matrix
+#' Estimate gene-level dispersion (theta)
 #'
-#' This function processes a gene-by-cell sparse expression matrix (e.g., read from a `.mtx` file),
-#' computes relative expression (TPM), filters genes by a TPM threshold, and estimates the
-#' expression-size (theta) for each retained gene using a fast parallel method.
+#' @param response_matrix \code{CsparseMatrix} (genes × cells).
+#' @param TPM_thres Numeric. Filter threshold on TPM. Default \code{1}.
+#' @param rough Logical. If \code{TRUE}, use rough C++ estimator; otherwise use
+#'   refined/MLE. Default \code{FALSE}.
+#' @param n_threads Integer controlling parallelism:
+#'   \itemize{
+#'     \item \code{NULL} – auto-detect (prefer \env{NSLOTS}, else local cores)
+#'     \item \code{NA}   – force use of \env{NSLOTS}
+#'     \item positive integer – user-supplied core count
+#'   }
 #'
-#' @param response_matrix A \code{CsparseMatrix} object representing gene-by-cell expression values.
-#'        Usually read with \code{Matrix::readMM()} and coerced via \code{as(., "CsparseMatrix")}.
-#' @param TPM_thres A numeric threshold for filtering genes by TPM (Transcripts Per Million).
-#'        Genes with TPM below this value will be excluded. Default is 0.
-#' @param rough Logical; if \code{TRUE}, use a faster but rougher estimation method for theta.
-#'        Default is \code{FALSE}.
-#'
-#' @return A \code{data.frame} with the following columns:
-#' \describe{
-#'   \item{response_id}{Character vector of gene names passing the TPM threshold.}
-#'   \item{relative_expression}{Numeric vector of each gene's relative expression (as a proportion).}
-#'   \item{expression_size}{Estimated expression-size parameter \eqn{\theta} for each gene.}
+#' @return \describe{
+#'   \item{response_id}{Gene symbol passing the TPM filter}
+#'   \item{relative_expression}{Proportion of total counts}
+#'   \item{expression_size}{Estimated dispersion \eqn{\theta}}
 #' }
 #'
-#' @details
-#' The theta parameter is clipped to the interval [0.01, 1e3] to avoid numerical instability.
-#'
-#' @importMethodsFrom Matrix [
-#' @importFrom Matrix rowSums colSums
-#' @importClassesFrom Matrix CsparseMatrix dgCMatrix
 #' @export
 obtain_expression_information <- function(response_matrix,
                                           TPM_thres = 1,
-                                          rough     = FALSE) {
+                                          rough     = FALSE,
+                                          n_threads = NULL) {
+  # --- decide #threads ------------------------------------------------------
+  if (is.null(n_threads)) {
+    ns <- Sys.getenv("NSLOTS", unset = "")
+    n_threads <- if (nzchar(ns)) as.integer(ns) else parallel::detectCores()
+  } else if (is.na(n_threads)) {
+    n_threads <- as.integer(Sys.getenv("NSLOTS", unset = "1"))
+  } else {
+    n_threads <- as.integer(n_threads)
+  }
+  if (n_threads < 1L) n_threads <- 1L
 
-  ## 1. library size per cell
-  print(paste0("Start relative expression calculation at ", Sys.time()))
-  library_size <- Matrix::colSums(response_matrix)
-
-  ## 2. gene-level totals & TPM
-  gene_sum <- Matrix::rowSums(response_matrix)
-  rel_expr <- gene_sum / sum(gene_sum)
-  TPM      <- rel_expr * 1e6
-
+  # --- library size & TPM ---------------------------------------------------
+  message("Start relative expression calculation @ ", Sys.time())
+  lib_size <- Matrix::colSums(response_matrix)
+  rel_expr <- Matrix::rowSums(response_matrix) / sum(response_matrix)
+  TPM <- rel_expr * 1e6
   keep_gene <- names(TPM)[TPM >= TPM_thres]
-  print(paste0("Finish relative expression calculation at ", Sys.time()))
-  if (length(keep_gene) == 0)
-    stop("No genes pass TPM threshold")
+  message("Finish relative expression calculation @ ", Sys.time())
+  if (!length(keep_gene)) stop("No genes pass TPM threshold")
 
-  ## 3. parallel estimation of theta
-  print(paste0("Start dispersion estimation at ", Sys.time()))
-  n_threads <- as.integer(Sys.getenv("NSLOTS", unset = "1"))
+  # --- dispersion estimation ------------------------------------------------
+  message("Start dispersion estimation (", n_threads, " thread(s)) @ ", Sys.time())
   theta_vec <- theta_batch_cpp(
     response_matrix[keep_gene, , drop = FALSE],
-    library_size,
+    lib_size,
     rel_expr[keep_gene],
-    rough = rough,
-    n_threads = n_threads
+    rough      = rough,
+    n_threads  = n_threads
   )
-  print(paste0("Finish dispersion estimation at ", Sys.time()))
-  ## 4. assemble result
+  message("Finish dispersion estimation @ ", Sys.time())
+
   data.frame(
     response_id         = keep_gene,
     relative_expression = rel_expr[keep_gene],
@@ -103,80 +104,83 @@ obtain_expression_information <- function(response_matrix,
   )
 }
 
-
-
-#' Generate random gRNA–gene discovery pairs for control or simulation.
+#' Simulate random gRNA–gene discovery pairs
 #'
-#' @param num_targets Integer. Number of pseudo gRNAs to simulate.
-#' @param pairs_per_target Integer. Number of genes to assign per gRNA.
-#' @param gene_info Data frame. Must contain a column named `response_id` with gene names.
+#' @param num_targets Integer. Number of mock gRNAs.
+#' @param pairs_per_target Integer. Genes assigned to each gRNA.
+#' @param gene_info Data frame from \code{obtain_expression_information()}, must
+#'   contain \code{response_id}.
 #'
-#' @return A data frame with columns `response_id` and `grna_id`, each row representing a pseudo discovery pair.
+#' @return A two-column \code{data.frame} (\code{response_id}, \code{grna_id}).
 #' @export
 obtain_random_pairs <- function(num_targets, pairs_per_target, gene_info) {
-  # Check input validity
-  if (!("response_id" %in% colnames(gene_info))) {
-    stop("`gene_info` must contain a column named `response_id`.")
-  }
-
-  tpm_filtered_genes <- gene_info$response_id
-
-  if (length(tpm_filtered_genes) < pairs_per_target) {
-    stop("Not enough genes to sample for each gRNA. Reduce `pairs_per_target`.")
-  }
-
-  discovery_pairs <- NULL
-
+  if (!"response_id" %in% names(gene_info))
+    stop("`gene_info` must contain `response_id`.")
+  genes <- gene_info$response_id
+  if (length(genes) < pairs_per_target)
+    stop("Not enough genes for sampling; reduce `pairs_per_target`.")
+  out <- vector("list", num_targets)
   for (i in seq_len(num_targets)) {
-    # randomly sample 'pairs_per_target' genes
-    target_sample <- sample(tpm_filtered_genes, pairs_per_target)
-
-    # generate the corresponding gRNA IDs
-    grna_sample <- rep(paste0("grna_target_", i), pairs_per_target)
-
-    # append to output
-    discovery_pairs <- rbind(
-      discovery_pairs,
-      data.frame(
-        response_id = target_sample,
-        grna_id = grna_sample,
-        stringsAsFactors = FALSE
-      )
-    )
+    out[[i]] <- data.frame(response_id = sample(genes, pairs_per_target),
+                           grna_id     = paste0("grna_target_", i),
+                           stringsAsFactors = FALSE)
   }
-
-  return(discovery_pairs)
+  do.call(rbind, out)
 }
 
+#' Extract QC-filtered molecule information from Cell Ranger HDF5 files
+#'
+#' @param path_to_cellranger_output Character. Folder containing
+#'   \code{outs/molecule_info.h5} and \code{outs/filtered_feature_bc_matrix.h5}.
+#'
+#' @return Data frame with columns \code{num_reads}, \code{UMI_id},
+#'   \code{cell_id}, \code{response_id}.
+#' @export
+obtain_qc_h5_data <- function(path_to_cellranger_output) {
+  raw_path <- file.path(path_to_cellranger_output, "outs", "molecule_info.h5")
+  qc_path  <- file.path(path_to_cellranger_output, "outs", "filtered_feature_bc_matrix.h5")
 
+  count   <- rhdf5::h5read(raw_path, "count")
+  umi_idx <- rhdf5::h5read(raw_path, "umi")
+  barcodes <- rhdf5::h5read(raw_path, "barcodes")
+  barcode_idx <- rhdf5::h5read(raw_path, "barcode_idx")
+  gem_group <- rhdf5::h5read(raw_path, "gem_group")
+  cell_id <- paste(barcodes[barcode_idx + 1], gem_group, sep = "-")
+  RNA_idx <- rhdf5::h5read(raw_path, "feature_idx")
+  gene_id <- rhdf5::h5read(raw_path, "features")$id[RNA_idx + 1]
 
-#' Obtain a data frame with information of all QC'd reads for library estimation
+  raw_df <- data.frame(num_reads = count,
+                       UMI_id    = umi_idx + 1,
+                       cell_id   = cell_id,
+                       response_id = gene_id)
+
+  qc_cells <- rhdf5::h5read(qc_path, "matrix/barcodes")
+  dplyr::filter(raw_df, cell_id %in% qc_cells)
+}
+
+#' Mapping efficiency of a Cell Ranger run
 #'
-#' @description
-#' This function reads HDF5 files from Cell Ranger output to extract molecule-level
-#' information and applies quality control filtering to obtain a comprehensive
-#' data frame for library size estimation.
+#' @param QC_data Output of \code{obtain_qc_h5_data()}.
+#' @param path_to_cellranger_output Folder containing `outs/metrics_summary.csv`.
 #'
-#' @param path_to_h5_file Character. The path to the outs folder of the Cell Ranger output
-#' containing `molecule_info.h5` and `filtered_feature_bc_matrix.h5` files.
+#' @return Numeric proportion: mapped / total reads.
+#' @export
+obtain_mapping_efficiency <- function(QC_data, path_to_cellranger_output) {
+  if (!"num_reads" %in% names(QC_data))
+    stop("QC_data must contain `num_reads`.")
+  csv <- file.path(path_to_cellranger_output, "outs", "metrics_summary.csv")
+  metrics <- read.csv(csv, check.names = FALSE)
+  if (!"Number of Reads" %in% names(metrics))
+    stop("Missing 'Number of Reads' in metrics_summary.csv")
+  total_reads  <- as.numeric(gsub(",", "", metrics$`Number of Reads`))
+  mapped_reads <- sum(QC_data$num_reads)
+  mapped_reads / total_reads
+}
+
+#' Summary statistics of QC-filtered molecule data
 #'
-#' @return A data frame with columns:
-#' \describe{
-#'   \item{num_reads}{Number of reads per molecule}
-#'   \item{UMI_id}{Unique molecular identifier}
-#'   \item{cell_id}{Cell barcode identifier with gem group}
-#'   \item{response_id}{Gene identifier}
-#' }
-#'
-#' @details
-#' The function performs the following steps:
-#' \enumerate{
-#'   \item Reads raw molecule information from `molecule_info.h5`
-#'   \item Extracts cell barcodes, UMI identifiers, and gene features
-#'   \item Filters molecules to only include those from QC-passed cells
-#'   \item Returns a cleaned data frame for downstream analysis
-#' }
-#'
+#' @param QC_data Data frame returned by \code{obtain_qc_h5_data()}.
+#' @return Named numeric vector: number of cells and average reads per cell.
 #' @export
 obtain_qc_h5_data <- function(path_to_h5_file){
 

@@ -2,20 +2,21 @@
 % Please edit documentation in R/pilot_data_preprocessing.R
 \name{obtain_random_pairs}
 \alias{obtain_random_pairs}
-\title{Generate random gRNA–gene discovery pairs for control or simulation.}
+\title{Simulate random gRNA–gene discovery pairs}
 \usage{
 obtain_random_pairs(num_targets, pairs_per_target, gene_info)
 }
 \arguments{
-\item{num_targets}{Integer. Number of pseudo gRNAs to simulate.}
+\item{num_targets}{Integer. Number of mock gRNAs.}
 
-\item{pairs_per_target}{Integer. Number of genes to assign per gRNA.}
+\item{pairs_per_target}{Integer. Genes assigned to each gRNA.}
 
-\item{gene_info}{Data frame. Must contain a column named \code{response_id} with gene names.}
+\item{gene_info}{Data frame from \code{obtain_expression_information()}, must
+contain \code{response_id}.}
 }
 \value{
-A data frame with columns \code{response_id} and \code{grna_id}, each row representing a pseudo discovery pair.
+A two-column \code{data.frame} (\code{response_id}, \code{grna_id}).
 }
 \description{
-Generate random gRNA–gene discovery pairs for control or simulation.
+Simulate random gRNA–gene discovery pairs
 }

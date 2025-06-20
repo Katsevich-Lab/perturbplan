@@ -2,18 +2,26 @@
 % Please edit documentation in R/pilot_data_preprocessing.R
 \name{obtain_mapping_efficiency}
 \alias{obtain_mapping_efficiency}
-\title{Compute mapping efficiency from QC'd molecule info and Cell Ranger metrics.}
+\title{Mapping efficiency of a Cell Ranger run}
 \usage{
+obtain_mapping_efficiency(QC_data, path_to_metrics_summary)
+
 obtain_mapping_efficiency(QC_data, path_to_metrics_summary)
 }
 \arguments{
 \item{QC_data}{A data frame from \code{obtain_qc_h5_data()}, must contain a \code{num_reads} column.}
 
 \item{path_to_metrics_summary}{Path to the folder containing Cell Ranger's \code{metrics_summary.csv}.}
+
+\item{path_to_cellranger_output}{Folder containing \code{outs/metrics_summary.csv}.}
 }
 \value{
+Numeric proportion: mapped / total reads.
+
 A numeric value representing the mapping efficiency (mapped_reads / total_reads).
 }
 \description{
+Mapping efficiency of a Cell Ranger run
+
 Compute mapping efficiency from QC'd molecule info and Cell Ranger metrics.
 }

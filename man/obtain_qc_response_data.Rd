@@ -2,20 +2,24 @@
 % Please edit documentation in R/pilot_data_preprocessing.R
 \name{obtain_qc_response_data}
 \alias{obtain_qc_response_data}
-\title{Load and QC gene expression matrix from Cell Ranger .mtx format}
+\title{Load and QC gene expression matrix from Cell Ranger output}
 \usage{
-obtain_qc_response_data(path_to_gene_expression)
+obtain_qc_response_data(path_to_cellranger_output)
 }
 \arguments{
-\item{path_to_gene_expression}{Character. Path to the folder containing
-\code{matrix.mtx.gz}, \code{features.tsv.gz}, and \code{barcodes.tsv.gz}.}
+\item{path_to_cellranger_output}{Character. Path to an SRR-named folder
+(e.g. \code{"SRR12345678"}). This folder must contain:
+\itemize{
+\item \code{outs/filtered_feature_bc_matrix/matrix.mtx.gz}
+\item \code{outs/filtered_feature_bc_matrix/features.tsv.gz}
+\item \code{outs/filtered_feature_bc_matrix/barcodes.tsv.gz}
+}}
 }
 \value{
-A sparse gene-by-cell expression matrix of class \code{dgCMatrix}, where
-only genes with valid and unique names are retained. Row names are set to gene symbols.
+A \code{dgCMatrix} (genes × cells) with cleaned, unique row names.
 }
 \description{
-This function reads a sparse expression matrix from a Cell Ranger output directory
-(in \code{.mtx} format) and performs quality control by removing genes with missing,
-empty, or duplicated names.
+Reads a sparse gene-by-cell matrix (\code{matrix.mtx.gz}) together with
+feature annotations from a Cell Ranger run folder. The required files are
+located in the sub-directory \code{outs/filtered_feature_bc_matrix/}.
 }
