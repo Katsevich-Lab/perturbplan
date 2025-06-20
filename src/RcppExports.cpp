@@ -177,6 +177,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_single_power_cpp
+double compute_single_power_cpp(double num_cells, double reads_per_cell, DataFrame fc_expression_df, double UMI_per_cell, double variation, double MOI, int num_targets, int gRNAs_per_target, int non_targeting_gRNAs, std::string control_group, double multiple_testing_alpha, std::string side, double prop_non_null);
+RcppExport SEXP _perturbplan_compute_single_power_cpp(SEXP num_cellsSEXP, SEXP reads_per_cellSEXP, SEXP fc_expression_dfSEXP, SEXP UMI_per_cellSEXP, SEXP variationSEXP, SEXP MOISEXP, SEXP num_targetsSEXP, SEXP gRNAs_per_targetSEXP, SEXP non_targeting_gRNAsSEXP, SEXP control_groupSEXP, SEXP multiple_testing_alphaSEXP, SEXP sideSEXP, SEXP prop_non_nullSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type num_cells(num_cellsSEXP);
+    Rcpp::traits::input_parameter< double >::type reads_per_cell(reads_per_cellSEXP);
+    Rcpp::traits::input_parameter< DataFrame >::type fc_expression_df(fc_expression_dfSEXP);
+    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
+    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
+    Rcpp::traits::input_parameter< double >::type MOI(MOISEXP);
+    Rcpp::traits::input_parameter< int >::type num_targets(num_targetsSEXP);
+    Rcpp::traits::input_parameter< int >::type gRNAs_per_target(gRNAs_per_targetSEXP);
+    Rcpp::traits::input_parameter< int >::type non_targeting_gRNAs(non_targeting_gRNAsSEXP);
+    Rcpp::traits::input_parameter< std::string >::type control_group(control_groupSEXP);
+    Rcpp::traits::input_parameter< double >::type multiple_testing_alpha(multiple_testing_alphaSEXP);
+    Rcpp::traits::input_parameter< std::string >::type side(sideSEXP);
+    Rcpp::traits::input_parameter< double >::type prop_non_null(prop_non_nullSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_single_power_cpp(num_cells, reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null));
+    return rcpp_result_gen;
+END_RCPP
+}
 // theta_batch_cpp
 Rcpp::NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y, const Rcpp::NumericVector& library_size, const Rcpp::NumericVector& rel_expr, bool rough, int n_threads);
 RcppExport SEXP _perturbplan_theta_batch_cpp(SEXP YSEXP, SEXP library_sizeSEXP, SEXP rel_exprSEXP, SEXP roughSEXP, SEXP n_threadsSEXP) {
@@ -254,6 +277,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_identify_library_size_range_cpp", (DL_FUNC) &_perturbplan_identify_library_size_range_cpp, 3},
     {"_perturbplan_generate_reads_grid_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_cpp, 4},
     {"_perturbplan_compute_power_plan_overall_cpp", (DL_FUNC) &_perturbplan_compute_power_plan_overall_cpp, 9},
+    {"_perturbplan_compute_single_power_cpp", (DL_FUNC) &_perturbplan_compute_single_power_cpp, 13},
     {"_perturbplan_theta_batch_cpp", (DL_FUNC) &_perturbplan_theta_batch_cpp, 5},
     {"_perturbplan_compute_fc_curve_cpp", (DL_FUNC) &_perturbplan_compute_fc_curve_cpp, 7},
     {"_perturbplan_compute_expression_curve_cpp", (DL_FUNC) &_perturbplan_compute_expression_curve_cpp, 8},

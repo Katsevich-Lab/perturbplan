@@ -131,6 +131,46 @@ compute_power_plan_overall_cpp <- function(fc_expression_df, library_size, num_t
     .Call(`_perturbplan_compute_power_plan_overall_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha, multiple_testing_method, side, prop_non_null, return_full_results)
 }
 
+#' Compute power for a single experimental design point (C++)
+#'
+#' @description
+#' Lightweight C++ function that computes power for a single cell count and 
+#' read depth combination. Optimized for use in binary search algorithms for 
+#' cell range determination.
+#'
+#' @param num_cells Numeric. Total number of cells in the experiment
+#' @param reads_per_cell Numeric. Sequencing reads per cell
+#' @param fc_expression_df DataFrame with fold change and expression info
+#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter from S-M curve
+#' @param variation Numeric. Variation parameter from S-M curve
+#' @param MOI Numeric. Multiplicity of infection (default 10)
+#' @param num_targets Integer. Number of targets (default 100)
+#' @param gRNAs_per_target Integer. gRNAs per target (default 4)
+#' @param non_targeting_gRNAs Integer. Non-targeting gRNAs (default 10)
+#' @param control_group String. Control group type ("complement" or "nt_cells", default "complement")
+#' @param multiple_testing_alpha Numeric. FDR target level (default 0.05)
+#' @param side String. Test sidedness ("left", "right", "both", default "left")
+#' @param prop_non_null Numeric. Proportion of non-null hypotheses (default 0.1)
+#'
+#' @return Numeric. Overall power for the specified experimental design point
+#'
+#' @details
+#' This function efficiently computes power for a single experimental condition by:
+#' \itemize{
+#'   \item Converting read depth to library size using S-M curve (fit_read_UMI_curve_cpp)
+#'   \item Calculating treatment and control cell counts based on experimental design
+#'   \item Computing overall power using compute_power_plan_overall_cpp
+#' }
+#' 
+#' The function is designed for use in binary search algorithms that determine 
+#' optimal cell count ranges based on power thresholds.
+#'
+#' @seealso \code{\link{compute_power_plan_overall_cpp}} for full power analysis
+#' @export
+compute_single_power_cpp <- function(num_cells, reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI = 10.0, num_targets = 100L, gRNAs_per_target = 4L, non_targeting_gRNAs = 10L, control_group = "complement", multiple_testing_alpha = 0.05, side = "left", prop_non_null = 0.1) {
+    .Call(`_perturbplan_compute_single_power_cpp`, num_cells, reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null)
+}
+
 theta_batch_cpp <- function(Y, library_size, rel_expr, rough = FALSE, n_threads = 0L) {
     .Call(`_perturbplan_theta_batch_cpp`, Y, library_size, rel_expr, rough, n_threads)
 }
