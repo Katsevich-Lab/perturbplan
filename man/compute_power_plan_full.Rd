@@ -6,14 +6,10 @@
 \usage{
 compute_power_plan_full(
   num_trt_cells,
+  num_cntrl_cells,
   library_size,
-  MOI = 10,
-  num_targets = 100,
-  gRNAs_per_target = 4,
-  non_targeting_gRNAs = 10,
   multiple_testing_alpha = 0.05,
   multiple_testing_method = "BH",
-  control_group = "complement",
   side = "left",
   fc_expression_df,
   expression_dispersion_curve,
@@ -23,23 +19,15 @@ compute_power_plan_full(
 )
 }
 \arguments{
-\item{num_trt_cells}{Number of treatment cells}
+\item{num_trt_cells}{Number of treatment cells (pre-computed)}
+
+\item{num_cntrl_cells}{Number of control cells (pre-computed)}
 
 \item{library_size}{Library size (reads per cell)}
-
-\item{MOI}{Multiplicity of infection}
-
-\item{num_targets}{Number of targets}
-
-\item{gRNAs_per_target}{Number of gRNAs per target}
-
-\item{non_targeting_gRNAs}{Number of non-targeting gRNAs}
 
 \item{multiple_testing_alpha}{Alpha level for multiple testing}
 
 \item{multiple_testing_method}{Multiple testing method}
-
-\item{control_group}{Control group type}
 
 \item{side}{Test sidedness}
 
@@ -57,6 +45,6 @@ compute_power_plan_full(
 List with overall power and power curves
 }
 \description{
-This function replaces the R Monte Carlo for loop with C++ implementation
-for improved performance.
+This function computes detailed power curves using C++ implementations for
+improved performance. Treatment and control cell counts should be pre-computed.
 }

@@ -8,46 +8,28 @@ compute_power_grid_full(
   cells_reads_df,
   fc_expression_info,
   library_info,
-  num_targets = 100,
-  gRNAs_per_target = 4,
-  non_targeting_gRNAs = 10,
   tpm_threshold = 10,
   fdr_target = 0.05,
   prop_non_null = 0.1,
-  MOI = 10,
-  experimental_platform = "10x Chromium v3",
   side = "left",
-  control_group = "complement",
   fc_curve_points = 10,
   expr_curve_points = 10
 )
 }
 \arguments{
-\item{cells_reads_df}{Data frame with columns num_total_cells, reads_per_cell, and num_trt_cells}
+\item{cells_reads_df}{Data frame with columns num_total_cells, reads_per_cell, num_trt_cells, and num_cntrl_cells}
 
 \item{fc_expression_info}{List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve}
 
 \item{library_info}{List from extract_library_info() containing UMI_per_cell and variation parameters}
 
-\item{num_targets}{Number of targets to test}
-
-\item{gRNAs_per_target}{Number of gRNAs per target}
-
-\item{non_targeting_gRNAs}{Number of non-targeting gRNAs}
-
-\item{tpm_threshold}{TPM threshold (currently unused)}
+\item{tpm_threshold}{TPM threshold for expression curve generation}
 
 \item{fdr_target}{Target false discovery rate}
 
 \item{prop_non_null}{Proportion of non-null hypotheses}
 
-\item{MOI}{Multiplicity of infection}
-
-\item{experimental_platform}{Experimental platform}
-
 \item{side}{Test sidedness ("left", "right", "both")}
-
-\item{control_group}{Control group type ("complement" or "nt_cells")}
 
 \item{fc_curve_points}{Number of points for fold change curve}
 
@@ -58,5 +40,6 @@ Data frame with power analysis results
 }
 \description{
 This function uses C++ implementations for computational efficiency in power analysis
-for perturb-seq experiments across different experimental conditions.
+for perturb-seq experiments across different experimental conditions. Experimental
+design parameters should be pre-computed into treatment and control cell counts.
 }

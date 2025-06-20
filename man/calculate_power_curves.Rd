@@ -15,7 +15,6 @@ calculate_power_curves(
   fdr_target = 0.05,
   prop_non_null = 0.1,
   MOI = 10,
-  experimental_platform = "10x Chromium v3",
   side = "left",
   control_group = "complement"
 )
@@ -40,8 +39,6 @@ calculate_power_curves(
 \item{prop_non_null}{Proportion of non-null pairs}
 
 \item{MOI}{Multiplicity of infection}
-
-\item{experimental_platform}{Experimental platform}
 
 \item{side}{Test sidedness ("left", "right", "both")}
 

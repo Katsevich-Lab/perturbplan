@@ -25,20 +25,21 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   side <- "both"
   prop_non_null <- 0.3
   
-  # Calculate treatment cells first
+  # Calculate treatment and control cells first
   num_trt_cells <- gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+  num_cntrl_cells <- switch(control_group,
+    complement = num_total_cells - num_trt_cells,
+    nt_cells = non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+  )
+  num_cntrl_cells <- round(num_cntrl_cells)
   
   # Get integrated result
   integrated_result <- compute_power_plan_overall(
     num_trt_cells = num_trt_cells,
+    num_cntrl_cells = num_cntrl_cells,
     library_size = library_size,
-    MOI = MOI,
-    num_targets = num_targets,
-    gRNAs_per_target = gRNAs_per_target,
-    non_targeting_gRNAs = non_targeting_gRNAs,
     multiple_testing_alpha = multiple_testing_alpha,
     multiple_testing_method = multiple_testing_method,
-    control_group = control_group,
     side = side,
     fc_expression_df = fc_expression_df,
     prop_non_null = prop_non_null,
@@ -114,14 +115,10 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   # Test simple return mode consistency
   simple_result <- compute_power_plan_overall(
     num_trt_cells = num_trt_cells,
+    num_cntrl_cells = num_cntrl_cells,
     library_size = library_size,
-    MOI = MOI,
-    num_targets = num_targets,
-    gRNAs_per_target = gRNAs_per_target,
-    non_targeting_gRNAs = non_targeting_gRNAs,
     multiple_testing_alpha = multiple_testing_alpha,
     multiple_testing_method = multiple_testing_method,
-    control_group = control_group,
     side = side,
     fc_expression_df = fc_expression_df,
     prop_non_null = prop_non_null,
@@ -132,25 +129,21 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   expect_equal(simple_result, integrated_result$overall_power, tolerance = 1e-12)
   
   # Test different control group method
+  # Manual calculation for nt_cells control group
+  manual_num_cntrl_cells_nt <- non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+  manual_num_cntrl_cells_nt <- round(manual_num_cntrl_cells_nt)
+  
   integrated_result_nt <- compute_power_plan_overall(
     num_trt_cells = num_trt_cells,
+    num_cntrl_cells = manual_num_cntrl_cells_nt,
     library_size = library_size,
-    MOI = MOI,
-    num_targets = num_targets,
-    gRNAs_per_target = gRNAs_per_target,
-    non_targeting_gRNAs = non_targeting_gRNAs,
     multiple_testing_alpha = multiple_testing_alpha,
     multiple_testing_method = multiple_testing_method,
-    control_group = "nt_cells",
     side = side,
     fc_expression_df = fc_expression_df,
     prop_non_null = prop_non_null,
     return_full_results = TRUE
   )
-  
-  # Manual calculation for nt_cells control group
-  manual_num_cntrl_cells_nt <- non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
-  manual_num_cntrl_cells_nt <- round(manual_num_cntrl_cells_nt)
   
   expect_equal(integrated_result_nt$num_cntrl_cells, manual_num_cntrl_cells_nt, tolerance = 1e-12)
   expect_equal(integrated_result_nt$num_trt_cells, manual_num_trt_cells, tolerance = 1e-12)  # Same treatment cells
@@ -162,6 +155,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   for (test_side in c("left", "right", "both")) {
     side_result <- compute_power_plan_overall(
       num_trt_cells = num_trt_cells,
+      num_cntrl_cells = num_cntrl_cells,
       library_size = library_size,
       fc_expression_df = fc_expression_df,
       side = test_side,

@@ -326,7 +326,6 @@ create_power_server <- function(input, output, session) {
       fdr_target = input$fdr_target,
       prop_non_null = input$prop_non_null,
       MOI = input$MOI,
-      experimental_platform = input$experimental_platform,
       side = input$side,
       control_group = input$control_group
     )

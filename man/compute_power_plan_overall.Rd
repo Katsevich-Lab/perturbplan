@@ -6,14 +6,10 @@
 \usage{
 compute_power_plan_overall(
   num_trt_cells,
+  num_cntrl_cells,
   library_size,
-  MOI = 10,
-  num_targets = 100,
-  gRNAs_per_target = 4,
-  non_targeting_gRNAs = 10,
   multiple_testing_alpha = 0.05,
   multiple_testing_method = "BH",
-  control_group = "complement",
   side = "left",
   fc_expression_df,
   prop_non_null = 0.1,
@@ -21,23 +17,15 @@ compute_power_plan_overall(
 )
 }
 \arguments{
-\item{num_trt_cells}{Number of treatment cells}
+\item{num_trt_cells}{Number of treatment cells (pre-computed)}
+
+\item{num_cntrl_cells}{Number of control cells (pre-computed)}
 
 \item{library_size}{Library size (reads per cell)}
-
-\item{MOI}{Multiplicity of infection}
-
-\item{num_targets}{Number of targets}
-
-\item{gRNAs_per_target}{Number of gRNAs per target}
-
-\item{non_targeting_gRNAs}{Number of non-targeting gRNAs}
 
 \item{multiple_testing_alpha}{Alpha level for multiple testing}
 
 \item{multiple_testing_method}{Multiple testing method}
-
-\item{control_group}{Control group type}
 
 \item{side}{Test sidedness}
 
@@ -51,6 +39,7 @@ compute_power_plan_overall(
 Overall power value (scalar) or list with full results depending on return_full_results
 }
 \description{
-This function computes overall power, BH cutoff, and cell counts without expensive curve calculations.
+This function computes overall power and BH cutoff without expensive curve calculations.
 Used for heatmap generation and as a base for detailed curve computation.
+Treatment and control cell counts should be pre-computed.
 }

@@ -1,7 +1,7 @@
 # Power calculation function using optimized approach for Shiny app integration
 
 # Suppress R CMD check warnings for variables used in dplyr contexts
-utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell", "num_trt_cells"))
+utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell", "num_trt_cells", "num_cntrl_cells"))
 
 #' Calculate power grid for app heatmap visualization (lightweight)
 #'
@@ -15,7 +15,6 @@ utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell", "n
 #' @param fdr_target FDR target level
 #' @param prop_non_null Proportion of non-null pairs
 #' @param MOI Multiplicity of infection
-#' @param experimental_platform Experimental platform
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
@@ -32,7 +31,6 @@ calculate_power_grid <- function(
   fdr_target = 0.05,
   prop_non_null = 0.1,
   MOI = 10,
-  experimental_platform = "10x Chromium v3",
   side = "left",
   control_group = "complement"
 ) {
@@ -47,7 +45,11 @@ calculate_power_grid <- function(
     reads_per_cell = reads_seq
   ) |>
     dplyr::mutate(
-      num_trt_cells = gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+      num_trt_cells = gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs),
+      num_cntrl_cells = switch(control_group,
+        complement = num_total_cells - num_trt_cells,
+        nt_cells = non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+      )
     )
 
   # Call the lightweight power function (overall power only, no curves)
@@ -55,15 +57,9 @@ calculate_power_grid <- function(
     cells_reads_df = cells_reads_df,
     fc_expression_info = fc_expression_info,
     library_info = library_info,
-    num_targets = num_targets,
-    gRNAs_per_target = gRNAs_per_target,
-    non_targeting_gRNAs = non_targeting_gRNAs,
     fdr_target = fdr_target,
     prop_non_null = prop_non_null,
-    MOI = MOI,
-    experimental_platform = experimental_platform,
-    side = side,
-    control_group = control_group
+    side = side
   )
 
   # Transform to expected format for heatmap
@@ -84,8 +80,7 @@ calculate_power_grid <- function(
       non_targeting_gRNAs = non_targeting_gRNAs,
       fdr_target = fdr_target,
       prop_non_null = prop_non_null,
-      MOI = MOI,
-      experimental_platform = experimental_platform
+      MOI = MOI
     )
   )
 }
@@ -105,7 +100,6 @@ calculate_power_grid <- function(
 #' @param fdr_target FDR target level
 #' @param prop_non_null Proportion of non-null pairs
 #' @param MOI Multiplicity of infection
-#' @param experimental_platform Experimental platform
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
 #'
@@ -122,7 +116,6 @@ calculate_power_curves <- function(
   fdr_target = 0.05,
   prop_non_null = 0.1,
   MOI = 10,
-  experimental_platform = "10x Chromium v3",
   side = "left",
   control_group = "complement"
 ) {
@@ -133,7 +126,11 @@ calculate_power_curves <- function(
     reads_per_cell = selected_tiles$reads
   ) |>
     dplyr::mutate(
-      num_trt_cells = gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+      num_trt_cells = gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs),
+      num_cntrl_cells = switch(control_group,
+        complement = num_total_cells - num_trt_cells,
+        nt_cells = non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+      )
     )
 
   # Call the detailed power function for selected tiles only
@@ -141,16 +138,10 @@ calculate_power_curves <- function(
     cells_reads_df = cells_reads_df,
     fc_expression_info = fc_expression_info,
     library_info = library_info,
-    num_targets = num_targets,
-    gRNAs_per_target = gRNAs_per_target,
-    non_targeting_gRNAs = non_targeting_gRNAs,
     tpm_threshold = tpm_threshold,
     fdr_target = fdr_target,
     prop_non_null = prop_non_null,
-    MOI = MOI,
-    experimental_platform = experimental_platform,
     side = side,
-    control_group = control_group,
     fc_curve_points = 10,  # Sufficient resolution for curves
     expr_curve_points = 10
   )
@@ -169,34 +160,24 @@ calculate_power_curves <- function(
 #'
 #' This function computes only overall power for each cell/read combination
 #' without the expensive curve calculations. Used for heatmap generation.
+#' Experimental design parameters (MOI, control group, etc.) should be pre-computed
+#' into treatment and control cell counts in the cells_reads_df.
 #'
-#' @param cells_reads_df Data frame with columns num_total_cells, reads_per_cell, and num_trt_cells
+#' @param cells_reads_df Data frame with columns num_total_cells, reads_per_cell, num_trt_cells, and num_cntrl_cells
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
-#' @param num_targets Number of targets to test
-#' @param gRNAs_per_target Number of gRNAs per target
-#' @param non_targeting_gRNAs Number of non-targeting gRNAs
 #' @param fdr_target Target false discovery rate
 #' @param prop_non_null Proportion of non-null hypotheses
-#' @param MOI Multiplicity of infection
-#' @param experimental_platform Experimental platform
 #' @param side Test sidedness ("left", "right", "both")
-#' @param control_group Control group type ("complement" or "nt_cells")
 #' @return Data frame with power analysis results (overall power only)
 #' @export
 compute_power_grid_overall <- function(
     cells_reads_df,
     fc_expression_info,
     library_info,
-    num_targets = 100,
-    gRNAs_per_target = 4,
-    non_targeting_gRNAs = 10,
     fdr_target = 0.05,
     prop_non_null = 0.1,
-    MOI = 10,
-    experimental_platform = "10x Chromium v3",
-    side = "left",
-    control_group = "complement"
+    side = "left"
 ){
 
   ########################## compute the library size ##########################
@@ -216,12 +197,10 @@ compute_power_grid_overall <- function(
     dplyr::mutate(
       overall_power = compute_power_plan_overall(
         # experimental information
-        num_trt_cells = num_trt_cells, library_size = library_size, MOI = MOI,
-        num_targets = num_targets, gRNAs_per_target = gRNAs_per_target,
-        non_targeting_gRNAs = non_targeting_gRNAs,
+        num_trt_cells = num_trt_cells, num_cntrl_cells = num_cntrl_cells, library_size = library_size,
         # analysis information
         multiple_testing_alpha = fdr_target, multiple_testing_method = "BH",
-        control_group = control_group, side = side,
+        side = side,
         # separated approach information
         fc_expression_df = fc_expression_info$fc_expression_df,
         prop_non_null = prop_non_null
@@ -239,21 +218,16 @@ compute_power_grid_overall <- function(
 #' Compute full power grid with curves using C++ test statistic computation
 #'
 #' This function uses C++ implementations for computational efficiency in power analysis
-#' for perturb-seq experiments across different experimental conditions.
+#' for perturb-seq experiments across different experimental conditions. Experimental
+#' design parameters should be pre-computed into treatment and control cell counts.
 #'
-#' @param cells_reads_df Data frame with columns num_total_cells, reads_per_cell, and num_trt_cells
+#' @param cells_reads_df Data frame with columns num_total_cells, reads_per_cell, num_trt_cells, and num_cntrl_cells
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
-#' @param num_targets Number of targets to test
-#' @param gRNAs_per_target Number of gRNAs per target
-#' @param non_targeting_gRNAs Number of non-targeting gRNAs
-#' @param tpm_threshold TPM threshold (currently unused)
+#' @param tpm_threshold TPM threshold for expression curve generation
 #' @param fdr_target Target false discovery rate
 #' @param prop_non_null Proportion of non-null hypotheses
-#' @param MOI Multiplicity of infection
-#' @param experimental_platform Experimental platform
 #' @param side Test sidedness ("left", "right", "both")
-#' @param control_group Control group type ("complement" or "nt_cells")
 #' @param fc_curve_points Number of points for fold change curve
 #' @param expr_curve_points Number of points for expression curve
 #' @return Data frame with power analysis results
@@ -262,16 +236,10 @@ compute_power_grid_full <- function(
     cells_reads_df,
     fc_expression_info,
     library_info,
-    num_targets = 100,
-    gRNAs_per_target = 4,
-    non_targeting_gRNAs = 10,
     tpm_threshold = 10,
     fdr_target = 0.05,
     prop_non_null = 0.1,
-    MOI = 10,
-    experimental_platform = "10x Chromium v3",
     side = "left",
-    control_group = "complement",
     fc_curve_points = 10,
     expr_curve_points = 10
 ){
@@ -340,12 +308,10 @@ compute_power_grid_full <- function(
       power_output = list(
         compute_power_plan_full(
           # experimental information
-          num_trt_cells = num_trt_cells, library_size = library_size, MOI = MOI,
-          num_targets = num_targets, gRNAs_per_target = gRNAs_per_target,
-          non_targeting_gRNAs = non_targeting_gRNAs,
+          num_trt_cells = num_trt_cells, num_cntrl_cells = num_cntrl_cells, library_size = library_size,
           # analysis information
           multiple_testing_alpha = fdr_target, multiple_testing_method = "BH",
-          control_group = control_group, side = side,
+          side = side,
           # separated approach information
           fc_expression_df = fc_expression_df,
           expression_dispersion_curve = expression_dispersion_curve,
@@ -368,18 +334,14 @@ compute_power_grid_full <- function(
 
 #' Compute full power analysis with curves using C++ Monte Carlo
 #'
-#' This function replaces the R Monte Carlo for loop with C++ implementation
-#' for improved performance.
+#' This function computes detailed power curves using C++ implementations for 
+#' improved performance. Treatment and control cell counts should be pre-computed.
 #'
-#' @param num_trt_cells Number of treatment cells
+#' @param num_trt_cells Number of treatment cells (pre-computed)
+#' @param num_cntrl_cells Number of control cells (pre-computed)
 #' @param library_size Library size (reads per cell)
-#' @param MOI Multiplicity of infection
-#' @param num_targets Number of targets
-#' @param gRNAs_per_target Number of gRNAs per target
-#' @param non_targeting_gRNAs Number of non-targeting gRNAs
 #' @param multiple_testing_alpha Alpha level for multiple testing
 #' @param multiple_testing_method Multiple testing method
-#' @param control_group Control group type
 #' @param side Test sidedness
 #' @param fc_expression_df Data frame with fold change and expression info
 #' @param expression_dispersion_curve Function for expression-size relationship
@@ -390,21 +352,19 @@ compute_power_grid_full <- function(
 #' @export
 compute_power_plan_full <- function(
     # experimental information
-  num_trt_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
+  num_trt_cells, num_cntrl_cells, library_size,
   # analysis information
-  multiple_testing_alpha = 0.05, multiple_testing_method = "BH", control_group = "complement", side = "left",
+  multiple_testing_alpha = 0.05, multiple_testing_method = "BH", side = "left",
   # separated approach information
   fc_expression_df, expression_dispersion_curve, fc_output_grid, expr_output_grid, prop_non_null = 0.1){
 
   ################ compute shared results (overall power, cutoff, cell counts) ################
   lightweight_results <- compute_power_plan_overall(
     # experimental information
-    num_trt_cells = num_trt_cells, library_size = library_size, MOI = MOI,
-    num_targets = num_targets, gRNAs_per_target = gRNAs_per_target,
-    non_targeting_gRNAs = non_targeting_gRNAs,
+    num_trt_cells = num_trt_cells, num_cntrl_cells = num_cntrl_cells, library_size = library_size,
     # analysis information
     multiple_testing_alpha = multiple_testing_alpha, multiple_testing_method = multiple_testing_method,
-    control_group = control_group, side = side,
+    side = side,
     # separated approach information
     fc_expression_df = fc_expression_df, prop_non_null = prop_non_null,
     return_full_results = TRUE
@@ -459,18 +419,15 @@ compute_power_plan_full <- function(
 
 #' Compute overall power for power analysis (lightweight computation)
 #'
-#' This function computes overall power, BH cutoff, and cell counts without expensive curve calculations.
+#' This function computes overall power and BH cutoff without expensive curve calculations.
 #' Used for heatmap generation and as a base for detailed curve computation.
+#' Treatment and control cell counts should be pre-computed.
 #'
-#' @param num_trt_cells Number of treatment cells
+#' @param num_trt_cells Number of treatment cells (pre-computed)
+#' @param num_cntrl_cells Number of control cells (pre-computed)
 #' @param library_size Library size (reads per cell)
-#' @param MOI Multiplicity of infection
-#' @param num_targets Number of targets
-#' @param gRNAs_per_target Number of gRNAs per target
-#' @param non_targeting_gRNAs Number of non-targeting gRNAs
 #' @param multiple_testing_alpha Alpha level for multiple testing
 #' @param multiple_testing_method Multiple testing method
-#' @param control_group Control group type
 #' @param side Test sidedness
 #' @param fc_expression_df Data frame with fold change and expression info
 #' @param prop_non_null Proportion of non-null hypotheses
@@ -479,23 +436,14 @@ compute_power_plan_full <- function(
 #' @export
 compute_power_plan_overall <- function(
     # experimental information
-  num_trt_cells, library_size, MOI = 10, num_targets = 100, gRNAs_per_target = 4, non_targeting_gRNAs = 10,
+  num_trt_cells, num_cntrl_cells, library_size,
   # analysis information
-  multiple_testing_alpha = 0.05, multiple_testing_method = "BH", control_group = "complement", side = "left",
+  multiple_testing_alpha = 0.05, multiple_testing_method = "BH", side = "left",
   # separated approach information
   fc_expression_df, prop_non_null = 0.1, return_full_results = FALSE){
 
-  ################ compute the control cells #####################
-  # Treatment cells already provided as parameter
-  # Calculate total cells from treatment cells for control group calculation
-  num_total_cells <- num_trt_cells * (num_targets * gRNAs_per_target + non_targeting_gRNAs) / (gRNAs_per_target * MOI)
-  num_cntrl_cells <- round(switch(control_group,
-                                  complement = {
-                                    num_total_cells - num_trt_cells
-                                  },
-                                  nt_cells = {
-                                    non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
-                                  }))
+  ################ cell counts are pre-computed and passed as parameters #####################
+  # num_trt_cells and num_cntrl_cells are already computed in higher-level functions
 
   ##############################################################################
   #################### compute Monte Carlo integration ########################
