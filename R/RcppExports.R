@@ -29,6 +29,73 @@ compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_m
     .Call(`_perturbplan_compute_distribution_teststat_fixed_es_cpp`, fold_change, expression_mean, expression_size, num_trt_cells, num_cntrl_cells, num_cells)
 }
 
+#' Compute effective library size from read depth using UMI saturation curve (C++)
+#'
+#' @description
+#' C++ implementation of the saturation-magnitude (S-M) curve that relates 
+#' sequencing reads to unique UMI counts, accounting for PCR amplification 
+#' variability and UMI saturation.
+#'
+#' @param reads_per_cell Numeric vector. Total reads per cell.
+#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter from S-M curve fit.
+#' @param variation Numeric. Variation parameter characterizing PCR bias from S-M curve fit.
+#'
+#' @return Numeric vector. Effective library size in UMIs for each read depth.
+#'
+#' @details
+#' This C++ implementation provides significant performance improvements over the R version
+#' for large-scale power analysis computations. The S-M curve formula:
+#' \deqn{effective\_UMI = UMI\_per\_cell \times (1 - exp(-reads\_per\_cell / UMI\_per\_cell) \times (1 + variation \times reads\_per\_cell^2 / (2 \times UMI\_per\_cell^2)))}
+#'
+#' @seealso \code{\link{fit_read_UMI_curve}} for R version
+#' @export
+fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
+    .Call(`_perturbplan_fit_read_UMI_curve_cpp`, reads_per_cell, UMI_per_cell, variation)
+}
+
+#' Identify optimal reads per cell range for power analysis grid (C++)
+#'
+#' @description
+#' C++ implementation that determines the minimum and maximum reads per cell values 
+#' for power analysis grid generation using binary search on the S-M curve.
+#'
+#' @param experimental_platform String. Experimental platform identifier.
+#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
+#' @param variation Numeric. Variation parameter for S-M curve.
+#'
+#' @return List with min_reads_per_cell and max_reads_per_cell elements.
+#'
+#' @details
+#' This C++ implementation uses efficient binary search to find the reads per cell
+#' that achieves approximately 80% UMI saturation. Platform-specific minimums:
+#' - "10x Chromium v3": 500 reads/cell
+#' - "Other": 1000 reads/cell
+#' - Default: 500 reads/cell
+#'
+#' @seealso \code{\link{identify_library_size_range}} for R version
+#' @export
+identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell, variation) {
+    .Call(`_perturbplan_identify_library_size_range_cpp`, experimental_platform, UMI_per_cell, variation)
+}
+
+#' Generate reads per cell grid using S-M curve analysis (C++)
+#'
+#' @description
+#' Convenience function that combines range identification with grid generation
+#' for power analysis heatmaps.
+#'
+#' @param experimental_platform String. Experimental platform identifier.
+#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
+#' @param variation Numeric. Variation parameter for S-M curve.
+#' @param grid_size Integer. Number of points in the grid (default: 10).
+#'
+#' @return NumericVector. Sequence of reads per cell values for grid.
+#'
+#' @export
+generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variation, grid_size = 10L) {
+    .Call(`_perturbplan_generate_reads_grid_cpp`, experimental_platform, UMI_per_cell, variation, grid_size)
+}
+
 theta_batch_cpp <- function(Y, library_size, rel_expr, rough = FALSE, n_threads = 0L) {
     .Call(`_perturbplan_theta_batch_cpp`, Y, library_size, rel_expr, rough, n_threads)
 }

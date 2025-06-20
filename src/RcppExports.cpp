@@ -118,6 +118,46 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fit_read_UMI_curve_cpp
+NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell, double UMI_per_cell, double variation);
+RcppExport SEXP _perturbplan_fit_read_UMI_curve_cpp(SEXP reads_per_cellSEXP, SEXP UMI_per_cellSEXP, SEXP variationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type reads_per_cell(reads_per_cellSEXP);
+    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
+    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_read_UMI_curve_cpp(reads_per_cell, UMI_per_cell, variation));
+    return rcpp_result_gen;
+END_RCPP
+}
+// identify_library_size_range_cpp
+List identify_library_size_range_cpp(std::string experimental_platform, double UMI_per_cell, double variation);
+RcppExport SEXP _perturbplan_identify_library_size_range_cpp(SEXP experimental_platformSEXP, SEXP UMI_per_cellSEXP, SEXP variationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type experimental_platform(experimental_platformSEXP);
+    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
+    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
+    rcpp_result_gen = Rcpp::wrap(identify_library_size_range_cpp(experimental_platform, UMI_per_cell, variation));
+    return rcpp_result_gen;
+END_RCPP
+}
+// generate_reads_grid_cpp
+NumericVector generate_reads_grid_cpp(std::string experimental_platform, double UMI_per_cell, double variation, int grid_size);
+RcppExport SEXP _perturbplan_generate_reads_grid_cpp(SEXP experimental_platformSEXP, SEXP UMI_per_cellSEXP, SEXP variationSEXP, SEXP grid_sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type experimental_platform(experimental_platformSEXP);
+    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
+    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
+    Rcpp::traits::input_parameter< int >::type grid_size(grid_sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(generate_reads_grid_cpp(experimental_platform, UMI_per_cell, variation, grid_size));
+    return rcpp_result_gen;
+END_RCPP
+}
 // theta_batch_cpp
 Rcpp::NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y, const Rcpp::NumericVector& library_size, const Rcpp::NumericVector& rel_expr, bool rough, int n_threads);
 RcppExport SEXP _perturbplan_theta_batch_cpp(SEXP YSEXP, SEXP library_sizeSEXP, SEXP rel_exprSEXP, SEXP roughSEXP, SEXP n_threadsSEXP) {
@@ -191,6 +231,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_compute_BH_plan", (DL_FUNC) &_perturbplan_compute_BH_plan, 5},
     {"_perturbplan_compute_QC_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_QC_fixed_es_cpp, 7},
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
+    {"_perturbplan_fit_read_UMI_curve_cpp", (DL_FUNC) &_perturbplan_fit_read_UMI_curve_cpp, 3},
+    {"_perturbplan_identify_library_size_range_cpp", (DL_FUNC) &_perturbplan_identify_library_size_range_cpp, 3},
+    {"_perturbplan_generate_reads_grid_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_cpp, 4},
     {"_perturbplan_theta_batch_cpp", (DL_FUNC) &_perturbplan_theta_batch_cpp, 5},
     {"_perturbplan_compute_fc_curve_cpp", (DL_FUNC) &_perturbplan_compute_fc_curve_cpp, 7},
     {"_perturbplan_compute_expression_curve_cpp", (DL_FUNC) &_perturbplan_compute_expression_curve_cpp, 8},
