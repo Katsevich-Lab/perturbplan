@@ -181,13 +181,18 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
 extract_baseline_expression <- function(biological_system = "K562"){
 
   # sample baseline expression based on biological system
-  switch(biological_system,
+  baseline_expression_list <- switch(biological_system,
          K562 = {
 
            # load the Gasperini baseline expression list
            rds_path <- system.file("extdata/baseline_expression", "Gasperini_expression.rds", package = "perturbplan", mustWork = TRUE)
-           baseline_expression_list <- readRDS(rds_path)
+           readRDS(rds_path)
 
+         },
+         # Default case for unsupported biological systems
+         {
+           stop("Unsupported biological system: '", biological_system, "'. ", 
+                "Supported systems: 'K562'. For other systems, use custom baseline data.")
          })
 
   # return the data frame with the susbampled rows

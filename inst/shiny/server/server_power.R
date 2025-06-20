@@ -5,7 +5,18 @@ create_power_server <- function(input, output, session) {
   planned <- reactiveVal(FALSE)
   output$need_plan <- reactive(!planned())
   outputOptions(output, "need_plan", suspendWhenHidden = FALSE)
-  observeEvent(input$plan_btn, planned(TRUE))
+  observeEvent(input$plan_btn, {
+    # Validate that if "Other" is selected, custom pilot data is provided
+    if ((input$biological_system == "Other" || input$experimental_platform == "Other") && 
+        (is.null(custom_baseline()) || is.null(custom_library()))) {
+      showNotification(
+        "Please upload custom pilot data when 'Other' is selected for biological system or experimental platform.",
+        type = "error", duration = 10
+      )
+      return()
+    }
+    planned(TRUE)
+  })
   
   # Gene list file upload handling
   gene_list <- reactiveVal(NULL)
@@ -54,9 +65,27 @@ create_power_server <- function(input, output, session) {
         
         # Analyze TPM filtering and gene availability
         tryCatch({
-          # Get baseline expression data to check gene availability (using unexported function)
-          baseline_expression_stats <- perturbplan:::extract_baseline_expression(biological_system = input$biological_system)
-          baseline_df <- baseline_expression_stats$baseline_expression
+          # Get baseline expression data to check gene availability
+          if (input$biological_system == "Other") {
+            # Use custom baseline data if available
+            if (!is.null(custom_baseline())) {
+              baseline_expression_stats <- custom_baseline()
+              baseline_df <- baseline_expression_stats$baseline_expression
+            } else {
+              # No custom data available, skip filtering analysis with a user-friendly message
+              output$gene_list_status <- renderUI({
+                HTML(sprintf("Loaded %d pairs (%d unique genes, %d unique targets)<br/><em style='color:orange;'>Gene filtering analysis unavailable: Please upload custom pilot data for 'Other' biological system</em>", 
+                            total_pairs, unique_genes_uploaded, unique_targets))
+              })
+              output$gene_list_uploaded <- reactive(TRUE)
+              outputOptions(output, "gene_list_uploaded", suspendWhenHidden = FALSE)
+              return()  # Exit early to avoid further processing
+            }
+          } else {
+            # Use built-in data (using unexported function)
+            baseline_expression_stats <- perturbplan:::extract_baseline_expression(biological_system = input$biological_system)
+            baseline_df <- baseline_expression_stats$baseline_expression
+          }
           
           # Apply TPM threshold filtering
           tpm_threshold_relative <- input$tpm_threshold / 1e6
@@ -180,7 +209,9 @@ create_power_server <- function(input, output, session) {
   custom_library <- reactiveVal(NULL)
   
   observeEvent(input$pilot_data_file, {
-    req(input$pilot_data_file, input$pilot_data_choice == "custom")
+    req(input$pilot_data_file)
+    # Require file if either "Other" is selected OR custom pilot data is chosen
+    req(input$pilot_data_choice == "custom" || input$biological_system == "Other" || input$experimental_platform == "Other")
     
     # Check file size (limit to 50MB for RDS files)
     file_size_mb <- file.size(input$pilot_data_file$datapath) / (1024^2)
@@ -274,9 +305,15 @@ create_power_server <- function(input, output, session) {
     })
   })
   
-  # Reset pilot data when choice changes to default or file is removed
+  # Reset pilot data when choice changes to default AND neither biological_system nor experimental_platform is "Other"
   observe({
-    if (is.null(input$pilot_data_file) || input$pilot_data_choice == "default") {
+    # Reset custom data if file is removed OR (pilot_data_choice is "default" AND neither system/platform is "Other")
+    should_reset <- is.null(input$pilot_data_file) || 
+                   (input$pilot_data_choice == "default" && 
+                    input$biological_system != "Other" && 
+                    input$experimental_platform != "Other")
+    
+    if (should_reset) {
       custom_baseline(NULL)
       custom_library(NULL)
       output$pilot_data_uploaded <- reactive(FALSE)
@@ -295,7 +332,7 @@ create_power_server <- function(input, output, session) {
       B = 1000,  # Monte Carlo samples for good accuracy
       gene_list = if(input$gene_list_mode == "custom") gene_list() else NULL,  # Use gene list only in custom mode
       tpm_threshold = input$tpm_threshold,  # Apply TPM filtering
-      custom_baseline_data = if(input$pilot_data_choice == "custom") custom_baseline() else NULL  # Use custom baseline if provided
+      custom_baseline_data = if(input$pilot_data_choice == "custom" || input$biological_system == "Other" || input$experimental_platform == "Other") custom_baseline() else NULL  # Use custom baseline if provided
     )
   })
 
@@ -305,7 +342,7 @@ create_power_server <- function(input, output, session) {
     # Extract library parameters for biological system or use custom data from pilot data
     perturbplan::extract_library_info(
       biological_system = input$biological_system,
-      custom_library_data = if(input$pilot_data_choice == "custom") custom_library() else NULL
+      custom_library_data = if(input$pilot_data_choice == "custom" || input$biological_system == "Other" || input$experimental_platform == "Other") custom_library() else NULL
     )
   })
 

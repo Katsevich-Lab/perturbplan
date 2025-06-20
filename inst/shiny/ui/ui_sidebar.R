@@ -19,23 +19,30 @@ create_sidebar <- function() {
         tags$div(
           id = "experimental-content",
           style = "padding: 15px;",
-          selectInput("biological_system", "Biological system:", c("K562")),
-          selectInput("experimental_platform", "Experimental platform:", c("10x Chromium v3")),
+          selectInput("biological_system", "Biological system:", c("K562", "Other")),
+          selectInput("experimental_platform", "Experimental platform:", c("10x Chromium v3", "Other")),
           
           # Pilot data choice (combines baseline expression and library parameters)
-          selectInput("pilot_data_choice", "Pilot data:",
-                     choices = c("Default" = "default", "Custom" = "custom"),
-                     selected = "default"),
+          # Only show this if neither biological_system nor experimental_platform is "Other"
+          conditionalPanel(
+            condition = "input.biological_system != 'Other' && input.experimental_platform != 'Other'",
+            selectInput("pilot_data_choice", "Pilot data:",
+                       choices = c("Default" = "default", "Custom" = "custom"),
+                       selected = "default")
+          ),
           
           # Conditional panel for custom pilot data upload
+          # Show if either biological_system or experimental_platform is "Other" OR if pilot_data_choice is "custom"
           conditionalPanel(
-            condition = "input.pilot_data_choice == 'custom'",
+            condition = "input.pilot_data_choice == 'custom' || input.biological_system == 'Other' || input.experimental_platform == 'Other'",
             tags$div(
               class = "file-upload-info",
               style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
               tags$small(
                 tags$i(class = "fa fa-info-circle", style = "margin-right: 3px;"),
                 tags$strong("Format: "), "Combined RDS file with baseline expression and library parameters",
+                tags$br(),
+                tags$strong("Note: "), "Required when 'Other' is selected for biological system or experimental platform",
                 style = "font-size: 11px;"
               )
             ),
