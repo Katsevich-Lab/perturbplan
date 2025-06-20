@@ -800,3 +800,127 @@ fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
 
   return(effective_UMI)
 }
+
+#' Identify optimal reads per cell range for power analysis grid
+#'
+#' @description
+#' This function determines the minimum and maximum reads per cell values for 
+#' power analysis grid generation based on experimental platform capabilities
+#' and S-M curve saturation analysis.
+#'
+#' @param experimental_platform Character. Experimental platform identifier
+#'   (e.g., "10x Chromium v3", "Other").
+#' @param library_info List. Output from extract_library_info() containing
+#'   UMI_per_cell and variation parameters for S-M curve analysis.
+#'
+#' @return List with elements:
+#' \describe{
+#'   \item{min_reads_per_cell}{Minimum reads per cell based on platform}
+#'   \item{max_reads_per_cell}{Maximum reads per cell for ~80% UMI saturation}
+#' }
+#'
+#' @details
+#' The function operates in two phases:
+#' 
+#' **Minimum determination**: Platform-specific minimum sequencing depth
+#' based on typical experimental capabilities and quality thresholds.
+#' 
+#' **Maximum determination**: Uses binary search on the S-M curve to find
+#' the reads per cell that achieves approximately 80% UMI saturation. If
+#' 80% saturation is not achievable within practical limits (10x UMI_per_cell),
+#' returns the practical upper bound.
+#' 
+#' The S-M curve relationship:
+#' \deqn{effective\_UMI = UMI\_per\_cell \times (1 - exp(-reads\_per\_cell / UMI\_per\_cell) \times (1 + variation \times reads\_per\_cell^2 / (2 \times UMI\_per\_cell^2)))}
+#'
+#' @seealso 
+#' \code{\link{fit_read_UMI_curve}} for S-M curve evaluation
+#' \code{\link{extract_library_info}} for obtaining library parameters
+#' @export
+identify_library_size_range <- function(experimental_platform, library_info) {
+  
+  # Validate inputs
+  if (!is.character(experimental_platform) || length(experimental_platform) != 1) {
+    stop("experimental_platform must be a single character string")
+  }
+  
+  if (!is.list(library_info) || !all(c("UMI_per_cell", "variation") %in% names(library_info))) {
+    stop("library_info must be a list with UMI_per_cell and variation elements")
+  }
+  
+  UMI_per_cell <- library_info$UMI_per_cell
+  variation <- library_info$variation
+  
+  if (!is.numeric(UMI_per_cell) || !is.numeric(variation) || 
+      UMI_per_cell <= 0 || variation <= 0) {
+    stop("UMI_per_cell and variation must be positive numeric values")
+  }
+  
+  # Step 1: Determine minimum reads per cell based on experimental platform
+  min_reads_per_cell <- switch(experimental_platform,
+    "10x Chromium v3" = 500,
+    "Other" = 1000,  # Conservative default for unknown platforms
+    500  # Fallback default
+  )
+  
+  # Step 2: Determine maximum reads per cell for ~80% UMI saturation
+  target_UMI <- 0.8 * UMI_per_cell
+  upper_bound <- 10 * UMI_per_cell  # Generous upper limit (10x UMI capacity)
+  
+  # Step 3: Check corner case - can we even reach 80% saturation?
+  upper_bound_UMI <- fit_read_UMI_curve(upper_bound, UMI_per_cell, variation)
+  
+  if (upper_bound_UMI < target_UMI) {
+    # Corner case: Even generous upper bound doesn't reach 80% saturation
+    # Return the upper bound as the practical maximum
+    max_reads_per_cell <- round(upper_bound)
+    
+    # Optional warning for user awareness
+    actual_saturation <- round(100 * upper_bound_UMI / UMI_per_cell, 1)
+    message("Note: 80% UMI saturation not achievable with practical read depths. ",
+            "Using maximum practical depth (", max_reads_per_cell, " reads/cell) ",
+            "which achieves ", actual_saturation, "% saturation.")
+    
+  } else {
+    # Step 4: Normal case - use binary search to find 80% saturation point
+    lower_bound <- min_reads_per_cell
+    tolerance <- 0.01 * UMI_per_cell  # 1% tolerance for convergence
+    
+    # Binary search loop
+    while (upper_bound - lower_bound > 1) {
+      mid_point <- (lower_bound + upper_bound) / 2
+      current_UMI <- fit_read_UMI_curve(mid_point, UMI_per_cell, variation)
+      
+      # Check if we've found the target within tolerance
+      if (abs(current_UMI - target_UMI) < tolerance) {
+        max_reads_per_cell <- round(mid_point)
+        break
+      }
+      
+      # Update bounds for next iteration
+      if (current_UMI < target_UMI) {
+        lower_bound <- mid_point
+      } else {
+        upper_bound <- mid_point
+      }
+    }
+    
+    # If loop ended without breaking, use the upper bound
+    if (!exists("max_reads_per_cell", inherits = FALSE)) {
+      max_reads_per_cell <- round(upper_bound)
+    }
+  }
+  
+  # Step 5: Ensure minimum < maximum (sanity check)
+  if (min_reads_per_cell >= max_reads_per_cell) {
+    warning("Minimum reads per cell (", min_reads_per_cell, ") >= maximum (", 
+            max_reads_per_cell, "). Adjusting minimum to ensure valid range.")
+    min_reads_per_cell <- max(100, max_reads_per_cell - 1000)
+  }
+  
+  # Return the range
+  return(list(
+    min_reads_per_cell = min_reads_per_cell,
+    max_reads_per_cell = max_reads_per_cell
+  ))
+}
