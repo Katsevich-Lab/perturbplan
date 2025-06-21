@@ -67,14 +67,6 @@ calculate_power_grid <- function(
     }
   }
 
-  # Debug: Check cells_reads_df structure before power calculation
-  cat("DEBUG calculate_power_grid: cells_reads_df columns:\n")
-  print(colnames(cells_reads_df))
-  cat("DEBUG calculate_power_grid: cells_reads_df structure:\n")
-  print(str(cells_reads_df))
-  cat("DEBUG calculate_power_grid: first few rows:\n")
-  print(head(cells_reads_df))
-
   # Call the lightweight power function (overall power only, no curves)
   power_results <- compute_power_grid_overall(
     cells_reads_df = cells_reads_df,
@@ -83,12 +75,6 @@ calculate_power_grid <- function(
     prop_non_null = prop_non_null,
     side = side
   )
-  
-  # Debug: Check power_results structure after power calculation
-  cat("DEBUG calculate_power_grid: power_results columns:\n")
-  print(colnames(power_results))
-  cat("DEBUG calculate_power_grid: power_results structure:\n")
-  print(str(power_results))
 
   # Transform to expected format for heatmap
   power_grid <- data.frame(
@@ -144,23 +130,11 @@ calculate_power_curves <- function(
   # Create cells_reads_df for selected tiles only
   # Note: selected_tiles$cells contains treatment cell counts from heatmap
   # Note: selected_tiles$num_cntrl_cells contains pre-computed control cells
-  
-  # Debug: Check selected_tiles input
-  cat("DEBUG calculate_power_curves: selected_tiles structure:\n")
-  print(str(selected_tiles))
-  cat("DEBUG calculate_power_curves: selected_tiles data:\n")
-  print(selected_tiles)
-  cat("DEBUG calculate_power_curves: selected_tiles columns:\n")
-  print(colnames(selected_tiles))
-  
   cells_reads_df <- data.frame(
     num_trt_cells = selected_tiles$cells,
     reads_per_cell = selected_tiles$reads,
     num_cntrl_cells = selected_tiles$num_cntrl_cells  # Use pre-computed control cells
   )
-  
-  cat("DEBUG calculate_power_curves: cells_reads_df:\n")
-  print(cells_reads_df)
 
   # Call the detailed power function for selected tiles only
   power_results <- compute_power_grid_full(

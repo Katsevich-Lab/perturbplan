@@ -25,17 +25,9 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     # Find matching rows in power grid
     grid_df <- power_data$gridDF()
     
-    # Debug: Check if num_cntrl_cells column exists
-    cat("DEBUG: grid_df columns:\n")
-    print(colnames(grid_df))
-    cat("DEBUG: grid_df structure:\n")
-    print(str(grid_df))
-    cat("DEBUG: first few rows of grid_df:\n")
-    print(head(grid_df))
     
     # Check if num_cntrl_cells column exists, if not calculate it
     if (!"num_cntrl_cells" %in% colnames(grid_df)) {
-      cat("WARNING: num_cntrl_cells column not found, calculating control cells directly\n")
       
       # Calculate control cells for selected tiles
       # Get experimental parameters from inputs
@@ -56,7 +48,6 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       )
     } else {
       # Use pre-computed values from power grid
-      cat("Found num_cntrl_cells column, using pre-computed values\n")
       
       # Find matching rows and extract control cells
       match_indices <- integer(length(selected_cells))
@@ -83,16 +74,6 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       reads = selected_reads,
       num_cntrl_cells = num_cntrl_cells
     )
-    
-    # Debug: Print selected_tiles structure
-    cat("DEBUG: selected_tiles structure:\n")
-    print(str(selected_tiles))
-    cat("DEBUG: selected_tiles data:\n")
-    print(selected_tiles)
-    cat("DEBUG: grid_df columns:\n")
-    print(colnames(grid_df))
-    cat("DEBUG: grid_df first few rows:\n")
-    print(head(grid_df))
     
     # Compute power curves only for selected tiles using the new workflow
     perturbplan::calculate_power_curves(
