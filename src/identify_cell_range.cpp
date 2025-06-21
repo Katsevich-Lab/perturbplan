@@ -220,9 +220,9 @@ List identify_cell_range_cpp(
   //============================================================================
   
   // Apply practical limits
-  if (min_cells > 1000.0) {
-    Rcout << "Info: min_cells (" << min_cells << ") > 1000. Setting min_cells to 1000." << std::endl;
-    min_cells = 1000.0;
+  if (min_cells > 100.0) {
+    Rcout << "Info: min_cells (" << min_cells << ") > 100. Setting min_cells to 100." << std::endl;
+    min_cells = 100.0;
     // Recalculate actual power at capped value
     actual_min_power = compute_single_power_cpp(
       min_cells, min_reads_per_cell, fc_expression_df,
@@ -245,9 +245,9 @@ List identify_cell_range_cpp(
   // Ensure min_cells <= max_cells after capping
   if (min_cells > max_cells) {
     Rcout << "Warning: After capping, min_cells (" << min_cells << ") > max_cells (" << max_cells 
-          << "). Setting both to 1000." << std::endl;
-    min_cells = 1000.0;
-    max_cells = 1000.0;
+          << "). Setting both to 100." << std::endl;
+    min_cells = 100.0;
+    max_cells = 100.0;
     // Recalculate powers at common value
     actual_min_power = compute_single_power_cpp(
       min_cells, min_reads_per_cell, fc_expression_df,
