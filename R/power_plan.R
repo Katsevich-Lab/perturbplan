@@ -138,12 +138,14 @@ calculate_power_curves <- function(
 ) {
 
   # Create cells_reads_df for selected tiles only
+  # Note: selected_tiles$cells contains treatment cell counts from heatmap
   cells_reads_df <- data.frame(
-    num_total_cells = selected_tiles$cells,
+    num_trt_cells = selected_tiles$cells,  # Use treatment cells directly
     reads_per_cell = selected_tiles$reads
   ) |>
     dplyr::mutate(
-      num_trt_cells = gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs),
+      # Calculate total cells from treatment cells
+      num_total_cells = (num_trt_cells * (num_targets * gRNAs_per_target + non_targeting_gRNAs)) / (gRNAs_per_target * MOI),
       num_cntrl_cells = switch(control_group,
         complement = num_total_cells - num_trt_cells,
         nt_cells = non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
