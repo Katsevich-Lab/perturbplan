@@ -72,30 +72,20 @@ calculate_power_grid <- function(
 #'
 #' @param selected_tiles Data frame with columns 'cells', 'reads', 'num_cntrl_cells', and 'library_size' for selected tiles
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
-#' @param num_targets Number of targets
-#' @param gRNAs_per_target Number of gRNAs per target
-#' @param non_targeting_gRNAs Number of non-targeting gRNAs
 #' @param tpm_threshold Minimum TPM threshold
 #' @param fdr_target FDR target level
 #' @param prop_non_null Proportion of non-null pairs
-#' @param MOI Multiplicity of infection
 #' @param side Test sidedness ("left", "right", "both")
-#' @param control_group Control group type ("complement" or "nt_cells")
 #'
 #' @return List with power curves for selected tiles
 #' @export
 calculate_power_curves <- function(
   selected_tiles,
   fc_expression_info,
-  num_targets = 100,
-  gRNAs_per_target = 4,
-  non_targeting_gRNAs = 10,
   tpm_threshold = 10,
   fdr_target = 0.05,
   prop_non_null = 0.1,
-  MOI = 10,
-  side = "left",
-  control_group = "complement"
+  side = "left"
 ) {
 
   # Create cells_reads_df for selected tiles only

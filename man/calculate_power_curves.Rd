@@ -7,15 +7,10 @@
 calculate_power_curves(
   selected_tiles,
   fc_expression_info,
-  num_targets = 100,
-  gRNAs_per_target = 4,
-  non_targeting_gRNAs = 10,
   tpm_threshold = 10,
   fdr_target = 0.05,
   prop_non_null = 0.1,
-  MOI = 10,
-  side = "left",
-  control_group = "complement"
+  side = "left"
 )
 }
 \arguments{
@@ -23,23 +18,13 @@ calculate_power_curves(
 
 \item{fc_expression_info}{List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve}
 
-\item{num_targets}{Number of targets}
-
-\item{gRNAs_per_target}{Number of gRNAs per target}
-
-\item{non_targeting_gRNAs}{Number of non-targeting gRNAs}
-
 \item{tpm_threshold}{Minimum TPM threshold}
 
 \item{fdr_target}{FDR target level}
 
 \item{prop_non_null}{Proportion of non-null pairs}
 
-\item{MOI}{Multiplicity of infection}
-
 \item{side}{Test sidedness ("left", "right", "both")}
-
-\item{control_group}{Control group type ("complement" or "nt_cells")}
 }
 \value{
 List with power curves for selected tiles

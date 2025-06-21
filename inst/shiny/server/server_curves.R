@@ -25,70 +25,43 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     # Find matching rows in power grid
     grid_df <- power_data$gridDF()
     
+    # Use pre-computed values from power grid
     
-    # Check if num_cntrl_cells column exists, if not calculate it
-    if (!"num_cntrl_cells" %in% colnames(grid_df)) {
+    # Find matching rows and extract control cells and library sizes
+    match_indices <- integer(length(selected_cells))
+    for (i in seq_along(selected_cells)) {
+      # Find exact matches for both cells and reads
+      cell_matches <- which(abs(grid_df$cells - selected_cells[i]) < 1e-6)
+      read_matches <- which(abs(grid_df$reads - selected_reads[i]) < 1e-6)
+      common_matches <- intersect(cell_matches, read_matches)
       
-      # Calculate control cells for selected tiles
-      # Get experimental parameters from inputs
-      num_targets <- if(input$gene_list_mode == "custom" && !is.null(power_data$gene_list()) && length(power_data$gene_list()) > 0) {
-        # For custom mode, count unique targets from uploaded data
-        length(unique(power_data$gene_list()))  # This should be target_list but gene_list is what's available
+      if (length(common_matches) == 0) {
+        # If no exact match, find closest
+        distances <- sqrt((grid_df$cells - selected_cells[i])^2 + (grid_df$reads - selected_reads[i])^2)
+        match_indices[i] <- which.min(distances)
       } else {
-        input$num_targets
+        match_indices[i] <- common_matches[1]
       }
-      
-      # Calculate total cells from treatment cells for each selection
-      num_total_cells <- (selected_cells * (num_targets * input$gRNAs_per_target + input$non_targeting_gRNAs)) / (input$gRNAs_per_target * input$MOI)
-      
-      # Calculate control cells based on control group type
-      num_cntrl_cells <- switch(input$control_group,
-        complement = num_total_cells - selected_cells,
-        nt_cells = input$non_targeting_gRNAs * num_total_cells * input$MOI / (num_targets * input$gRNAs_per_target + input$non_targeting_gRNAs)
-      )
-    } else {
-      # Use pre-computed values from power grid
-      
-      # Find matching rows and extract control cells
-      match_indices <- integer(length(selected_cells))
-      for (i in seq_along(selected_cells)) {
-        # Find exact matches for both cells and reads
-        cell_matches <- which(abs(grid_df$cells - selected_cells[i]) < 1e-6)
-        read_matches <- which(abs(grid_df$reads - selected_reads[i]) < 1e-6)
-        common_matches <- intersect(cell_matches, read_matches)
-        
-        if (length(common_matches) == 0) {
-          # If no exact match, find closest
-          distances <- sqrt((grid_df$cells - selected_cells[i])^2 + (grid_df$reads - selected_reads[i])^2)
-          match_indices[i] <- which.min(distances)
-        } else {
-          match_indices[i] <- common_matches[1]
-        }
-      }
-      
-      num_cntrl_cells <- grid_df$num_cntrl_cells[match_indices]
     }
+    
+    num_cntrl_cells <- grid_df$num_cntrl_cells[match_indices]
+    library_sizes <- grid_df$library_size[match_indices]
     
     selected_tiles <- data.frame(
       cells = selected_cells,
       reads = selected_reads,
-      num_cntrl_cells = num_cntrl_cells
+      num_cntrl_cells = num_cntrl_cells,
+      library_size = library_sizes
     )
     
     # Compute power curves only for selected tiles using the new workflow
     perturbplan::calculate_power_curves(
       selected_tiles = selected_tiles,
-      fc_expression_info = power_data$fc_expression_info(),  # Use extracted fc_expression_info
-      library_info = power_data$library_info(),  # Use extracted library_info
-      num_targets = input$num_targets,
-      gRNAs_per_target = input$gRNAs_per_target,
-      non_targeting_gRNAs = input$non_targeting_gRNAs,
+      fc_expression_info = power_data$fc_expression_info(),
       tpm_threshold = input$tpm_threshold,
       fdr_target = input$fdr_target,
       prop_non_null = input$prop_non_null,
-      MOI = input$MOI,
-      side = input$side,
-      control_group = input$control_group
+      side = input$side
     )
   })
 
