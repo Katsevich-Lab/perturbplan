@@ -1,7 +1,7 @@
 # Power calculation function using optimized approach for Shiny app integration
 
 # Suppress R CMD check warnings for variables used in dplyr contexts
-utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell", "num_trt_cells", "num_cntrl_cells"))
+utils::globalVariables(c("library_size", "reads_per_cell", "num_trt_cells", "num_cntrl_cells"))
 
 #' Calculate power grid for app heatmap visualization (lightweight)
 #'
@@ -11,7 +11,7 @@ utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell", "n
 #'
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param cells_reads_df Data frame with pre-computed experimental design containing
-#'   num_total_cells, reads_per_cell, num_trt_cells, num_cntrl_cells, and library_size columns.
+#'   reads_per_cell, num_trt_cells, num_cntrl_cells, and library_size columns.
 #'   Must be provided (from identify_cell_read_range() → convert_design_to_dataframe()).
 #' @param fdr_target FDR target level
 #' @param prop_non_null Proportion of non-null pairs
@@ -33,7 +33,7 @@ calculate_power_grid <- function(
   }
 
   # Validate provided experimental design
-  required_cols <- c("num_total_cells", "reads_per_cell", "num_trt_cells", "num_cntrl_cells", "library_size")
+  required_cols <- c("reads_per_cell", "num_trt_cells", "num_cntrl_cells", "library_size")
   missing_cols <- setdiff(required_cols, colnames(cells_reads_df))
   if (length(missing_cols) > 0) {
     stop("Missing required columns in cells_reads_df: ", paste(missing_cols, collapse = ", "))
@@ -138,7 +138,7 @@ calculate_power_curves <- function(
 #' Experimental design parameters (MOI, control group, etc.) should be pre-computed
 #' into treatment and control cell counts in the cells_reads_df.
 #'
-#' @param cells_reads_df Data frame with columns num_total_cells, reads_per_cell, num_trt_cells, and num_cntrl_cells
+#' @param cells_reads_df Data frame with columns reads_per_cell, num_trt_cells, and num_cntrl_cells
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #' @param fdr_target Target false discovery rate
@@ -190,7 +190,7 @@ compute_power_grid_overall <- function(
 #' for perturb-seq experiments across different experimental conditions. Experimental
 #' design parameters should be pre-computed into treatment and control cell counts.
 #'
-#' @param cells_reads_df Data frame with columns num_total_cells, reads_per_cell, num_trt_cells, and num_cntrl_cells
+#' @param cells_reads_df Data frame with columns reads_per_cell, num_trt_cells, and num_cntrl_cells
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #' @param tpm_threshold TPM threshold for expression curve generation

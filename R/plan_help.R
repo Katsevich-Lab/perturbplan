@@ -1075,13 +1075,12 @@ convert_design_to_dataframe <- function(design_output) {
     reads_idx = 1:length(design_output$reads_seq)
   ) |>
     dplyr::mutate(
-      num_total_cells = design_output$cells_seq[cells_idx],
       reads_per_cell = design_output$reads_seq[reads_idx],
       library_size = if("library_size_seq" %in% names(design_output)) design_output$library_size_seq[reads_idx] else NA,
       num_trt_cells = design_output$num_trt_cells_seq[cells_idx],
       num_cntrl_cells = design_output$num_cntrl_cells_seq[cells_idx]
     ) |>
-    dplyr::select(num_total_cells, reads_per_cell, library_size, num_trt_cells, num_cntrl_cells)
+    dplyr::select(reads_per_cell, library_size, num_trt_cells, num_cntrl_cells)
   
   return(cells_reads_df)
 }
