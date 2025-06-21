@@ -13,17 +13,44 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     req(power_data$planned(), power_data$fc_expression_info(), power_data$library_info(), selection_data$is_sel("tile"), nrow(selection_data$sel$tiles) > 0)
     
     # Create selected tiles data frame with pre-computed control cells
+    # Get selected cell and read values
+    selected_cells <- power_data$cells_seq()[selection_data$sel$tiles$row]
+    selected_reads <- power_data$reads_seq()[selection_data$sel$tiles$col]
+    
+    # Debug: check if we have valid selections
+    if (length(selected_cells) == 0 || length(selected_reads) == 0) {
+      stop("No valid tile selections found")
+    }
+    
+    # Find matching rows in power grid
+    grid_df <- power_data$gridDF()
+    
+    # Use a more robust matching approach that handles potential rounding differences
+    match_indices <- integer(length(selected_cells))
+    for (i in seq_along(selected_cells)) {
+      # Find exact matches for both cells and reads
+      cell_matches <- which(abs(grid_df$cells - selected_cells[i]) < 1e-6)
+      read_matches <- which(abs(grid_df$reads - selected_reads[i]) < 1e-6)
+      common_matches <- intersect(cell_matches, read_matches)
+      
+      if (length(common_matches) == 0) {
+        # If no exact match, find closest
+        distances <- sqrt((grid_df$cells - selected_cells[i])^2 + (grid_df$reads - selected_reads[i])^2)
+        match_indices[i] <- which.min(distances)
+      } else {
+        match_indices[i] <- common_matches[1]
+      }
+    }
+    
+    # Verify we found valid matches
+    if (any(match_indices <= 0 | match_indices > nrow(grid_df))) {
+      stop("Invalid match indices found")
+    }
+    
     selected_tiles <- data.frame(
-      cells = power_data$cells_seq()[selection_data$sel$tiles$row],
-      reads = power_data$reads_seq()[selection_data$sel$tiles$col],
-      # Extract corresponding control cells from power grid
-      num_cntrl_cells = power_data$gridDF()[
-        match(
-          interaction(power_data$cells_seq()[selection_data$sel$tiles$row],
-                     power_data$reads_seq()[selection_data$sel$tiles$col]),
-          interaction(power_data$gridDF()$cells, power_data$gridDF()$reads)
-        ), "num_cntrl_cells"
-      ]
+      cells = selected_cells,
+      reads = selected_reads,
+      num_cntrl_cells = grid_df$num_cntrl_cells[match_indices]
     )
     
     # Compute power curves only for selected tiles using the new workflow
