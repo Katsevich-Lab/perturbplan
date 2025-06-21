@@ -850,3 +850,168 @@ identify_library_size_range <- function(experimental_platform, library_info) {
   # Wrapper around the C++ implementation
   return(identify_library_size_range_cpp(experimental_platform, UMI_per_cell, variation))
 }
+
+#' Identify optimal cell and read range for power analysis with logarithmic grid generation
+#'
+#' @description
+#' This function combines library size range determination with cell range optimization
+#' to generate logarithmically-spaced experimental design grids for power analysis.
+#' It integrates identify_library_size_range_cpp() and identify_cell_range_cpp() with
+#' treatment/control cell allocation calculations.
+#'
+#' @param experimental_platform String. Experimental platform identifier for read range determination.
+#' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve.
+#' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters.
+#' @param grid_size Integer. Number of points in each dimension of the grid (default: 10).
+#' @param min_power_threshold Numeric. Minimum power threshold for cell range determination (default: 0.01).
+#' @param max_power_threshold Numeric. Maximum power threshold for cell range determination (default: 0.8).
+#' @param MOI Numeric. Multiplicity of infection for cell allocation calculations (default: 10).
+#' @param num_targets Integer. Number of targets for cell allocation calculations (default: 100).
+#' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
+#' @param non_targeting_gRNAs Integer. Number of non-targeting gRNAs (default: 10).
+#' @param control_group String. Control group type: "complement" or "nt_cells" (default: "complement").
+#' @param multiple_testing_alpha Numeric. Alpha level for multiple testing (default: 0.05).
+#' @param side String. Test sidedness: "left", "right", or "both" (default: "left").
+#' @param prop_non_null Numeric. Proportion of non-null hypotheses (default: 0.1).
+#'
+#' @return A list containing:
+#' \describe{
+#'   \item{cells_seq}{Numeric vector of logarithmically-spaced total cell counts}
+#'   \item{reads_seq}{Numeric vector of logarithmically-spaced reads per cell values}
+#'   \item{num_trt_cells_seq}{Numeric vector of treatment cell counts for each cell count}
+#'   \item{num_cntrl_cells_seq}{Numeric vector of control cell counts for each cell count}
+#'   \item{cell_range}{List with detailed cell range determination results}
+#'   \item{reads_range}{List with reads per cell range determination results}
+#'   \item{grid_size}{Integer grid size used}
+#' }
+#'
+#' @details
+#' The function operates in three main steps:
+#' \enumerate{
+#'   \item \strong{Reads Range}: Uses identify_library_size_range_cpp() to determine optimal reads per cell range based on UMI saturation curves
+#'   \item \strong{Cell Range}: Uses identify_cell_range_cpp() to determine optimal cell count range based on power thresholds
+#'   \item \strong{Grid Generation}: Creates logarithmically-spaced sequences and pre-computes treatment/control cell allocations
+#' }
+#'
+#' Both cell and read sequences use logarithmic spacing to provide good coverage across multiple orders of magnitude.
+#' Treatment and control cell counts are calculated based on MOI, gRNA ratios, and control group specification.
+#'
+#' @examples
+#' \dontrun{
+#' # Extract required info
+#' fc_info <- extract_fc_expression_info(0.8, 0.1, "K562", B = 100)
+#' lib_info <- extract_library_info("K562")
+#' 
+#' # Generate experimental design
+#' design <- identify_cell_read_range(
+#'   experimental_platform = "10x Chromium v3",
+#'   fc_expression_info = fc_info,
+#'   library_info = lib_info,
+#'   grid_size = 10
+#' )
+#' 
+#' # Examine the design
+#' print(design$cells_seq)      # Total cells: 100, 279, 777, ...
+#' print(design$reads_seq)      # Reads/cell: 500, 1753, 6145, ...
+#' print(design$num_trt_cells_seq)   # Treatment cells for each total
+#' }
+#'
+#' @seealso 
+#' \code{\link{identify_library_size_range_cpp}} for reads per cell range determination
+#' \code{\link{identify_cell_range_cpp}} for cell count range determination
+#' @export
+identify_cell_read_range <- function(
+  experimental_platform,
+  fc_expression_info, 
+  library_info,
+  grid_size = 10,
+  min_power_threshold = 0.01,
+  max_power_threshold = 0.8,
+  MOI = 10,
+  num_targets = 100,
+  gRNAs_per_target = 4,
+  non_targeting_gRNAs = 10,
+  control_group = "complement",
+  multiple_testing_alpha = 0.05,
+  side = "left",
+  prop_non_null = 0.1
+) {
+  
+  # Input validation
+  if (grid_size < 2) {
+    stop("grid_size must be at least 2")
+  }
+  if (min_power_threshold <= 0 || min_power_threshold >= 1) {
+    stop("min_power_threshold must be between 0 and 1")
+  }
+  if (max_power_threshold <= 0 || max_power_threshold >= 1) {
+    stop("max_power_threshold must be between 0 and 1")
+  }
+  if (min_power_threshold >= max_power_threshold) {
+    stop("min_power_threshold must be < max_power_threshold")
+  }
+  
+  # Step 1: Determine optimal reads per cell range using S-M curve analysis
+  reads_range <- identify_library_size_range(
+    experimental_platform = experimental_platform,
+    library_info = library_info
+  )
+  
+  # Step 2: Determine optimal cell count range based on power thresholds
+  cell_range <- identify_cell_range_cpp(
+    min_reads_per_cell = reads_range$min_reads_per_cell,
+    max_reads_per_cell = reads_range$max_reads_per_cell,
+    fc_expression_df = fc_expression_info$fc_expression_df,
+    UMI_per_cell = library_info$UMI_per_cell,
+    variation = library_info$variation,
+    MOI = MOI,
+    num_targets = num_targets,
+    gRNAs_per_target = gRNAs_per_target,
+    non_targeting_gRNAs = non_targeting_gRNAs,
+    control_group = control_group,
+    multiple_testing_alpha = multiple_testing_alpha,
+    side = side,
+    prop_non_null = prop_non_null,
+    min_power_threshold = min_power_threshold,
+    max_power_threshold = max_power_threshold
+  )
+  
+  # Step 3: Generate logarithmically-spaced sequences
+  
+  # Cell sequence (logarithmic spacing)
+  log_min_cells <- log10(cell_range$min_cells)
+  log_max_cells <- log10(cell_range$max_cells)
+  log_cells_seq <- seq(log_min_cells, log_max_cells, length.out = grid_size)
+  cells_seq <- round(10^log_cells_seq)
+  
+  # Reads sequence (logarithmic spacing)
+  log_min_reads <- log10(reads_range$min_reads_per_cell)
+  log_max_reads <- log10(reads_range$max_reads_per_cell)
+  log_reads_seq <- seq(log_min_reads, log_max_reads, length.out = grid_size)
+  reads_seq <- round(10^log_reads_seq)
+  
+  # Step 4: Pre-compute treatment and control cell allocations
+  total_gRNAs <- num_targets * gRNAs_per_target + non_targeting_gRNAs
+  num_trt_cells_seq <- (gRNAs_per_target * cells_seq * MOI) / total_gRNAs
+  
+  if (control_group == "complement") {
+    num_cntrl_cells_seq <- cells_seq - num_trt_cells_seq
+  } else {  # "nt_cells"
+    num_cntrl_cells_seq <- (non_targeting_gRNAs * cells_seq * MOI) / total_gRNAs
+  }
+  
+  # Round to whole cells
+  num_trt_cells_seq <- round(num_trt_cells_seq)
+  num_cntrl_cells_seq <- round(num_cntrl_cells_seq)
+  
+  # Return comprehensive experimental design
+  return(list(
+    cells_seq = cells_seq,
+    reads_seq = reads_seq,
+    num_trt_cells_seq = num_trt_cells_seq,
+    num_cntrl_cells_seq = num_cntrl_cells_seq,
+    cell_range = cell_range,
+    reads_range = reads_range,
+    grid_size = grid_size
+  ))
+}
