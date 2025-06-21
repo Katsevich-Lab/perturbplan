@@ -145,11 +145,7 @@ calculate_power_curves <- function(
     num_trt_cells = selected_tiles$cells,
     reads_per_cell = selected_tiles$reads,
     num_cntrl_cells = selected_tiles$num_cntrl_cells  # Use pre-computed control cells
-  ) |>
-    dplyr::mutate(
-      # Calculate total cells for any functions that still need it
-      num_total_cells = (num_trt_cells * (num_targets * gRNAs_per_target + non_targeting_gRNAs)) / (gRNAs_per_target * MOI)
-    )
+  )
 
   # Call the detailed power function for selected tiles only
   power_results <- compute_power_grid_full(
