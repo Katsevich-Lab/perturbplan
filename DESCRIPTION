@@ -1,6 +1,8 @@
 Package: perturbplan
 Title: Experimental Design and Power Analysis for Perturb-Seq Experiments
 Version: 0.0.1
+Author: Ziang Niu [aut, cre], Yihui He [aut], Eugene Katsevich [aut]
+Maintainer: Ziang Niu <ziangniu@wharton.upenn.edu>
 Authors@R: 
     c(person("Ziang", "Niu", , "ziangniu@wharton.upenn.edu", role = c("aut", "cre")),
       person("Yihui", "He", , "yihuihe@wharton.upenn.edu", role = c("aut")),
