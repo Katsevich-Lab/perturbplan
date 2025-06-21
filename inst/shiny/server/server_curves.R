@@ -25,6 +25,20 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     # Find matching rows in power grid
     grid_df <- power_data$gridDF()
     
+    # Debug: Check if num_cntrl_cells column exists
+    cat("DEBUG: grid_df columns:\n")
+    print(colnames(grid_df))
+    cat("DEBUG: grid_df structure:\n")
+    print(str(grid_df))
+    cat("DEBUG: first few rows of grid_df:\n")
+    print(head(grid_df))
+    
+    # Check if num_cntrl_cells column exists
+    if (!"num_cntrl_cells" %in% colnames(grid_df)) {
+      stop("num_cntrl_cells column not found in power grid! Available columns: ", 
+           paste(colnames(grid_df), collapse = ", "))
+    }
+    
     # Use a more robust matching approach that handles potential rounding differences
     match_indices <- integer(length(selected_cells))
     for (i in seq_along(selected_cells)) {
