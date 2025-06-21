@@ -46,7 +46,7 @@ double compute_single_power_cpp(
 //' @param min_power_threshold Numeric. Minimum power threshold for min cells (default 0.01)
 //' @param max_power_threshold Numeric. Target power threshold for max cells (default 0.8)
 //' @param cell_lower_bound Numeric. Lower bound for cell search (default 100)
-//' @param cell_upper_bound Numeric. Upper bound for cell search (default 1e6)
+//' @param cell_upper_bound Numeric. Upper bound for cell search (default 1e7)
 //'
 //' @return List with min_cells, max_cells, and achieved power values
 //'
@@ -79,7 +79,7 @@ List identify_cell_range_cpp(
   double min_power_threshold = 0.01,
   double max_power_threshold = 0.8,
   double cell_lower_bound = 100.0,
-  double cell_upper_bound = 1e6) {
+  double cell_upper_bound = 1e7) {
   
   // Input validation
   if (min_reads_per_cell <= 0) {
@@ -231,9 +231,9 @@ List identify_cell_range_cpp(
     );
   }
   
-  if (max_cells > 1e6) {
-    Rcout << "Info: max_cells (" << max_cells << ") > 1e6. Setting max_cells to 1e6." << std::endl;
-    max_cells = 1e6;
+  if (max_cells > 1e7) {
+    Rcout << "Info: max_cells (" << max_cells << ") > 1e7. Setting max_cells to 1e7." << std::endl;
+    max_cells = 1e7;
     // Recalculate actual power at capped value
     actual_max_power = compute_single_power_cpp(
       max_cells, max_reads_per_cell, fc_expression_df,
