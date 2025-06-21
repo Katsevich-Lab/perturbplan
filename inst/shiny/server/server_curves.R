@@ -12,10 +12,18 @@ create_curves_server <- function(input, output, session, power_data, selection_d
   selected_power_curves <- reactive({
     req(power_data$planned(), power_data$fc_expression_info(), power_data$library_info(), selection_data$is_sel("tile"), nrow(selection_data$sel$tiles) > 0)
     
-    # Create selected tiles data frame
+    # Create selected tiles data frame with pre-computed control cells
     selected_tiles <- data.frame(
       cells = power_data$cells_seq()[selection_data$sel$tiles$row],
-      reads = power_data$reads_seq()[selection_data$sel$tiles$col]
+      reads = power_data$reads_seq()[selection_data$sel$tiles$col],
+      # Extract corresponding control cells from power grid
+      num_cntrl_cells = power_data$gridDF()[
+        match(
+          interaction(power_data$cells_seq()[selection_data$sel$tiles$row],
+                     power_data$reads_seq()[selection_data$sel$tiles$col]),
+          interaction(power_data$gridDF()$cells, power_data$gridDF()$reads)
+        ), "num_cntrl_cells"
+      ]
     )
     
     # Compute power curves only for selected tiles using the new workflow
