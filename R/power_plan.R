@@ -102,15 +102,7 @@ calculate_power_grid <- function(
   list(
     power_grid = power_grid,
     cells_seq = sort(unique(power_grid$cells)),  # Treatment cell sequence for axis
-    reads_seq = if (!cells_reads_df_provided) reads_seq else sort(unique(power_results$reads_per_cell)),
-    parameters = list(
-      num_targets = num_targets,
-      gRNAs_per_target = gRNAs_per_target,
-      non_targeting_gRNAs = non_targeting_gRNAs,
-      fdr_target = fdr_target,
-      prop_non_null = prop_non_null,
-      MOI = MOI
-    )
+    reads_seq = if (!cells_reads_df_provided) reads_seq else sort(unique(power_results$reads_per_cell))
   )
 }
 
