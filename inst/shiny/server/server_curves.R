@@ -25,6 +25,14 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     # Find matching rows in power grid
     grid_df <- power_data$gridDF()
     
+    # Check if required columns exist in the power grid
+    if (!"num_cntrl_cells" %in% colnames(grid_df)) {
+      stop("num_cntrl_cells column missing from power grid. Power grid must be regenerated with pre-computed values.")
+    }
+    if (!"library_size" %in% colnames(grid_df)) {
+      stop("library_size column missing from power grid. Power grid must be regenerated with pre-computed values.")
+    }
+    
     # Use pre-computed values from power grid
     
     # Find matching rows and extract control cells and library sizes
@@ -46,6 +54,16 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     
     num_cntrl_cells <- grid_df$num_cntrl_cells[match_indices]
     library_sizes <- grid_df$library_size[match_indices]
+    
+    # Debug: check vector lengths before creating data frame
+    if (length(num_cntrl_cells) != length(selected_cells)) {
+      stop(paste("Length mismatch: selected_cells =", length(selected_cells), 
+                ", num_cntrl_cells =", length(num_cntrl_cells)))
+    }
+    if (length(library_sizes) != length(selected_cells)) {
+      stop(paste("Length mismatch: selected_cells =", length(selected_cells), 
+                ", library_sizes =", length(library_sizes)))
+    }
     
     selected_tiles <- data.frame(
       cells = selected_cells,
