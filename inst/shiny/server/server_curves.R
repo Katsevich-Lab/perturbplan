@@ -33,38 +33,55 @@ create_curves_server <- function(input, output, session, power_data, selection_d
     cat("DEBUG: first few rows of grid_df:\n")
     print(head(grid_df))
     
-    # Check if num_cntrl_cells column exists
+    # Check if num_cntrl_cells column exists, if not calculate it
     if (!"num_cntrl_cells" %in% colnames(grid_df)) {
-      stop("num_cntrl_cells column not found in power grid! Available columns: ", 
-           paste(colnames(grid_df), collapse = ", "))
-    }
-    
-    # Use a more robust matching approach that handles potential rounding differences
-    match_indices <- integer(length(selected_cells))
-    for (i in seq_along(selected_cells)) {
-      # Find exact matches for both cells and reads
-      cell_matches <- which(abs(grid_df$cells - selected_cells[i]) < 1e-6)
-      read_matches <- which(abs(grid_df$reads - selected_reads[i]) < 1e-6)
-      common_matches <- intersect(cell_matches, read_matches)
+      cat("WARNING: num_cntrl_cells column not found, calculating control cells directly\n")
       
-      if (length(common_matches) == 0) {
-        # If no exact match, find closest
-        distances <- sqrt((grid_df$cells - selected_cells[i])^2 + (grid_df$reads - selected_reads[i])^2)
-        match_indices[i] <- which.min(distances)
+      # Calculate control cells for selected tiles
+      # Get experimental parameters from inputs
+      num_targets <- if(input$gene_list_mode == "custom" && !is.null(power_data$gene_list()) && length(power_data$gene_list()) > 0) {
+        # For custom mode, count unique targets from uploaded data
+        length(unique(power_data$gene_list()))  # This should be target_list but gene_list is what's available
       } else {
-        match_indices[i] <- common_matches[1]
+        input$num_targets
       }
-    }
-    
-    # Verify we found valid matches
-    if (any(match_indices <= 0 | match_indices > nrow(grid_df))) {
-      stop("Invalid match indices found")
+      
+      # Calculate total cells from treatment cells for each selection
+      num_total_cells <- (selected_cells * (num_targets * input$gRNAs_per_target + input$non_targeting_gRNAs)) / (input$gRNAs_per_target * input$MOI)
+      
+      # Calculate control cells based on control group type
+      num_cntrl_cells <- switch(input$control_group,
+        complement = num_total_cells - selected_cells,
+        nt_cells = input$non_targeting_gRNAs * num_total_cells * input$MOI / (num_targets * input$gRNAs_per_target + input$non_targeting_gRNAs)
+      )
+    } else {
+      # Use pre-computed values from power grid
+      cat("Found num_cntrl_cells column, using pre-computed values\n")
+      
+      # Find matching rows and extract control cells
+      match_indices <- integer(length(selected_cells))
+      for (i in seq_along(selected_cells)) {
+        # Find exact matches for both cells and reads
+        cell_matches <- which(abs(grid_df$cells - selected_cells[i]) < 1e-6)
+        read_matches <- which(abs(grid_df$reads - selected_reads[i]) < 1e-6)
+        common_matches <- intersect(cell_matches, read_matches)
+        
+        if (length(common_matches) == 0) {
+          # If no exact match, find closest
+          distances <- sqrt((grid_df$cells - selected_cells[i])^2 + (grid_df$reads - selected_reads[i])^2)
+          match_indices[i] <- which.min(distances)
+        } else {
+          match_indices[i] <- common_matches[1]
+        }
+      }
+      
+      num_cntrl_cells <- grid_df$num_cntrl_cells[match_indices]
     }
     
     selected_tiles <- data.frame(
       cells = selected_cells,
       reads = selected_reads,
-      num_cntrl_cells = grid_df$num_cntrl_cells[match_indices]
+      num_cntrl_cells = num_cntrl_cells
     )
     
     # Debug: Print selected_tiles structure
