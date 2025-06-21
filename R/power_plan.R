@@ -198,15 +198,18 @@ compute_power_grid_overall <- function(
 ){
 
   ########################## compute the library size ##########################
-  # Use passed library info (extracted upfront)
-  UMI_per_cell <- library_info$UMI_per_cell
-  variation <- library_info$variation
-
-  # compute the library size
-  cells_reads_df <- cells_reads_df |>
-    dplyr::mutate(
-      library_size = fit_read_UMI_curve(reads_per_cell = reads_per_cell, UMI_per_cell = !!UMI_per_cell, variation = !!variation)
-    )
+  # Check if library_size is already provided (from identify_cell_read_range)
+  if (!"library_size" %in% colnames(cells_reads_df)) {
+    # Backward compatibility: compute library size if not provided
+    UMI_per_cell <- library_info$UMI_per_cell
+    variation <- library_info$variation
+    
+    cells_reads_df <- cells_reads_df |>
+      dplyr::mutate(
+        library_size = fit_read_UMI_curve(reads_per_cell = reads_per_cell, UMI_per_cell = !!UMI_per_cell, variation = !!variation)
+      )
+  }
+  # If library_size already exists, use pre-computed values (more efficient!)
 
   ############### compute the power for the cells-reads grid ###################
   power_df <- cells_reads_df |>
@@ -308,15 +311,18 @@ compute_power_grid_full <- function(
   expr_output_grid <- 10^seq(log10(expr_min), log10(expr_range[2]), length.out = expr_curve_points)
 
   ########################## compute the library size ##########################
-  # Use passed library info (extracted upfront)
-  UMI_per_cell <- library_info$UMI_per_cell
-  variation <- library_info$variation
-
-  # compute the library size
-  cells_reads_df <- cells_reads_df |>
-    dplyr::mutate(
-      library_size = fit_read_UMI_curve(reads_per_cell = reads_per_cell, UMI_per_cell = !!UMI_per_cell, variation = !!variation)
-    )
+  # Check if library_size is already provided (from identify_cell_read_range)
+  if (!"library_size" %in% colnames(cells_reads_df)) {
+    # Backward compatibility: compute library size if not provided
+    UMI_per_cell <- library_info$UMI_per_cell
+    variation <- library_info$variation
+    
+    cells_reads_df <- cells_reads_df |>
+      dplyr::mutate(
+        library_size = fit_read_UMI_curve(reads_per_cell = reads_per_cell, UMI_per_cell = !!UMI_per_cell, variation = !!variation)
+      )
+  }
+  # If library_size already exists, use pre-computed values (more efficient!)
 
   ############### compute the power for the cells-reads grid ###################
   power_df <- cells_reads_df |>
