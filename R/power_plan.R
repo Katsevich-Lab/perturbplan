@@ -141,11 +141,23 @@ calculate_power_curves <- function(
   # Create cells_reads_df for selected tiles only
   # Note: selected_tiles$cells contains treatment cell counts from heatmap
   # Note: selected_tiles$num_cntrl_cells contains pre-computed control cells
+  
+  # Debug: Check selected_tiles input
+  cat("DEBUG calculate_power_curves: selected_tiles structure:\n")
+  print(str(selected_tiles))
+  cat("DEBUG calculate_power_curves: selected_tiles data:\n")
+  print(selected_tiles)
+  cat("DEBUG calculate_power_curves: selected_tiles columns:\n")
+  print(colnames(selected_tiles))
+  
   cells_reads_df <- data.frame(
     num_trt_cells = selected_tiles$cells,
     reads_per_cell = selected_tiles$reads,
     num_cntrl_cells = selected_tiles$num_cntrl_cells  # Use pre-computed control cells
   )
+  
+  cat("DEBUG calculate_power_curves: cells_reads_df:\n")
+  print(cells_reads_df)
 
   # Call the detailed power function for selected tiles only
   power_results <- compute_power_grid_full(

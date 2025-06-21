@@ -53,6 +53,16 @@ create_curves_server <- function(input, output, session, power_data, selection_d
       num_cntrl_cells = grid_df$num_cntrl_cells[match_indices]
     )
     
+    # Debug: Print selected_tiles structure
+    cat("DEBUG: selected_tiles structure:\n")
+    print(str(selected_tiles))
+    cat("DEBUG: selected_tiles data:\n")
+    print(selected_tiles)
+    cat("DEBUG: grid_df columns:\n")
+    print(colnames(grid_df))
+    cat("DEBUG: grid_df first few rows:\n")
+    print(head(grid_df))
+    
     # Compute power curves only for selected tiles using the new workflow
     perturbplan::calculate_power_curves(
       selected_tiles = selected_tiles,
