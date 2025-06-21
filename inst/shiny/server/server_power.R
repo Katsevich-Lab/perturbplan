@@ -382,19 +382,10 @@ create_power_server <- function(input, output, session) {
     # Call the package function with pre-computed experimental design
     perturbplan::calculate_power_grid(
       fc_expression_info = fc_expression_info(),
-      num_targets = if(input$gene_list_mode == "custom" && !is.null(target_list())) {
-        length(unique(target_list()))  # Use actual unique targets from CSV
-      } else {
-        input$num_targets  # Use user input for random mode
-      },
-      gRNAs_per_target = input$gRNAs_per_target, 
-      non_targeting_gRNAs = input$non_targeting_gRNAs,
+      cells_reads_df = cells_reads_df(),  # Pass pre-computed experimental design
       fdr_target = input$fdr_target,
       prop_non_null = input$prop_non_null,
-      MOI = input$MOI,
-      side = input$side,
-      control_group = input$control_group,
-      cells_reads_df = cells_reads_df()  # Pass pre-computed experimental design
+      side = input$side
     )
   })
 
