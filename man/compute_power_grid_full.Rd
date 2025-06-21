@@ -7,7 +7,6 @@
 compute_power_grid_full(
   cells_reads_df,
   fc_expression_info,
-  library_info,
   tpm_threshold = 10,
   fdr_target = 0.05,
   prop_non_null = 0.1,
@@ -17,11 +16,9 @@ compute_power_grid_full(
 )
 }
 \arguments{
-\item{cells_reads_df}{Data frame with columns num_total_cells, reads_per_cell, num_trt_cells, and num_cntrl_cells}
+\item{cells_reads_df}{Data frame with columns reads_per_cell, num_trt_cells, and num_cntrl_cells}
 
 \item{fc_expression_info}{List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve}
-
-\item{library_info}{List from extract_library_info() containing UMI_per_cell and variation parameters}
 
 \item{tpm_threshold}{TPM threshold for expression curve generation}
 

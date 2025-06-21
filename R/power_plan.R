@@ -1,7 +1,7 @@
 # Power calculation function using optimized approach for Shiny app integration
 
 # Suppress R CMD check warnings for variables used in dplyr contexts
-utils::globalVariables(c("library_size", "reads_per_cell", "num_trt_cells", "num_cntrl_cells"))
+utils::globalVariables(c("library_size", "reads_per_cell", "num_trt_cells", "num_cntrl_cells", "cells_idx", "reads_idx"))
 
 #' Calculate power grid for app heatmap visualization (lightweight)
 #'
@@ -12,7 +12,7 @@ utils::globalVariables(c("library_size", "reads_per_cell", "num_trt_cells", "num
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param cells_reads_df Data frame with pre-computed experimental design containing
 #'   reads_per_cell, num_trt_cells, num_cntrl_cells, and library_size columns.
-#'   Must be provided (from identify_cell_read_range() → convert_design_to_dataframe()).
+#'   Must be provided (from identify_cell_read_range() -> convert_design_to_dataframe()).
 #' @param fdr_target FDR target level
 #' @param prop_non_null Proportion of non-null pairs
 #' @param side Test sidedness ("left", "right", "both")
@@ -29,7 +29,7 @@ calculate_power_grid <- function(
 
   # Validate that cells_reads_df is provided
   if (missing(cells_reads_df) || is.null(cells_reads_df)) {
-    stop("cells_reads_df is required and must be provided from identify_cell_read_range() → convert_design_to_dataframe()")
+    stop("cells_reads_df is required and must be provided from identify_cell_read_range() -> convert_design_to_dataframe()")
   }
 
   # Validate provided experimental design
@@ -53,7 +53,8 @@ calculate_power_grid <- function(
     cells = round(power_results$num_trt_cells),  # Display treatment cells as integers
     reads = power_results$reads_per_cell,
     power = power_results$overall_power,
-    num_cntrl_cells = round(power_results$num_cntrl_cells)  # Pre-computed control cells
+    num_cntrl_cells = round(power_results$num_cntrl_cells),  # Pre-computed control cells
+    library_size = power_results$library_size  # Pre-computed library sizes
   )
 
   # Return structure compatible with Shiny app
@@ -69,9 +70,8 @@ calculate_power_grid <- function(
 #' This function computes detailed power curves (TPM and fold-change) for specific
 #' selected cell/read combinations. More efficient than computing all curves upfront.
 #'
-#' @param selected_tiles Data frame with columns 'cells' and 'reads' for selected tiles
+#' @param selected_tiles Data frame with columns 'cells', 'reads', 'num_cntrl_cells', and 'library_size' for selected tiles
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
-#' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #' @param num_targets Number of targets
 #' @param gRNAs_per_target Number of gRNAs per target
 #' @param non_targeting_gRNAs Number of non-targeting gRNAs
@@ -87,7 +87,6 @@ calculate_power_grid <- function(
 calculate_power_curves <- function(
   selected_tiles,
   fc_expression_info,
-  library_info,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
@@ -102,17 +101,24 @@ calculate_power_curves <- function(
   # Create cells_reads_df for selected tiles only
   # Note: selected_tiles$cells contains treatment cell counts from heatmap
   # Note: selected_tiles$num_cntrl_cells contains pre-computed control cells
+  # Note: selected_tiles$library_size contains pre-computed library sizes
+  
+  # Validate that library_size is provided
+  if (!"library_size" %in% colnames(selected_tiles)) {
+    stop("library_size column missing from selected_tiles. Expected pre-computed values from power grid.")
+  }
+  
   cells_reads_df <- data.frame(
     num_trt_cells = selected_tiles$cells,
     reads_per_cell = selected_tiles$reads,
-    num_cntrl_cells = selected_tiles$num_cntrl_cells  # Use pre-computed control cells
+    num_cntrl_cells = selected_tiles$num_cntrl_cells,  # Use pre-computed control cells
+    library_size = selected_tiles$library_size  # Use pre-computed library sizes
   )
 
   # Call the detailed power function for selected tiles only
   power_results <- compute_power_grid_full(
     cells_reads_df = cells_reads_df,
     fc_expression_info = fc_expression_info,
-    library_info = library_info,
     tpm_threshold = tpm_threshold,
     fdr_target = fdr_target,
     prop_non_null = prop_non_null,
@@ -140,7 +146,6 @@ calculate_power_curves <- function(
 #'
 #' @param cells_reads_df Data frame with columns reads_per_cell, num_trt_cells, and num_cntrl_cells
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
-#' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #' @param fdr_target Target false discovery rate
 #' @param prop_non_null Proportion of non-null hypotheses
 #' @param side Test sidedness ("left", "right", "both")
@@ -192,7 +197,6 @@ compute_power_grid_overall <- function(
 #'
 #' @param cells_reads_df Data frame with columns reads_per_cell, num_trt_cells, and num_cntrl_cells
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
-#' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #' @param tpm_threshold TPM threshold for expression curve generation
 #' @param fdr_target Target false discovery rate
 #' @param prop_non_null Proportion of non-null hypotheses
@@ -297,7 +301,7 @@ compute_power_grid_full <- function(
 
 #' Compute full power analysis with curves using C++ Monte Carlo
 #'
-#' This function computes detailed power curves using C++ implementations for 
+#' This function computes detailed power curves using C++ implementations for
 #' improved performance. Treatment and control cell counts should be pre-computed.
 #'
 #' @param num_trt_cells Number of treatment cells (pre-computed)
@@ -332,7 +336,7 @@ compute_power_plan_full <- function(
     fc_expression_df = fc_expression_df, prop_non_null = prop_non_null,
     return_full_results = TRUE
   )
-  
+
   # Extract results from lightweight computation
   overall_power <- lightweight_results$overall_power
   sig_cutoff <- lightweight_results$sig_cutoff

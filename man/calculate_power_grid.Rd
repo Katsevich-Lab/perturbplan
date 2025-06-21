@@ -6,45 +6,27 @@
 \usage{
 calculate_power_grid(
   fc_expression_info,
-  library_info,
-  num_targets = 100,
-  gRNAs_per_target = 4,
-  non_targeting_gRNAs = 10,
+  cells_reads_df,
   fdr_target = 0.05,
   prop_non_null = 0.1,
-  MOI = 10,
-  side = "left",
-  control_group = "complement",
-  cells_reads_df = NULL
+  side = "left"
 )
 }
 \arguments{
 \item{fc_expression_info}{List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve}
 
-\item{library_info}{List from extract_library_info() containing UMI_per_cell and variation parameters}
-
-\item{num_targets}{Number of targets}
-
-\item{gRNAs_per_target}{Number of gRNAs per target}
-
-\item{non_targeting_gRNAs}{Number of non-targeting gRNAs}
+\item{cells_reads_df}{Data frame with pre-computed experimental design containing
+reads_per_cell, num_trt_cells, num_cntrl_cells, and library_size columns.
+Must be provided (from identify_cell_read_range() -> convert_design_to_dataframe()).}
 
 \item{fdr_target}{FDR target level}
 
 \item{prop_non_null}{Proportion of non-null pairs}
 
-\item{MOI}{Multiplicity of infection}
-
 \item{side}{Test sidedness ("left", "right", "both")}
-
-\item{control_group}{Control group type ("complement" or "nt_cells")}
-
-\item{cells_reads_df}{Optional data frame with pre-computed experimental design containing
-num_total_cells, reads_per_cell, num_trt_cells, num_cntrl_cells columns.
-If NULL (default), uses hardcoded grid for backward compatibility.}
 }
 \value{
-List with power grid, cell/read sequences, and parameters
+List with power grid, cell/read sequences
 }
 \description{
 This function provides lightweight power analysis for the Shiny application heatmap.

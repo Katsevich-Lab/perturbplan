@@ -8,10 +8,10 @@ convert_design_to_dataframe(design_output)
 }
 \arguments{
 \item{design_output}{List output from identify_cell_read_range() containing
-cells_seq, reads_seq, num_trt_cells_seq, and num_cntrl_cells_seq.}
+cells_seq, reads_seq, library_size_seq, num_trt_cells_seq, and num_cntrl_cells_seq.}
 }
 \value{
-Data frame with columns: num_total_cells, reads_per_cell,
+Data frame with columns: num_total_cells, reads_per_cell, library_size,
 num_trt_cells, num_cntrl_cells. Each row represents one experimental
 condition (cell count × reads per cell combination).
 }
@@ -22,8 +22,8 @@ experimental design grid by expanding all combinations of cells and reads.
 }
 \details{
 The function creates all combinations of cell counts and reads per cell values,
-then assigns the appropriate treatment and control cell counts based on the
-total cell count for each row.
+then assigns the appropriate treatment and control cell counts and library sizes
+based on the total cell count and reads per cell for each row.
 }
 \examples{
 \dontrun{

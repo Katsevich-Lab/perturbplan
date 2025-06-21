@@ -55,6 +55,7 @@ A list containing:
 \describe{
 \item{cells_seq}{Numeric vector of logarithmically-spaced total cell counts}
 \item{reads_seq}{Numeric vector of logarithmically-spaced reads per cell values}
+\item{library_size_seq}{Numeric vector of library sizes corresponding to reads_seq}
 \item{num_trt_cells_seq}{Numeric vector of treatment cell counts for each cell count}
 \item{num_cntrl_cells_seq}{Numeric vector of control cell counts for each cell count}
 \item{cell_range}{List with detailed cell range determination results}
