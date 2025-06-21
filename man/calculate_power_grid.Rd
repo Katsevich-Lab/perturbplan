@@ -14,7 +14,8 @@ calculate_power_grid(
   prop_non_null = 0.1,
   MOI = 10,
   side = "left",
-  control_group = "complement"
+  control_group = "complement",
+  cells_reads_df = NULL
 )
 }
 \arguments{
@@ -37,6 +38,10 @@ calculate_power_grid(
 \item{side}{Test sidedness ("left", "right", "both")}
 
 \item{control_group}{Control group type ("complement" or "nt_cells")}
+
+\item{cells_reads_df}{Optional data frame with pre-computed experimental design containing
+num_total_cells, reads_per_cell, num_trt_cells, num_cntrl_cells columns.
+If NULL (default), uses hardcoded grid for backward compatibility.}
 }
 \value{
 List with power grid, cell/read sequences, and parameters

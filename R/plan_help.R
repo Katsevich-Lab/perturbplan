@@ -973,7 +973,9 @@ identify_cell_read_range <- function(
     side = side,
     prop_non_null = prop_non_null,
     min_power_threshold = min_power_threshold,
-    max_power_threshold = max_power_threshold
+    max_power_threshold = max_power_threshold,
+    cell_lower_bound = 100.0,   # Start from 100 treatment cells for practical experimental design
+    cell_upper_bound = 1e5      # Cap at 1e5 treatment cells for more reasonable ranges
   )
   
   # Step 3: Generate logarithmically-spaced sequences
@@ -1014,4 +1016,62 @@ identify_cell_read_range <- function(
     reads_range = reads_range,
     grid_size = grid_size
   ))
+}
+
+#' Convert identify_cell_read_range output to data frame for calculate_power_grid
+#'
+#' @description
+#' This helper function converts the output from identify_cell_read_range() into
+#' the data frame format expected by calculate_power_grid(). It creates the full
+#' experimental design grid by expanding all combinations of cells and reads.
+#'
+#' @param design_output List output from identify_cell_read_range() containing
+#'   cells_seq, reads_seq, num_trt_cells_seq, and num_cntrl_cells_seq.
+#'
+#' @return Data frame with columns: num_total_cells, reads_per_cell, 
+#'   num_trt_cells, num_cntrl_cells. Each row represents one experimental 
+#'   condition (cell count × reads per cell combination).
+#'
+#' @details
+#' The function creates all combinations of cell counts and reads per cell values,
+#' then assigns the appropriate treatment and control cell counts based on the
+#' total cell count for each row.
+#'
+#' @examples
+#' \dontrun{
+#' # Generate experimental design
+#' fc_info <- extract_fc_expression_info(0.8, 0.1, "K562", B = 100)
+#' lib_info <- extract_library_info("K562")
+#' design <- identify_cell_read_range("10x Chromium v3", fc_info, lib_info)
+#' 
+#' # Convert to data frame for power analysis
+#' cells_reads_df <- convert_design_to_dataframe(design)
+#' print(head(cells_reads_df))
+#' }
+#'
+#' @seealso \code{\link{identify_cell_read_range}} for experimental design generation
+#' @export
+convert_design_to_dataframe <- function(design_output) {
+  
+  # Input validation
+  required_elements <- c("cells_seq", "reads_seq", "num_trt_cells_seq", "num_cntrl_cells_seq")
+  missing_elements <- setdiff(required_elements, names(design_output))
+  if (length(missing_elements) > 0) {
+    stop("Missing required elements in design_output: ", paste(missing_elements, collapse = ", "))
+  }
+  
+  # Create all combinations of cells and reads
+  cells_reads_df <- expand.grid(
+    cells_idx = 1:length(design_output$cells_seq),
+    reads_idx = 1:length(design_output$reads_seq)
+  ) |>
+    dplyr::mutate(
+      num_total_cells = design_output$cells_seq[cells_idx],
+      reads_per_cell = design_output$reads_seq[reads_idx],
+      num_trt_cells = design_output$num_trt_cells_seq[cells_idx],
+      num_cntrl_cells = design_output$num_cntrl_cells_seq[cells_idx]
+    ) |>
+    dplyr::select(num_total_cells, reads_per_cell, num_trt_cells, num_cntrl_cells)
+  
+  return(cells_reads_df)
 }

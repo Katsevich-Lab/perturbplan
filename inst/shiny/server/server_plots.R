@@ -13,38 +13,87 @@ create_plots_server <- function(input, output, session, power_data, selection_da
     req(power_data$planned())
     ggplot(power_data$gridDF(),aes(reads,cells,fill=power))+
       geom_tile(colour=NA)+
-      scale_x_continuous(expand = c(0, 0)) +
-      scale_y_continuous(expand = c(0, 0)) +
+      scale_x_log10(expand = c(0.02, 0.02), labels = scales::comma_format()) +
+      scale_y_log10(expand = c(0.02, 0.02), labels = scales::comma_format()) +
       theme_bw(base_size = 16)+
       theme(panel.grid=element_blank(),
             aspect.ratio = 1)+
-      labs(x="Reads per cell",y="Number of treatment cells",fill="Power")
+      labs(x="Reads per cell (log scale)",y="Number of treatment cells (log scale)",fill="Power")
   })
   
+  # Helper function to calculate logarithmic tile boundaries
+  get_log_tile_bounds <- function(values, idx) {
+    if (length(values) == 1) {
+      # Single value - create small bounds around it
+      factor <- 1.2  # 20% extension
+      return(list(min = values / factor, max = values * factor))
+    }
+    
+    # Multiple values - use geometric spacing
+    if (idx == 1) {
+      # First tile
+      ratio <- values[2] / values[1]
+      min_val <- values[1] / sqrt(ratio)
+      max_val <- (values[1] + values[2]) / 2
+    } else if (idx == length(values)) {
+      # Last tile
+      ratio <- values[idx] / values[idx-1]
+      min_val <- (values[idx-1] + values[idx]) / 2
+      max_val <- values[idx] * sqrt(ratio)
+    } else {
+      # Middle tiles
+      min_val <- (values[idx-1] + values[idx]) / 2
+      max_val <- (values[idx] + values[idx+1]) / 2
+    }
+    
+    return(list(min = min_val, max = max_val))
+  }
+
   # Selection overlay (isolated from base heatmap)
   selection_overlay <- reactive({
     req(power_data$planned())
     
+    reads_seq <- power_data$reads_seq()
+    cells_seq <- power_data$cells_seq()
+    
     if (selection_data$is_sel("row") && length(selection_data$sel$idx)) {
+      # Row selection - highlight entire rows
+      y_bounds <- lapply(selection_data$sel$idx, function(i) {
+        get_log_tile_bounds(cells_seq, i)
+      })
+      
       data.frame(
-        xmin=min(power_data$reads_seq())-power_data$dreads()/2,
-        xmax=max(power_data$reads_seq())+power_data$dreads()/2,
-        ymin=power_data$cells_seq()[selection_data$sel$idx]-power_data$dcells()/2,
-        ymax=power_data$cells_seq()[selection_data$sel$idx]+power_data$dcells()/2
+        xmin = min(reads_seq) * 0.8,  # Extend slightly beyond data range
+        xmax = max(reads_seq) * 1.2,
+        ymin = sapply(y_bounds, function(b) b$min),
+        ymax = sapply(y_bounds, function(b) b$max)
       )
     } else if (selection_data$is_sel("col") && length(selection_data$sel$idx)) {
+      # Column selection - highlight entire columns
+      x_bounds <- lapply(selection_data$sel$idx, function(i) {
+        get_log_tile_bounds(reads_seq, i)
+      })
+      
       data.frame(
-        xmin=power_data$reads_seq()[selection_data$sel$idx]-power_data$dreads()/2,
-        xmax=power_data$reads_seq()[selection_data$sel$idx]+power_data$dreads()/2,
-        ymin=min(power_data$cells_seq())-power_data$dcells()/2,
-        ymax=max(power_data$cells_seq())+power_data$dcells()/2
+        xmin = sapply(x_bounds, function(b) b$min),
+        xmax = sapply(x_bounds, function(b) b$max),
+        ymin = min(cells_seq) * 0.8,  # Extend slightly beyond data range
+        ymax = max(cells_seq) * 1.2
       )
     } else if (selection_data$is_sel("tile") && nrow(selection_data$sel$tiles)) {
+      # Tile selection - highlight individual tiles
+      x_bounds <- lapply(selection_data$sel$tiles$col, function(i) {
+        get_log_tile_bounds(reads_seq, i)
+      })
+      y_bounds <- lapply(selection_data$sel$tiles$row, function(i) {
+        get_log_tile_bounds(cells_seq, i)
+      })
+      
       data.frame(
-        xmin=power_data$reads_seq()[selection_data$sel$tiles$col]-power_data$dreads()/2,
-        xmax=power_data$reads_seq()[selection_data$sel$tiles$col]+power_data$dreads()/2,
-        ymin=power_data$cells_seq()[selection_data$sel$tiles$row]-power_data$dcells()/2,
-        ymax=power_data$cells_seq()[selection_data$sel$tiles$row]+power_data$dcells()/2
+        xmin = sapply(x_bounds, function(b) b$min),
+        xmax = sapply(x_bounds, function(b) b$max),
+        ymin = sapply(y_bounds, function(b) b$min),
+        ymax = sapply(y_bounds, function(b) b$max)
       )
     } else {
       NULL
@@ -96,9 +145,10 @@ create_plots_server <- function(input, output, session, power_data, selection_da
         geom_point()+
         geom_hline(yintercept=0.8,linetype="dashed",colour="grey") +
         geom_vline(xintercept=selection_data$slice_x(),colour="red")+
+        scale_x_log10(labels = scales::comma_format()) +
         theme_bw(base_size = 16)+
         theme(aspect.ratio = 1) +
-        labs(x="Reads per cell",y="Power",colour="Treatment cells")
+        labs(x="Reads per cell (log scale)",y="Power",colour="Treatment cells")
     } else {
       sub <- subset(df, reads %in% power_data$reads_seq()[selection_data$sel$idx])
       ggplot(sub,aes(cells,power,colour=factor(reads)))+
@@ -106,9 +156,10 @@ create_plots_server <- function(input, output, session, power_data, selection_da
         geom_point()+
         geom_hline(yintercept=0.8,linetype="dashed",colour="grey") +
         geom_vline(xintercept=selection_data$slice_x(),colour="red")+
+        scale_x_log10(labels = scales::comma_format()) +
         theme_bw(base_size = 16)+
         theme(aspect.ratio = 1) +
-        labs(x="Number of treatment cells",y="Power",colour="Reads")
+        labs(x="Number of treatment cells (log scale)",y="Power",colour="Reads")
     }
   })
 

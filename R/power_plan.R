@@ -19,6 +19,9 @@ utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell", "n
 #' @param control_group Control group type ("complement" or "nt_cells")
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
+#' @param cells_reads_df Optional data frame with pre-computed experimental design containing
+#'   num_total_cells, reads_per_cell, num_trt_cells, num_cntrl_cells columns. 
+#'   If NULL (default), uses hardcoded grid for backward compatibility.
 #'
 #' @return List with power grid, cell/read sequences, and parameters
 #' @export
@@ -32,25 +35,39 @@ calculate_power_grid <- function(
   prop_non_null = 0.1,
   MOI = 10,
   side = "left",
-  control_group = "complement"
+  control_group = "complement",
+  cells_reads_df = NULL
 ) {
 
-  # Create grid for heatmap visualization
-  cells_seq <- round(seq(5000, 50000, length.out = 10))
-  reads_seq <- round(seq(2000, 50000, length.out = 10))
+  # Store original parameter to know if it was provided
+  cells_reads_df_provided <- !is.null(cells_reads_df)
 
-  # Create cells-reads data frame for power calculation
-  cells_reads_df <- expand.grid(
-    num_total_cells = cells_seq,
-    reads_per_cell = reads_seq
-  ) |>
-    dplyr::mutate(
-      num_trt_cells = gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs),
-      num_cntrl_cells = switch(control_group,
-        complement = num_total_cells - num_trt_cells,
-        nt_cells = non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+  # Use provided experimental design or create default grid
+  if (is.null(cells_reads_df)) {
+    # Create default grid for heatmap visualization (backward compatibility)
+    cells_seq <- round(seq(5000, 50000, length.out = 10))
+    reads_seq <- round(seq(2000, 50000, length.out = 10))
+
+    # Create cells-reads data frame for power calculation
+    cells_reads_df <- expand.grid(
+      num_total_cells = cells_seq,
+      reads_per_cell = reads_seq
+    ) |>
+      dplyr::mutate(
+        num_trt_cells = gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs),
+        num_cntrl_cells = switch(control_group,
+          complement = num_total_cells - num_trt_cells,
+          nt_cells = non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
+        )
       )
-    )
+  } else {
+    # Validate provided experimental design
+    required_cols <- c("num_total_cells", "reads_per_cell", "num_trt_cells", "num_cntrl_cells")
+    missing_cols <- setdiff(required_cols, colnames(cells_reads_df))
+    if (length(missing_cols) > 0) {
+      stop("Missing required columns in cells_reads_df: ", paste(missing_cols, collapse = ", "))
+    }
+  }
 
   # Call the lightweight power function (overall power only, no curves)
   power_results <- compute_power_grid_overall(
@@ -73,7 +90,7 @@ calculate_power_grid <- function(
   list(
     power_grid = power_grid,
     cells_seq = sort(unique(power_grid$cells)),  # Treatment cell sequence for axis
-    reads_seq = reads_seq,
+    reads_seq = if (!cells_reads_df_provided) reads_seq else sort(unique(power_results$reads_per_cell)),
     parameters = list(
       num_targets = num_targets,
       gRNAs_per_target = gRNAs_per_target,

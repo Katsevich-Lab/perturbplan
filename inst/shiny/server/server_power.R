@@ -346,10 +346,40 @@ create_power_server <- function(input, output, session) {
     )
   })
 
-  # Real power calculation using perturbplan package
-  power_results <- reactive({
+  # Generate optimized cell and read ranges using modular approach
+  cells_reads_df <- reactive({
     req(planned(), fc_expression_info(), library_info())
-    # Call the package function with extracted expression and library info
+    
+    # Call identify_cell_read_range to generate experimental design
+    cell_read_range <- perturbplan::identify_cell_read_range(
+      experimental_platform = input$experimental_platform,
+      fc_expression_info = fc_expression_info(),
+      library_info = library_info(),
+      grid_size = 10,  # 10x10 grid for Shiny app
+      min_power_threshold = 0.05,  # Moderate minimum for good visualization range
+      max_power_threshold = 0.9,   # High maximum for wide power range
+      MOI = input$MOI,
+      num_targets = if(input$gene_list_mode == "custom" && !is.null(target_list())) {
+        length(unique(target_list()))  # Use actual unique targets from CSV
+      } else {
+        input$num_targets  # Use user input for random mode
+      },
+      gRNAs_per_target = input$gRNAs_per_target,
+      non_targeting_gRNAs = input$non_targeting_gRNAs,
+      control_group = input$control_group,
+      multiple_testing_alpha = input$fdr_target,
+      side = input$side,
+      prop_non_null = input$prop_non_null
+    )
+    
+    # Convert to format expected by calculate_power_grid
+    perturbplan::convert_design_to_dataframe(cell_read_range)
+  })
+
+  # Real power calculation using perturbplan package with pre-computed design
+  power_results <- reactive({
+    req(planned(), fc_expression_info(), library_info(), cells_reads_df())
+    # Call the package function with pre-computed experimental design
     perturbplan::calculate_power_grid(
       fc_expression_info = fc_expression_info(),
       library_info = library_info(),
@@ -364,7 +394,8 @@ create_power_server <- function(input, output, session) {
       prop_non_null = input$prop_non_null,
       MOI = input$MOI,
       side = input$side,
-      control_group = input$control_group
+      control_group = input$control_group,
+      cells_reads_df = cells_reads_df()  # Pass pre-computed experimental design
     )
   })
 
