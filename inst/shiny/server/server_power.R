@@ -378,11 +378,10 @@ create_power_server <- function(input, output, session) {
 
   # Real power calculation using perturbplan package with pre-computed design
   power_results <- reactive({
-    req(planned(), fc_expression_info(), library_info(), cells_reads_df())
+    req(planned(), fc_expression_info(), cells_reads_df())
     # Call the package function with pre-computed experimental design
     perturbplan::calculate_power_grid(
       fc_expression_info = fc_expression_info(),
-      library_info = library_info(),
       num_targets = if(input$gene_list_mode == "custom" && !is.null(target_list())) {
         length(unique(target_list()))  # Use actual unique targets from CSV
       } else {

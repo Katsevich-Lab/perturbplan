@@ -18,7 +18,6 @@ utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell", "n
 #' @param side Test sidedness ("left", "right", "both")
 #' @param control_group Control group type ("complement" or "nt_cells")
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
-#' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters
 #' @param cells_reads_df Optional data frame with pre-computed experimental design containing
 #'   num_total_cells, reads_per_cell, num_trt_cells, num_cntrl_cells columns. 
 #'   If NULL (default), uses hardcoded grid for backward compatibility.
@@ -27,7 +26,6 @@ utils::globalVariables(c("library_size", "num_total_cells", "reads_per_cell", "n
 #' @export
 calculate_power_grid <- function(
   fc_expression_info,
-  library_info,
   num_targets = 100,
   gRNAs_per_target = 4,
   non_targeting_gRNAs = 10,
@@ -81,7 +79,6 @@ calculate_power_grid <- function(
   power_results <- compute_power_grid_overall(
     cells_reads_df = cells_reads_df,
     fc_expression_info = fc_expression_info,
-    library_info = library_info,
     fdr_target = fdr_target,
     prop_non_null = prop_non_null,
     side = side
@@ -214,25 +211,16 @@ calculate_power_curves <- function(
 compute_power_grid_overall <- function(
     cells_reads_df,
     fc_expression_info,
-    library_info,
     fdr_target = 0.05,
     prop_non_null = 0.1,
     side = "left"
 ){
 
-  ########################## compute the library size ##########################
-  # Check if library_size is already provided (from identify_cell_read_range)
+  ########################## use pre-computed library size ##########################
+  # cells_reads_df should always contain pre-computed library_size from identify_cell_read_range()
   if (!"library_size" %in% colnames(cells_reads_df)) {
-    # Backward compatibility: compute library size if not provided
-    UMI_per_cell <- library_info$UMI_per_cell
-    variation <- library_info$variation
-    
-    cells_reads_df <- cells_reads_df |>
-      dplyr::mutate(
-        library_size = fit_read_UMI_curve(reads_per_cell = reads_per_cell, UMI_per_cell = !!UMI_per_cell, variation = !!variation)
-      )
+    stop("library_size column missing from cells_reads_df. Expected pre-computed values from identify_cell_read_range().")
   }
-  # If library_size already exists, use pre-computed values (more efficient!)
 
   ############### compute the power for the cells-reads grid ###################
   power_df <- cells_reads_df |>
@@ -278,7 +266,6 @@ compute_power_grid_overall <- function(
 compute_power_grid_full <- function(
     cells_reads_df,
     fc_expression_info,
-    library_info,
     tpm_threshold = 10,
     fdr_target = 0.05,
     prop_non_null = 0.1,
@@ -333,19 +320,11 @@ compute_power_grid_full <- function(
   expr_min <- max(expr_range[1], tpm_threshold_relative)  # Start from TPM threshold or data minimum, whichever is higher
   expr_output_grid <- 10^seq(log10(expr_min), log10(expr_range[2]), length.out = expr_curve_points)
 
-  ########################## compute the library size ##########################
-  # Check if library_size is already provided (from identify_cell_read_range)
+  ########################## use pre-computed library size ##########################
+  # cells_reads_df should always contain pre-computed library_size from identify_cell_read_range()
   if (!"library_size" %in% colnames(cells_reads_df)) {
-    # Backward compatibility: compute library size if not provided
-    UMI_per_cell <- library_info$UMI_per_cell
-    variation <- library_info$variation
-    
-    cells_reads_df <- cells_reads_df |>
-      dplyr::mutate(
-        library_size = fit_read_UMI_curve(reads_per_cell = reads_per_cell, UMI_per_cell = !!UMI_per_cell, variation = !!variation)
-      )
+    stop("library_size column missing from cells_reads_df. Expected pre-computed values from identify_cell_read_range().")
   }
-  # If library_size already exists, use pre-computed values (more efficient!)
 
   ############### compute the power for the cells-reads grid ###################
   power_df <- cells_reads_df |>
