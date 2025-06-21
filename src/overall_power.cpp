@@ -194,8 +194,8 @@ double compute_single_power_cpp(
   if (UMI_per_cell <= 0) {
     stop("UMI_per_cell must be positive");
   }
-  if (variation <= 0) {
-    stop("variation must be positive");
+  if (variation < 0) {
+    stop("variation must be non-negative");
   }
   if (MOI <= 0) {
     stop("MOI must be positive");

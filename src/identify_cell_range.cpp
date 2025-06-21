@@ -94,8 +94,8 @@ List identify_cell_range_cpp(
   if (UMI_per_cell <= 0) {
     stop("UMI_per_cell must be positive");
   }
-  if (variation <= 0) {
-    stop("variation must be positive");
+  if (variation < 0) {
+    stop("variation must be non-negative");
   }
   if (min_power_threshold <= 0 || min_power_threshold >= 1) {
     stop("min_power_threshold must be between 0 and 1");

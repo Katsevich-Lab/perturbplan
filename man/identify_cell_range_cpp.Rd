@@ -21,7 +21,7 @@ identify_cell_range_cpp(
   min_power_threshold = 0.01,
   max_power_threshold = 0.8,
   cell_lower_bound = 100,
-  cell_upper_bound = 1e+06
+  cell_upper_bound = 1e+07
 )
 }
 \arguments{
@@ -57,7 +57,7 @@ identify_cell_range_cpp(
 
 \item{cell_lower_bound}{Numeric. Lower bound for cell search (default 100)}
 
-\item{cell_upper_bound}{Numeric. Upper bound for cell search (default 1e6)}
+\item{cell_upper_bound}{Numeric. Upper bound for cell search (default 1e7)}
 }
 \value{
 List with min_cells, max_cells, and achieved power values

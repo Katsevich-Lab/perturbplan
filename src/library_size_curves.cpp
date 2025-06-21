@@ -37,8 +37,8 @@ NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
   if (UMI_per_cell <= 0) {
     stop("UMI_per_cell must be positive");
   }
-  if (variation <= 0) {
-    stop("variation must be positive");
+  if (variation < 0) {
+    stop("variation must be non-negative");
   }
   
   int n = reads_per_cell.size();
@@ -100,8 +100,8 @@ List identify_library_size_range_cpp(std::string experimental_platform,
   if (UMI_per_cell <= 0) {
     stop("UMI_per_cell must be positive");
   }
-  if (variation <= 0) {
-    stop("variation must be positive");
+  if (variation < 0) {
+    stop("variation must be non-negative");
   }
   
   // Step 1: Determine minimum reads per cell based on experimental platform
