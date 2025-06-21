@@ -878,6 +878,7 @@ identify_library_size_range <- function(experimental_platform, library_info) {
 #' \describe{
 #'   \item{cells_seq}{Numeric vector of logarithmically-spaced total cell counts}
 #'   \item{reads_seq}{Numeric vector of logarithmically-spaced reads per cell values}
+#'   \item{library_size_seq}{Numeric vector of library sizes corresponding to reads_seq}
 #'   \item{num_trt_cells_seq}{Numeric vector of treatment cell counts for each cell count}
 #'   \item{num_cntrl_cells_seq}{Numeric vector of control cell counts for each cell count}
 #'   \item{cell_range}{List with detailed cell range determination results}
@@ -1006,10 +1007,18 @@ identify_cell_read_range <- function(
   num_trt_cells_seq <- round(num_trt_cells_seq)
   num_cntrl_cells_seq <- round(num_cntrl_cells_seq)
   
+  # Calculate library sizes corresponding to reads_seq
+  library_size_seq <- fit_read_UMI_curve(
+    reads_per_cell = reads_seq,
+    UMI_per_cell = library_info$UMI_per_cell,
+    variation = library_info$variation
+  )
+  
   # Return comprehensive experimental design
   return(list(
     cells_seq = cells_seq,
     reads_seq = reads_seq,
+    library_size_seq = library_size_seq,
     num_trt_cells_seq = num_trt_cells_seq,
     num_cntrl_cells_seq = num_cntrl_cells_seq,
     cell_range = cell_range,
@@ -1026,16 +1035,16 @@ identify_cell_read_range <- function(
 #' experimental design grid by expanding all combinations of cells and reads.
 #'
 #' @param design_output List output from identify_cell_read_range() containing
-#'   cells_seq, reads_seq, num_trt_cells_seq, and num_cntrl_cells_seq.
+#'   cells_seq, reads_seq, library_size_seq, num_trt_cells_seq, and num_cntrl_cells_seq.
 #'
-#' @return Data frame with columns: num_total_cells, reads_per_cell, 
+#' @return Data frame with columns: num_total_cells, reads_per_cell, library_size,
 #'   num_trt_cells, num_cntrl_cells. Each row represents one experimental 
 #'   condition (cell count × reads per cell combination).
 #'
 #' @details
 #' The function creates all combinations of cell counts and reads per cell values,
-#' then assigns the appropriate treatment and control cell counts based on the
-#' total cell count for each row.
+#' then assigns the appropriate treatment and control cell counts and library sizes 
+#' based on the total cell count and reads per cell for each row.
 #'
 #' @examples
 #' \dontrun{
@@ -1068,10 +1077,11 @@ convert_design_to_dataframe <- function(design_output) {
     dplyr::mutate(
       num_total_cells = design_output$cells_seq[cells_idx],
       reads_per_cell = design_output$reads_seq[reads_idx],
+      library_size = if("library_size_seq" %in% names(design_output)) design_output$library_size_seq[reads_idx] else NA,
       num_trt_cells = design_output$num_trt_cells_seq[cells_idx],
       num_cntrl_cells = design_output$num_cntrl_cells_seq[cells_idx]
     ) |>
-    dplyr::select(num_total_cells, reads_per_cell, num_trt_cells, num_cntrl_cells)
+    dplyr::select(num_total_cells, reads_per_cell, library_size, num_trt_cells, num_cntrl_cells)
   
   return(cells_reads_df)
 }
