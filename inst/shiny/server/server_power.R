@@ -18,6 +18,21 @@ create_power_server <- function(input, output, session) {
     planned(TRUE)
   })
   
+  # Dynamic updating of pilot data choices based on biological system and experimental platform
+  observe({
+    if (input$biological_system == "Other" || input$experimental_platform == "Other") {
+      # When "Other" is selected, only show "Custom" option and auto-select it
+      updateSelectInput(session, "pilot_data_choice",
+                       choices = c("Custom" = "custom"),
+                       selected = "custom")
+    } else {
+      # When supported systems are selected, show both options with "Built-in" as default
+      updateSelectInput(session, "pilot_data_choice",
+                       choices = c("Built-in" = "default", "Custom" = "custom"),
+                       selected = "default")
+    }
+  })
+  
   # Gene list file upload handling
   gene_list <- reactiveVal(NULL)
   target_list <- reactiveVal(NULL)  # Store targets from uploaded CSV

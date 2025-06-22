@@ -22,19 +22,16 @@ create_sidebar <- function() {
           selectInput("biological_system", "Biological system:", c("K562", "Other")),
           selectInput("experimental_platform", "Experimental platform:", c("10x Chromium v3", "Other")),
           
-          # Pilot data choice (combines baseline expression and library parameters)
-          # Only show this if neither biological_system nor experimental_platform is "Other"
-          conditionalPanel(
-            condition = "input.biological_system != 'Other' && input.experimental_platform != 'Other'",
-            selectInput("pilot_data_choice", "Pilot data:",
-                       choices = c("Default" = "default", "Custom" = "custom"),
-                       selected = "default")
-          ),
+          # Reference expression data choice (combines baseline expression and library parameters)
+          # Use server-side logic to update choices dynamically
+          selectInput("pilot_data_choice", "Reference expression data:",
+                     choices = c("Built-in" = "default", "Custom" = "custom"),
+                     selected = "default"),
           
-          # Conditional panel for custom pilot data upload
-          # Show if either biological_system or experimental_platform is "Other" OR if pilot_data_choice is "custom"
+          # Conditional panel for custom reference expression data upload
+          # Show only when "Custom" is selected for pilot_data_choice
           conditionalPanel(
-            condition = "input.pilot_data_choice == 'custom' || input.biological_system == 'Other' || input.experimental_platform == 'Other'",
+            condition = "input.pilot_data_choice != 'default'",
             tags$div(
               class = "file-upload-info",
               style = "border-radius: 3px; padding: 6px; margin: 5px 0;",
@@ -51,7 +48,7 @@ create_sidebar <- function() {
               fileInput("pilot_data_file", 
                        label = NULL,
                        accept = c(".rds", ".RDS"),
-                       placeholder = "Choose pilot data RDS file...")
+                       placeholder = "Choose reference expression data RDS file...")
             ),
             conditionalPanel(
               condition = "output.pilot_data_uploaded",
