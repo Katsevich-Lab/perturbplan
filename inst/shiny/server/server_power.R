@@ -356,7 +356,7 @@ create_power_server <- function(input, output, session) {
       fc_expression_info = fc_expression_info(),
       library_info = library_info(),
       grid_size = 10,  # 10x10 grid for Shiny app
-      min_power_threshold = 0.01,  # Low minimum to start from ~100 treatment cells
+      min_power_threshold = 0.01,  # Low minimum to start from ~100 cells per target
       max_power_threshold = 0.9,   # High maximum for wide power range
       MOI = input$MOI,
       num_targets = if(input$gene_list_mode == "custom" && !is.null(target_list())) {

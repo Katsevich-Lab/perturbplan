@@ -181,7 +181,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         # Create factor variables for cells (color) and reads per cell (linetype and shape)
         dfs1$cells_factor <- factor(dfs1$cells,
                                    levels = sort(unique(dfs1$cells)),
-                                   labels = paste0(sort(unique(dfs1$cells)), " treatment cells"))
+                                   labels = sort(unique(dfs1$cells)))
         dfs1$reads_factor <- factor(dfs1$reads,
                                    levels = sort(unique(dfs1$reads)),
                                    labels = sort(unique(dfs1$reads)))
@@ -211,14 +211,14 @@ create_curves_server <- function(input, output, session, power_data, selection_d
                 ggside.panel.scale = 0.3,
                 legend.position = "right") +
           labs(x = "Expression Level (TPM)", y = "Power",
-               colour = "Number of treatment cells", linetype = "Reads per cell", shape = "Reads per cell")
+               colour = "Number of cells per target", linetype = "Reads per cell", shape = "Reads per cell")
 
       } else if (display_mode == "facet_cells") {
         # Facet by number of cells (horizontal panels)
         # Convert cells to factor for faceting to avoid ggplot2 internal issues
         dfs1$cells_factor <- factor(dfs1$cells,
                                    levels = sort(unique(dfs1$cells)),
-                                   labels = paste0("treatment cells: ", sort(unique(dfs1$cells))))
+                                   labels = paste0("cells per target: ", sort(unique(dfs1$cells))))
         # Create reads factor for coloring
         dfs1$reads_factor <- factor(dfs1$reads,
                                    levels = sort(unique(dfs1$reads)),
@@ -246,7 +246,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         # Convert reads to factor for faceting to avoid ggplot2 internal issues
         dfs1$reads_factor <- factor(dfs1$reads,
                                    levels = sort(unique(dfs1$reads)),
-                                   labels = paste0("reads: ", sort(unique(dfs1$reads))))
+                                   labels = paste0("reads per cell: ", sort(unique(dfs1$reads))))
         # Create cells factor for coloring
         dfs1$cells_factor <- factor(dfs1$cells,
                                    levels = sort(unique(dfs1$cells)),
@@ -267,7 +267,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
                 legend.position = "bottom",
                 strip.text = element_text(size = 12),
                 aspect.ratio = 1) +
-          labs(x = "Expression Level (TPM)", y = "Power", colour = "Number of treatment cells")
+          labs(x = "Expression Level (TPM)", y = "Power", colour = "Number of cells per target")
       }
     } else {
       ggplot() + theme_void()
@@ -337,7 +337,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         # Create factor variables for cells (color) and reads per cell (linetype and shape)
         dfs2$cells_factor <- factor(dfs2$cells,
                                    levels = sort(unique(dfs2$cells)),
-                                   labels = paste0(sort(unique(dfs2$cells)), " treatment cells"))
+                                   labels = sort(unique(dfs2$cells)))
         dfs2$reads_factor <- factor(dfs2$reads,
                                    levels = sort(unique(dfs2$reads)),
                                    labels = sort(unique(dfs2$reads)))
@@ -362,7 +362,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
           scale_shape_manual(values = shape_values) +
           scale_linetype_manual(values = linetype_values) +
           labs(x = "Fold Change", y = "Power",
-               colour = "Number of treatment cells", linetype = "Reads per cell", shape = "Reads per cell") +
+               colour = "Number of cells per target", linetype = "Reads per cell", shape = "Reads per cell") +
           {if (input$side %in% c("left", "right")) geom_vline(xintercept = 1, linetype = "dotted", colour = "darkgrey", alpha = 0.8)} +
           theme_bw(base_size = 16) +
           theme(aspect.ratio = 1,
@@ -374,7 +374,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         # Convert cells to factor for faceting to avoid ggplot2 internal issues
         dfs2$cells_factor <- factor(dfs2$cells,
                                    levels = sort(unique(dfs2$cells)),
-                                   labels = paste0("treatment cells: ", sort(unique(dfs2$cells))))
+                                   labels = paste0("cells per target: ", sort(unique(dfs2$cells))))
         # Create reads factor for coloring
         dfs2$reads_factor <- factor(dfs2$reads,
                                    levels = sort(unique(dfs2$reads)),
@@ -408,7 +408,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
         # Convert reads to factor for faceting to avoid ggplot2 internal issues
         dfs2$reads_factor <- factor(dfs2$reads,
                                    levels = sort(unique(dfs2$reads)),
-                                   labels = paste0("reads: ", sort(unique(dfs2$reads))))
+                                   labels = paste0("reads per cell: ", sort(unique(dfs2$reads))))
         # Create cells factor for coloring
         dfs2$cells_factor <- factor(dfs2$cells,
                                    levels = sort(unique(dfs2$cells)),
@@ -422,7 +422,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
                              bins = 60, fill = "pink", alpha = 0.7, inherit.aes = FALSE) +
           scale_x_continuous(limits = x_limits) +
           scale_xsidey_continuous() +
-          labs(x = "Fold Change", y = "Power", colour = "Number of treatment cells")
+          labs(x = "Fold Change", y = "Power", colour = "Number of cells per target")
 
         # Add vertical line at fold change = 1 for reference
         if (input$side %in% c("left", "right")) {
