@@ -18,7 +18,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
       theme_bw(base_size = 16)+
       theme(panel.grid=element_blank(),
             aspect.ratio = 1)+
-      labs(x="Reads per cell (log scale)",y="Number of cells per target (log scale)",fill="Power")
+      labs(x="Reads per cell (log scale)",y="Cells per target (log scale)",fill="Power")
   })
   
   # Helper function to calculate logarithmic tile boundaries
@@ -120,8 +120,8 @@ create_plots_server <- function(input, output, session, power_data, selection_da
   output$slice_box_ui <- renderUI({
     req(power_data$planned(), !is.null(selection_data$slice_mode()))
     lab <- if (identical(selection_data$slice_mode(),"row"))
-      "Drill down by number of reads per cell:<br/>(click to select multiple points)"
-    else "Drill down by number of cells per target:<br/>(click to select multiple points)"
+      "Drill down by reads per cell:<br/>(click to select multiple points)"
+    else "Drill down by cells per target:<br/>(click to select multiple points)"
     textInput("slice_points", HTML(lab),
               if (length(selection_data$slice_x())) paste(selection_data$slice_x(), collapse=", ") else "")
   })
@@ -131,7 +131,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
     if (identical(selection_data$slice_mode(),"row"))
       sprintf("Power versus reads per cell")
     else if (identical(selection_data$slice_mode(),"col"))
-      sprintf("Power vs number of cells per target")
+      sprintf("Power vs cells per target")
     else "Slice view"
   })
   
@@ -159,7 +159,7 @@ create_plots_server <- function(input, output, session, power_data, selection_da
         scale_x_log10(labels = scales::comma_format()) +
         theme_bw(base_size = 16)+
         theme(aspect.ratio = 1) +
-        labs(x="Number of cells per target (log scale)",y="Power",colour="Reads per cell")
+        labs(x="Cells per target (log scale)",y="Power",colour="Reads per cell")
     }
   })
 

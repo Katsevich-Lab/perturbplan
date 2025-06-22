@@ -211,7 +211,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
                 ggside.panel.scale = 0.3,
                 legend.position = "right") +
           labs(x = "Expression Level (TPM)", y = "Power",
-               colour = "Number of cells per target", linetype = "Reads per cell", shape = "Reads per cell")
+               colour = "Cells per target", linetype = "Reads per cell", shape = "Reads per cell")
 
       } else if (display_mode == "facet_cells") {
         # Facet by number of cells (horizontal panels)
@@ -267,7 +267,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
                 legend.position = "bottom",
                 strip.text = element_text(size = 12),
                 aspect.ratio = 1) +
-          labs(x = "Expression Level (TPM)", y = "Power", colour = "Number of cells per target")
+          labs(x = "Expression Level (TPM)", y = "Power", colour = "Cells per target")
       }
     } else {
       ggplot() + theme_void()
@@ -362,7 +362,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
           scale_shape_manual(values = shape_values) +
           scale_linetype_manual(values = linetype_values) +
           labs(x = "Fold Change", y = "Power",
-               colour = "Number of cells per target", linetype = "Reads per cell", shape = "Reads per cell") +
+               colour = "Cells per target", linetype = "Reads per cell", shape = "Reads per cell") +
           {if (input$side %in% c("left", "right")) geom_vline(xintercept = 1, linetype = "dotted", colour = "darkgrey", alpha = 0.8)} +
           theme_bw(base_size = 16) +
           theme(aspect.ratio = 1,
@@ -422,7 +422,7 @@ create_curves_server <- function(input, output, session, power_data, selection_d
                              bins = 60, fill = "pink", alpha = 0.7, inherit.aes = FALSE) +
           scale_x_continuous(limits = x_limits) +
           scale_xsidey_continuous() +
-          labs(x = "Fold Change", y = "Power", colour = "Number of cells per target")
+          labs(x = "Fold Change", y = "Power", colour = "Cells per target")
 
         # Add vertical line at fold change = 1 for reference
         if (input$side %in% c("left", "right")) {

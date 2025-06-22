@@ -24,10 +24,10 @@ create_selection_server <- function(input, output, session, power_data) {
     req(power_data$planned())
     if (input$mode=="cells") {
       vals <- power_data$cells_seq()[sel$idx]
-      textInput("overall_points","Number of cells per target (comma-separated):",paste(vals,collapse=", "))
+      textInput("overall_points","Cells per target (comma-separated):",paste(vals,collapse=", "))
     } else if (input$mode=="reads") {
       vals <- power_data$reads_seq()[sel$idx]
-      textInput("overall_points","Number of reads per cell (comma-separated):",paste(vals,collapse=", "))
+      textInput("overall_points","Reads per cell (comma-separated):",paste(vals,collapse=", "))
     } else {
       if (nrow(sel$tiles)) {
         vals <- sprintf("%d×%d",

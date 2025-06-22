@@ -66,7 +66,7 @@ create_overall_power_tab <- function() {
             condition = "input.overall_subtabs == 'overall_heatmap'",
             radioButtons(
               "mode", "Drill down by:",
-              c("Number of cells per target (click one or more rows)" = "cells",
+              c("Cells per target (click one or more rows)" = "cells",
                 "Reads per cell (click one or more columns)" = "reads", 
                 "Both (click one or more tiles)" = "tile"),
               selected = "cells"
