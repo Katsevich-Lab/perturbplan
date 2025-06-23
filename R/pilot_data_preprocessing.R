@@ -4,7 +4,7 @@
 NULL
 
 #' @importFrom methods as
-#' @importFrom stats setNames coef predict
+#' @importFrom stats setNames coef predict isoreg approxfun
 #' @importFrom utils read.csv
 #' @importFrom Matrix readMM rowSums colSums
 #' @importClassesFrom Matrix CsparseMatrix dgCMatrix
@@ -339,3 +339,74 @@ library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
   return(final_model)
 }
 
+
+#' Generate expression-dispersion curve using isotonic regression
+#'
+#' @description
+#' This function fits an isotonic regression model to estimate the relationship
+#' between gene expression level and dispersion parameter (theta). The resulting
+#' curve is used to predict dispersion values for genes based on their expression.
+#'
+#' @param baseline_expression Data frame. Output from
+#'   \code{\link{obtain_expression_information}} containing columns
+#'   \code{relative_expression} and \code{expression_size}.
+#'
+#' @return A function that takes a numeric vector of relative expression values
+#'   and returns corresponding dispersion estimates. The function uses linear
+#'   interpolation with constant extrapolation (rule = 2).
+#'
+#' @details
+#' This function is designed to work with the output from
+#' \code{\link{obtain_expression_information}}, which provides the necessary
+#' gene-level expression and dispersion parameters.
+#' 
+#' The function:
+#' \enumerate{
+#'   \item Orders genes by increasing relative expression
+#'   \item Fits isotonic regression to enforce monotonicity constraints
+#'   \item Creates an interpolation function for smooth dispersion prediction
+#' }
+#' 
+#' The isotonic regression ensures that dispersion estimates are monotonic
+#' with respect to expression level, which is a biologically reasonable constraint.
+#'
+#' @seealso
+#' \code{\link{obtain_expression_information}} for generating input data
+#' \code{\link{isoreg}} for isotonic regression details
+#' @export
+obtain_expression_dispersion_curve <- function(baseline_expression) {
+  # Input validation
+  if (!is.data.frame(baseline_expression)) {
+    stop("baseline_expression must be a data frame")
+  }
+  
+  required_cols <- c("relative_expression", "expression_size")
+  missing_cols <- setdiff(required_cols, names(baseline_expression))
+  if (length(missing_cols) > 0) {
+    stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+  }
+  
+  if (nrow(baseline_expression) < 2) {
+    stop("baseline_expression must contain at least 2 rows for curve fitting")
+  }
+  
+  # Extract expression and dispersion parameters
+  pi <- baseline_expression$relative_expression
+  theta <- baseline_expression$expression_size
+  
+  # Check for valid data
+  if (any(is.na(pi)) || any(is.na(theta))) {
+    stop("Missing values detected in relative_expression or expression_size")
+  }
+  
+  if (any(pi <= 0) || any(theta <= 0)) {
+    stop("All relative_expression and expression_size values must be positive")
+  }
+  
+  # Fit isotonic regression on sorted data
+  o <- order(pi)
+  iso_fit <- isoreg(pi[o], theta[o])
+  
+  # Build prediction function with linear interpolation and constant extrapolation
+  approxfun(iso_fit$x, iso_fit$yf, rule = 2)
+}
