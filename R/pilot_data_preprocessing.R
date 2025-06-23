@@ -188,25 +188,6 @@ obtain_mapping_efficiency <- function(QC_data, path_to_cellranger_output) {
   mapped_reads / total_reads
 }
 
-#' Summary statistics of QC-filtered molecule data
-#'
-#' @param QC_data Data frame returned by \code{obtain_qc_h5_data()}.
-#' @return Named numeric vector: number of cells and average reads per cell.
-#' @export
-summary_h5_data <- function(QC_data){
-
-  # extract the number of total cells
-  num_cells <- length(unique(QC_data$cell_id))
-
-  # extract the number of reads per cell
-  total_reads <- sum(QC_data$num_reads)
-  num_reads_per_cell <- total_reads / num_cells
-
-  # output the summary statistics
-  return(
-    stats::setNames(c(num_cells, num_reads_per_cell), c("num_cells", "avg_reads"))
-  )
-}
 
 
 
