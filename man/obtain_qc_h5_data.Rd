@@ -4,24 +4,16 @@
 \alias{obtain_qc_h5_data}
 \title{Extract QC-filtered molecule information from Cell Ranger HDF5 files}
 \usage{
-obtain_qc_h5_data(path_to_h5_file)
-
-obtain_qc_h5_data(path_to_h5_file)
+obtain_qc_h5_data(path_to_cellranger_output)
 }
 \arguments{
 \item{path_to_cellranger_output}{Character. Folder containing
 \code{outs/molecule_info.h5} and \code{outs/filtered_feature_bc_matrix.h5}.}
-
-\item{QC_data}{Data frame returned by \code{obtain_qc_h5_data()}.}
 }
 \value{
 Data frame with columns \code{num_reads}, \code{UMI_id},
 \code{cell_id}, \code{response_id}.
-
-Named numeric vector: number of cells and average reads per cell.
 }
 \description{
 Extract QC-filtered molecule information from Cell Ranger HDF5 files
-
-Summary statistics of QC-filtered molecule data
 }

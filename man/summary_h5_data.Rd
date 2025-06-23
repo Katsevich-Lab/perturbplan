@@ -2,8 +2,10 @@
 % Please edit documentation in R/pilot_data_preprocessing.R
 \name{summary_h5_data}
 \alias{summary_h5_data}
-\title{Obtain summary statistics of QC'd molecular data}
+\title{Summary statistics of QC-filtered molecule data}
 \usage{
+summary_h5_data(QC_data)
+
 summary_h5_data(QC_data)
 }
 \arguments{
@@ -11,6 +13,8 @@ summary_h5_data(QC_data)
 containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
 }
 \value{
+Named numeric vector: number of cells and average reads per cell.
+
 A named numeric vector with elements:
 \describe{
 \item{num_cells}{Total number of unique cells}

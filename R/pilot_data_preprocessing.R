@@ -193,81 +193,21 @@ obtain_mapping_efficiency <- function(QC_data, path_to_cellranger_output) {
 #' @param QC_data Data frame returned by \code{obtain_qc_h5_data()}.
 #' @return Named numeric vector: number of cells and average reads per cell.
 #' @export
-obtain_qc_h5_data <- function(path_to_h5_file){
+summary_h5_data <- function(QC_data){
 
-  # specify the particular h5 file of interest
-  raw_count_file_path <- sprintf("%s/molecule_info.h5", path_to_h5_file)
-  qc_info_file_path <- sprintf("%s/filtered_feature_bc_matrix.h5", path_to_h5_file)
+  # extract the number of total cells
+  num_cells <- length(unique(QC_data$cell_id))
 
-  ###################### construct the raw data frame ##########################
-  raw_count_file <- rhdf5::h5read(raw_count_file_path, "count")
-  umi_idx <- rhdf5::h5read(raw_count_file_path, "umi")
+  # extract the number of reads per cell
+  total_reads <- sum(QC_data$num_reads)
+  num_reads_per_cell <- total_reads / num_cells
 
-  # obtain cell index
-  barcode_idx <- rhdf5::h5read(raw_count_file_path, "barcode_idx")
-  cell_barcodes <- rhdf5::h5read(raw_count_file_path, "barcodes")
-  cell_idx <- cell_barcodes[barcode_idx + 1]
-
-  # append the gem_group
-  gem_group <- rhdf5::h5read(raw_count_file_path, "gem_group")
-  cell_id_with_gem <- paste(cell_idx, gem_group, sep = "-")
-
-  # obtain gene index for each RNA
-  RNA_idx <- rhdf5::h5read(raw_count_file_path, "feature_idx")
-  gene_reference <- rhdf5::h5read(raw_count_file_path, "features")
-  gene_idx <- gene_reference$id[RNA_idx + 1]
-
-  # store the data frame
-  raw_data_frame <- data.frame(
-    num_reads = raw_count_file,
-    UMI_id = umi_idx + 1,
-    cell_id = cell_id_with_gem,
-    response_id = gene_idx
+  # output the summary statistics
+  return(
+    stats::setNames(c(num_cells, num_reads_per_cell), c("num_cells", "avg_reads"))
   )
-
-  ############################ QC the raw data #################################
-  qc_cell <- rhdf5::h5read(qc_info_file_path, "matrix/barcodes")
-
-  # QC the raw data
-  qc_df <- raw_data_frame |> dplyr::filter(cell_id %in% qc_cell)
-
-  # return the reads vector
-  return(qc_df)
 }
 
-
-#' Compute mapping efficiency from QC'd molecule info and Cell Ranger metrics.
-#'
-#' @param QC_data A data frame from `obtain_qc_h5_data()`, must contain a `num_reads` column.
-#' @param path_to_metrics_summary Path to the folder containing Cell Ranger's `metrics_summary.csv`.
-#'
-#' @return A numeric value representing the mapping efficiency (mapped_reads / total_reads).
-#' @export
-obtain_mapping_efficiency <- function(QC_data, path_to_metrics_summary) {
-  # Check input
-  if (!"num_reads" %in% colnames(QC_data)) {
-    stop("QC_data must contain a column named `num_reads`.")
-  }
-
-  # Read metrics_summary.csv and extract total read count
-  metrics_summary <- read.csv(file.path(path_to_metrics_summary, "/metrics_summary.csv"),
-                              check.names = FALSE)
-
-  if (!"Number of Reads" %in% colnames(metrics_summary)) {
-    stop("`metrics_summary.csv` must contain a column named 'Number of Reads'.")
-  }
-
-  # Remove commas and convert to numeric
-  total_reads <- as.numeric(gsub(",", "", metrics_summary$`Number of Reads`))
-
-  # Compute total mapped reads (after QC)
-  mapped_reads <- sum(QC_data$num_reads)
-
-  # Compute mapping efficiency
-  mapping_efficiency <- mapped_reads / total_reads
-
-  return(mapping_efficiency)
-}
 
 
 #' Obtain summary statistics of QC'd molecular data
