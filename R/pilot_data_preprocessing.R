@@ -394,6 +394,7 @@ library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 #'
 #' @param path_to_cellranger_output Character. Path to Cell Ranger output folder
 #'   containing the required subdirectories and files.
+#' @param multi_folder Logical. If \code{TRUE}, process multiple SRR-named folders
 #' @param TPM_thres Numeric. TPM threshold for gene filtering (default: 1).
 #' @param rough Logical. Whether to use rough dispersion estimation (default: FALSE).
 #' @param n_threads Integer. Number of threads for parallel processing (default: NULL).
@@ -404,8 +405,8 @@ library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 #' \describe{
 #'   \item{biological_system}{List containing:
 #'     \itemize{
-#'       \item \code{gene_info}: Data frame with gene expression information
-#'       \item \code{expression_dispersion_curve}: Fitted dispersion model parameters
+#'       \item \code{gene_info}: Data frame with gene expression information and dispersion
+#'       \item \code{expression_dispersion_curve}: Fitted dispersion model parameters against relative expression
 #'     }
 #'   }
 #'   \item{library_info}{List containing:

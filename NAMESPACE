@@ -2,6 +2,7 @@
 
 export(FDP_estimate)
 export(adjusted_cutoff)
+export(build_bio_library_info)
 export(calculate_power_curves)
 export(calculate_power_grid)
 export(compute_distribution_teststat)
