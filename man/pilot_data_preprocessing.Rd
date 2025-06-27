@@ -6,7 +6,6 @@
 \usage{
 pilot_data_preprocessing(
   path_to_cellranger_output,
-  TPM_thres = 1,
   rough = FALSE,
   n_threads = NULL,
   downsample_ratio = 0.7,
@@ -21,8 +20,6 @@ containing the required subdirectories and files including:
 \item \code{outs/molecule_info.h5}
 \item \code{outs/filtered_feature_bc_matrix.h5}
 }}
-
-\item{TPM_thres}{Numeric. TPM threshold for gene filtering (default: 1).}
 
 \item{rough}{Logical. Whether to use rough dispersion estimation (default: FALSE).}
 

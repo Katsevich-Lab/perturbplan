@@ -12,7 +12,6 @@
 #'     \item \code{outs/molecule_info.h5}
 #'     \item \code{outs/filtered_feature_bc_matrix.h5}
 #'   }
-#' @param TPM_thres Numeric. TPM threshold for gene filtering (default: 1).
 #' @param rough Logical. Whether to use rough dispersion estimation (default: FALSE).
 #' @param n_threads Integer. Number of threads for parallel processing (default: NULL).
 #' @param downsample_ratio Numeric. Downsampling ratio for library estimation (default: 0.7).
@@ -56,7 +55,6 @@
 #'
 #' @export
 pilot_data_preprocessing <- function(path_to_cellranger_output,
-                                   TPM_thres = 1,
                                    rough = FALSE,
                                    n_threads = NULL,
                                    downsample_ratio = 0.7,
@@ -90,7 +88,7 @@ pilot_data_preprocessing <- function(path_to_cellranger_output,
   message("Step 2: Computing gene expression information...")
   baseline_expression_df <- obtain_expression_information(
     response_matrix = response_matrix,
-    TPM_thres = TPM_thres,
+    TPM_thres = 0,  # No filtering during preprocessing
     rough = rough,
     n_threads = n_threads
   )

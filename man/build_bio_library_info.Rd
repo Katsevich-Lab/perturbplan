@@ -7,7 +7,6 @@
 build_bio_library_info(
   path_to_cellranger_output,
   multi_folder = FALSE,
-  TPM_thres = 1,
   rough = FALSE,
   n_threads = NULL,
   downsample_ratio = 0.7,
@@ -19,8 +18,6 @@ build_bio_library_info(
 containing the required subdirectories and files.}
 
 \item{multi_folder}{Logical. If \code{TRUE}, process multiple SRR-named folders}
-
-\item{TPM_thres}{Numeric. TPM threshold for gene filtering (default: 1).}
 
 \item{rough}{Logical. Whether to use rough dispersion estimation (default: FALSE).}
 

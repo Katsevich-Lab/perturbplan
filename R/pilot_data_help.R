@@ -395,7 +395,6 @@ library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 #' @param path_to_cellranger_output Character. Path to Cell Ranger output folder
 #'   containing the required subdirectories and files.
 #' @param multi_folder Logical. If \code{TRUE}, process multiple SRR-named folders
-#' @param TPM_thres Numeric. TPM threshold for gene filtering (default: 1).
 #' @param rough Logical. Whether to use rough dispersion estimation (default: FALSE).
 #' @param n_threads Integer. Number of threads for parallel processing (default: NULL).
 #' @param downsample_ratio Numeric. Downsampling ratio for library estimation (default: 0.7).
@@ -432,7 +431,6 @@ library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 #' @export
 build_bio_library_info <- function(path_to_cellranger_output,
                                    multi_folder = FALSE,
-                                   TPM_thres = 1,
                                    rough = FALSE,
                                    n_threads = NULL,
                                    downsample_ratio = 0.7,
@@ -479,7 +477,7 @@ build_bio_library_info <- function(path_to_cellranger_output,
   message("Step 2: Computing gene expression information...")
   gene_info <- obtain_expression_information(
     response_matrix = response_matrix,
-    TPM_thres = TPM_thres,
+    TPM_thres = 0,  # No filtering during preprocessing
     rough = rough,
     n_threads = n_threads
   )

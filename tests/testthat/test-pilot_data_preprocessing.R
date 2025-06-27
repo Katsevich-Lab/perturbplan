@@ -33,9 +33,9 @@ test_that("pilot_data_preprocessing validates parameter types and ranges", {
   fake_dir <- file.path(temp_dir, "test_params")
   dir.create(fake_dir, recursive = TRUE)
   
-  # Test invalid TPM threshold
+  # Test invalid downsample ratio
   expect_error(
-    pilot_data_preprocessing(fake_dir, TPM_thres = -1),
+    pilot_data_preprocessing(fake_dir, downsample_ratio = -1),
     "Missing required Cell Ranger output files"  # Will fail on file check first
   )
   
@@ -90,7 +90,7 @@ test_that("pilot_data_preprocessing function signature is correct", {
   
   # Check that function has expected formal arguments
   formal_args <- names(formals(pilot_func))
-  expected_args <- c("path_to_cellranger_output", "TPM_thres", "rough", 
+  expected_args <- c("path_to_cellranger_output", "rough", 
                      "n_threads", "downsample_ratio", "D2_rough")
   expect_true(all(expected_args %in% formal_args))
 })
