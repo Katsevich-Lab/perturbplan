@@ -2,7 +2,7 @@
 % Please edit documentation in R/pilot_data_preprocessing.R
 \name{reference_data_preprocessing_10x}
 \alias{reference_data_preprocessing_10x}
-\title{Reference Data Aggregation from Multi-SRR Cell Ranger Outputs}
+\title{Aggregate Expression and QC Data from Multiple SRR-Level Cell Ranger Outputs}
 \usage{
 reference_data_preprocessing_10x(
   path_to_top_level_output,
@@ -12,35 +12,37 @@ reference_data_preprocessing_10x(
 }
 \arguments{
 \item{path_to_top_level_output}{Character. Path to the top-level directory
-containing Cell Ranger run-level subdirectories, each with multiple SRR subdirectories}
+containing Cell Ranger run-level subdirectories.}
 
-\item{path_to_run_level_output}{Optional character vector. Subset of specific
-run-level directories to include. If not found within the top-level path,
-unmatched entries will trigger a warning.}
+\item{path_to_run_level_output}{Optional character vector. A subset of run-level
+directory names (not full paths). These should match the basename of folders
+inside \code{path_to_top_level_output}. Unmatched entries will trigger a warning.}
 
-\item{h5_rough}{Logical. Whether to extract h5 molecular information from only
-the first SRR (TRUE) or from all SRRs and combine them (FALSE). Default is TRUE.}
+\item{h5_rough}{Logical. If TRUE (default), h5 data will only be extracted from
+the first SRR folder. If FALSE, data from all SRRs will be combined.}
 }
 \value{
-A list with:
+A list with two elements:
 \describe{
-\item{response_matrix}{Combined gene expression matrix with consistent genes across SRRs.}
-\item{h5_data}{QC and molecule-level data extracted from HDF5 files.}
+\item{response_matrix}{A matrix of gene expression values (common genes only),
+combined across SRR directories.}
+\item{h5_data}{A data frame of molecule-level QC data from one or more SRRs,
+including the SRR label.}
 }
 }
 \description{
-Aggregates gene expression response matrices and molecular information
-from multiple SRR-level Cell Ranger output folders, extracting common genes
-and aligning them into a unified response matrix. Optionally processes only a
-subset of run-level folders, and summarizes gene consistency across SRRs.
+This function aggregates gene expression matrices and h5 molecule-level data
+from multiple SRR-level Cell Ranger output directories. It aligns all matrices
+to a common set of genes, performs basic consistency checks, and optionally
+restricts to a user-defined subset of run-level directories.
 }
 \details{
-This function:
+The function performs the following steps:
 \enumerate{
-\item Identifies all run-level and SRR-level directories.
-\item Extracts gene expression matrices from each SRR via \code{obtain_qc_response_data}.
-\item Intersects gene sets to ensure consistency across all SRRs.
-\item Extracts h5 QC data from either one or all SRRs via \code{obtain_qc_h5_data}.
+\item Lists all SRR directories under the given top-level folder.
+\item Optionally filters to a subset of run-level names.
+\item Reads response matrices and retains only shared genes across SRRs.
+\item Optionally reads h5 QC data from one or all SRRs.
 }
 }
 \seealso{

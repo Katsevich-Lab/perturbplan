@@ -1,99 +1,96 @@
-#' Reference Data Aggregation from Multi-SRR Cell Ranger Outputs
+#' Aggregate Expression and QC Data from Multiple SRR-Level Cell Ranger Outputs
 #'
 #' @description
-#' Aggregates gene expression response matrices and molecular information
-#' from multiple SRR-level Cell Ranger output folders, extracting common genes
-#' and aligning them into a unified response matrix. Optionally processes only a
-#' subset of run-level folders, and summarizes gene consistency across SRRs.
+#' This function aggregates gene expression matrices and h5 molecule-level data
+#' from multiple SRR-level Cell Ranger output directories. It aligns all matrices
+#' to a common set of genes, performs basic consistency checks, and optionally
+#' restricts to a user-defined subset of run-level directories.
 #'
 #' @param path_to_top_level_output Character. Path to the top-level directory
-#'   containing Cell Ranger run-level subdirectories, each with multiple SRR subdirectories
-#' @param path_to_run_level_output Optional character vector. Subset of specific
-#'   run-level directories to include. If not found within the top-level path,
-#'   unmatched entries will trigger a warning.
-#' @param h5_rough Logical. Whether to extract h5 molecular information from only
-#'   the first SRR (TRUE) or from all SRRs and combine them (FALSE). Default is TRUE.
+#'   containing Cell Ranger run-level subdirectories.
+#' @param path_to_run_level_output Optional character vector. A subset of run-level
+#'   directory names (not full paths). These should match the basename of folders
+#'   inside \code{path_to_top_level_output}. Unmatched entries will trigger a warning.
+#' @param h5_rough Logical. If TRUE (default), h5 data will only be extracted from
+#'   the first SRR folder. If FALSE, data from all SRRs will be combined.
 #'
-#' @return A list with:
+#' @return A list with two elements:
 #' \describe{
-#'   \item{response_matrix}{Combined gene expression matrix with consistent genes across SRRs.}
-#'   \item{h5_data}{QC and molecule-level data extracted from HDF5 files.}
+#'   \item{response_matrix}{A matrix of gene expression values (common genes only),
+#'     combined across SRR directories.}
+#'   \item{h5_data}{A data frame of molecule-level QC data from one or more SRRs,
+#'     including the SRR label.}
 #' }
 #'
 #' @details
-#' This function:
+#' The function performs the following steps:
 #' \enumerate{
-#'   \item Identifies all run-level and SRR-level directories.
-#'   \item Extracts gene expression matrices from each SRR via \code{obtain_qc_response_data}.
-#'   \item Intersects gene sets to ensure consistency across all SRRs.
-#'   \item Extracts h5 QC data from either one or all SRRs via \code{obtain_qc_h5_data}.
+#'   \item Lists all SRR directories under the given top-level folder.
+#'   \item Optionally filters to a subset of run-level names.
+#'   \item Reads response matrices and retains only shared genes across SRRs.
+#'   \item Optionally reads h5 QC data from one or all SRRs.
 #' }
 #'
-#' @seealso
-#' \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_h5_data}}
-#'
+#' @seealso \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_h5_data}}
 #' @export
 reference_data_preprocessing_10x <- function(path_to_top_level_output,
                                              path_to_run_level_output = NULL,
-                                             h5_rough = TRUE
-) {
-  # Obtain the srr directories from the top-level output directory
-  run_dirs <- list.dirs(parent_dir, recursive = FALSE, full.names = TRUE)
+                                             h5_rough = TRUE) {
+  run_dirs <- list.dirs(path_to_top_level_output, recursive = FALSE, full.names = TRUE)
+  run_dir_names <- basename(run_dirs)
+
   if (!is.null(path_to_run_level_output)) {
-    # check if every element in the vector path_to_run_level_output belongs to run_dirs
-    # if not, tell the users which elements are unmatched and keep the matched ones in run_dirs
-    missing_dirs <- setdiff(path_to_run_level_output, run_dirs)
+    missing_dirs <- setdiff(path_to_run_level_output, run_dir_names)
     if (length(missing_dirs) > 0) {
       warning("The following directories were not found in the run directories: ",
               paste(missing_dirs, collapse = ", "))
     }
-    run_dirs <- intersect(run_dirs, path_to_run_level_output)
+    run_dirs <- run_dirs[run_dir_names %in% path_to_run_level_output]
+    run_dir_names <- basename(run_dirs)  # update names after filtering
   }
 
-  srr_dirs <- unlist(lapply(run_dirs, function(rd) {
-    list.dirs(rd, recursive = FALSE, full.names = TRUE)
-  }), use.names = FALSE)
-
-  # Read the response matrices from each srr directory
-  mats <- list()
-  for (i in seq_along(srr_dirs)) {
-    mats[[i]] <- perturbplan::obtain_qc_response_data(srr_dirs[i])
+  if (length(run_dirs) == 0) {
+    stop("No valid run directories found.")
   }
 
-  all_genes_list <- list()
-  for (i in seq_along(mats)) {
-    all_genes_list[[i]] <- rownames(mats[[i]])
+  # Read response matrices
+  mats <- lapply(run_dirs, perturbplan::obtain_qc_response_data)
+  gene_lists <- lapply(mats, rownames)
+  common_genes <- Reduce(intersect, gene_lists)
+
+  if (length(common_genes) == 0) {
+    stop("No common genes found across SRRs.")
   }
 
-  common_genes <- Reduce(intersect, all_genes_list)
-  # record the genes present in some mats but not in others
+  # Warn if some genes are missing
   missing_genes <- lapply(mats, function(mat) setdiff(rownames(mat), common_genes))
   if (any(sapply(missing_genes, length) > 0)) {
     warning("Some genes are missing in some matrices: ",
             paste(sapply(missing_genes, function(x) paste(x, collapse = ", ")), collapse = "; "))
   }
 
-  for (i in seq_along(mats)) {
-    mats[[i]] <- mats[[i]][common_genes, , drop = FALSE]
-  }
+  # Subset matrices
+  mats <- lapply(mats, function(mat) mat[common_genes, , drop = FALSE])
   response_matrix <- do.call(cbind, mats)
 
-  # Read the h5 data from each srr directory
-  h5_data <- NULL
+  # Read h5 data
   if (h5_rough) {
-    h5_data <- perturbplan::obtain_qc_h5_data(srr_dirs[1])|>
-      mutate(
-        srr_idx = srr_dirs[1]
-      )
+    h5_data <- perturbplan::obtain_qc_h5_data(run_dirs[1]) |>
+      dplyr::mutate(srr_idx = run_dir_names[1])
   } else {
-    current_data <- perturbplan::obtain_qc_h5_data(srr_dirs[i])|>
-      mutate(
-        srr_idx = srr_dirs[i]
-      )
-    h5_data <- dplyr::bind_rows(h5_data, current_data)
+    h5_data <- list()
+    for (i in seq_along(run_dirs)) {
+      current <- perturbplan::obtain_qc_h5_data(run_dirs[i]) |>
+        dplyr::mutate(srr_idx = run_dir_names[i])
+      h5_data[[i]] <- current
+    }
+    h5_data <- dplyr::bind_rows(h5_data)
   }
 
-  return(list(response_matrix = response_matrix, h5_data = h5_data))
+  return(list(
+    response_matrix = response_matrix,
+    h5_data = h5_data
+  ))
 }
 
 
