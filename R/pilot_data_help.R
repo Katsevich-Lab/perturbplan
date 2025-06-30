@@ -52,7 +52,7 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
 #' Estimate gene-level dispersion (theta)
 #'
 #' @param response_matrix \code{CsparseMatrix} (genes × cells).
-#' @param TPM_thres Numeric. Filter threshold on TPM. Default \code{1}.
+#' @param TPM_thres Numeric. Filter threshold on TPM. Default \code{0}.
 #' @param rough Logical. If \code{TRUE}, use rough C++ estimator; otherwise use
 #'   refined/MLE. Default \code{FALSE}.
 #' @param n_threads Integer controlling parallelism:
@@ -70,7 +70,7 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
 #'
 #' @export
 obtain_expression_information <- function(response_matrix,
-                                          TPM_thres = 1,
+                                          TPM_thres = 0,
                                           rough     = FALSE,
                                           n_threads = NULL) {
   # --- decide #threads ------------------------------------------------------
@@ -328,6 +328,7 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 #'   \item Computes UMI counts for different read depths
 #'   \item Fits a nonlinear saturation curve: \code{UMI = total_UMIs * (1 - exp(-reads/total_UMIs) * (1 + variation * reads^2/(2*total_UMIs^2)))}
 #'   \item Returns the best-fitting model from multiple initial parameter values
+#'   \item Issues a warning if the relative error of the fitted model exceeds 7%
 #' }
 #'
 #' @seealso
@@ -382,146 +383,14 @@ library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
   }else{
     final_model <- fitted_output$delicate$fitted_model
   }
-  return(final_model)
-}
-
-#' Build comprehensive biological and library information from Cell Ranger output
-#'
-#' @description
-#' This function integrates all preprocessing steps to extract biological system
-#' information (gene expression and dispersion) and library characteristics
-#' from Cell Ranger output directories.
-#'
-#' @param path_to_cellranger_output Character. Path to Cell Ranger output folder
-#'   containing the required subdirectories and files.
-#' @param multi_folder Logical. If \code{TRUE}, process multiple SRR-named folders
-#' @param rough Logical. Whether to use rough dispersion estimation (default: FALSE).
-#' @param n_threads Integer. Number of threads for parallel processing (default: NULL).
-#' @param downsample_ratio Numeric. Downsampling ratio for library estimation (default: 0.7).
-#' @param D2_rough Numeric. Initial D2 parameter estimate (default: 0.3).
-#'
-#' @return A list with two main elements:
-#' \describe{
-#'   \item{biological_system}{List containing:
-#'     \itemize{
-#'       \item \code{gene_info}: Data frame with gene expression information and dispersion
-#'       \item \code{expression_dispersion_curve}: Fitted dispersion model parameters against relative expression
-#'     }
-#'   }
-#'   \item{library_info}{List containing:
-#'     \itemize{
-#'       \item \code{S_M_curve_params}: Named numeric vector with UMI_per_cell and variation parameters
-#'     }
-#'   }
-#' }
-#'
-#' @details
-#' The function performs the following steps:
-#' \enumerate{
-#'   \item Load and QC gene expression matrix
-#'   \item Calculate gene expression information and dispersion
-#'   \item Extract molecular information from HDF5 files
-#'   \item Estimate library parameters using saturation curve fitting
-#' }
-#'
-#' @seealso
-#' \code{\link{obtain_qc_response_data}}, \code{\link{obtain_expression_information}},
-#' \code{\link{obtain_qc_h5_data}}, \code{\link{library_estimation}}
-#'
-#' @export
-build_bio_library_info <- function(path_to_cellranger_output,
-                                   multi_folder = FALSE,
-                                   rough = FALSE,
-                                   n_threads = NULL,
-                                   downsample_ratio = 0.7,
-                                   D2_rough = 0.3) {
-
-  # Input validation
-  if (!dir.exists(path_to_cellranger_output)) {
-    stop("Cell Ranger output directory does not exist: ", path_to_cellranger_output)
-  }
-
-  if (multi_folder){
-    srr_dirs <- list.dirs(path_to_cellranger_output, recursive = FALSE, full.names = TRUE)
-    srr_dirs <- srr_dirs[grepl("^SRR", basename(srr_dirs))]
-  }
-  message("Starting biological and library information extraction @ ", Sys.time())
-
-  # Step 1: Load and QC gene expression matrix
-  message("Step 1: Loading gene expression matrix...")
-  if (!multi_folder){
-    response_matrix <- obtain_qc_response_data(path_to_cellranger_output)
-  } else {
-    mats <- list()
-    for (i in seq_along(srr_dirs)) {
-      mats[[i]] <- perturbplan::obtain_qc_response_data(srr_dirs[i])
-    }
-
-    all_genes_list <- list()
-    for (i in seq_along(mats)) {
-      all_genes_list[[i]] <- rownames(mats[[i]])
-    }
-
-    common_genes <- Reduce(intersect, all_genes_list)
-    message(length(common_genes), " genes in common")
-
-    mats_aligned <- list()
-    for (i in seq_along(mats)) {
-      mats_aligned[[i]] <- mats[[i]][common_genes, , drop = FALSE]
-    }
-
-    response_matrix <- do.call(cbind, mats_aligned)
-  }
-
-  # Step 2: Obtain gene expression information
-  message("Step 2: Computing gene expression information...")
-  gene_info <- obtain_expression_information(
-    response_matrix = response_matrix,
-    TPM_thres = 0,  # No filtering during preprocessing
-    rough = rough,
-    n_threads = n_threads
-  )
-
-  # Step 3: Create expression dispersion curve (placeholder for now)
-  # Note: Since obtain_expression_dispersion_curve is not defined in the provided code,
-  # I'm creating a placeholder that could be replaced with the actual function
-  message("Step 3: Computing expression dispersion curve...")
-  expression_dispersion_curve <- obtain_expression_dispersion_curve(gene_info)
-
-  # Step 4: Extract QC molecular data
-  message("Step 4: Extracting molecular information...")
-  if (!multi_folder) {
-    QC_data <- obtain_qc_h5_data(path_to_cellranger_output)
-  } else {
-    QC_data <- obtain_qc_h5_data(srr_dirs[1])
-  }
-
-  # Step 5: Estimate library parameters
-  message("Step 5: Estimating library parameters...")
-  library_params <- library_estimation(
-    QC_data = QC_data,
-    downsample_ratio = downsample_ratio,
-    D2_rough = D2_rough
-  )
-
-  # Create S-M curve parameters as shown in the screenshot
-  S_M_curve_params <- stats::setNames(
-    c(library_params$UMI_per_cell, library_params$variation),
-    c("UMI_per_cell", "variation")
-  )
-
-  # Construct the final output structure
-  result <- list(
-    biological_system = list(
-      gene_info = gene_info,
-      expression_dispersion_curve = expression_dispersion_curve
-    ),
-    library_info = list(
-      S_M_curve_params = S_M_curve_params
+  # add a warning about the relative error
+  if (!is.null(final_model$relative_error) &&
+      !is.na(final_model$relative_error) &&
+      final_model$relative_error > 0.07) {
+    perc_error <- round(100 * final_model$relative_error, 2)
+    warning(
+      sprintf("The relative error of the fitted model is %.2f%%. Consider adjusting downsample_ratio or D2_rough.", perc_error)
     )
-  )
-
-  message("Completed biological and library information extraction @ ", Sys.time())
-
-  return(result)
+  }
+  return(final_model)
 }

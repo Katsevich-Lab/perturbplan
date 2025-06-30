@@ -36,6 +36,7 @@ The function:
 \item Computes UMI counts for different read depths
 \item Fits a nonlinear saturation curve: \code{UMI = total_UMIs * (1 - exp(-reads/total_UMIs) * (1 + variation * reads^2/(2*total_UMIs^2)))}
 \item Returns the best-fitting model from multiple initial parameter values
+\item Issues a warning if the relative error of the fitted model exceeds 7\%
 }
 }
 \seealso{
