@@ -18,7 +18,7 @@
 #' \describe{
 #'   \item{response_matrix}{A matrix of gene expression values (common genes only),
 #'     combined across SRR directories.}
-#'   \item{h5_data}{A data frame of molecule-level QC data from one or more SRRs,
+#'   \item{read_umi_table}{A data frame of molecule-level QC data from one or more SRRs,
 #'     including the SRR label.}
 #' }
 #'
@@ -31,7 +31,7 @@
 #'   \item Optionally reads h5 QC data from one or all SRRs.
 #' }
 #'
-#' @seealso \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_h5_data}}
+#' @seealso \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}
 #' @export
 reference_data_preprocessing_10x <- function(path_to_top_level_output,
                                              path_to_run_level_output = NULL,
@@ -75,21 +75,21 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 
   # Read h5 data
   if (h5_rough) {
-    h5_data <- perturbplan::obtain_qc_h5_data(run_dirs[1]) |>
+    read_umi_table <- perturbplan::obtain_qc_read_umi_table(run_dirs[1]) |>
       dplyr::mutate(srr_idx = run_dir_names[1])
   } else {
-    h5_data <- list()
+    read_umi_table <- list()
     for (i in seq_along(run_dirs)) {
-      current <- perturbplan::obtain_qc_h5_data(run_dirs[i]) |>
+      current <- perturbplan::obtain_qc_read_umi_table(run_dirs[i]) |>
         dplyr::mutate(srr_idx = run_dir_names[i])
-      h5_data[[i]] <- current
+      read_umi_table[[i]] <- current
     }
-    h5_data <- dplyr::bind_rows(h5_data)
+    read_umi_table <- dplyr::bind_rows(read_umi_table)
   }
 
   return(list(
     response_matrix = response_matrix,
-    h5_data = h5_data
+    read_umi_table = read_umi_table
   ))
 }
 
@@ -106,13 +106,13 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #' @param response_matrix Matrix or NULL. Gene-by-cell matrix of normalized expression
 #'   responses, typically from \code{\link{reference_data_preprocessing_10x}}. If \code{h5_only = TRUE},
 #'   this can be NULL.
-#' @param h5_data Data frame. QC information from molecule_info.h5 or filtered_feature_bc_matrix.h5,
-#'   as obtained via \code{\link{obtain_qc_h5_data}}.
+#' @param read_umi_table Data frame. QC information from molecule_info.h5 or filtered_feature_bc_matrix.h5,
+#'   as obtained via \code{\link{obtain_qc_read_umi_table}}.
 #' @param n_threads Integer. Number of threads used for parallel processing. Default: NULL (single-threaded).
 #' @param downsample_ratio Numeric. Proportion of downsampling used for library size estimation. Default: 0.7.
 #' @param D2_rough Numeric. Rough prior value for library variation parameter. Default: 0.3.
 #' @param h5_only Logical. If TRUE, skips baseline expression and dispersion estimation
-#'   steps (only processes h5_data). Default: FALSE.
+#'   steps (only processes read_umi_table). Default: FALSE.
 #'
 #' @return A list containing:
 #' \describe{
@@ -140,35 +140,17 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #' @seealso
 #' \code{\link{obtain_expression_information}},
 #' \code{\link{obtain_expression_dispersion_curve}},
-#' \code{\link{obtain_qc_h5_data}},
+#' \code{\link{obtain_qc_read_umi_table}},
 #' \code{\link{library_estimation}}
 #'
 #' @export
 reference_data_preprocessing <- function(response_matrix = NULL,
-                                         h5_data,
+                                         read_umi_table,
                                          n_threads = NULL,
                                          downsample_ratio = 0.7,
                                          D2_rough = 0.3,
                                          h5_only = FALSE
                                         ) {
-
-  # Input validation
-  if (!dir.exists(path_to_cellranger_output)) {
-    stop("Cell Ranger output directory does not exist: ", path_to_cellranger_output)
-  }
-
-  # Check for required subdirectories and files
-  required_paths <- c(
-    file.path(path_to_cellranger_output, "outs", "filtered_feature_bc_matrix"),
-    file.path(path_to_cellranger_output, "outs", "molecule_info.h5"),
-    file.path(path_to_cellranger_output, "outs", "filtered_feature_bc_matrix.h5")
-  )
-
-  missing_paths <- required_paths[!file.exists(required_paths)]
-  if (length(missing_paths) > 0) {
-    stop("Missing required Cell Ranger output files/directories: ",
-         paste(missing_paths, collapse = ", "))
-  }
 
   message("Starting pilot data preprocessing @ ", Sys.time())
   if (!h5_only){
@@ -188,7 +170,7 @@ reference_data_preprocessing <- function(response_matrix = NULL,
 
   message("Step 3: Estimating library parameters...")
   library_params <- library_estimation(
-    QC_data = h5_data,
+    QC_data = read_umi_table,
     downsample_ratio = downsample_ratio,
     D2_rough = D2_rough
   )
