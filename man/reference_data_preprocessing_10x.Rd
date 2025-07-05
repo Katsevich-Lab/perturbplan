@@ -26,7 +26,7 @@ A list with two elements:
 \describe{
 \item{response_matrix}{A matrix of gene expression values (common genes only),
 combined across SRR directories.}
-\item{h5_data}{A data frame of molecule-level QC data from one or more SRRs,
+\item{read_umi_table}{A data frame of molecule-level QC data from one or more SRRs,
 including the SRR label.}
 }
 }
@@ -46,5 +46,5 @@ The function performs the following steps:
 }
 }
 \seealso{
-\code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_h5_data}}
+\code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}
 }

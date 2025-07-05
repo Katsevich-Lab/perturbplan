@@ -6,7 +6,7 @@
 \usage{
 reference_data_preprocessing(
   response_matrix = NULL,
-  h5_data,
+  read_umi_table,
   n_threads = NULL,
   downsample_ratio = 0.7,
   D2_rough = 0.3,
@@ -18,8 +18,8 @@ reference_data_preprocessing(
 responses, typically from \code{\link{reference_data_preprocessing_10x}}. If \code{h5_only = TRUE},
 this can be NULL.}
 
-\item{h5_data}{Data frame. QC information from molecule_info.h5 or filtered_feature_bc_matrix.h5,
-as obtained via \code{\link{obtain_qc_h5_data}}.}
+\item{read_umi_table}{Data frame. QC information from molecule_info.h5 or filtered_feature_bc_matrix.h5,
+as obtained via \code{\link{obtain_qc_read_umi_table}}.}
 
 \item{n_threads}{Integer. Number of threads used for parallel processing. Default: NULL (single-threaded).}
 
@@ -28,7 +28,7 @@ as obtained via \code{\link{obtain_qc_h5_data}}.}
 \item{D2_rough}{Numeric. Rough prior value for library variation parameter. Default: 0.3.}
 
 \item{h5_only}{Logical. If TRUE, skips baseline expression and dispersion estimation
-steps (only processes h5_data). Default: FALSE.}
+steps (only processes read_umi_table). Default: FALSE.}
 }
 \value{
 A list containing:
@@ -62,6 +62,6 @@ This function executes the core steps in the pilot data setup for PerturbPlan:
 \seealso{
 \code{\link{obtain_expression_information}},
 \code{\link{obtain_expression_dispersion_curve}},
-\code{\link{obtain_qc_h5_data}},
+\code{\link{obtain_qc_read_umi_table}},
 \code{\link{library_estimation}}
 }
