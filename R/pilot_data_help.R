@@ -35,7 +35,7 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
   mat_dir <- file.path(path_to_cellranger_output, "outs", "filtered_feature_bc_matrix")
 
   # Read sparse matrix in Matrix Market format
-  response_matrix <- as(Matrix::readMM(file.path(mat_dir, "matrix.mtx.gz")), "dgCMatrix")
+  response_matrix <- as(Matrix::readMM(file.path(mat_dir, "matrix.mtx.gz")), "CsparseMatrix")
 
   # Read features.tsv.gz: typically contains gene_id (V1), gene_name (V2), and feature_type (V3)
   genes <- data.table::fread(file.path(mat_dir, "features.tsv.gz"), header = FALSE)
@@ -92,6 +92,9 @@ obtain_expression_information <- function(response_matrix,
   keep_gene <- names(TPM)[TPM >= TPM_thres]
   message("Finish relative expression calculation @ ", Sys.time())
   if (!length(keep_gene)) stop("No genes pass TPM threshold")
+  # print the number of genes
+  message("Number of genes passing TPM threshold: ", length(keep_gene))
+
 
   # --- dispersion estimation ------------------------------------------------
   message("Start dispersion estimation (", n_threads, " thread(s)) @ ", Sys.time())
