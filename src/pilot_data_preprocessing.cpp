@@ -197,15 +197,39 @@ Rcpp::NumericVector theta_batch_cpp(
       double t_0 = theta_rough_row(Y, g, mu);
       double t_est = t_0;
 
-      // optional refined Newton iteration
-      if (!rough)
-        t_est = theta_mle_row(t_0, Y, g, mu);
-      else
-        t_est = theta_refined_row(t_0, Y, g, mu);
+      try {
+        if (rough) {
+          // Attempt refined Newton iteration (fast)
+          t_est = theta_refined_row(t_0, Y, g, mu);
+        } else {
+          // Attempt full MLE with digamma
+          t_est = theta_mle_row(t_0, Y, g, mu);
+        }
 
-      // clip to stable range
+        // Check if result is valid
+        if (!std::isfinite(t_est) || t_est <= 0.0) {
+          // Fall back to rough estimate
+          t_est = t_0;
+        }
+
+        // If rough fallback also fails, use a conservative default
+        if (!std::isfinite(t_est) || t_est <= 0.0) {
+          t_est = 1.0;
+        }
+
+      } catch (...) {
+        // Catch numerical errors from digamma/polygamma/log, etc.
+        // Fallback to rough estimate
+        t_est = t_0;
+
+        if (!std::isfinite(t_est) || t_est <= 0.0) {
+          t_est = 1.0;
+        }
+      }
+
       theta[g] = t_est;
     }
   }
+
   return theta;
 }
