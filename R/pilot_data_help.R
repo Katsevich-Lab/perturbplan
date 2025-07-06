@@ -193,7 +193,7 @@ obtain_expression_dispersion_curve <- function(baseline_expression) {
 #' @return Data frame with columns \code{num_reads}, \code{UMI_id},
 #'   \code{cell_id}, \code{response_id}.
 #' @export
-obtain_qc_h5_data <- function(path_to_cellranger_output) {
+obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
   raw_path <- file.path(path_to_cellranger_output, "outs", "molecule_info.h5")
   qc_path  <- file.path(path_to_cellranger_output, "outs", "filtered_feature_bc_matrix.h5")
 
