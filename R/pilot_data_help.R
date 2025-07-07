@@ -89,7 +89,7 @@ obtain_expression_information <- function(response_matrix,
   lib_size <- Matrix::colSums(response_matrix)
   rel_expr <- Matrix::rowSums(response_matrix) / sum(response_matrix)
   TPM <- rel_expr * 1e6
-  keep_gene <- names(TPM)[TPM >= TPM_thres]
+  keep_gene <- names(TPM)[TPM > TPM_thres]
   message("Finish relative expression calculation @ ", Sys.time())
   if (!length(keep_gene)) stop("No genes pass TPM threshold")
   # print the number of genes
