@@ -16,7 +16,7 @@ obtain_qc_response_data(path_to_cellranger_output)
 }}
 }
 \value{
-A \code{dgCMatrix} (genes × cells) with cleaned, unique row names.
+A \code{dgCMatrix} (genes × cells) with cleaned, unique row names and column names.
 }
 \description{
 Reads a sparse gene-by-cell matrix (\code{matrix.mtx.gz}) together with

@@ -28,7 +28,7 @@ NULL
 #'     \item \code{outs/filtered_feature_bc_matrix/barcodes.tsv.gz}
 #'   }
 #'
-#' @return A \code{dgCMatrix} (genes × cells) with cleaned, unique row names.
+#' @return A \code{dgCMatrix} (genes × cells) with cleaned, unique row names and column names.
 #' @export
 obtain_qc_response_data <- function(path_to_cellranger_output) {
   # Construct path to filtered matrix directory
@@ -42,9 +42,17 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
   gene_ids <- genes$V1
 
   # Keep only unique, non-empty gene IDs
-  keep <- which(!is.na(gene_ids) & nzchar(gene_ids) & !duplicated(gene_ids))
-  response_matrix <- response_matrix[keep, , drop = FALSE]
-  rownames(response_matrix) <- gene_ids[keep]
+  valid_gene <- which(!is.na(gene_ids) & nzchar(gene_ids) & !duplicated(gene_ids))
+  response_matrix <- response_matrix[valid_gene, , drop = FALSE]
+  rownames(response_matrix) <- gene_ids[valid_gene]
+
+  # Read cell barcodes
+  barcodes <- readLines(file.path(mat_dir, "barcodes.tsv.gz"))
+
+  # Set as column names of the matrix
+  valid_barcode <- which(!is.na(barcodes) & nzchar(barcodes) & !duplicated(barcodes))
+  response_matrix <- response_matrix[, valid_barcode, drop = FALSE]
+  colnames(response_matrix) <- barcodes[valid_barcode]
 
   return(response_matrix)
 }
