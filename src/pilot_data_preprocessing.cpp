@@ -170,9 +170,15 @@ Rcpp::NumericVector theta_batch_cpp(
         bool                              rough      = false,
         int                               n_threads  = 0) {
 
-  const int G   = Y.rows();                   // genes
-  const int C   = Y.cols();                   // cells
+  const int G   = Y.rows();  // number of genes
+  const int C   = Y.cols();  // number of cells
   const double eps = std::pow(DBL_EPSILON, 0.25);
+
+  Rcpp::Rcout << "[theta_batch_cpp] Starting computation" << std::endl;
+  Rcpp::Rcout << " - G (genes) = " << G << std::endl;
+  Rcpp::Rcout << " - C (cells) = " << C << std::endl;
+  Rcpp::Rcout << " - rel_expr size = " << rel_expr.size() << std::endl;
+  Rcpp::Rcout << " - library_size size = " << library_size.size() << std::endl;
 
   Rcpp::NumericVector theta(G);
 
@@ -184,45 +190,50 @@ Rcpp::NumericVector theta_batch_cpp(
 #pragma omp parallel
 #endif
   {
-    VectorXd mu(C);                 // thread-local working buffer
+    VectorXd mu(C);  // thread-local working buffer
 
 #ifdef HAS_OPENMP
 #pragma omp for schedule(static)
 #endif
     for (int g = 0; g < G; ++g) {
-      // compute mu for this gene (dense, one vector multiply)
+      if (g < 5) {
+        Rcpp::Rcout << "[gene " << g << "] rel_expr = " << rel_expr[g] << std::endl;
+      }
+
       mu = lib_vec * rel_expr[g];
 
-      // rough estimate
       double t_0 = theta_rough_row(Y, g, mu);
       double t_est = t_0;
 
+      if (g < 5) {
+        Rcpp::Rcout << "[gene " << g << "] t_0 = " << t_0 << std::endl;
+      }
+
       try {
         if (rough) {
-          // Attempt refined Newton iteration (fast)
           t_est = theta_refined_row(t_0, Y, g, mu);
+          if (g < 5) Rcpp::Rcout << "[gene " << g << "] theta_refined_row result = " << t_est << std::endl;
         } else {
-          // Attempt full MLE with digamma
           t_est = theta_mle_row(t_0, Y, g, mu);
+          if (g < 5) Rcpp::Rcout << "[gene " << g << "] theta_mle_row result = " << t_est << std::endl;
         }
 
-        // Check if result is valid
         if (!std::isfinite(t_est) || t_est <= 0.0) {
-          // Fall back to rough estimate
+          Rcpp::Rcout << "[gene " << g << "] Invalid t_est after main method, fallback to t_0" << std::endl;
           t_est = t_0;
         }
 
-        // If rough fallback also fails, use a conservative default
         if (!std::isfinite(t_est) || t_est <= 0.0) {
+          Rcpp::Rcout << "[gene " << g << "] Invalid t_est after fallback, using default 1.0" << std::endl;
           t_est = 1.0;
         }
 
       } catch (...) {
-        // Catch numerical errors from digamma/polygamma/log, etc.
-        // Fallback to rough estimate
+        Rcpp::Rcout << "[gene " << g << "] Exception caught during dispersion estimation, fallback to t_0" << std::endl;
         t_est = t_0;
 
         if (!std::isfinite(t_est) || t_est <= 0.0) {
+          Rcpp::Rcout << "[gene " << g << "] Invalid t_est after catch fallback, using default 1.0" << std::endl;
           t_est = 1.0;
         }
       }
@@ -230,6 +241,8 @@ Rcpp::NumericVector theta_batch_cpp(
       theta[g] = t_est;
     }
   }
+
+  Rcpp::Rcout << "[theta_batch_cpp] Done." << std::endl;
 
   return theta;
 }

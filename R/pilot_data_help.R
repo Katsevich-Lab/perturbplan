@@ -389,7 +389,7 @@ library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
   # add a warning about the relative error
   if (!is.null(final_model$relative_error) &&
       !is.na(final_model$relative_error) &&
-      final_model$relative_error > 0.07) {
+      final_model$relative_error > 0.05) {
     perc_error <- round(100 * final_model$relative_error, 2)
     warning(
       sprintf("The relative error of the fitted model is %.2f%%. Consider adjusting downsample_ratio or D2_rough.", perc_error)
