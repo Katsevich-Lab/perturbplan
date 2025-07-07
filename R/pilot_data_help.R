@@ -96,6 +96,7 @@ obtain_expression_information <- function(response_matrix,
   message("Start relative expression calculation @ ", Sys.time())
   lib_size <- Matrix::colSums(response_matrix)
   rel_expr <- Matrix::rowSums(response_matrix) / sum(response_matrix)
+  names(rel_expr) <- rownames(response_matrix)
   TPM <- rel_expr * 1e6
   keep_gene <- names(TPM)[TPM > TPM_thres]
   message("Finish relative expression calculation @ ", Sys.time())
