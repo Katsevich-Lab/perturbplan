@@ -6,7 +6,7 @@
 \usage{
 obtain_expression_information(
   response_matrix,
-  TPM_thres = 0,
+  TPM_thres = 0.01,
   rough = FALSE,
   n_threads = NULL
 )
@@ -14,7 +14,7 @@ obtain_expression_information(
 \arguments{
 \item{response_matrix}{\code{CsparseMatrix} (genes × cells).}
 
-\item{TPM_thres}{Numeric. Filter threshold on TPM. Default \code{0}.}
+\item{TPM_thres}{Numeric. Filter threshold on TPM. Default \code{1e-2}.}
 
 \item{rough}{Logical. If \code{TRUE}, use rough C++ estimator; otherwise use
 refined/MLE. Default \code{FALSE}.}
