@@ -52,7 +52,7 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
 #' Estimate gene-level dispersion (theta)
 #'
 #' @param response_matrix \code{CsparseMatrix} (genes × cells).
-#' @param TPM_thres Numeric. Filter threshold on TPM. Default \code{1e-2}.
+#' @param TPM_thres Numeric. Filter threshold on TPM. Default \code{1}.
 #' @param rough Logical. If \code{TRUE}, use rough C++ estimator; otherwise use
 #'   refined/MLE. Default \code{FALSE}.
 #' @param n_threads Integer controlling parallelism:
@@ -70,7 +70,7 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
 #'
 #' @export
 obtain_expression_information <- function(response_matrix,
-                                          TPM_thres = 1e-2,
+                                          TPM_thres = 1,
                                           rough     = FALSE,
                                           n_threads = NULL) {
   # --- decide #threads ------------------------------------------------------
