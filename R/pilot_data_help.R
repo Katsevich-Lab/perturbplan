@@ -107,6 +107,13 @@ obtain_expression_information <- function(response_matrix,
 
   # --- dispersion estimation ------------------------------------------------
   message("Start dispersion estimation (", n_threads, " thread(s)) @ ", Sys.time())
+  # check all elements in keep_gene are in rownames(response_matrix)
+  if (!all(keep_gene %in% rownames(response_matrix))) {
+    # show how many genes are not in it
+    missing_genes <- setdiff(keep_gene, rownames(response_matrix))
+    message("Missing genes: ", length(missing_genes), " (", paste(head(missing_genes, 10), collapse = ", "), "...)")
+    stop("Some genes in keep_gene are not present in response_matrix rownames")
+  }
   theta_vec <- theta_batch_cpp(
     response_matrix[keep_gene, , drop = FALSE],
     lib_size,
