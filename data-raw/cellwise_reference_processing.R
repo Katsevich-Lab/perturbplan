@@ -1,8 +1,10 @@
 process_k562_10x <- function(path_to_dataset) {
-  path_to_runs <- file.path(path_to_dataset, "processed")
-  k562_data <- perturbplan::reference_data_preprocessing_10x(path_to_runs)
-  response_matrix <- k562_data[[1]]
-  read_umi_table <- k562_data[[2]]
+  path_to_run1 <- file.path(path_to_dataset, "processed", "run1")
+  path_to_run2 <- file.path(path_to_dataset, "processed", "run2")
+  k562_data_1 <- perturbplan::reference_data_preprocessing_10x(path_to_run1)
+  response_matrix <- k562_data_1[[1]]
+  read_umi_table <- k562_data_1[[2]]
+  k562_data_2 <- perturbplan::reference_data_preprocessing_10x(path_to_run2)
   h5 <- "molecule_info.h5"
   feature_idx <- h5read(h5, "feature_idx", index=list(1:10))
   barcode_idx <- h5read(h5, "barcode_idx")

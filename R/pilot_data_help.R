@@ -98,7 +98,7 @@ obtain_expression_information <- function(response_matrix,
   rel_expr <- Matrix::rowSums(response_matrix) / sum(response_matrix)
   names(rel_expr) <- rownames(response_matrix)
   TPM <- rel_expr * 1e6
-  keep_gene <- names(TPM)[TPM > TPM_thres]
+  keep_gene <- names(TPM)[TPM >= TPM_thres]
   message("Finish relative expression calculation @ ", Sys.time())
   if (!length(keep_gene)) stop("No genes pass TPM threshold")
   # print the number of genes
@@ -383,7 +383,7 @@ library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 
     # do the model fitting
     nlm_fitting <- minpack.lm::nlsLM(
-      num_UMIs ~ total_UMIs * (1 - exp(-num_reads / total_UMIs) * (1 + D2 * num_reads^2 / (2 * num_reads^2))),
+      num_UMIs ~ total_UMIs * (1 - exp(-num_reads / total_UMIs) * (1 + D2 * num_reads^2 / (2 * total_UMIs^2))),
       data = down_sample_df,
       start = list(total_UMIs = initial_UMIs, D2 = D2_rough),
       upper = c(Inf, 1),
