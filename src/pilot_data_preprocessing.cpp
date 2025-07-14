@@ -18,7 +18,6 @@ using Eigen::VectorXd;
 #include <RcppEigen.h>
 using Eigen::VectorXd;
 
-// [[Rcpp::export]]
 inline double theta_rough_row(const Eigen::MappedSparseMatrix<double>& Y,
                               int                               row,
                               const Eigen::VectorXd&            mu) {

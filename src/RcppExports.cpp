@@ -227,19 +227,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// theta_rough_row
-inline double theta_rough_row(const Eigen::MappedSparseMatrix<double>& Y, int row, const Eigen::VectorXd& mu);
-RcppExport SEXP _perturbplan_theta_rough_row(SEXP YSEXP, SEXP rowSEXP, SEXP muSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Eigen::MappedSparseMatrix<double>& >::type Y(YSEXP);
-    Rcpp::traits::input_parameter< int >::type row(rowSEXP);
-    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type mu(muSEXP);
-    rcpp_result_gen = Rcpp::wrap(theta_rough_row(Y, row, mu));
-    return rcpp_result_gen;
-END_RCPP
-}
 // theta_batch_cpp
 Rcpp::NumericVector theta_batch_cpp(const Eigen::MappedSparseMatrix<double>& Y, const Rcpp::NumericVector& library_size, const Rcpp::NumericVector& rel_expr, bool rough, int n_threads);
 RcppExport SEXP _perturbplan_theta_batch_cpp(SEXP YSEXP, SEXP library_sizeSEXP, SEXP rel_exprSEXP, SEXP roughSEXP, SEXP n_threadsSEXP) {
@@ -319,7 +306,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_generate_reads_grid_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_cpp, 4},
     {"_perturbplan_compute_power_plan_overall_cpp", (DL_FUNC) &_perturbplan_compute_power_plan_overall_cpp, 9},
     {"_perturbplan_compute_single_power_cpp", (DL_FUNC) &_perturbplan_compute_single_power_cpp, 13},
-    {"_perturbplan_theta_rough_row", (DL_FUNC) &_perturbplan_theta_rough_row, 3},
     {"_perturbplan_theta_batch_cpp", (DL_FUNC) &_perturbplan_theta_batch_cpp, 5},
     {"_perturbplan_compute_fc_curve_cpp", (DL_FUNC) &_perturbplan_compute_fc_curve_cpp, 7},
     {"_perturbplan_compute_expression_curve_cpp", (DL_FUNC) &_perturbplan_compute_expression_curve_cpp, 8},
