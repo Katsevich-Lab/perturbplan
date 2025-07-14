@@ -147,6 +147,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 reference_data_preprocessing <- function(response_matrix = NULL,
                                          read_umi_table,
                                          n_threads = NULL,
+                                         TPM_thres = 1,
                                          downsample_ratio = 0.7,
                                          D2_rough = 0.3,
                                          h5_only = FALSE
@@ -157,7 +158,8 @@ reference_data_preprocessing <- function(response_matrix = NULL,
   message("Step 1: Computing gene expression information...")
   baseline_expression_df <- obtain_expression_information(
     response_matrix = response_matrix,
-    n_threads = n_threads
+    n_threads = n_threads,
+    TPM_thres = TPM_thres
   )
 
   message("Step 2: Computing expression-dispersion curve...")
