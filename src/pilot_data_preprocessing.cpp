@@ -15,21 +15,54 @@ using Eigen::VectorXd;
 // ─────────────────────────────────────────────────────────────────────────────
 //  Rough dispersion estimate for one sparse row (no temporary SparseVector)
 // ─────────────────────────────────────────────────────────────────────────────
+#include <RcppEigen.h>
+using Eigen::VectorXd;
+
+// [[Rcpp::export]]
 inline double theta_rough_row(const Eigen::MappedSparseMatrix<double>& Y,
                               int                               row,
-                              const VectorXd&                   mu) {
+                              const Eigen::VectorXd&            mu) {
   const int n   = mu.size();
-  double     ss = 0.0;                // sum of squared residuals
-  int        nz = 0;                  // number of non-zero entries
+  double     ss = 0.0;  // Sum of squared residuals
+  int        nz = 0;    // Number of non-zero entries in the row
 
+  // Loop through non-zero elements in the specified row
   for (Eigen::MappedSparseMatrix<double>::InnerIterator it(Y, row); it; ++it) {
-    const int    j   = it.index();        // column index
-    const double res = it.value() / mu[j] - 1.0;
+    const int j = it.index();          // Column index
+    const double mu_j = mu[j];
+
+    // Safety check: mu[j] must be finite and non-zero
+    if (!std::isfinite(mu_j) || mu_j == 0.0) {
+      return -99;
+    }
+
+    const double res = it.value() / mu_j - 1.0;
+
+    // Safety check: residual must be finite
+    if (!std::isfinite(res)) {
+      return -99;
+    }
+
     ss += res * res;
     ++nz;
   }
-  ss += static_cast<double>(n - nz);       // contribution of zeros
-  return static_cast<double>(n) / ss;      // rough theta
+
+  // Add contribution from zero entries (assumed residual = -1)
+  ss += static_cast<double>(n - nz);
+
+  // Safety check before final division
+  if (ss <= 0.0 || !std::isfinite(ss)) {
+    return -99;
+  }
+
+  double theta = static_cast<double>(n) / ss;
+
+  // Final check on computed theta
+  if (!std::isfinite(theta)) {
+    return -99;
+  }
+
+  return theta;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,7 +118,7 @@ inline double theta_refined_row(double                                  t0,
   }
 
   // guard against NaN / Inf
-  if (!std::isfinite(t0)) t0 = 1.0;
+  if (!std::isfinite(t0)) t0 = -99;
   return t0;
 }
 
@@ -165,14 +198,18 @@ inline double theta_mle_row(double                                  t0,
 // [[Rcpp::export]]
 Rcpp::NumericVector theta_batch_cpp(
         const Eigen::MappedSparseMatrix<double>& Y,
-        const Rcpp::NumericVector&        library_size,
-        const Rcpp::NumericVector&        rel_expr,
-        bool                              rough      = false,
-        int                               n_threads  = 0) {
+        const Rcpp::NumericVector& library_size,
+        const Rcpp::NumericVector& rel_expr,
+        bool rough = false,
+        int n_threads = 0) {
 
-  const int G   = Y.rows();  // number of genes
-  const int C   = Y.cols();  // number of cells
+  const int G = Y.rows();  // number of genes
+  const int C = Y.cols();  // number of cells
   const double eps = std::pow(DBL_EPSILON, 0.25);
+
+  if (library_size.size() != C || rel_expr.size() != G) {
+    Rcpp::stop("Dimension mismatch: rel_expr or library_size does not match Y.");
+  }
 
   Rcpp::Rcout << "[theta_batch_cpp] Starting computation" << std::endl;
   Rcpp::Rcout << " - G (genes) = " << G << std::endl;
@@ -181,8 +218,6 @@ Rcpp::NumericVector theta_batch_cpp(
   Rcpp::Rcout << " - library_size size = " << library_size.size() << std::endl;
 
   Rcpp::NumericVector theta(G);
-
-  // map once, reuse in every loop
   const VectorXd lib_vec = Eigen::Map<const VectorXd>(library_size.begin(), C);
 
 #ifdef HAS_OPENMP
@@ -190,12 +225,13 @@ Rcpp::NumericVector theta_batch_cpp(
 #pragma omp parallel
 #endif
   {
-    VectorXd mu(C);  // thread-local working buffer
+    VectorXd mu(C);  // thread-local buffer
 
 #ifdef HAS_OPENMP
 #pragma omp for schedule(static)
 #endif
     for (int g = 0; g < G; ++g) {
+
       if (g < 5) {
         Rcpp::Rcout << "[gene " << g << "] rel_expr = " << rel_expr[g] << std::endl;
       }
@@ -204,6 +240,12 @@ Rcpp::NumericVector theta_batch_cpp(
 
       double t_0 = theta_rough_row(Y, g, mu);
       double t_est = t_0;
+
+      if (!std::isfinite(t_0) || t_0 <= 0.0) {
+        Rcpp::Rcout << "[gene " << g << "] Invalid t_0 from rough estimation, using -99" << std::endl;
+        theta[g] = -99;
+        continue;
+      }
 
       if (g < 5) {
         Rcpp::Rcout << "[gene " << g << "] t_0 = " << t_0 << std::endl;
@@ -219,23 +261,13 @@ Rcpp::NumericVector theta_batch_cpp(
         }
 
         if (!std::isfinite(t_est) || t_est <= 0.0) {
-          Rcpp::Rcout << "[gene " << g << "] Invalid t_est after main method, fallback to t_0" << std::endl;
-          t_est = t_0;
-        }
-
-        if (!std::isfinite(t_est) || t_est <= 0.0) {
-          Rcpp::Rcout << "[gene " << g << "] Invalid t_est after fallback, using default 1.0" << std::endl;
-          t_est = 1.0;
+          Rcpp::Rcout << "[gene " << g << "] Invalid t_est after main method, using -99" << std::endl;
+          t_est = -99;
         }
 
       } catch (...) {
-        Rcpp::Rcout << "[gene " << g << "] Exception caught during dispersion estimation, fallback to t_0" << std::endl;
-        t_est = t_0;
-
-        if (!std::isfinite(t_est) || t_est <= 0.0) {
-          Rcpp::Rcout << "[gene " << g << "] Invalid t_est after catch fallback, using default 1.0" << std::endl;
-          t_est = 1.0;
-        }
+        Rcpp::Rcout << "[gene " << g << "] Exception caught during estimation, using -99" << std::endl;
+        t_est = -99;
       }
 
       theta[g] = t_est;
@@ -243,6 +275,5 @@ Rcpp::NumericVector theta_batch_cpp(
   }
 
   Rcpp::Rcout << "[theta_batch_cpp] Done." << std::endl;
-
   return theta;
 }

@@ -213,6 +213,10 @@ compute_single_power_cpp <- function(num_cells, reads_per_cell, fc_expression_df
     .Call(`_perturbplan_compute_single_power_cpp`, num_cells, reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null)
 }
 
+theta_rough_row <- function(Y, row, mu) {
+    .Call(`_perturbplan_theta_rough_row`, Y, row, mu)
+}
+
 theta_batch_cpp <- function(Y, library_size, rel_expr, rough = FALSE, n_threads = 0L) {
     .Call(`_perturbplan_theta_batch_cpp`, Y, library_size, rel_expr, rough, n_threads)
 }

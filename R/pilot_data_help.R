@@ -121,6 +121,7 @@ obtain_expression_information <- function(response_matrix,
     rough      = rough,
     n_threads  = n_threads
   )
+  theta_vec[theta_vec == -99] <- NA_real_
   message("Finish dispersion estimation @ ", Sys.time())
 
   data.frame(
@@ -182,15 +183,18 @@ obtain_expression_dispersion_curve <- function(baseline_expression) {
     stop("baseline_expression must contain at least 2 rows for curve fitting")
   }
 
-  # Extract expression and dispersion parameters
-  pi <- baseline_expression$relative_expression
-  theta <- baseline_expression$expression_size
+  # Filter out rows with NA in key columns
+  clean_df <- baseline_expression[complete.cases(baseline_expression[, required_cols]), ]
 
-  # Check for valid data
-  if (any(is.na(pi)) || any(is.na(theta))) {
-    stop("Missing values detected in relative_expression or expression_size")
+  if (nrow(clean_df) < 2) {
+    stop("Not enough valid rows remaining after removing NAs for curve fitting")
   }
 
+  # Extract expression and dispersion parameters
+  pi <- clean_df$relative_expression
+  theta <- clean_df$expression_size
+
+  # Check for valid values
   if (any(pi <= 0) || any(theta <= 0)) {
     stop("All relative_expression and expression_size values must be positive")
   }
