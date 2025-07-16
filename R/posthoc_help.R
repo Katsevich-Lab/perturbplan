@@ -266,4 +266,40 @@ compute_distribution_teststat <- function(num_trt_cells, num_cntrl_cells, num_tr
   )
 }
 
+compute_distribution_teststat_random_es <- function(num_trt_cell, num_cntrl_cell,
+                                                    expression_mean, expression_size,
+                                                    avg_fold_change, avg_fold_change_sq){
+
+  # compute treatment/control cells proportion
+  num_test_cell <- num_trt_cell + num_cntrl_cell
+  trt_test_prop <- num_trt_cell / num_test_cell
+  cntrl_test_prop <- 1 - trt_test_prop
+
+  # define treatment/control/pooled mean expression
+  trt_expression_mean <- expression_mean * avg_fold_change
+  cntrl_expression_mean <- expression_mean
+  pooled_expression_mean <- trt_expression_mean * trt_test_prop + cntrl_expression_mean * cntrl_test_prop
+
+  # compute the square of the denominator in the score statistic
+  pooled_var <- var_nb(mean = pooled_expression_mean, size = expression_size)
+  denominator_sq <- pooled_var * (1 / num_cntrl_cell + 1 / num_trt_cell)
+
+  ########################## compute the asymptotic sd of test stat ############
+  # compute the control group variance
+  cntrl_var <- var_nb(mean = cntrl_expression_mean, size = expression_size) / num_cntrl_cell
+
+  # compute the treatment group variance
+  trt_var <- (trt_expression_mean + (cntrl_expression_mean^2 * avg_fold_change_sq / expression_size)) / num_trt_cell
+
+  # compute the asymptotic sd
+  sd <- sqrt((cntrl_var + trt_var) / denominator_sq)
+
+  ################# compute the asymptotic mean of test stat ###################
+  mean <- cntrl_expression_mean * (avg_fold_change - 1) / sqrt(denominator_sq)
+
+  # return the mean and sd vector
+  return(
+    list(stats::setNames(c(mean, sd), c("mean", "sd")))
+  )
+}
 

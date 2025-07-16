@@ -126,26 +126,26 @@ test_that("obtain_expression_dispersion_curve validates minimum data requirement
 })
 
 test_that("obtain_expression_dispersion_curve handles missing values", {
-  # Test with NA in relative_expression
+  # Test with NA in relative_expression (leaving only 1 valid row)
   baseline_expr_na_rel <- data.frame(
     response_id = c("gene1", "gene2", "gene3"),
-    relative_expression = c(1e-5, NA, 3e-5),
-    expression_size = c(0.5, 1.0, 1.5)
-  )
-  expect_error(
-    obtain_expression_dispersion_curve(baseline_expr_na_rel),
-    "Missing values detected in relative_expression or expression_size"
-  )
-  
-  # Test with NA in expression_size
-  baseline_expr_na_size <- data.frame(
-    response_id = c("gene1", "gene2", "gene3"),
-    relative_expression = c(1e-5, 2e-5, 3e-5),
+    relative_expression = c(1e-5, NA, NA),
     expression_size = c(0.5, NA, 1.5)
   )
   expect_error(
+    obtain_expression_dispersion_curve(baseline_expr_na_rel),
+    "Not enough valid rows remaining after removing NAs for curve fitting"
+  )
+  
+  # Test with NA in expression_size (leaving only 1 valid row)
+  baseline_expr_na_size <- data.frame(
+    response_id = c("gene1", "gene2", "gene3"),
+    relative_expression = c(1e-5, NA, 3e-5),
+    expression_size = c(0.5, NA, NA)
+  )
+  expect_error(
     obtain_expression_dispersion_curve(baseline_expr_na_size),
-    "Missing values detected in relative_expression or expression_size"
+    "Not enough valid rows remaining after removing NAs for curve fitting"
   )
 })
 

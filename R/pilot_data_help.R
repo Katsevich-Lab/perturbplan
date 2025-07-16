@@ -111,7 +111,7 @@ obtain_expression_information <- function(response_matrix,
   if (!all(keep_gene %in% rownames(response_matrix))) {
     # show how many genes are not in it
     missing_genes <- setdiff(keep_gene, rownames(response_matrix))
-    message("Missing genes: ", length(missing_genes), " (", paste(head(missing_genes, 10), collapse = ", "), "...)")
+    message("Missing genes: ", length(missing_genes), " (", paste(utils::head(missing_genes, 10), collapse = ", "), "...)")
     stop("Some genes in keep_gene are not present in response_matrix rownames")
   }
   theta_vec <- theta_batch_cpp(
@@ -184,7 +184,7 @@ obtain_expression_dispersion_curve <- function(baseline_expression) {
   }
 
   # Filter out rows with NA in key columns
-  clean_df <- baseline_expression[complete.cases(baseline_expression[, required_cols]), ]
+  clean_df <- baseline_expression[stats::complete.cases(baseline_expression[, required_cols]), ]
 
   if (nrow(clean_df) < 2) {
     stop("Not enough valid rows remaining after removing NAs for curve fitting")

@@ -8,7 +8,6 @@ reference_data_preprocessing(
   response_matrix = NULL,
   read_umi_table,
   n_threads = NULL,
-  TPM_thres = 1,
   downsample_ratio = 0.7,
   D2_rough = 0.3,
   h5_only = FALSE
