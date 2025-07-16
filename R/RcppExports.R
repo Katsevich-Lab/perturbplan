@@ -187,9 +187,15 @@ generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variati
 #'
 #' @description
 #' C++ implementation of compute_power_plan_overall that provides significant 
-#' performance improvements for power analysis computations.
+#' performance improvements for power analysis computations. Automatically detects
+#' DataFrame format and uses appropriate Monte Carlo function for fixed or random
+#' effect sizes.
 #'
-#' @param fc_expression_df DataFrame with fold change and expression info
+#' @param fc_expression_df DataFrame with fold change and expression info. Can contain either:
+#'   \itemize{
+#'     \item Fixed effect sizes: 'fold_change' column
+#'     \item Random effect sizes: 'avg_fold_change' and 'avg_fold_change_sq' columns
+#'   }
 #' @param library_size Numeric. Effective library size
 #' @param num_trt_cells Numeric. Number of treatment cells  
 #' @param num_cntrl_cells Numeric. Number of control cells
@@ -202,9 +208,11 @@ generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variati
 #' @return Numeric overall power (if return_full_results=FALSE) or List with full results
 #'
 #' @details
-#' This C++ implementation orchestrates existing optimized C++ functions:
+#' This C++ implementation automatically detects the DataFrame format and orchestrates
+#' appropriate optimized C++ functions:
 #' \itemize{
-#'   \item compute_monte_carlo_teststat_cpp(): Monte Carlo test statistics
+#'   \item For fixed effect sizes: compute_monte_carlo_teststat_cpp()
+#'   \item For random effect sizes: compute_monte_carlo_teststat_new_cpp()
 #'   \item compute_BH_plan(): Benjamini-Hochberg significance cutoff
 #'   \item rejection_computation_cpp(): Power calculations
 #' }

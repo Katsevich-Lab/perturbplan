@@ -12,6 +12,11 @@ List compute_monte_carlo_teststat_cpp(DataFrame fc_expression_df,
                                      double num_trt_cells,
                                      double num_cntrl_cells);
 
+List compute_monte_carlo_teststat_new_cpp(DataFrame fc_expression_df,
+                                         double library_size,
+                                         double num_trt_cells,
+                                         double num_cntrl_cells);
+
 double compute_BH_plan(const NumericVector &mean_list,
                       const NumericVector &sd_list,
                       const std::string   &side,
@@ -31,9 +36,15 @@ NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
 //'
 //' @description
 //' C++ implementation of compute_power_plan_overall that provides significant 
-//' performance improvements for power analysis computations.
+//' performance improvements for power analysis computations. Automatically detects
+//' DataFrame format and uses appropriate Monte Carlo function for fixed or random
+//' effect sizes.
 //'
-//' @param fc_expression_df DataFrame with fold change and expression info
+//' @param fc_expression_df DataFrame with fold change and expression info. Can contain either:
+//'   \itemize{
+//'     \item Fixed effect sizes: 'fold_change' column
+//'     \item Random effect sizes: 'avg_fold_change' and 'avg_fold_change_sq' columns
+//'   }
 //' @param library_size Numeric. Effective library size
 //' @param num_trt_cells Numeric. Number of treatment cells  
 //' @param num_cntrl_cells Numeric. Number of control cells
@@ -46,9 +57,11 @@ NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
 //' @return Numeric overall power (if return_full_results=FALSE) or List with full results
 //'
 //' @details
-//' This C++ implementation orchestrates existing optimized C++ functions:
+//' This C++ implementation automatically detects the DataFrame format and orchestrates
+//' appropriate optimized C++ functions:
 //' \itemize{
-//'   \item compute_monte_carlo_teststat_cpp(): Monte Carlo test statistics
+//'   \item For fixed effect sizes: compute_monte_carlo_teststat_cpp()
+//'   \item For random effect sizes: compute_monte_carlo_teststat_new_cpp()
 //'   \item compute_BH_plan(): Benjamini-Hochberg significance cutoff
 //'   \item rejection_computation_cpp(): Power calculations
 //' }
@@ -96,11 +109,43 @@ SEXP compute_power_plan_overall_cpp(DataFrame fc_expression_df,
     stop("side must be 'left', 'right', or 'both'");
   }
   
-  // Step 1: Compute Monte Carlo test statistics (call existing C++ function)
-  List mc_results = compute_monte_carlo_teststat_cpp(fc_expression_df, 
-                                                    library_size,
-                                                    num_trt_cells, 
-                                                    num_cntrl_cells);
+  // Step 1: Detect DataFrame format and compute Monte Carlo test statistics
+  CharacterVector column_names = fc_expression_df.names();
+  
+  // Check if DataFrame contains random effect size columns
+  bool has_avg_fold_change = false;
+  bool has_avg_fold_change_sq = false;
+  bool has_fold_change = false;
+  
+  for (int i = 0; i < column_names.size(); i++) {
+    std::string col_name = as<std::string>(column_names[i]);
+    if (col_name == "avg_fold_change") {
+      has_avg_fold_change = true;
+    } else if (col_name == "avg_fold_change_sq") {
+      has_avg_fold_change_sq = true;
+    } else if (col_name == "fold_change") {
+      has_fold_change = true;
+    }
+  }
+  
+  List mc_results;
+  
+  // Use appropriate Monte Carlo function based on DataFrame format
+  if (has_avg_fold_change && has_avg_fold_change_sq) {
+    // Random effect sizes: use new function
+    mc_results = compute_monte_carlo_teststat_new_cpp(fc_expression_df, 
+                                                     library_size,
+                                                     num_trt_cells, 
+                                                     num_cntrl_cells);
+  } else if (has_fold_change) {
+    // Fixed effect sizes: use original function
+    mc_results = compute_monte_carlo_teststat_cpp(fc_expression_df, 
+                                                  library_size,
+                                                  num_trt_cells, 
+                                                  num_cntrl_cells);
+  } else {
+    stop("DataFrame must contain either 'fold_change' (for fixed effects) or both 'avg_fold_change' and 'avg_fold_change_sq' (for random effects)");
+  }
   
   // Extract vectors for Monte Carlo samples
   NumericVector mc_means = mc_results["means"];

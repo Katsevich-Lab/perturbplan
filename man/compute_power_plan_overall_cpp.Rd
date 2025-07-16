@@ -17,7 +17,11 @@ compute_power_plan_overall_cpp(
 )
 }
 \arguments{
-\item{fc_expression_df}{DataFrame with fold change and expression info}
+\item{fc_expression_df}{DataFrame with fold change and expression info. Can contain either:
+\itemize{
+\item Fixed effect sizes: 'fold_change' column
+\item Random effect sizes: 'avg_fold_change' and 'avg_fold_change_sq' columns
+}}
 
 \item{library_size}{Numeric. Effective library size}
 
@@ -40,12 +44,16 @@ Numeric overall power (if return_full_results=FALSE) or List with full results
 }
 \description{
 C++ implementation of compute_power_plan_overall that provides significant
-performance improvements for power analysis computations.
+performance improvements for power analysis computations. Automatically detects
+DataFrame format and uses appropriate Monte Carlo function for fixed or random
+effect sizes.
 }
 \details{
-This C++ implementation orchestrates existing optimized C++ functions:
+This C++ implementation automatically detects the DataFrame format and orchestrates
+appropriate optimized C++ functions:
 \itemize{
-\item compute_monte_carlo_teststat_cpp(): Monte Carlo test statistics
+\item For fixed effect sizes: compute_monte_carlo_teststat_cpp()
+\item For random effect sizes: compute_monte_carlo_teststat_new_cpp()
 \item compute_BH_plan(): Benjamini-Hochberg significance cutoff
 \item rejection_computation_cpp(): Power calculations
 }
