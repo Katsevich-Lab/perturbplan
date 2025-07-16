@@ -16,6 +16,14 @@ List compute_distribution_teststat_fixed_es_cpp(
     NumericVector num_cntrl_cells,
     NumericVector num_cells);
 
+List compute_distribution_teststat_random_es_cpp(
+    double num_trt_cell,
+    double num_cntrl_cell,
+    double expression_mean,
+    double expression_size,
+    double avg_fold_change,
+    double avg_fold_change_sq);
+
 /*------------------------------------------------------------ *
  *  Compute power curve across fold change values (C++)        *
  *------------------------------------------------------------ */
@@ -179,6 +187,93 @@ List compute_monte_carlo_teststat_cpp(DataFrame fc_expression_df,
     List test_stats = compute_distribution_teststat_fixed_es_cpp(
       fc_vec, expr_mean_vec, expr_size_vec,
       num_trt_vec, num_cntrl_vec, num_cells_vec
+    );
+    
+    // Extract results
+    mc_means[i] = as<double>(test_stats["mean"]);
+    mc_sds[i] = as<double>(test_stats["sd"]);
+  }
+  
+  // Return as list
+  return List::create(
+    Named("means") = mc_means,
+    Named("sds") = mc_sds
+  );
+}
+
+/*------------------------------------------------------------ *
+ *  Compute Monte Carlo test statistics for random ES (C++)    *
+ *------------------------------------------------------------ */
+//' Compute Monte Carlo Test Statistics for Random Effect Sizes
+//' 
+//' @description
+//' Computes Monte Carlo test statistics for random effect sizes across multiple
+//' expression samples. This function is the counterpart to compute_monte_carlo_teststat_cpp
+//' but uses random effect sizes characterized by avg_fold_change and avg_fold_change_sq
+//' instead of fixed fold changes.
+//' 
+//' @param fc_expression_df DataFrame containing Monte Carlo expression samples with columns:
+//'   \itemize{
+//'     \item \code{relative_expression}: Relative expression levels
+//'     \item \code{expression_size}: Size parameters for negative binomial distribution
+//'     \item \code{avg_fold_change}: Average fold change across perturbations
+//'     \item \code{avg_fold_change_sq}: Average of squared fold changes (second moment)
+//'   }
+//' @param library_size Numeric. Library size for scaling expression means
+//' @param num_trt_cells Numeric. Number of treatment cells
+//' @param num_cntrl_cells Numeric. Number of control cells
+//' 
+//' @return A list containing:
+//' \describe{
+//'   \item{means}{NumericVector. Asymptotic means of test statistics}
+//'   \item{sds}{NumericVector. Asymptotic standard deviations of test statistics}
+//' }
+//' 
+//' @details
+//' This function processes Monte Carlo samples where each sample has random effect sizes
+//' characterized by their first and second moments (avg_fold_change and avg_fold_change_sq).
+//' It calls compute_distribution_teststat_random_es_cpp for each sample to compute the
+//' asymptotic distribution of the test statistic.
+//' 
+//' The key difference from compute_monte_carlo_teststat_cpp is that it handles random
+//' effect sizes rather than fixed fold changes, making it suitable for scenarios where
+//' perturbation effects vary across cells or conditions.
+//' 
+//' @seealso \code{\link{compute_monte_carlo_teststat_cpp}} for fixed effect sizes
+//' @seealso \code{\link{compute_distribution_teststat_random_es_cpp}} for single sample computation
+//' 
+//' @export
+// [[Rcpp::export]]
+List compute_monte_carlo_teststat_new_cpp(DataFrame fc_expression_df,
+                                         double library_size,
+                                         double num_trt_cells,
+                                         double num_cntrl_cells) {
+  
+  const int n_samples = fc_expression_df.nrows();
+  
+  // Extract vectors from data frame
+  NumericVector relative_expression = fc_expression_df["relative_expression"];
+  NumericVector expression_size = fc_expression_df["expression_size"];
+  NumericVector avg_fold_change = fc_expression_df["avg_fold_change"];
+  NumericVector avg_fold_change_sq = fc_expression_df["avg_fold_change_sq"];
+  
+  // Pre-compute expression means
+  NumericVector mc_expression_means = library_size * relative_expression;
+  
+  // Initialize output vectors
+  NumericVector mc_means(n_samples);
+  NumericVector mc_sds(n_samples);
+  
+  // Loop through Monte Carlo samples
+  for (int i = 0; i < n_samples; i++) {
+    // Call the random effect size C++ function
+    List test_stats = compute_distribution_teststat_random_es_cpp(
+      num_trt_cells,
+      num_cntrl_cells,
+      mc_expression_means[i],
+      expression_size[i],
+      avg_fold_change[i],
+      avg_fold_change_sq[i]
     );
     
     // Extract results

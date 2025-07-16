@@ -29,6 +29,51 @@ compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_m
     .Call(`_perturbplan_compute_distribution_teststat_fixed_es_cpp`, fold_change, expression_mean, expression_size, num_trt_cells, num_cntrl_cells, num_cells)
 }
 
+#' Compute Test Statistic Distribution for Random Effect Sizes
+#' 
+#' @description
+#' Computes the asymptotic mean and standard deviation of the score test statistic
+#' for random effect sizes in perturb-seq experiments. This function handles the
+#' case where fold changes vary randomly across perturbations, using the average
+#' fold change and its second moment.
+#' 
+#' @param num_trt_cell Numeric. Number of treatment cells
+#' @param num_cntrl_cell Numeric. Number of control cells  
+#' @param expression_mean Numeric. Mean baseline expression level
+#' @param expression_size Numeric. Size parameter for negative binomial distribution
+#' @param avg_fold_change Numeric. Average fold change across perturbations
+#' @param avg_fold_change_sq Numeric. Average of squared fold changes (second moment)
+#' 
+#' @return A list containing:
+#' \describe{
+#'   \item{mean}{Numeric. Asymptotic mean of the test statistic}
+#'   \item{sd}{Numeric. Asymptotic standard deviation of the test statistic}
+#' }
+#' 
+#' @details
+#' This function computes the asymptotic distribution of the score test statistic
+#' under the assumption of random effect sizes. The key difference from fixed
+#' effect sizes is that it accounts for variability in fold changes using the
+#' second moment (avg_fold_change_sq).
+#' 
+#' The computation follows these steps:
+#' \enumerate{
+#'   \item Compute treatment/control cell proportions
+#'   \item Calculate treatment, control, and pooled expression means
+#'   \item Compute pooled variance using negative binomial variance formula
+#'   \item Calculate denominator squared for the test statistic
+#'   \item Compute control group variance
+#'   \item Compute treatment group variance (incorporating fold change variability)
+#'   \item Calculate final asymptotic mean and standard deviation
+#' }
+#' 
+#' @seealso \code{\link{compute_distribution_teststat_fixed_es_cpp}} for fixed effect sizes
+#' 
+#' @export
+compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq) {
+    .Call(`_perturbplan_compute_distribution_teststat_random_es_cpp`, num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq)
+}
+
 #' Identify optimal cell count range based on power thresholds (C++)
 #'
 #' @description
@@ -227,5 +272,48 @@ compute_expression_curve_cpp <- function(expr_output_grid, fc_expression_df, lib
 
 compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells) {
     .Call(`_perturbplan_compute_monte_carlo_teststat_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells)
+}
+
+#' Compute Monte Carlo Test Statistics for Random Effect Sizes
+#' 
+#' @description
+#' Computes Monte Carlo test statistics for random effect sizes across multiple
+#' expression samples. This function is the counterpart to compute_monte_carlo_teststat_cpp
+#' but uses random effect sizes characterized by avg_fold_change and avg_fold_change_sq
+#' instead of fixed fold changes.
+#' 
+#' @param fc_expression_df DataFrame containing Monte Carlo expression samples with columns:
+#'   \itemize{
+#'     \item \code{relative_expression}: Relative expression levels
+#'     \item \code{expression_size}: Size parameters for negative binomial distribution
+#'     \item \code{avg_fold_change}: Average fold change across perturbations
+#'     \item \code{avg_fold_change_sq}: Average of squared fold changes (second moment)
+#'   }
+#' @param library_size Numeric. Library size for scaling expression means
+#' @param num_trt_cells Numeric. Number of treatment cells
+#' @param num_cntrl_cells Numeric. Number of control cells
+#' 
+#' @return A list containing:
+#' \describe{
+#'   \item{means}{NumericVector. Asymptotic means of test statistics}
+#'   \item{sds}{NumericVector. Asymptotic standard deviations of test statistics}
+#' }
+#' 
+#' @details
+#' This function processes Monte Carlo samples where each sample has random effect sizes
+#' characterized by their first and second moments (avg_fold_change and avg_fold_change_sq).
+#' It calls compute_distribution_teststat_random_es_cpp for each sample to compute the
+#' asymptotic distribution of the test statistic.
+#' 
+#' The key difference from compute_monte_carlo_teststat_cpp is that it handles random
+#' effect sizes rather than fixed fold changes, making it suitable for scenarios where
+#' perturbation effects vary across cells or conditions.
+#' 
+#' @seealso \code{\link{compute_monte_carlo_teststat_cpp}} for fixed effect sizes
+#' @seealso \code{\link{compute_distribution_teststat_random_es_cpp}} for single sample computation
+#' 
+#' @export
+compute_monte_carlo_teststat_new_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells) {
+    .Call(`_perturbplan_compute_monte_carlo_teststat_new_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells)
 }
 

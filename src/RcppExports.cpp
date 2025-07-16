@@ -118,6 +118,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_distribution_teststat_random_es_cpp
+List compute_distribution_teststat_random_es_cpp(double num_trt_cell, double num_cntrl_cell, double expression_mean, double expression_size, double avg_fold_change, double avg_fold_change_sq);
+RcppExport SEXP _perturbplan_compute_distribution_teststat_random_es_cpp(SEXP num_trt_cellSEXP, SEXP num_cntrl_cellSEXP, SEXP expression_meanSEXP, SEXP expression_sizeSEXP, SEXP avg_fold_changeSEXP, SEXP avg_fold_change_sqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type num_trt_cell(num_trt_cellSEXP);
+    Rcpp::traits::input_parameter< double >::type num_cntrl_cell(num_cntrl_cellSEXP);
+    Rcpp::traits::input_parameter< double >::type expression_mean(expression_meanSEXP);
+    Rcpp::traits::input_parameter< double >::type expression_size(expression_sizeSEXP);
+    Rcpp::traits::input_parameter< double >::type avg_fold_change(avg_fold_changeSEXP);
+    Rcpp::traits::input_parameter< double >::type avg_fold_change_sq(avg_fold_change_sqSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_distribution_teststat_random_es_cpp(num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq));
+    return rcpp_result_gen;
+END_RCPP
+}
 // identify_cell_range_cpp
 List identify_cell_range_cpp(double min_reads_per_cell, double max_reads_per_cell, DataFrame fc_expression_df, double UMI_per_cell, double variation, double MOI, int num_targets, int gRNAs_per_target, int non_targeting_gRNAs, std::string control_group, double multiple_testing_alpha, std::string side, double prop_non_null, double min_power_threshold, double max_power_threshold, double cell_lower_bound, double cell_upper_bound);
 RcppExport SEXP _perturbplan_identify_cell_range_cpp(SEXP min_reads_per_cellSEXP, SEXP max_reads_per_cellSEXP, SEXP fc_expression_dfSEXP, SEXP UMI_per_cellSEXP, SEXP variationSEXP, SEXP MOISEXP, SEXP num_targetsSEXP, SEXP gRNAs_per_targetSEXP, SEXP non_targeting_gRNAsSEXP, SEXP control_groupSEXP, SEXP multiple_testing_alphaSEXP, SEXP sideSEXP, SEXP prop_non_nullSEXP, SEXP min_power_thresholdSEXP, SEXP max_power_thresholdSEXP, SEXP cell_lower_boundSEXP, SEXP cell_upper_boundSEXP) {
@@ -291,6 +307,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_monte_carlo_teststat_new_cpp
+List compute_monte_carlo_teststat_new_cpp(DataFrame fc_expression_df, double library_size, double num_trt_cells, double num_cntrl_cells);
+RcppExport SEXP _perturbplan_compute_monte_carlo_teststat_new_cpp(SEXP fc_expression_dfSEXP, SEXP library_sizeSEXP, SEXP num_trt_cellsSEXP, SEXP num_cntrl_cellsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type fc_expression_df(fc_expression_dfSEXP);
+    Rcpp::traits::input_parameter< double >::type library_size(library_sizeSEXP);
+    Rcpp::traits::input_parameter< double >::type num_trt_cells(num_trt_cellsSEXP);
+    Rcpp::traits::input_parameter< double >::type num_cntrl_cells(num_cntrl_cellsSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_monte_carlo_teststat_new_cpp(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_rejection_computation_cpp", (DL_FUNC) &_perturbplan_rejection_computation_cpp, 4},
@@ -300,6 +330,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_compute_BH_plan", (DL_FUNC) &_perturbplan_compute_BH_plan, 5},
     {"_perturbplan_compute_QC_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_QC_fixed_es_cpp, 7},
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
+    {"_perturbplan_compute_distribution_teststat_random_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_random_es_cpp, 6},
     {"_perturbplan_identify_cell_range_cpp", (DL_FUNC) &_perturbplan_identify_cell_range_cpp, 17},
     {"_perturbplan_fit_read_UMI_curve_cpp", (DL_FUNC) &_perturbplan_fit_read_UMI_curve_cpp, 3},
     {"_perturbplan_identify_library_size_range_cpp", (DL_FUNC) &_perturbplan_identify_library_size_range_cpp, 3},
@@ -310,6 +341,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_compute_fc_curve_cpp", (DL_FUNC) &_perturbplan_compute_fc_curve_cpp, 7},
     {"_perturbplan_compute_expression_curve_cpp", (DL_FUNC) &_perturbplan_compute_expression_curve_cpp, 8},
     {"_perturbplan_compute_monte_carlo_teststat_cpp", (DL_FUNC) &_perturbplan_compute_monte_carlo_teststat_cpp, 4},
+    {"_perturbplan_compute_monte_carlo_teststat_new_cpp", (DL_FUNC) &_perturbplan_compute_monte_carlo_teststat_new_cpp, 4},
     {NULL, NULL, 0}
 };
 
