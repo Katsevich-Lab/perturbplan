@@ -187,14 +187,15 @@ generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variati
 #'
 #' @description
 #' C++ implementation of compute_power_plan_overall that provides significant 
-#' performance improvements for power analysis computations. Automatically detects
-#' DataFrame format and uses appropriate Monte Carlo function for fixed or random
-#' effect sizes.
+#' performance improvements for power analysis computations. Uses random effect sizes
+#' format with avg_fold_change and avg_fold_change_sq columns.
 #'
-#' @param fc_expression_df DataFrame with fold change and expression info. Can contain either:
+#' @param fc_expression_df DataFrame with fold change and expression info. Must contain:
 #'   \itemize{
-#'     \item Fixed effect sizes: 'fold_change' column
-#'     \item Random effect sizes: 'avg_fold_change' and 'avg_fold_change_sq' columns
+#'     \item relative_expression: Relative expression levels
+#'     \item expression_size: Size parameters for negative binomial distribution
+#'     \item avg_fold_change: Average fold change across perturbations
+#'     \item avg_fold_change_sq: Average of squared fold changes (second moment)
 #'   }
 #' @param library_size Numeric. Effective library size
 #' @param num_trt_cells Numeric. Number of treatment cells  
@@ -208,11 +209,9 @@ generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variati
 #' @return Numeric overall power (if return_full_results=FALSE) or List with full results
 #'
 #' @details
-#' This C++ implementation automatically detects the DataFrame format and orchestrates
-#' appropriate optimized C++ functions:
+#' This C++ implementation uses optimized C++ functions for random effect sizes:
 #' \itemize{
-#'   \item For fixed effect sizes: compute_monte_carlo_teststat_cpp()
-#'   \item For random effect sizes: compute_monte_carlo_teststat_new_cpp()
+#'   \item compute_monte_carlo_teststat_new_cpp(): Monte Carlo test statistics for random effect sizes
 #'   \item compute_BH_plan(): Benjamini-Hochberg significance cutoff
 #'   \item rejection_computation_cpp(): Power calculations
 #' }

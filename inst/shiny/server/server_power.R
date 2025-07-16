@@ -347,7 +347,8 @@ create_power_server <- function(input, output, session) {
       B = 1000,  # Monte Carlo samples for good accuracy
       gene_list = if(input$gene_list_mode == "custom") gene_list() else NULL,  # Use gene list only in custom mode
       tpm_threshold = input$tpm_threshold,  # Apply TPM filtering
-      custom_baseline_data = if(input$pilot_data_choice == "custom" || input$biological_system == "Other" || input$experimental_platform == "Other") custom_baseline() else NULL  # Use custom baseline if provided
+      custom_baseline_data = if(input$pilot_data_choice == "custom" || input$biological_system == "Other" || input$experimental_platform == "Other") custom_baseline() else NULL,  # Use custom baseline if provided
+      gRNAs_per_target = input$gRNAs_per_target  # Pass gRNAs per target parameter
     )
   })
 

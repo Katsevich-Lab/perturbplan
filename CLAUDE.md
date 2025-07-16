@@ -220,6 +220,13 @@ importFrom("utils", "read.csv")
 
 This ensures consistency across the entire codebase and avoids confusion between "TPM" (Transcripts Per Million) and "tmp" (temporary).
 
+## Common Typos to Avoid
+
+- **`tpm_threshold` vs `tmp_threshold`**: Always use `tpm_threshold` (Transcripts Per Million), not `tmp_threshold` (temporary)
+- **Parameter consistency**: When adding parameters to functions, double-check spelling matches existing usage
+- **Function signatures**: Ensure parameter names match between function definitions and calls
+- **Careful attention to existing code**: When modifying existing functions, preserve existing parameter names exactly as they are
+
 ## Combined Pilot Data Upload
 
 The Shiny application supports uploading combined pilot data that includes both baseline expression and library parameters in a single RDS file. This ensures consistency between these components and simplifies the upload process.
