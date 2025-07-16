@@ -49,11 +49,9 @@ DataFrame format and uses appropriate Monte Carlo function for fixed or random
 effect sizes.
 }
 \details{
-This C++ implementation automatically detects the DataFrame format and orchestrates
-appropriate optimized C++ functions:
+This C++ implementation uses optimized C++ functions for random effect sizes:
 \itemize{
-\item For fixed effect sizes: compute_monte_carlo_teststat_cpp()
-\item For random effect sizes: compute_monte_carlo_teststat_new_cpp()
+\item compute_monte_carlo_teststat_new_cpp(): Monte Carlo test statistics for random effect sizes
 \item compute_BH_plan(): Benjamini-Hochberg significance cutoff
 \item rejection_computation_cpp(): Power calculations
 }

@@ -5,9 +5,14 @@ library(testthat)
 
 test_that("compute_power_plan_overall matches manual step-by-step calculation", {
   
+  # Load all functions including internal ones for testing
+  devtools::load_all()
+  
   # Simple, controlled test case for precise verification
+  # Using new random effect sizes format
   fc_expression_df <- data.frame(
-    fold_change = c(0.5, 1.0, 2.0),
+    avg_fold_change = c(0.5, 1.0, 2.0),
+    avg_fold_change_sq = c(0.26, 1.01, 4.05),  # Slightly > avg_fold_change^2 to satisfy constraint
     relative_expression = c(1e-5, 5e-5, 1e-4),
     expression_size = c(0.5, 1.0, 2.0)
   )
@@ -71,7 +76,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   expect_equal(integrated_result$num_cntrl_cells, manual_num_cntrl_cells, tolerance = 1e-12)
   
   # Manual calculation step 2: Monte Carlo test statistics
-  manual_mc_results <- compute_monte_carlo_teststat_cpp(
+  manual_mc_results <- compute_monte_carlo_teststat_new_cpp(
     fc_expression_df = fc_expression_df,
     library_size = library_size,
     num_trt_cells = manual_num_trt_cells,

@@ -156,56 +156,6 @@ DataFrame compute_expression_curve_cpp(NumericVector expr_output_grid,
   );
 }
 
-/*------------------------------------------------------------ *
- *  Compute Monte Carlo test statistics for power plan (C++)   *
- *------------------------------------------------------------ */
-// [[Rcpp::export]]
-List compute_monte_carlo_teststat_cpp(DataFrame fc_expression_df,
-                                     double library_size,
-                                     double num_trt_cells,
-                                     double num_cntrl_cells) {
-  
-  const int n_samples = fc_expression_df.nrows();
-  
-  // Extract vectors from data frame
-  NumericVector fold_change = fc_expression_df["fold_change"];
-  NumericVector relative_expression = fc_expression_df["relative_expression"];
-  NumericVector expression_size = fc_expression_df["expression_size"];
-  
-  // Pre-compute expression means
-  NumericVector mc_expression_means = library_size * relative_expression;
-  
-  // Initialize output vectors
-  NumericVector mc_means(n_samples);
-  NumericVector mc_sds(n_samples);
-  
-  // Loop through Monte Carlo samples
-  for (int i = 0; i < n_samples; i++) {
-    // Prepare input vectors for C++ function call
-    NumericVector fc_vec(1, fold_change[i]);
-    NumericVector expr_mean_vec(1, mc_expression_means[i]);
-    NumericVector expr_size_vec(1, expression_size[i]);
-    NumericVector num_trt_vec(1, num_trt_cells);
-    NumericVector num_cntrl_vec(1, num_cntrl_cells);
-    NumericVector num_cells_vec(1, num_trt_cells);  // For single gRNA case
-    
-    // Call existing C++ function
-    List test_stats = compute_distribution_teststat_fixed_es_cpp(
-      fc_vec, expr_mean_vec, expr_size_vec,
-      num_trt_vec, num_cntrl_vec, num_cells_vec
-    );
-    
-    // Extract results
-    mc_means[i] = as<double>(test_stats["mean"]);
-    mc_sds[i] = as<double>(test_stats["sd"]);
-  }
-  
-  // Return as list
-  return List::create(
-    Named("means") = mc_means,
-    Named("sds") = mc_sds
-  );
-}
 
 /*------------------------------------------------------------ *
  *  Compute Monte Carlo test statistics for random ES (C++)    *
