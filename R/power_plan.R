@@ -88,6 +88,9 @@ calculate_power_curves <- function(
   side = "left"
 ) {
 
+  # Power curve functionality is temporarily disabled
+  stop("Power curve functionality is temporarily disabled. Use heatmap and slice visualization instead.")
+
   # Create cells_reads_df for selected tiles only
   # Note: selected_tiles$cells contains treatment cell counts from heatmap
   # Note: selected_tiles$num_cntrl_cells contains pre-computed control cells
@@ -205,6 +208,9 @@ compute_power_grid_full <- function(
     fc_curve_points = 10,
     expr_curve_points = 10
 ){
+
+  # Power curve functionality is temporarily disabled
+  stop("Power curve functionality is temporarily disabled. Use heatmap and slice visualization instead.")
 
   ############### extract components from fc_expression_info ##################
   set.seed(1)  # Reproducible results

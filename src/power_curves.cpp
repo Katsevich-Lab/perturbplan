@@ -36,6 +36,9 @@ DataFrame compute_fc_curve_cpp(NumericVector fc_output_grid,
                               std::string side,
                               double cutoff) {
   
+  // Power curve functionality is temporarily disabled
+  stop("Power curve functionality is temporarily disabled. Use heatmap and slice visualization instead.");
+  
   const int n_grid = fc_output_grid.size();
   const int n_samples = fc_expression_df.nrows();
   
@@ -98,6 +101,9 @@ DataFrame compute_expression_curve_cpp(NumericVector expr_output_grid,
                                       double num_cntrl_cells,
                                       std::string side,
                                       double cutoff) {
+  
+  // Power curve functionality is temporarily disabled
+  stop("Power curve functionality is temporarily disabled. Use heatmap and slice visualization instead.");
   
   const int n_grid = expr_output_grid.size();
   const int n_samples = fc_expression_df.nrows();
