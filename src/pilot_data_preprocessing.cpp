@@ -12,12 +12,10 @@
 using namespace Rcpp;
 using Eigen::VectorXd;
 
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  Rough dispersion estimate for one sparse row (no temporary SparseVector)
 // ─────────────────────────────────────────────────────────────────────────────
-#include <RcppEigen.h>
-using Eigen::VectorXd;
-
 inline double theta_rough_row(const Eigen::MappedSparseMatrix<double>& Y,
                               int                               row,
                               const Eigen::VectorXd&            mu) {
@@ -25,26 +23,20 @@ inline double theta_rough_row(const Eigen::MappedSparseMatrix<double>& Y,
   double     ss = 0.0;  // Sum of squared residuals
   int        nz = 0;    // Number of non-zero entries in the row
 
-  Rcpp::Rcout << "[DEBUG] Row: " << row << ", Total columns: " << n << std::endl;
-
+  // Loop through non-zero elements in the specified row
   for (Eigen::MappedSparseMatrix<double>::InnerIterator it(Y, row); it; ++it) {
     const int j = it.index();          // Column index
     const double mu_j = mu[j];
 
-    // Debug print
-    Rcpp::Rcout << "  [DEBUG] col " << j << ": Y[" << row << "," << j << "] = " << it.value() 
-                << ", mu[" << j << "] = " << mu_j << std::endl;
-
     // Safety check: mu[j] must be finite and non-zero
     if (!std::isfinite(mu_j) || mu_j == 0.0) {
-      Rcpp::Rcout << "  [ERROR] Invalid mu[" << j << "]: " << mu_j << std::endl;
       return -99;
     }
 
     const double res = it.value() / mu_j - 1.0;
 
+    // Safety check: residual must be finite
     if (!std::isfinite(res)) {
-      Rcpp::Rcout << "  [ERROR] Invalid residual for col " << j << ": " << res << std::endl;
       return -99;
     }
 
@@ -52,25 +44,21 @@ inline double theta_rough_row(const Eigen::MappedSparseMatrix<double>& Y,
     ++nz;
   }
 
-  Rcpp::Rcout << "  [DEBUG] Non-zero entries: " << nz << ", Residual sum squares (pre-zero): " << ss << std::endl;
-
-  // Add contribution from zero entries
+  // Add contribution from zero entries (assumed residual = -1)
   ss += static_cast<double>(n - nz);
-  Rcpp::Rcout << "  [DEBUG] Total residual sum squares (with zero entries): " << ss << std::endl;
 
+  // Safety check before final division
   if (ss <= 0.0 || !std::isfinite(ss)) {
-    Rcpp::Rcout << "  [ERROR] Invalid sum of squares: " << ss << std::endl;
     return -99;
   }
 
   double theta = static_cast<double>(n) / ss;
 
+  // Final check on computed theta
   if (!std::isfinite(theta)) {
-    Rcpp::Rcout << "  [ERROR] Computed theta not finite: " << theta << std::endl;
     return -99;
   }
 
-  Rcpp::Rcout << "[DEBUG] Computed theta for row " << row << ": " << theta << std::endl;
   return theta;
 }
 
@@ -212,8 +200,8 @@ Rcpp::NumericVector theta_batch_cpp(
         bool rough = false,
         int n_threads = 0) {
 
-  const int G = Y.rows();  // number of genes
-  const int C = Y.cols();  // number of cells
+  const int G = Y.cols();  // number of genes
+  const int C = Y.rows();  // number of cells
   const double eps = std::pow(DBL_EPSILON, 0.25);
 
   if (library_size.size() != C || rel_expr.size() != G) {
