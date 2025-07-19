@@ -95,13 +95,6 @@ obtain_expression_information <- function(response_matrix,
   # --- library size & TPM ---------------------------------------------------
   message("Start relative expression calculation @ ", Sys.time())
   lib_size <- Matrix::colSums(response_matrix)
-  # check whether lib_size is all positive or at least nonnegative
-  if (any(lib_size < 0)) {
-    print
-    stop("Library size contains negative values, which is unexpected.")
-  } else if (all(lib_size == 0)) {
-    stop("All library sizes are zero, which is unexpected.")
-  }
   rel_expr <- Matrix::rowSums(response_matrix) / sum(response_matrix)
   names(rel_expr) <- rownames(response_matrix)
   TPM <- rel_expr * 1e6
