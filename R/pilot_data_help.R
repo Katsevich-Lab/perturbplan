@@ -115,7 +115,7 @@ obtain_expression_information <- function(response_matrix,
     stop("Some genes in keep_gene are not present in response_matrix rownames")
   }
   theta_vec <- theta_batch_cpp(
-    t(response_matrix[keep_gene, , drop = FALSE]),
+    Matrix::t(response_matrix[keep_gene, , drop = FALSE]),
     lib_size,
     rel_expr[keep_gene],
     rough      = rough,
