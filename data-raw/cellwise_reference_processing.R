@@ -29,7 +29,7 @@ get_nt_only_barcodes <- function(run_dir) {
   nt_only_barcodes <- df %>%
     group_by(barcode) %>%
     summarise(all_nt = all(guide %in% nontargeting_features), .groups = "drop") %>%
-    filter(all_nt) %>%
+    dplyr::filter(all_nt) %>%
     pull(barcode)
 
   return(nt_only_barcodes)
@@ -125,9 +125,13 @@ process_t_cd8_10x <- function(path_to_dataset) {
   message("Start processing T_CD8_10x")
   path_to_runs <- file.path(path_to_dataset, "processed")
   t_cd8_data <- perturbplan::reference_data_preprocessing_10x(path_to_runs)
+
   response_matrix <- t_cd8_data[[1]]
   read_umi_table <- t_cd8_data[[2]]
-
+  nt_only_barcodes <- get_nt_only_barcodes(file.path(path_to_dataset, "processed", "SRR7788629", "outs", "molecule_info.h5"))
+  response_matrix <- response_matrix[, colnames(response_matrix) %in% nt_only_barcodes]
+  read_umi_table <- read_umi_table|>
+    dplyr::filter(barcode %in% nt_only_barcodes)
   return(perturbplan::reference_data_preprocessing(response_matrix=response_matrix,
                                                    read_umi_table=read_umi_table))
 }
