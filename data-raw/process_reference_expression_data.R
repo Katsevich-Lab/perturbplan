@@ -11,7 +11,7 @@ reference_expression_datasets <- tribble(
   "K562",                            "10x",      "LOCAL_GASPERINI_2019_SRA_DATA_DIR", "process_k562_10x",
   # "MCF 7 (treated with IFN-gamma)", "Parse",    "MCF_IFN_2021", "process_mcf7_parse",
   "THP-1",                           "10x",      "LOCAL_YAO_2023_DATA_DIR", "process_thp1_10x",
-  "T_CD4",                         "10x",      "LOCAL_10X_2016_DATA_DIR", "process_t_cd4_10x"
+  "T_CD8",                         "10x",      "LOCAL_SHIFRUT_2018_DATA_DIR", "process_t_cd8_10x"
 )
 
 usethis::use_data(reference_expression_datasets, overwrite = overwrite)

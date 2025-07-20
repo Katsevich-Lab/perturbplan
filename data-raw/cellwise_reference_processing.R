@@ -70,8 +70,12 @@ process_thp1_10x <- function(path_to_dataset) {
   response_matrix <- GetAssayData(seurat_obj, assay = "RNA", slot = "counts")
 
   # Subset the expression matrix to include only the selected 'nt_cells_once' cells
-  response_matrix <- response_matrix[, nt_cells_once]
+  response_matrix <- response_matrix[, nt_cells]
 
+  # check whether there are negative values
+  if (any(response_matrix < 0)) {
+    stop("Response matrix contains negative values, which is unexpected for UMI counts.")
+  }
 
   # Read features.tsv.gz (usually contains 3 columns: gene_id, gene_name, gene_type)
   genes <- fread(file.path(dir_srrs[1], "outs" , "filtered_feature_bc_matrix" , "features.tsv.gz"), header = FALSE)
@@ -94,9 +98,6 @@ process_thp1_10x <- function(path_to_dataset) {
 
 
   read_umi_table <- obtain_qc_read_umi_table(dir_srrs[1])
-
-  read_umi_table$prefix <- sub("-.*", "", read_umi_table$cell_id)
-
   read_umi_table <- read_umi_table|>
     dplyr::filter(cell_id %in% nt_cells_once)
 
@@ -118,4 +119,15 @@ process_t_cd4_10x <- function(path_to_dataset){
                                                    read_umi_table=read_umi_table))
 
 
+}
+
+process_t_cd8_10x <- function(path_to_dataset) {
+  message("Start processing T_CD8_10x")
+  path_to_runs <- file.path(path_to_dataset, "processed")
+  t_cd8_data <- perturbplan::reference_data_preprocessing_10x(path_to_runs)
+  response_matrix <- t_cd8_data[[1]]
+  read_umi_table <- t_cd8_data[[2]]
+
+  return(perturbplan::reference_data_preprocessing(response_matrix=response_matrix,
+                                                   read_umi_table=read_umi_table))
 }

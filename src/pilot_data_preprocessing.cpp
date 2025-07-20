@@ -233,7 +233,6 @@ Rcpp::NumericVector theta_batch_cpp(
         Rcpp::Rcout << "[gene " << g << "] rel_expr = " << rel_expr[g] << std::endl;
       }
 
-      Rcpp::Rcout << "[gene " << g << "] rel_expr value = " << rel_expr[g] << std::endl;
       mu = lib_vec * rel_expr[g];
 
       double t_0 = theta_rough_row(Y, g, mu);
