@@ -11,7 +11,8 @@ extract_fc_expression_info(
   B = 200,
   gene_list = NULL,
   tpm_threshold = 10,
-  custom_baseline_data = NULL
+  custom_baseline_data = NULL,
+  gRNAs_per_target = 4
 )
 }
 \arguments{
@@ -35,11 +36,16 @@ levels below tpm_threshold/1e6 are filtered out before power calculation.}
 as extract_baseline_expression() output. If provided, this data is used instead of the
 default biological_system data. Must contain baseline_expression data frame and
 expression_dispersion_curve function.}
+
+\item{gRNAs_per_target}{Integer. Number of gRNAs per target (default: 4).
+Each target will have gRNAs_per_target individual gRNA effect sizes drawn from the
+specified fold change distribution. avg_fold_change and avg_fold_change_sq are
+calculated as the mean and mean-of-squares of these gRNA effect sizes.}
 }
 \value{
 A list with elements:
 \describe{
-\item{fc_expression_df}{Data frame with sampled fold changes and expression parameters}
+\item{fc_expression_df}{Data frame with avg_fold_change, avg_fold_change_sq, and expression parameters}
 \item{expression_dispersion_curve}{Function relating expression mean to dispersion}
 }
 }
@@ -59,8 +65,9 @@ In both modes:
 \itemize{
 \item Sets a random seed for reproducibility
 \item Filters genes below TPM threshold (relative_expression < tpm_threshold/1e6)
-\item Generates fold change values from a normal distribution (one per gene)
-\item Returns combined data for Monte Carlo integration
+\item Generates gRNAs_per_target effect sizes per target from a normal distribution
+\item Calculates avg_fold_change and avg_fold_change_sq from the gRNA effect sizes
+\item Returns combined data for Monte Carlo integration with random effect sizes
 }
 }
 \seealso{

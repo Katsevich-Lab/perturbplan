@@ -110,6 +110,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   as obtained via \code{\link{obtain_qc_read_umi_table}}.
 #' @param n_threads Integer. Number of threads used for parallel processing. Default: NULL (single-threaded).
 #' @param downsample_ratio Numeric. Proportion of downsampling used for library size estimation. Default: 0.7.
+#' @param TPM_thres Numeric. Threshold for filtering low-expression genes during preprocessing.
 #' @param D2_rough Numeric. Rough prior value for library variation parameter. Default: 0.3.
 #' @param h5_only Logical. If TRUE, skips baseline expression and dispersion estimation
 #'   steps (only processes read_umi_table). Default: FALSE.
@@ -148,6 +149,7 @@ reference_data_preprocessing <- function(response_matrix = NULL,
                                          read_umi_table,
                                          n_threads = NULL,
                                          downsample_ratio = 0.7,
+                                         TPM_thres = 1,
                                          D2_rough = 0.3,
                                          h5_only = FALSE
                                         ) {
@@ -157,7 +159,7 @@ reference_data_preprocessing <- function(response_matrix = NULL,
   message("Step 1: Computing gene expression information...")
   baseline_expression_df <- obtain_expression_information(
     response_matrix = response_matrix,
-    TPM_thres = 0,  # No filtering during preprocessing
+    TPM_thres = TPM_thres,  # No filtering during preprocessing
     n_threads = n_threads
   )
 

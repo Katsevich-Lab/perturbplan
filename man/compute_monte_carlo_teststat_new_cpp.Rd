@@ -35,8 +35,9 @@ A list containing:
 }
 \description{
 Computes Monte Carlo test statistics for random effect sizes across multiple
-expression samples. This function uses random effect sizes characterized by 
-avg_fold_change and avg_fold_change_sq instead of fixed fold changes.
+expression samples. This function is the counterpart to compute_monte_carlo_teststat_cpp
+but uses random effect sizes characterized by avg_fold_change and avg_fold_change_sq
+instead of fixed fold changes.
 }
 \details{
 This function processes Monte Carlo samples where each sample has random effect sizes
@@ -44,9 +45,12 @@ characterized by their first and second moments (avg_fold_change and avg_fold_ch
 It calls compute_distribution_teststat_random_es_cpp for each sample to compute the
 asymptotic distribution of the test statistic.
 
-This function handles random effect sizes rather than fixed fold changes, making 
-it suitable for scenarios where perturbation effects vary across cells or conditions.
+The key difference from compute_monte_carlo_teststat_cpp is that it handles random
+effect sizes rather than fixed fold changes, making it suitable for scenarios where
+perturbation effects vary across cells or conditions.
 }
 \seealso{
+\code{\link{compute_monte_carlo_teststat_cpp}} for fixed effect sizes
+
 \code{\link{compute_distribution_teststat_random_es_cpp}} for single sample computation
 }

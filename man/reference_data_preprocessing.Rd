@@ -9,6 +9,7 @@ reference_data_preprocessing(
   read_umi_table,
   n_threads = NULL,
   downsample_ratio = 0.7,
+  TPM_thres = 1,
   D2_rough = 0.3,
   h5_only = FALSE
 )
@@ -24,6 +25,8 @@ as obtained via \code{\link{obtain_qc_read_umi_table}}.}
 \item{n_threads}{Integer. Number of threads used for parallel processing. Default: NULL (single-threaded).}
 
 \item{downsample_ratio}{Numeric. Proportion of downsampling used for library size estimation. Default: 0.7.}
+
+\item{TPM_thres}{Numeric. Threshold for filtering low-expression genes during preprocessing.}
 
 \item{D2_rough}{Numeric. Rough prior value for library variation parameter. Default: 0.3.}
 
