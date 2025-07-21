@@ -4,22 +4,29 @@ library(purrr)    # pwalk()
 library(usethis)  # use_data()
 
 overwrite <- FALSE   # set TRUE to rebuild even if .rda exists
-
+source("data-raw/cellwise_reference_processing.R")
 # 1. Define and save your spec ------------------------------------------
 reference_expression_datasets <- tribble(
   ~cell_type,                       ~platform, ~config_name, ~process_function,
   "K562",                            "10x",      "LOCAL_GASPERINI_2019_SRA_DATA_DIR", "process_k562_10x",
   # "MCF 7 (treated with IFN-gamma)", "Parse",    "MCF_IFN_2021", "process_mcf7_parse",
-  "THP-1",                           "10x",      "LOCAL_YAO_2023_DATA_DIR", "process_thp1_10x",
-  "T_CD8",                         "10x",      "LOCAL_SHIFRUT_2018_DATA_DIR", "process_t_cd8_10x"
+  "THP-1",                           "10x",      "LOCAL_YAO_2023_DATA_DIR", "process_thp1_10x"
+  # "T_CD8",                         "10x",      "LOCAL_SHIFRUT_2018_DATA_DIR", "process_t_cd8_10x"
+  # "A549",                           "10x",      "LOCAL_YAO_2023_DATA_DIR", "process_a549_10x",
+  # "iPSC",                           "10x",      "LOCAL_YAO_2023_DATA_DIR", "process_ipsc_10x"
 )
 
-usethis::use_data(reference_expression_datasets, overwrite = overwrite)
+rda_file <- file.path("data", "reference_expression_datasets.rda")
+if (!file.exists(rda_file)) {
+  usethis::use_data(reference_expression_datasets, overwrite = overwrite)
+} else {
+  message("reference_expression_datasets.rda exists; skipping.")
+}
 
 # 2. Processing loop ----------------------------------------------------
 pwalk(
   reference_expression_datasets,
-  function(cell_type, platform, config_name, process_function, overwrite) {
+  function(cell_type, platform, config_name, process_function) {
 
     # Create a valid object name for the dataset
     package_name <- paste0(cell_type, "_", platform) |>
@@ -40,7 +47,9 @@ pwalk(
 
     # Save object
     assign(package_name, obj, envir = .GlobalEnv)
-    usethis::use_data(list = package_name, overwrite = overwrite)
-  },
-  overwrite = overwrite
+    save(list = package_name,
+         file = file.path("data", paste0(package_name, ".rda")),
+         envir = .GlobalEnv)
+    # do.call(usethis::use_data, list(list = package_name, overwrite = TRUE, envir = .GlobalEnv))
+  }
 )

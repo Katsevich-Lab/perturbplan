@@ -41,3 +41,6 @@ LinkingTo:
     Rcpp,
     RcppEigen,
     BH
+Depends: 
+    R (>= 3.5)
+LazyData: true
