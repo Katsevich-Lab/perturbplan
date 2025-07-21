@@ -4,10 +4,7 @@
 library(testthat)
 
 test_that("compute_power_plan_overall matches manual step-by-step calculation", {
-  
-  # Load all functions including internal ones for testing
-  devtools::load_all()
-  
+
   # Simple, controlled test case for precise verification
   # Using new random effect sizes format
   fc_expression_df <- data.frame(
@@ -16,7 +13,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
     relative_expression = c(1e-5, 5e-5, 1e-4),
     expression_size = c(0.5, 1.0, 2.0)
   )
-  
+
   # Fixed experimental parameters
   num_total_cells <- 5000
   library_size <- 10000
@@ -29,7 +26,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   control_group <- "complement"
   side <- "both"
   prop_non_null <- 0.3
-  
+
   # Calculate treatment and control cells first
   num_trt_cells <- gRNAs_per_target * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
   num_cntrl_cells <- switch(control_group,
@@ -37,7 +34,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
     nt_cells = non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
   )
   num_cntrl_cells <- round(num_cntrl_cells)
-  
+
   # Get integrated result
   integrated_result <- compute_power_plan_overall(
     num_trt_cells = num_trt_cells,
@@ -50,7 +47,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
     prop_non_null = prop_non_null,
     return_full_results = TRUE
   )
-  
+
   # Verify output structure
   expect_type(integrated_result, "list")
   expect_true(all(c("overall_power", "sig_cutoff", "num_trt_cells", "num_cntrl_cells") %in% names(integrated_result)))
@@ -58,7 +55,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   expect_true(is.finite(integrated_result$overall_power))
   expect_true(integrated_result$sig_cutoff > 0 && integrated_result$sig_cutoff <= multiple_testing_alpha)
   expect_true(is.finite(integrated_result$sig_cutoff))
-  
+
   # Manual calculation step 1: Cell count allocation
   # Replicate exact logic from the function
   manual_num_trt_cells <- num_trt_cells
@@ -70,11 +67,11 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
                                     non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
                                   })
   manual_num_cntrl_cells <- round(manual_num_cntrl_cells)
-  
+
   # Compare cell count calculations
   expect_equal(integrated_result$num_trt_cells, manual_num_trt_cells, tolerance = 1e-12)
   expect_equal(integrated_result$num_cntrl_cells, manual_num_cntrl_cells, tolerance = 1e-12)
-  
+
   # Manual calculation step 2: Monte Carlo test statistics
   manual_mc_results <- compute_monte_carlo_teststat_new_cpp(
     fc_expression_df = fc_expression_df,
@@ -82,14 +79,14 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
     num_trt_cells = manual_num_trt_cells,
     num_cntrl_cells = manual_num_cntrl_cells
   )
-  
+
   # Verify Monte Carlo results structure
   expect_equal(length(manual_mc_results$means), nrow(fc_expression_df))
   expect_equal(length(manual_mc_results$sds), nrow(fc_expression_df))
   expect_true(all(is.finite(manual_mc_results$means)))
   expect_true(all(is.finite(manual_mc_results$sds)))
   expect_true(all(manual_mc_results$sds > 0))
-  
+
   # Manual calculation step 3: Multiple testing cutoff
   manual_cutoff <- switch(multiple_testing_method,
                          BH = {
@@ -101,10 +98,10 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
                              prop_non_null = prop_non_null
                            )
                          })
-  
+
   # Compare cutoff calculations
   expect_equal(integrated_result$sig_cutoff, manual_cutoff, tolerance = 1e-12)
-  
+
   # Manual calculation step 4: Overall power computation
   manual_powers <- rejection_computation_cpp(
     mean_list = manual_mc_results$means,
@@ -113,10 +110,10 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
     cutoff = manual_cutoff
   )
   manual_overall_power <- mean(manual_powers)
-  
+
   # Compare final power calculation
   expect_equal(integrated_result$overall_power, manual_overall_power, tolerance = 1e-12)
-  
+
   # Test simple return mode consistency
   simple_result <- compute_power_plan_overall(
     num_trt_cells = num_trt_cells,
@@ -129,15 +126,15 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
     prop_non_null = prop_non_null,
     return_full_results = FALSE
   )
-  
+
   expect_type(simple_result, "double")
   expect_equal(simple_result, integrated_result$overall_power, tolerance = 1e-12)
-  
+
   # Test different control group method
   # Manual calculation for nt_cells control group
   manual_num_cntrl_cells_nt <- non_targeting_gRNAs * num_total_cells * MOI / (num_targets * gRNAs_per_target + non_targeting_gRNAs)
   manual_num_cntrl_cells_nt <- round(manual_num_cntrl_cells_nt)
-  
+
   integrated_result_nt <- compute_power_plan_overall(
     num_trt_cells = num_trt_cells,
     num_cntrl_cells = manual_num_cntrl_cells_nt,
@@ -149,13 +146,13 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
     prop_non_null = prop_non_null,
     return_full_results = TRUE
   )
-  
+
   expect_equal(integrated_result_nt$num_cntrl_cells, manual_num_cntrl_cells_nt, tolerance = 1e-12)
   expect_equal(integrated_result_nt$num_trt_cells, manual_num_trt_cells, tolerance = 1e-12)  # Same treatment cells
-  
+
   # Verify nt_cells gives different result from complement
   expect_false(isTRUE(all.equal(integrated_result$overall_power, integrated_result_nt$overall_power)))
-  
+
   # Test different test sides
   for (test_side in c("left", "right", "both")) {
     side_result <- compute_power_plan_overall(
@@ -166,11 +163,11 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
       side = test_side,
       return_full_results = FALSE
     )
-    
+
     expect_true(is.finite(side_result))
     expect_true(side_result >= 0 && side_result <= 1)
   }
-  
+
   # Print summary for manual inspection
   cat("\n--- Power Plan Overall Test Summary ---")
   cat("\nIntegrated overall power:", round(integrated_result$overall_power, 4))
