@@ -1,5 +1,5 @@
 # load path to raw data directory
-document::load_all()
+devtools::load_all()
 source("~/.Rprofile")
 path_to_raw_data <- paste0(.get_config_path("LOCAL_SAKELLAROPOULOS_2024_RAW_DATA_DIR"), "/processed")
 
