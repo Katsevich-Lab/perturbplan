@@ -10,7 +10,7 @@ get_nt_only_barcodes <- function(run_dir) {
   feature_type <- h5read(h5_file, "features/feature_type")
 
   # Identify rows corresponding to CRISPR guides
-  is_guide <- feature_type == "CRISPR Guide"
+  is_guide <- grepl("CRISPR Guide", feature_type)
 
   # Identify non-targeting guide names (e.g., containing "non" or "NTC")
   nontargeting_features <- grep("non|NTC", features, ignore.case = TRUE, value = TRUE)
