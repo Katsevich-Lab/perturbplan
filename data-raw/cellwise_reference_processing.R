@@ -156,5 +156,5 @@ process_ipsc_10x <- function(path_to_dataset) {
   read_umi_table <- ipsc_data[[2]]
 
   return(perturbplan::reference_data_preprocessing(response_matrix=response_matrix,
-                                                   read_umi_table=read_umi_table))
+                                                   read_umi_table=read_umi_table, downsample_ratio=0.4))
 }
