@@ -128,10 +128,33 @@ process_t_cd8_10x <- function(path_to_dataset) {
 
   response_matrix <- t_cd8_data[[1]]
   read_umi_table <- t_cd8_data[[2]]
-  nt_only_barcodes <- get_nt_only_barcodes(file.path(path_to_dataset, "processed", "SRR7788629", "outs", "molecule_info.h5"))
-  response_matrix <- response_matrix[, colnames(response_matrix) %in% nt_only_barcodes]
-  read_umi_table <- read_umi_table|>
-    dplyr::filter(barcode %in% nt_only_barcodes)
+  # nt_only_barcodes <- get_nt_only_barcodes(file.path(path_to_dataset, "processed", "SRR7788629", "outs", "molecule_info.h5"))
+  # response_matrix <- response_matrix[, colnames(response_matrix) %in% nt_only_barcodes]
+  # read_umi_table <- read_umi_table|>
+  #   dplyr::filter(barcode %in% nt_only_barcodes)
+  return(perturbplan::reference_data_preprocessing(response_matrix=response_matrix,
+                                                   read_umi_table=read_umi_table))
+}
+
+
+process_a549_10x <- function(path_to_dataset) {
+  message("Start processing A549_10x")
+  path_to_runs <- file.path(path_to_dataset, "processed")
+  a549_data <- perturbplan::reference_data_preprocessing_10x(path_to_runs)
+  response_matrix <- a549_data[[1]]
+  read_umi_table <- a549_data[[2]]
+
+  return(perturbplan::reference_data_preprocessing(response_matrix=response_matrix,
+                                                   read_umi_table=read_umi_table))
+}
+
+process_ipsc_10x <- function(path_to_dataset) {
+  message("Start processing iPSC_10x")
+  path_to_runs <- file.path(path_to_dataset, "processed")
+  ipsc_data <- perturbplan::reference_data_preprocessing_10x(path_to_runs)
+  response_matrix <- ipsc_data[[1]]
+  read_umi_table <- ipsc_data[[2]]
+
   return(perturbplan::reference_data_preprocessing(response_matrix=response_matrix,
                                                    read_umi_table=read_umi_table))
 }
