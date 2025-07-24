@@ -137,7 +137,7 @@ calculate_power_curves <- function(
 #' Experimental design parameters (MOI, control group, etc.) should be pre-computed
 #' into treatment and control cell counts in the cells_reads_df.
 #'
-#' @param cells_reads_df Data frame with columns reads_per_cell, num_trt_cells, and num_cntrl_cells
+#' @param cells_reads_df Data frame with columns reads_per_cell, library_size, num_trt_cells, and num_cntrl_cells
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param fdr_target Target false discovery rate
 #' @param prop_non_null Proportion of non-null hypotheses
@@ -188,7 +188,7 @@ compute_power_grid_overall <- function(
 #' for perturb-seq experiments across different experimental conditions. Experimental
 #' design parameters should be pre-computed into treatment and control cell counts.
 #'
-#' @param cells_reads_df Data frame with columns reads_per_cell, num_trt_cells, and num_cntrl_cells
+#' @param cells_reads_df Data frame with columns reads_per_cell, library_size, num_trt_cells, and num_cntrl_cells
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve
 #' @param tpm_threshold TPM threshold for expression curve generation
 #' @param fdr_target Target false discovery rate

@@ -56,6 +56,3 @@ The computation follows these steps:
 \item Calculate final asymptotic mean and standard deviation
 }
 }
-\seealso{
-\code{\link{compute_distribution_teststat_fixed_es_cpp}} for fixed effect sizes
-}

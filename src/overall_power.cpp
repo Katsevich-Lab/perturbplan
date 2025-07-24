@@ -7,7 +7,7 @@ using namespace Rcpp;
  *------------------------------------------------------------ */
 
 // Forward declarations for functions from other files
-List compute_monte_carlo_teststat_new_cpp(DataFrame fc_expression_df,
+List compute_monte_carlo_teststat_cpp(DataFrame fc_expression_df,
                                          double library_size,
                                          double num_trt_cells,
                                          double num_cntrl_cells);
@@ -55,7 +55,7 @@ NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
 //' @details
 //' This C++ implementation uses optimized C++ functions for random effect sizes:
 //' \itemize{
-//'   \item compute_monte_carlo_teststat_new_cpp(): Monte Carlo test statistics for random effect sizes
+//'   \item compute_monte_carlo_teststat_cpp(): Monte Carlo test statistics for random effect sizes
 //'   \item compute_BH_plan(): Benjamini-Hochberg significance cutoff
 //'   \item rejection_computation_cpp(): Power calculations
 //' }
@@ -104,7 +104,7 @@ SEXP compute_power_plan_overall_cpp(DataFrame fc_expression_df,
   }
   
   // Step 1: Compute Monte Carlo test statistics for random effect sizes
-  List mc_results = compute_monte_carlo_teststat_new_cpp(fc_expression_df, 
+  List mc_results = compute_monte_carlo_teststat_cpp(fc_expression_df, 
                                                         library_size,
                                                         num_trt_cells, 
                                                         num_cntrl_cells);

@@ -63,7 +63,7 @@ perturbplan::launch_app()
    - `BH_cutoff.cpp`: Benjamini-Hochberg multiple testing corrections
    - `compute_distribution_teststat_*.cpp`: Test statistic distributions
    - `power_curves.cpp`: Monte Carlo integration for power curves
-   - Key C++ functions: `compute_monte_carlo_teststat_new_cpp()`, `compute_fc_curve_cpp()`, `compute_expression_curve_cpp()`
+   - Key C++ functions: `compute_monte_carlo_teststat_cpp()`, `compute_fc_curve_cpp()`, `compute_expression_curve_cpp()`
    - Uses Rcpp for seamless R/C++ integration
 
 4. **Quality Control** (`R/QC_computation.R`)
@@ -106,7 +106,7 @@ perturbplan::launch_app()
 The package has been optimized for computational efficiency:
 
 - **C++ Monte Carlo**: `.compute_power_plan_efficient()` replaces the older R-based `.compute_underspecified_power_efficient()` with C++ implementations
-- **Batch Processing**: Monte Carlo samples processed in batch using `compute_monte_carlo_teststat_new_cpp()`
+- **Batch Processing**: Monte Carlo samples processed in batch using `compute_monte_carlo_teststat_cpp()`
 - **Efficient Curves**: Power curves computed using optimized C++ functions (`compute_fc_curve_cpp`, `compute_expression_curve_cpp`)
 - **Memory-Efficient Sampling**: Uses weighted sampling for gene multiplicity instead of duplicating rows, reducing memory usage while preserving statistical correctness
 

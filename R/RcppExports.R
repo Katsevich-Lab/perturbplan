@@ -67,7 +67,6 @@ compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_m
 #'   \item Calculate final asymptotic mean and standard deviation
 #' }
 #' 
-#' @seealso \code{\link{compute_distribution_teststat_fixed_es_cpp}} for fixed effect sizes
 #' 
 #' @export
 compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq) {
@@ -211,7 +210,7 @@ generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variati
 #' @details
 #' This C++ implementation uses optimized C++ functions for random effect sizes:
 #' \itemize{
-#'   \item compute_monte_carlo_teststat_new_cpp(): Monte Carlo test statistics for random effect sizes
+#'   \item compute_monte_carlo_teststat_cpp(): Monte Carlo test statistics for random effect sizes
 #'   \item compute_BH_plan(): Benjamini-Hochberg significance cutoff
 #'   \item rejection_computation_cpp(): Power calculations
 #' }
@@ -281,9 +280,8 @@ compute_expression_curve_cpp <- function(expr_output_grid, fc_expression_df, lib
 #' 
 #' @description
 #' Computes Monte Carlo test statistics for random effect sizes across multiple
-#' expression samples. This function is the counterpart to compute_monte_carlo_teststat_cpp
-#' but uses random effect sizes characterized by avg_fold_change and avg_fold_change_sq
-#' instead of fixed fold changes.
+#' expression samples using random effect sizes characterized by avg_fold_change 
+#' and avg_fold_change_sq instead of fixed fold changes.
 #' 
 #' @param fc_expression_df DataFrame containing Monte Carlo expression samples with columns:
 #'   \itemize{
@@ -306,17 +304,11 @@ compute_expression_curve_cpp <- function(expr_output_grid, fc_expression_df, lib
 #' This function processes Monte Carlo samples where each sample has random effect sizes
 #' characterized by their first and second moments (avg_fold_change and avg_fold_change_sq).
 #' It calls compute_distribution_teststat_random_es_cpp for each sample to compute the
-#' asymptotic distribution of the test statistic.
-#' 
-#' The key difference from compute_monte_carlo_teststat_cpp is that it handles random
-#' effect sizes rather than fixed fold changes, making it suitable for scenarios where
+#' asymptotic distribution of the test statistic, making it suitable for scenarios where
 #' perturbation effects vary across cells or conditions.
 #' 
-#' @seealso \code{\link{compute_monte_carlo_teststat_cpp}} for fixed effect sizes
-#' @seealso \code{\link{compute_distribution_teststat_random_es_cpp}} for single sample computation
-#' 
 #' @export
-compute_monte_carlo_teststat_new_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells) {
-    .Call(`_perturbplan_compute_monte_carlo_teststat_new_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells)
+compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells) {
+    .Call(`_perturbplan_compute_monte_carlo_teststat_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells)
 }
 

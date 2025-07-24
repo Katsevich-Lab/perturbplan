@@ -73,7 +73,7 @@ test_that("compute_power_plan_overall matches manual step-by-step calculation", 
   expect_equal(integrated_result$num_cntrl_cells, manual_num_cntrl_cells, tolerance = 1e-12)
 
   # Manual calculation step 2: Monte Carlo test statistics
-  manual_mc_results <- compute_monte_carlo_teststat_new_cpp(
+  manual_mc_results <- compute_monte_carlo_teststat_cpp(
     fc_expression_df = fc_expression_df,
     library_size = library_size,
     num_trt_cells = manual_num_trt_cells,

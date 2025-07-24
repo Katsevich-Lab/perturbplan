@@ -1,6 +1,6 @@
 library(testthat)
 
-test_that("compute_monte_carlo_teststat_new_cpp validates inputs", {
+test_that("compute_monte_carlo_teststat_cpp validates inputs", {
   # Create valid test data
   test_df <- data.frame(
     relative_expression = c(0.001, 0.002),
@@ -17,7 +17,7 @@ test_that("compute_monte_carlo_teststat_new_cpp validates inputs", {
   )
   
   expect_error(
-    compute_monte_carlo_teststat_new_cpp(
+    compute_monte_carlo_teststat_cpp(
       fc_expression_df = incomplete_df,
       library_size = 5000,
       num_trt_cells = 100,
@@ -28,7 +28,7 @@ test_that("compute_monte_carlo_teststat_new_cpp validates inputs", {
   
   # Test with negative library size
   expect_error(
-    compute_monte_carlo_teststat_new_cpp(
+    compute_monte_carlo_teststat_cpp(
       fc_expression_df = test_df,
       library_size = -1000,
       num_trt_cells = 100,
@@ -39,7 +39,7 @@ test_that("compute_monte_carlo_teststat_new_cpp validates inputs", {
   
   # Test with zero cell counts
   expect_error(
-    compute_monte_carlo_teststat_new_cpp(
+    compute_monte_carlo_teststat_cpp(
       fc_expression_df = test_df,
       library_size = 5000,
       num_trt_cells = 0,
@@ -49,7 +49,7 @@ test_that("compute_monte_carlo_teststat_new_cpp validates inputs", {
   )
 })
 
-test_that("compute_monte_carlo_teststat_new_cpp produces correct output structure", {
+test_that("compute_monte_carlo_teststat_cpp produces correct output structure", {
   # Create test data
   n_samples <- 5
   test_df <- data.frame(
@@ -59,7 +59,7 @@ test_that("compute_monte_carlo_teststat_new_cpp produces correct output structur
     avg_fold_change_sq = c(0.7, 2.5, 0.4, 1.5, 0.85)
   )
   
-  result <- compute_monte_carlo_teststat_new_cpp(
+  result <- compute_monte_carlo_teststat_cpp(
     fc_expression_df = test_df,
     library_size = 5000,
     num_trt_cells = 100,
@@ -82,7 +82,7 @@ test_that("compute_monte_carlo_teststat_new_cpp produces correct output structur
   expect_true(all(result$sds > 0))
 })
 
-test_that("compute_monte_carlo_teststat_new_cpp matches individual function calls", {
+test_that("compute_monte_carlo_teststat_cpp matches individual function calls", {
   # Create test data
   test_df <- data.frame(
     relative_expression = c(0.001, 0.002, 0.0005),
@@ -96,7 +96,7 @@ test_that("compute_monte_carlo_teststat_new_cpp matches individual function call
   num_cntrl_cells <- 200
   
   # Test batch function
-  batch_result <- compute_monte_carlo_teststat_new_cpp(
+  batch_result <- compute_monte_carlo_teststat_cpp(
     fc_expression_df = test_df,
     library_size = library_size,
     num_trt_cells = num_trt_cells,
@@ -125,7 +125,7 @@ test_that("compute_monte_carlo_teststat_new_cpp matches individual function call
   expect_equal(batch_result$sds, individual_sds, tolerance = 1e-10)
 })
 
-test_that("compute_monte_carlo_teststat_new_cpp handles edge cases", {
+test_that("compute_monte_carlo_teststat_cpp handles edge cases", {
   # Test with single sample
   single_df <- data.frame(
     relative_expression = 0.001,
@@ -134,7 +134,7 @@ test_that("compute_monte_carlo_teststat_new_cpp handles edge cases", {
     avg_fold_change_sq = 0.7
   )
   
-  result1 <- compute_monte_carlo_teststat_new_cpp(
+  result1 <- compute_monte_carlo_teststat_cpp(
     fc_expression_df = single_df,
     library_size = 5000,
     num_trt_cells = 100,
@@ -148,7 +148,7 @@ test_that("compute_monte_carlo_teststat_new_cpp handles edge cases", {
   expect_true(result1$sds[1] > 0)
   
   # Test with very small library size
-  result2 <- compute_monte_carlo_teststat_new_cpp(
+  result2 <- compute_monte_carlo_teststat_cpp(
     fc_expression_df = single_df,
     library_size = 1,
     num_trt_cells = 100,
@@ -167,7 +167,7 @@ test_that("compute_monte_carlo_teststat_new_cpp handles edge cases", {
     avg_fold_change_sq = 1.0
   )
   
-  result3 <- compute_monte_carlo_teststat_new_cpp(
+  result3 <- compute_monte_carlo_teststat_cpp(
     fc_expression_df = no_effect_df,
     library_size = 5000,
     num_trt_cells = 100,
@@ -178,7 +178,7 @@ test_that("compute_monte_carlo_teststat_new_cpp handles edge cases", {
   expect_true(result3$sds[1] > 0)
 })
 
-test_that("compute_monte_carlo_teststat_new_cpp handles different parameter ranges", {
+test_that("compute_monte_carlo_teststat_cpp handles different parameter ranges", {
   # Test with various parameter combinations
   test_cases <- list(
     list(
@@ -208,7 +208,7 @@ test_that("compute_monte_carlo_teststat_new_cpp handles different parameter rang
   for (i in seq_along(test_cases)) {
     case <- test_cases[[i]]
     
-    result <- compute_monte_carlo_teststat_new_cpp(
+    result <- compute_monte_carlo_teststat_cpp(
       fc_expression_df = case$df,
       library_size = case$library_size,
       num_trt_cells = case$num_trt_cells,
@@ -223,7 +223,7 @@ test_that("compute_monte_carlo_teststat_new_cpp handles different parameter rang
   }
 })
 
-test_that("compute_monte_carlo_teststat_new_cpp second moment constraint", {
+test_that("compute_monte_carlo_teststat_cpp second moment constraint", {
   # Test with valid second moment constraint
   valid_df <- data.frame(
     relative_expression = c(0.001, 0.002),
@@ -232,7 +232,7 @@ test_that("compute_monte_carlo_teststat_new_cpp second moment constraint", {
     avg_fold_change_sq = c(0.8^2, 1.5^2)  # Equal to first moment squared
   )
   
-  result1 <- compute_monte_carlo_teststat_new_cpp(
+  result1 <- compute_monte_carlo_teststat_cpp(
     fc_expression_df = valid_df,
     library_size = 5000,
     num_trt_cells = 100,
@@ -252,7 +252,7 @@ test_that("compute_monte_carlo_teststat_new_cpp second moment constraint", {
   )
   
   expect_error(
-    compute_monte_carlo_teststat_new_cpp(
+    compute_monte_carlo_teststat_cpp(
       fc_expression_df = invalid_df,
       library_size = 5000,
       num_trt_cells = 100,

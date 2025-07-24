@@ -52,7 +52,7 @@ format with avg_fold_change and avg_fold_change_sq columns.
 \details{
 This C++ implementation uses optimized C++ functions for random effect sizes:
 \itemize{
-\item compute_monte_carlo_teststat_new_cpp(): Monte Carlo test statistics for random effect sizes
+\item compute_monte_carlo_teststat_cpp(): Monte Carlo test statistics for random effect sizes
 \item compute_BH_plan(): Benjamini-Hochberg significance cutoff
 \item rejection_computation_cpp(): Power calculations
 }
