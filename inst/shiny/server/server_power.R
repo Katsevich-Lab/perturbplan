@@ -8,7 +8,7 @@ create_power_server <- function(input, output, session) {
   observeEvent(input$plan_btn, {
     # Validate that if "Other" is selected, custom pilot data is provided
     if ((input$biological_system == "Other" || input$experimental_platform == "Other") && 
-        (is.null(custom_baseline()) || is.null(custom_library()))) {
+        is.null(custom_pilot_data())) {
       showNotification(
         "Please upload custom pilot data when 'Other' is selected for biological system or experimental platform.",
         type = "error", duration = 10
@@ -83,8 +83,8 @@ create_power_server <- function(input, output, session) {
           # Get baseline expression data to check gene availability
           if (input$biological_system == "Other") {
             # Use custom baseline data if available
-            if (!is.null(custom_baseline())) {
-              baseline_expression_stats <- custom_baseline()
+            if (!is.null(custom_pilot_data())) {
+              baseline_expression_stats <- custom_pilot_data()$baseline_expression
               baseline_df <- baseline_expression_stats$baseline_expression
             } else {
               # No custom data available, skip filtering analysis with a user-friendly message
@@ -221,8 +221,7 @@ create_power_server <- function(input, output, session) {
   })
 
   # Combined pilot data file upload handling
-  custom_baseline <- reactiveVal(NULL)
-  custom_library <- reactiveVal(NULL)
+  custom_pilot_data <- reactiveVal(NULL)
   
   observeEvent(input$pilot_data_file, {
     req(input$pilot_data_file)
@@ -254,9 +253,8 @@ create_power_server <- function(input, output, session) {
         validation_result <- perturbplan::validate_combined_pilot_data(uploaded_data, input$pilot_data_file$name)
         
         if (validation_result$valid) {
-          # Extract components from validated data
-          custom_baseline(validation_result$data$baseline_expression)
-          custom_library(validation_result$data$library_parameters)
+          # Store complete pilot data
+          custom_pilot_data(validation_result$data)
           
           # Create success message with summary and warnings
           status_msg <- validation_result$summary
@@ -284,16 +282,14 @@ create_power_server <- function(input, output, session) {
             HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
           })
           
-          custom_baseline(NULL)
-          custom_library(NULL)
+          custom_pilot_data(NULL)
           output$pilot_data_uploaded <- reactive(FALSE)
           outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
         }
         
       } else {
         showNotification("Please upload an RDS file with the required pilot data structure", type = "error")
-        custom_baseline(NULL)
-        custom_library(NULL)
+        custom_pilot_data(NULL)
         output$pilot_data_uploaded <- reactive(FALSE)
         outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
       }
@@ -314,8 +310,7 @@ create_power_server <- function(input, output, session) {
       output$pilot_data_status <- renderUI({
         HTML(paste0("<em style='color:red;'>", error_msg, "</em>"))
       })
-      custom_baseline(NULL)
-      custom_library(NULL)
+      custom_pilot_data(NULL)
       output$pilot_data_uploaded <- reactive(FALSE)
       outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
     })
@@ -330,8 +325,7 @@ create_power_server <- function(input, output, session) {
                     input$experimental_platform != "Other")
     
     if (should_reset) {
-      custom_baseline(NULL)
-      custom_library(NULL)
+      custom_pilot_data(NULL)
       output$pilot_data_uploaded <- reactive(FALSE)
       outputOptions(output, "pilot_data_uploaded", suspendWhenHidden = FALSE)
     }
@@ -348,7 +342,7 @@ create_power_server <- function(input, output, session) {
       B = 1000,  # Monte Carlo samples for good accuracy
       gene_list = if(input$gene_list_mode == "custom") gene_list() else NULL,  # Use gene list only in custom mode
       tpm_threshold = input$tpm_threshold,  # Apply TPM filtering
-      custom_baseline_data = if(input$pilot_data_choice == "custom" || input$biological_system == "Other" || input$experimental_platform == "Other") custom_baseline() else NULL,  # Use custom baseline if provided
+      custom_pilot_data = if(input$pilot_data_choice == "custom" || input$biological_system == "Other" || input$experimental_platform == "Other") custom_pilot_data() else NULL,  # Use custom pilot data if provided
       gRNAs_per_target = input$gRNAs_per_target  # Pass gRNAs per target parameter
     )
   })
@@ -356,19 +350,8 @@ create_power_server <- function(input, output, session) {
   # Extract library information (UMI saturation parameters)
   library_info <- reactive({
     req(planned(), fc_expression_info())
-    # Use library parameters from pilot data if available, otherwise custom data
-    if(!is.null(fc_expression_info()$pilot_data)) {
-      # Use library parameters from pilot data
-      fc_expression_info()$pilot_data$library_parameters
-    } else {
-      # Use custom library data for custom baseline
-      if(input$pilot_data_choice == "custom" || input$biological_system == "Other" || input$experimental_platform == "Other") {
-        custom_library()
-      } else {
-        # Fallback: load pilot data directly
-        perturbplan:::get_pilot_data_from_package(input$biological_system)$library_parameters
-      }
-    }
+    # pilot_data is always available now (either built-in or custom)
+    fc_expression_info()$pilot_data$library_parameters
   })
 
   # Generate optimized cell and read ranges using modular approach

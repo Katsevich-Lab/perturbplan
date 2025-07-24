@@ -11,7 +11,7 @@ extract_fc_expression_info(
   B = 200,
   gene_list = NULL,
   tpm_threshold = 10,
-  custom_baseline_data = NULL,
+  custom_pilot_data = NULL,
   gRNAs_per_target = 4
 )
 }
@@ -33,9 +33,10 @@ If NULL (default), B genes are randomly sampled from baseline data.}
 \item{tpm_threshold}{Numeric. Minimum TPM threshold (default: 10). Genes with expression
 levels below tpm_threshold/1e6 are filtered out before power calculation.}
 
-\item{custom_baseline_data}{List. Optional custom baseline expression data. If provided,
+\item{custom_pilot_data}{List. Optional custom pilot data. If provided,
 this data is used instead of the default biological_system data. Must contain
-baseline_expression data frame and expression_dispersion_curve function.}
+baseline_expression (with baseline_expression data frame and expression_dispersion_curve function)
+and library_parameters (with UMI_per_cell and variation).}
 
 \item{gRNAs_per_target}{Integer. Number of gRNAs per target (default: 4).
 Each target will have gRNAs_per_target individual gRNA effect sizes drawn from the

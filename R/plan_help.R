@@ -62,9 +62,10 @@ get_pilot_data_from_package <- function(biological_system) {
 #'   If NULL (default), B genes are randomly sampled from baseline data.
 #' @param tpm_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
 #'   levels below tpm_threshold/1e6 are filtered out before power calculation.
-#' @param custom_baseline_data List. Optional custom baseline expression data. If provided, 
+#' @param custom_pilot_data List. Optional custom pilot data. If provided, 
 #'   this data is used instead of the default biological_system data. Must contain 
-#'   baseline_expression data frame and expression_dispersion_curve function.
+#'   baseline_expression (with baseline_expression data frame and expression_dispersion_curve function)
+#'   and library_parameters (with UMI_per_cell and variation).
 #' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
 #'   Each target will have gRNAs_per_target individual gRNA effect sizes drawn from the
 #'   specified fold change distribution. avg_fold_change and avg_fold_change_sq are
@@ -94,15 +95,16 @@ get_pilot_data_from_package <- function(biological_system) {
 #'
 #' @seealso \code{\link{get_pilot_data_from_package}} for direct pilot data access
 #' @export
-extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, biological_system =  "K562", B = 200, gene_list = NULL, tpm_threshold = 10, custom_baseline_data = NULL, gRNAs_per_target = 4){
+extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, biological_system =  "K562", B = 200, gene_list = NULL, tpm_threshold = 10, custom_pilot_data = NULL, gRNAs_per_target = 4){
 
   # set the random seed
   set.seed(1)
 
   ############## combine expression and effect size information ################
-  # Use custom baseline data if provided, otherwise load from data/ directory
-  if (!is.null(custom_baseline_data)) {
-    baseline_expression_stats <- custom_baseline_data
+  # Use custom pilot data if provided, otherwise load from data/ directory
+  if (!is.null(custom_pilot_data)) {
+    pilot_data <- custom_pilot_data
+    baseline_expression_stats <- custom_pilot_data$baseline_expression
   } else {
     # Load complete pilot data from data/ directory based on biological_system
     pilot_data <- get_pilot_data_from_package(biological_system)
@@ -217,13 +219,9 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
   result <- list(
     fc_expression_df = fc_expression_df,
     expression_dispersion_curve = expression_dispersion_curve,
-    minimum_fold_change = minimum_fold_change  # Include for adaptive grid generation
+    minimum_fold_change = minimum_fold_change,  # Include for adaptive grid generation
+    pilot_data = pilot_data  # Always include pilot data (either built-in or custom)
   )
-  
-  # Add pilot data if available (not available for custom baseline data)
-  if (is.null(custom_baseline_data)) {
-    result$pilot_data <- pilot_data
-  }
   
   return(result)
 }
