@@ -7,7 +7,7 @@
 library_computation(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 }
 \arguments{
-\item{QC_data}{Data frame. The QC'd molecular data from \code{\link{obtain_qc_h5_data}}
+\item{QC_data}{Data frame. The QC'd molecular data from \code{\link{obtain_qc_read_umi_table}}
 containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
 
 \item{downsample_ratio}{Numeric. The ratio for downsampling the dataset (default: 0.7).
@@ -40,6 +40,6 @@ The function:
 }
 }
 \seealso{
-\code{\link{obtain_qc_h5_data}} for input data preparation
+\code{\link{obtain_qc_read_umi_table}} for input data preparation
 \code{\link{fit_read_UMI_curve}} for using the fitted parameters
 }

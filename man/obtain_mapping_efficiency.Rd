@@ -7,7 +7,7 @@
 obtain_mapping_efficiency(QC_data, path_to_cellranger_output)
 }
 \arguments{
-\item{QC_data}{Output of \code{obtain_qc_h5_data()}.}
+\item{QC_data}{Output of \code{obtain_qc_read_umi_table()}.}
 
 \item{path_to_cellranger_output}{Folder containing \code{outs/metrics_summary.csv}.}
 }

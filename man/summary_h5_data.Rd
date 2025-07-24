@@ -7,7 +7,7 @@
 summary_h5_data(QC_data)
 }
 \arguments{
-\item{QC_data}{Data frame. The QC'd data from \code{\link{obtain_qc_h5_data}}
+\item{QC_data}{Data frame. The QC'd data from \code{\link{obtain_qc_read_umi_table}}
 containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
 }
 \value{
@@ -30,5 +30,5 @@ The function calculates:
 }
 }
 \seealso{
-\code{\link{obtain_qc_h5_data}} for generating the input data
+\code{\link{obtain_qc_read_umi_table}} for generating the input data
 }

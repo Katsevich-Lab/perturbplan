@@ -240,7 +240,7 @@ obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
 
 #' Mapping efficiency of a Cell Ranger run
 #'
-#' @param QC_data Output of \code{obtain_qc_h5_data()}.
+#' @param QC_data Output of \code{obtain_qc_read_umi_table()}.
 #' @param path_to_cellranger_output Folder containing `outs/metrics_summary.csv`.
 #'
 #' @return Numeric proportion: mapped / total reads.
@@ -266,7 +266,7 @@ obtain_mapping_efficiency <- function(QC_data, path_to_cellranger_output) {
 #' This function computes basic summary statistics from quality-controlled
 #' molecular data, providing key metrics for library size estimation.
 #'
-#' @param QC_data Data frame. The QC'd data from \code{\link{obtain_qc_h5_data}}
+#' @param QC_data Data frame. The QC'd data from \code{\link{obtain_qc_read_umi_table}}
 #' containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.
 #'
 #' @return A named numeric vector with elements:
@@ -283,7 +283,7 @@ obtain_mapping_efficiency <- function(QC_data, path_to_cellranger_output) {
 #'   \item Average reads per cell (total reads divided by number of cells)
 #' }
 #'
-#' @seealso \code{\link{obtain_qc_h5_data}} for generating the input data
+#' @seealso \code{\link{obtain_qc_read_umi_table}} for generating the input data
 #' @export
 summary_h5_data <- function(QC_data){
 
@@ -330,7 +330,7 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 #' between the number of mapped reads per cell and the number of observed UMIs per cell.
 #' The model is essential for library size estimation in single-cell RNA sequencing.
 #'
-#' @param QC_data Data frame. The QC'd molecular data from \code{\link{obtain_qc_h5_data}}
+#' @param QC_data Data frame. The QC'd molecular data from \code{\link{obtain_qc_read_umi_table}}
 #' containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.
 #' @param downsample_ratio Numeric. The ratio for downsampling the dataset (default: 0.7).
 #' Must be between 0 and 1.
@@ -355,7 +355,7 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 #' }
 #'
 #' @seealso
-#' \code{\link{obtain_qc_h5_data}} for input data preparation
+#' \code{\link{obtain_qc_read_umi_table}} for input data preparation
 #' \code{\link{fit_read_UMI_curve}} for using the fitted parameters
 #' @export
 library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3){
