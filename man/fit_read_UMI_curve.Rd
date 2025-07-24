@@ -30,5 +30,5 @@ accounting for:
 }
 }
 \seealso{
-\code{\link{extract_library_info}} for obtaining curve parameters
+\code{\link{get_pilot_data_from_package}} for obtaining curve parameters
 }

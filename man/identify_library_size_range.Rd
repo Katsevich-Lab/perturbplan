@@ -10,7 +10,7 @@ identify_library_size_range(experimental_platform, library_info)
 \item{experimental_platform}{Character. Experimental platform identifier
 (e.g., "10x Chromium v3", "Other").}
 
-\item{library_info}{List. Output from extract_library_info() containing
+\item{library_info}{List. Library parameters containing
 UMI_per_cell and variation parameters for S-M curve analysis.}
 }
 \value{
@@ -42,6 +42,6 @@ returns the practical upper bound.
 }
 \seealso{
 \code{\link{fit_read_UMI_curve}} for S-M curve evaluation
-\code{\link{extract_library_info}} for obtaining library parameters
+\code{\link{get_pilot_data_from_package}} for obtaining library parameters
 \code{\link{identify_library_size_range_cpp}} for C++ implementation
 }

@@ -11,4 +11,6 @@ preprocessed_results <- reference_data_preprocessing(response_matrix = preproces
                                                      read_umi_table = preprocessed_data$read_umi_table)
 
 # save the baseline information to data
-save(preprocessed_results, "data/iPSC_10x.rda")
+usethis::use_data(preprocessed_results,
+                  name = "iPSC_10x",  # object name users will type
+                  overwrite = TRUE)          # allow reruns

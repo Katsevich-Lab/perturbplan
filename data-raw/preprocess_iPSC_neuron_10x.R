@@ -13,4 +13,6 @@ preprocessed_results <- reference_data_preprocessing(response_matrix = preproces
                                                      downsample_ratio = c(0.1, 0.3, 0.5, 0.7))
 
 # save the baseline information to data
-save(preprocessed_results, "data/iPSC_neuron_10x.rda")
+usethis::use_data(preprocessed_results,
+                  name = "iPSC_neuron_10x",  # object name users will type
+                  overwrite = TRUE)          # allow reruns

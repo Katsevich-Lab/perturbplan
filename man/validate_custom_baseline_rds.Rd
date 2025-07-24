@@ -23,7 +23,7 @@ List with validation results:
 }
 \description{
 This function validates that custom baseline expression RDS data has the required
-structure matching the output of extract_baseline_expression().
+structure with baseline expression data and dispersion curve function.
 }
 \details{
 Required structure:

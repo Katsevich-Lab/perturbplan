@@ -97,8 +97,9 @@ create_power_server <- function(input, output, session) {
               return()  # Exit early to avoid further processing
             }
           } else {
-            # Use built-in data (using unexported function)
-            baseline_expression_stats <- perturbplan:::extract_baseline_expression(biological_system = input$biological_system)
+            # Use built-in pilot data from data/ directory
+            pilot_data <- perturbplan:::get_pilot_data_from_package(biological_system = input$biological_system)
+            baseline_expression_stats <- pilot_data$baseline_expression
             baseline_df <- baseline_expression_stats$baseline_expression
           }
           
@@ -354,12 +355,20 @@ create_power_server <- function(input, output, session) {
 
   # Extract library information (UMI saturation parameters)
   library_info <- reactive({
-    req(planned())
-    # Extract library parameters for biological system or use custom data from pilot data
-    perturbplan::extract_library_info(
-      biological_system = input$biological_system,
-      custom_library_data = if(input$pilot_data_choice == "custom" || input$biological_system == "Other" || input$experimental_platform == "Other") custom_library() else NULL
-    )
+    req(planned(), fc_expression_info())
+    # Use library parameters from pilot data if available, otherwise custom data
+    if(!is.null(fc_expression_info()$pilot_data)) {
+      # Use library parameters from pilot data
+      fc_expression_info()$pilot_data$library_parameters
+    } else {
+      # Use custom library data for custom baseline
+      if(input$pilot_data_choice == "custom" || input$biological_system == "Other" || input$experimental_platform == "Other") {
+        custom_library()
+      } else {
+        # Fallback: load pilot data directly
+        perturbplan:::get_pilot_data_from_package(input$biological_system)$library_parameters
+      }
+    }
   })
 
   # Generate optimized cell and read ranges using modular approach

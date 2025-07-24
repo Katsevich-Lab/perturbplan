@@ -26,7 +26,7 @@ identify_cell_read_range(
 
 \item{fc_expression_info}{List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve.}
 
-\item{library_info}{List from extract_library_info() containing UMI_per_cell and variation parameters.}
+\item{library_info}{List containing UMI_per_cell and variation parameters.}
 
 \item{grid_size}{Integer. Number of points in each dimension of the grid (default: 10).}
 
@@ -84,7 +84,7 @@ Treatment and control cell counts are calculated based on MOI, gRNA ratios, and 
 \dontrun{
 # Extract required info
 fc_info <- extract_fc_expression_info(0.8, 0.1, "K562", B = 100)
-lib_info <- extract_library_info("K562")
+lib_info <- fc_info$pilot_data$library_parameters
 
 # Generate experimental design
 design <- identify_cell_read_range(

@@ -1,6 +1,49 @@
 # Suppress R CMD check warnings for variables used in dplyr contexts
 utils::globalVariables(c("response_id"))
 
+#' Get pilot data from package data directory
+#'
+#' @description
+#' Internal function to load baseline expression and library parameters from the
+#' pilot datasets stored in the package data/ directory.
+#'
+#' @param biological_system Character. The biological system name (e.g., "K562", "A549", "THP-1", "T_CD8", "iPSC")
+#'
+#' @return A list containing:
+#' \describe{
+#'   \item{baseline_expression}{List with baseline_expression data frame and expression_dispersion_curve function}
+#'   \item{library_parameters}{List with UMI_per_cell and variation parameters}
+#' }
+#'
+#' @keywords internal
+get_pilot_data_from_package <- function(biological_system) {
+  # Map biological system names to data file names
+  data_mapping <- list(
+    "K562" = "K562_10x",
+    "A549" = "A549_10x", 
+    "THP-1" = "THP_1_10x",
+    "T_CD8" = "T_CD8_10x",
+    "iPSC" = "iPSC_10x"
+  )
+  
+  # Check if biological system is supported
+  if (!biological_system %in% names(data_mapping)) {
+    # Load reference datasets to show available options
+    data("reference_expression_datasets", package = "perturbplan", envir = environment())
+    available_systems <- paste(reference_expression_datasets$cell_type, collapse = ", ")
+    stop("Unsupported biological system: '", biological_system, "'. Available options: ", available_systems)
+  }
+  
+  # Get the data object name
+  data_name <- data_mapping[[biological_system]]
+  
+  # Load the data from the package data/ directory
+  data(list = data_name, package = "perturbplan", envir = environment())
+  
+  # Return the loaded data object
+  return(get(data_name, envir = environment()))
+}
+
 #' Extract fold change and expression information for power analysis
 #'
 #' @description
@@ -10,7 +53,8 @@ utils::globalVariables(c("response_id"))
 #'
 #' @param minimum_fold_change Numeric. Minimum expected fold change effect (mean of gRNA effect distribution).
 #' @param gRNA_variability Numeric. Standard deviation of gRNA effect sizes, representing variability between gRNAs targeting the same gene.
-#' @param biological_system Character. Biological system for baseline expression (default: "K562").
+#' @param biological_system Character. Biological system for baseline expression. Available options: 
+#'   "K562", "A549", "THP-1", "T_CD8", "iPSC" (default: "K562").
 #' @param B Integer. Number of Monte Carlo samples to generate when gene_list is NULL (default: 200).
 #'   Ignored when gene_list is provided.
 #' @param gene_list Character vector. Optional list of Ensembl gene IDs to use for analysis.
@@ -18,10 +62,9 @@ utils::globalVariables(c("response_id"))
 #'   If NULL (default), B genes are randomly sampled from baseline data.
 #' @param tpm_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
 #'   levels below tpm_threshold/1e6 are filtered out before power calculation.
-#' @param custom_baseline_data List. Optional custom baseline expression data with same structure
-#'   as extract_baseline_expression() output. If provided, this data is used instead of the
-#'   default biological_system data. Must contain baseline_expression data frame and
-#'   expression_dispersion_curve function.
+#' @param custom_baseline_data List. Optional custom baseline expression data. If provided, 
+#'   this data is used instead of the default biological_system data. Must contain 
+#'   baseline_expression data frame and expression_dispersion_curve function.
 #' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
 #'   Each target will have gRNAs_per_target individual gRNA effect sizes drawn from the
 #'   specified fold change distribution. avg_fold_change and avg_fold_change_sq are
@@ -49,7 +92,7 @@ utils::globalVariables(c("response_id"))
 #'   \item Returns combined data for Monte Carlo integration with random effect sizes
 #' }
 #'
-#' @seealso \code{\link{extract_baseline_expression}} for baseline data extraction
+#' @seealso \code{\link{get_pilot_data_from_package}} for direct pilot data access
 #' @export
 extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, biological_system =  "K562", B = 200, gene_list = NULL, tpm_threshold = 10, custom_baseline_data = NULL, gRNAs_per_target = 4){
 
@@ -57,11 +100,13 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
   set.seed(1)
 
   ############## combine expression and effect size information ################
-  # Use custom baseline data if provided, otherwise use default biological system data
+  # Use custom baseline data if provided, otherwise load from data/ directory
   if (!is.null(custom_baseline_data)) {
     baseline_expression_stats <- custom_baseline_data
   } else {
-    baseline_expression_stats <- extract_baseline_expression(biological_system = biological_system)
+    # Load complete pilot data from data/ directory based on biological_system
+    pilot_data <- get_pilot_data_from_package(biological_system)
+    baseline_expression_stats <- pilot_data$baseline_expression
   }
   baseline_df <- baseline_expression_stats$baseline_expression
 
@@ -168,58 +213,21 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
   ################## extract the expression-dispersion curve ###################
   expression_dispersion_curve <- baseline_expression_stats$expression_dispersion_curve
 
-  # return the data frame
-  return(list(
+  # return the data frame with complete pilot data access
+  result <- list(
     fc_expression_df = fc_expression_df,
     expression_dispersion_curve = expression_dispersion_curve,
     minimum_fold_change = minimum_fold_change  # Include for adaptive grid generation
-  ))
+  )
+  
+  # Add pilot data if available (not available for custom baseline data)
+  if (is.null(custom_baseline_data)) {
+    result$pilot_data <- pilot_data
+  }
+  
+  return(result)
 }
 
-#' Extract baseline expression data by biological system
-#'
-#' @description
-#' This function loads pre-computed baseline expression statistics and
-#' expression-dispersion relationships for specified biological systems.
-#'
-#' @param biological_system Character. Biological system identifier (default: "K562").
-#' Currently supports "K562" cells.
-#'
-#' @return A list with elements:
-#' \describe{
-#'   \item{baseline_expression}{Data frame with expression parameters for genes}
-#'   \item{expression_dispersion_curve}{Function mapping expression mean to dispersion}
-#' }
-#'
-#' @details
-#' The function loads system-specific data files containing:
-#' \itemize{
-#'   \item Gene expression means and dispersion parameters
-#'   \item Fitted dispersion curves for the negative binomial model
-#'   \item System-specific calibration parameters
-#' }
-#'
-#' @seealso \code{\link{extract_fc_expression_info}} for combining with effect sizes
-extract_baseline_expression <- function(biological_system = "K562"){
-
-  # sample baseline expression based on biological system
-  baseline_expression_list <- switch(biological_system,
-         K562 = {
-
-           # load the Gasperini baseline expression list
-           rds_path <- system.file("extdata/baseline_expression", "Gasperini_expression.rds", package = "perturbplan", mustWork = TRUE)
-           readRDS(rds_path)
-
-         },
-         # Default case for unsupported biological systems
-         {
-           stop("Unsupported biological system: '", biological_system, "'. ", 
-                "Supported systems: 'K562'. For other systems, use custom baseline data.")
-         })
-
-  # return the data frame with the susbampled rows
-  return(baseline_expression_list)
-}
 
 #' Validate custom baseline expression data
 #'
@@ -357,7 +365,7 @@ validate_custom_baseline <- function(data, file_path = "uploaded file") {
 #'
 #' @description
 #' This function validates that custom baseline expression RDS data has the required
-#' structure matching the output of extract_baseline_expression().
+#' structure with baseline expression data and dispersion curve function.
 #'
 #' @param data List object from RDS file containing baseline expression data
 #' @param file_path Character. Optional file path for error messages (default: "uploaded file")
@@ -513,66 +521,6 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
   ))
 }
 
-#' Extract library size parameters by biological system
-#'
-#' @description
-#' This function loads pre-computed library size parameters including UMI saturation
-#' curve parameters for specified biological systems.
-#'
-#' @param biological_system Character. Biological system identifier (default: "K562").
-#' Currently supports "K562" cells.
-#' @param custom_library_data List. Optional custom library data with UMI_per_cell and variation parameters.
-#' If provided, this data will be used instead of the biological_system data.
-#'
-#' @return A list with elements:
-#' \describe{
-#'   \item{UMI_per_cell}{Total UMI per cell parameter}
-#'   \item{variation}{Variation parameter characterizing PCR bias}
-#' }
-#'
-#' @details
-#' The function loads system-specific library parameters fitted from
-#' single-cell RNA-seq data using the saturation-magnitude (S-M) curve model.
-#' These parameters are used in \code{\link{fit_read_UMI_curve}} to convert
-#' read depth to effective library size.
-#'
-#' When custom_library_data is provided, it should be a list with:
-#' \itemize{
-#'   \item UMI_per_cell: Maximum UMI per cell parameter (positive numeric)
-#'   \item variation: Variation parameter for PCR bias (positive numeric)
-#' }
-#'
-#' @seealso
-#' \code{\link{fit_read_UMI_curve}} for using these parameters
-#' \code{\link{library_computation}} for fitting these parameters from data
-#' \code{\link{validate_custom_library_rds}} for custom data validation
-#' @export
-extract_library_info <- function(biological_system = "K562", custom_library_data = NULL){
-
-  # Use custom library data if provided, otherwise use default biological system data
-  if (!is.null(custom_library_data)) {
-    return(custom_library_data)
-  }
-
-  # sample baseline expression based on biological system
-  switch(biological_system,
-         K562 = {
-
-           # load the Gasperini baseline expression list
-           rds_path <- system.file("extdata/library_info", "Gasperini_library.rds", package = "perturbplan", mustWork = TRUE)
-           library_info <- readRDS(rds_path)
-
-         })
-
-  # Extract scalar values from named vector
-  params <- library_info$S_M_curve_params
-
-  # return the data frame with the susbampled rows
-  return(list(
-    UMI_per_cell = unname(as.numeric(params[["UMI_per_cell"]])),
-    variation = unname(as.numeric(params[["variation"]]))
-  ))
-}
 
 #' Validate custom library RDS file structure and content
 #'
@@ -812,7 +760,7 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
 #' }
 #'
 #'
-#' @seealso \code{\link{extract_library_info}} for obtaining curve parameters
+#' @seealso \code{\link{get_pilot_data_from_package}} for obtaining curve parameters
 #' @export
 fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
   
@@ -829,7 +777,7 @@ fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
 #'
 #' @param experimental_platform Character. Experimental platform identifier
 #'   (e.g., "10x Chromium v3", "Other").
-#' @param library_info List. Output from extract_library_info() containing
+#' @param library_info List. Library parameters containing
 #'   UMI_per_cell and variation parameters for S-M curve analysis.
 #'
 #' @return List with elements:
@@ -855,7 +803,7 @@ fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
 #'
 #' @seealso 
 #' \code{\link{fit_read_UMI_curve}} for S-M curve evaluation
-#' \code{\link{extract_library_info}} for obtaining library parameters
+#' \code{\link{get_pilot_data_from_package}} for obtaining library parameters
 #' \code{\link{identify_library_size_range_cpp}} for C++ implementation
 #' @export
 identify_library_size_range <- function(experimental_platform, library_info) {
@@ -883,7 +831,7 @@ identify_library_size_range <- function(experimental_platform, library_info) {
 #'
 #' @param experimental_platform String. Experimental platform identifier for read range determination.
 #' @param fc_expression_info List from extract_fc_expression_info() containing fc_expression_df and expression_dispersion_curve.
-#' @param library_info List from extract_library_info() containing UMI_per_cell and variation parameters.
+#' @param library_info List containing UMI_per_cell and variation parameters.
 #' @param grid_size Integer. Number of points in each dimension of the grid (default: 10).
 #' @param min_power_threshold Numeric. Minimum power threshold for cell range determination (default: 0.01).
 #' @param max_power_threshold Numeric. Maximum power threshold for cell range determination (default: 0.8).
@@ -923,7 +871,7 @@ identify_library_size_range <- function(experimental_platform, library_info) {
 #' \dontrun{
 #' # Extract required info
 #' fc_info <- extract_fc_expression_info(0.8, 0.1, "K562", B = 100)
-#' lib_info <- extract_library_info("K562")
+#' lib_info <- fc_info$pilot_data$library_parameters
 #' 
 #' # Generate experimental design
 #' design <- identify_cell_read_range(
@@ -1072,7 +1020,7 @@ identify_cell_read_range <- function(
 #' \dontrun{
 #' # Generate experimental design
 #' fc_info <- extract_fc_expression_info(0.8, 0.1, "K562", B = 100)
-#' lib_info <- extract_library_info("K562")
+#' lib_info <- fc_info$pilot_data$library_parameters
 #' design <- identify_cell_read_range("10x Chromium v3", fc_info, lib_info)
 #' 
 #' # Convert to data frame for power analysis

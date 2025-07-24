@@ -29,7 +29,7 @@ based on the total cell count and reads per cell for each row.
 \dontrun{
 # Generate experimental design
 fc_info <- extract_fc_expression_info(0.8, 0.1, "K562", B = 100)
-lib_info <- extract_library_info("K562")
+lib_info <- fc_info$pilot_data$library_parameters
 design <- identify_cell_read_range("10x Chromium v3", fc_info, lib_info)
 
 # Convert to data frame for power analysis

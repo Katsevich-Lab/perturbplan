@@ -32,8 +32,9 @@ cat("Custom library saved to 'my_custom_library.rds'\n")
 # Example 2: Modifying default library parameters
 # ===============================================
 
-# Extract default library info for K562
-default_library <- extract_library_info("K562")
+# Extract default library info for K562 (recommended approach)
+fc_result <- extract_fc_expression_info(minimum_fold_change = -1, gRNA_variability = 0.25, biological_system = "K562", B = 10)
+default_library <- fc_result$pilot_data$library_parameters
 cat("Default K562 library parameters:\n")
 cat("  UMI_per_cell:", default_library$UMI_per_cell, "\n")
 cat("  variation:", default_library$variation, "\n")

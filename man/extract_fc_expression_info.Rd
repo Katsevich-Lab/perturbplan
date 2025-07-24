@@ -20,7 +20,8 @@ extract_fc_expression_info(
 
 \item{gRNA_variability}{Numeric. Standard deviation of gRNA effect sizes, representing variability between gRNAs targeting the same gene.}
 
-\item{biological_system}{Character. Biological system for baseline expression (default: "K562").}
+\item{biological_system}{Character. Biological system for baseline expression. Available options:
+"K562", "A549", "THP-1", "T_CD8", "iPSC" (default: "K562").}
 
 \item{B}{Integer. Number of Monte Carlo samples to generate when gene_list is NULL (default: 200).
 Ignored when gene_list is provided.}
@@ -32,10 +33,9 @@ If NULL (default), B genes are randomly sampled from baseline data.}
 \item{tpm_threshold}{Numeric. Minimum TPM threshold (default: 10). Genes with expression
 levels below tpm_threshold/1e6 are filtered out before power calculation.}
 
-\item{custom_baseline_data}{List. Optional custom baseline expression data with same structure
-as extract_baseline_expression() output. If provided, this data is used instead of the
-default biological_system data. Must contain baseline_expression data frame and
-expression_dispersion_curve function.}
+\item{custom_baseline_data}{List. Optional custom baseline expression data. If provided,
+this data is used instead of the default biological_system data. Must contain
+baseline_expression data frame and expression_dispersion_curve function.}
 
 \item{gRNAs_per_target}{Integer. Number of gRNAs per target (default: 4).
 Each target will have gRNAs_per_target individual gRNA effect sizes drawn from the
@@ -71,5 +71,5 @@ In both modes:
 }
 }
 \seealso{
-\code{\link{extract_baseline_expression}} for baseline data extraction
+\code{\link{get_pilot_data_from_package}} for direct pilot data access
 }
