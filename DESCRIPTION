@@ -25,9 +25,7 @@ Imports:
     methods,
     utils,
     Matrix,
-    shiny,
-    Seurat,
-    data.table
+    shiny
 Suggests: 
     knitr,
     rmarkdown,
