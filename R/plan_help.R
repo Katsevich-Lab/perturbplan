@@ -16,6 +16,7 @@ utils::globalVariables(c("response_id"))
 #' }
 #'
 #' @keywords internal
+#' @importFrom utils data
 get_pilot_data_from_package <- function(biological_system) {
   # Map biological system names to data file names
   data_mapping <- list(
@@ -29,8 +30,10 @@ get_pilot_data_from_package <- function(biological_system) {
   # Check if biological system is supported
   if (!biological_system %in% names(data_mapping)) {
     # Load reference datasets to show available options
-    data("reference_expression_datasets", package = "perturbplan", envir = environment())
-    available_systems <- paste(reference_expression_datasets$cell_type, collapse = ", ")
+    env <- environment()
+    data("reference_expression_datasets", package = "perturbplan", envir = env)
+    ref_datasets <- get("reference_expression_datasets", envir = env)
+    available_systems <- paste(ref_datasets$cell_type, collapse = ", ")
     stop("Unsupported biological system: '", biological_system, "'. Available options: ", available_systems)
   }
   
