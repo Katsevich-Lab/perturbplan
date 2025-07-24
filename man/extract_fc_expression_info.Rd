@@ -5,8 +5,8 @@
 \title{Extract fold change and expression information for power analysis}
 \usage{
 extract_fc_expression_info(
-  fold_change_mean,
-  fold_change_sd,
+  minimum_fold_change,
+  gRNA_variability,
   biological_system = "K562",
   B = 200,
   gene_list = NULL,
@@ -16,9 +16,9 @@ extract_fc_expression_info(
 )
 }
 \arguments{
-\item{fold_change_mean}{Numeric. Mean of the fold change distribution.}
+\item{minimum_fold_change}{Numeric. Minimum expected fold change effect (mean of gRNA effect distribution).}
 
-\item{fold_change_sd}{Numeric. Standard deviation of the fold change distribution.}
+\item{gRNA_variability}{Numeric. Standard deviation of gRNA effect sizes, representing variability between gRNAs targeting the same gene.}
 
 \item{biological_system}{Character. Biological system for baseline expression (default: "K562").}
 

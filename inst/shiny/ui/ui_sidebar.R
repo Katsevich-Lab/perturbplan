@@ -163,8 +163,8 @@ create_sidebar <- function() {
         tags$div(
           id = "effects-content",
           style = "padding: 15px;",
-          numericInput("fc_mean", "Fold-change mean:", 0.85, 1.1, 10, 0.05),
-          numericInput("fc_sd", "Fold-change SD:", 0.15, 0.1, 5, 0.05),
+          numericInput("fc_mean", "Minimum fold change:", 0.85, 1.1, 10, 0.05),
+          numericInput("fc_sd", "gRNA variability:", 0.15, 0.1, 5, 0.05),
           numericInput("prop_non_null", "Proportion of non-null pairs:", 0.1, 0, 1, 0.01)
         )
       ),

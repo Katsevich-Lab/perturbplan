@@ -341,8 +341,8 @@ create_power_server <- function(input, output, session) {
     req(planned())
     # Extract expression information including gene list if provided
     perturbplan::extract_fc_expression_info(
-      fold_change_mean = input$fc_mean,
-      fold_change_sd = input$fc_sd,
+      minimum_fold_change = input$fc_mean,
+      gRNA_variability = input$fc_sd,
       biological_system = input$biological_system,
       B = 1000,  # Monte Carlo samples for good accuracy
       gene_list = if(input$gene_list_mode == "custom") gene_list() else NULL,  # Use gene list only in custom mode

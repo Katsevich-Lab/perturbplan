@@ -8,8 +8,8 @@ utils::globalVariables(c("response_id"))
 #' data to create a comprehensive dataset for Monte Carlo power analysis simulations.
 #' It can handle both user-specified genes and random sampling scenarios.
 #'
-#' @param fold_change_mean Numeric. Mean of the fold change distribution.
-#' @param fold_change_sd Numeric. Standard deviation of the fold change distribution.
+#' @param minimum_fold_change Numeric. Minimum expected fold change effect (mean of gRNA effect distribution).
+#' @param gRNA_variability Numeric. Standard deviation of gRNA effect sizes, representing variability between gRNAs targeting the same gene.
 #' @param biological_system Character. Biological system for baseline expression (default: "K562").
 #' @param B Integer. Number of Monte Carlo samples to generate when gene_list is NULL (default: 200).
 #'   Ignored when gene_list is provided.
@@ -51,7 +51,7 @@ utils::globalVariables(c("response_id"))
 #'
 #' @seealso \code{\link{extract_baseline_expression}} for baseline data extraction
 #' @export
-extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biological_system =  "K562", B = 200, gene_list = NULL, tpm_threshold = 10, custom_baseline_data = NULL, gRNAs_per_target = 4){
+extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, biological_system =  "K562", B = 200, gene_list = NULL, tpm_threshold = 10, custom_baseline_data = NULL, gRNAs_per_target = 4){
 
   # set the random seed
   set.seed(1)
@@ -150,8 +150,8 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
   for (i in 1:n_genes) {
     # Generate gRNAs_per_target effect sizes for this target
     grna_effects <- stats::rnorm(n = gRNAs_per_target, 
-                                mean = fold_change_mean, 
-                                sd = fold_change_sd)
+                                mean = minimum_fold_change, 
+                                sd = gRNA_variability)
     
     # Calculate moments: mean and mean of squares
     avg_fold_change[i] <- mean(grna_effects)
@@ -172,7 +172,7 @@ extract_fc_expression_info <- function(fold_change_mean, fold_change_sd, biologi
   return(list(
     fc_expression_df = fc_expression_df,
     expression_dispersion_curve = expression_dispersion_curve,
-    fold_change_mean = fold_change_mean  # Include for adaptive grid generation
+    minimum_fold_change = minimum_fold_change  # Include for adaptive grid generation
   ))
 }
 
