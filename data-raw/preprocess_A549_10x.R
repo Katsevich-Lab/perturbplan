@@ -7,11 +7,9 @@ path_to_raw_data <- paste0(.get_config_path("LOCAL_SAKELLAROPOULOS_2024_RAW_DATA
 preprocessed_data <- reference_data_preprocessing_10x(path_to_raw_data)
 
 # obtain the necessary information for baseline expression and library size information
-preprocessed_results <- reference_data_preprocessing(response_matrix = preprocessed_data$response_matrix,
-                                                     read_umi_table = preprocessed_data$read_umi_table)
+A549_10x <- reference_data_preprocessing(response_matrix = preprocessed_data$response_matrix,
+                                         read_umi_table = preprocessed_data$read_umi_table)
 
 # save the baseline information to data
-usethis::use_data(preprocessed_results,
-                  name = "A549_10x",  # object name users will type
-                  overwrite = TRUE)          # allow reruns
+usethis::use_data(A549_10x, overwrite = TRUE)          # allow reruns
 
