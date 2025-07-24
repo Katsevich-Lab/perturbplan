@@ -104,8 +104,8 @@ compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_
 #' @details
 #' This function performs two binary searches:
 #' \itemize{
-#'   \item Find minimum cells: Where power ≥ 1% using minimum reads per cell
-#'   \item Find maximum cells: Where power ≥ 80% using maximum reads per cell
+#'   \item Find minimum cells: Where power >= 1% using minimum reads per cell
+#'   \item Find maximum cells: Where power >= 80% using maximum reads per cell
 #' }
 #' 
 #' The resulting cell range spans from barely useful (1% power) to highly powered 

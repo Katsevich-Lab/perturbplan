@@ -70,8 +70,8 @@ per cell to find where power reaches 80\%.
 \details{
 This function performs two binary searches:
 \itemize{
-\item Find minimum cells: Where power ≥ 1\% using minimum reads per cell
-\item Find maximum cells: Where power ≥ 80\% using maximum reads per cell
+\item Find minimum cells: Where power >= 1\% using minimum reads per cell
+\item Find maximum cells: Where power >= 80\% using maximum reads per cell
 }
 
 The resulting cell range spans from barely useful (1\% power) to highly powered
