@@ -21,12 +21,12 @@ get_pilot_data_from_package <- function(biological_system) {
   # Map biological system names to data file names
   data_mapping <- list(
     "K562" = "K562_10x",
-    "A549" = "A549_10x", 
+    "A549" = "A549_10x",
     "THP-1" = "THP_1_10x",
     "T_CD8" = "T_CD8_10x",
     "iPSC" = "iPSC_10x"
   )
-  
+
   # Check if biological system is supported
   if (!biological_system %in% names(data_mapping)) {
     # Load reference datasets to show available options
@@ -36,13 +36,13 @@ get_pilot_data_from_package <- function(biological_system) {
     available_systems <- paste(ref_datasets$cell_type, collapse = ", ")
     stop("Unsupported biological system: '", biological_system, "'. Available options: ", available_systems)
   }
-  
+
   # Get the data object name
   data_name <- data_mapping[[biological_system]]
-  
+
   # Load the data from the package data/ directory
   data(list = data_name, package = "perturbplan", envir = environment())
-  
+
   # Return the loaded data object
   return(get(data_name, envir = environment()))
 }
@@ -56,7 +56,7 @@ get_pilot_data_from_package <- function(biological_system) {
 #'
 #' @param minimum_fold_change Numeric. Minimum expected fold change effect (mean of gRNA effect distribution).
 #' @param gRNA_variability Numeric. Standard deviation of gRNA effect sizes, representing variability between gRNAs targeting the same gene.
-#' @param biological_system Character. Biological system for baseline expression. Available options: 
+#' @param biological_system Character. Biological system for baseline expression. Available options:
 #'   "K562", "A549", "THP-1", "T_CD8", "iPSC" (default: "K562").
 #' @param B Integer. Number of Monte Carlo samples to generate when gene_list is NULL (default: 200).
 #'   Ignored when gene_list is provided.
@@ -65,8 +65,8 @@ get_pilot_data_from_package <- function(biological_system) {
 #'   If NULL (default), B genes are randomly sampled from baseline data.
 #' @param tpm_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
 #'   levels below tpm_threshold/1e6 are filtered out before power calculation.
-#' @param custom_pilot_data List. Optional custom pilot data. If provided, 
-#'   this data is used instead of the default biological_system data. Must contain 
+#' @param custom_pilot_data List. Optional custom pilot data. If provided,
+#'   this data is used instead of the default biological_system data. Must contain
 #'   baseline_expression (with baseline_expression data frame and expression_dispersion_curve function)
 #'   and library_parameters (with UMI_per_cell and variation).
 #' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
@@ -196,18 +196,19 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
   # Each target will have gRNAs_per_target individual gRNA effect sizes
   avg_fold_change <- numeric(n_genes)
   avg_fold_change_sq <- numeric(n_genes)
-  
+
   for (i in 1:n_genes) {
     # Generate gRNAs_per_target effect sizes for this target
-    grna_effects <- stats::rnorm(n = gRNAs_per_target, 
-                                mean = minimum_fold_change, 
-                                sd = gRNA_variability)
-    
+    grna_effects <- stats::rnorm(n = gRNAs_per_target,
+                                 mean = minimum_fold_change,
+                                 sd = gRNA_variability) |>
+      pmax(0)  # Ensure no negative effects
+
     # Calculate moments: mean and mean of squares
     avg_fold_change[i] <- mean(grna_effects)
     avg_fold_change_sq[i] <- mean(grna_effects^2)
   }
-  
+
   # Create DataFrame with new random effect size format
   fc_expression_df <- data.frame(
     avg_fold_change = avg_fold_change,
@@ -225,7 +226,7 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
     minimum_fold_change = minimum_fold_change,  # Include for adaptive grid generation
     pilot_data = pilot_data  # Always include pilot data (either built-in or custom)
   )
-  
+
   return(result)
 }
 
@@ -256,33 +257,33 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
 #'
 #' @export
 validate_custom_baseline <- function(data, file_path = "uploaded file") {
-  
+
   errors <- character(0)
   warnings <- character(0)
-  
+
   # Check if data is a data frame
   if (!is.data.frame(data)) {
     errors <- c(errors, "Data must be a data frame")
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
-  
+
   # Check required columns exist
   required_cols <- c("response_id", "relative_expression", "expression_size")
   missing_cols <- setdiff(required_cols, colnames(data))
   if (length(missing_cols) > 0) {
     errors <- c(errors, paste("Missing required columns:", paste(missing_cols, collapse = ", ")))
   }
-  
+
   # If missing required columns, return early
   if (length(errors) > 0) {
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
-  
+
   # Check data types and values
   if (!is.character(data$response_id) && !is.factor(data$response_id)) {
     errors <- c(errors, "response_id column must be character or factor")
   }
-  
+
   if (!is.numeric(data$relative_expression)) {
     errors <- c(errors, "relative_expression column must be numeric")
   } else {
@@ -293,11 +294,11 @@ validate_custom_baseline <- function(data, file_path = "uploaded file") {
     # Check for extremely large values (potential TPM instead of relative scale)
     if (any(data$relative_expression > 1, na.rm = TRUE)) {
       max_val <- max(data$relative_expression, na.rm = TRUE)
-      warnings <- c(warnings, paste0("Some relative_expression values > 1 (max: ", round(max_val, 4), 
+      warnings <- c(warnings, paste0("Some relative_expression values > 1 (max: ", round(max_val, 4),
                                     "). Ensure values are on TPM/1e6 scale, not raw TPM."))
     }
   }
-  
+
   if (!is.numeric(data$expression_size)) {
     errors <- c(errors, "expression_size column must be numeric")
   } else {
@@ -306,7 +307,7 @@ validate_custom_baseline <- function(data, file_path = "uploaded file") {
       errors <- c(errors, "expression_size values must be positive")
     }
   }
-  
+
   # Check for missing values
   for (col in required_cols) {
     if (any(is.na(data[[col]]))) {
@@ -314,20 +315,20 @@ validate_custom_baseline <- function(data, file_path = "uploaded file") {
       errors <- c(errors, paste0("Column '", col, "' contains ", na_count, " missing values"))
     }
   }
-  
+
   # Check for duplicate gene IDs
   if (any(duplicated(data$response_id))) {
     dup_count <- sum(duplicated(data$response_id))
     warnings <- c(warnings, paste0(dup_count, " duplicate gene IDs found. Only first occurrence will be used."))
     data <- data[!duplicated(data$response_id), ]
   }
-  
+
   # Check for reasonable number of genes
   n_genes <- nrow(data)
   if (n_genes < 100) {
     warnings <- c(warnings, paste0("Only ", n_genes, " genes provided. Consider using more genes for robust analysis."))
   }
-  
+
   # Validate Ensembl gene ID format (warn if not)
   ensembl_pattern <- "^ENSG[0-9]{11}$"
   non_ensembl <- !grepl(ensembl_pattern, data$response_id)
@@ -335,22 +336,22 @@ validate_custom_baseline <- function(data, file_path = "uploaded file") {
     non_ensembl_count <- sum(non_ensembl)
     warnings <- c(warnings, paste0(non_ensembl_count, " gene IDs do not match Ensembl format (ENSGXXXXXXXXXXX)"))
   }
-  
+
   # Create summary statistics
   if (length(errors) == 0) {
     # Convert relative expression back to TPM for display
     tpm_values <- data$relative_expression * 1e6
     summary_text <- paste0(
       "Loaded custom baseline expression (", formatC(n_genes, format = "d", big.mark = ","), " genes)<br/>",
-      "Average TPM: ", round(mean(tpm_values, na.rm = TRUE), 1), 
+      "Average TPM: ", round(mean(tpm_values, na.rm = TRUE), 1),
       ", Range: ", round(min(tpm_values, na.rm = TRUE), 1), " - ", round(max(tpm_values, na.rm = TRUE), 1), "<br/>",
-      "Expression size range: ", round(min(data$expression_size, na.rm = TRUE), 2), 
+      "Expression size range: ", round(min(data$expression_size, na.rm = TRUE), 2),
       " - ", round(max(data$expression_size, na.rm = TRUE), 2)
     )
   } else {
     summary_text <- ""
   }
-  
+
   # Return validation results
   valid <- length(errors) == 0
   return(list(
@@ -388,10 +389,10 @@ validate_custom_baseline <- function(data, file_path = "uploaded file") {
 #'
 #' @export
 validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
-  
+
   errors <- character(0)
   warnings <- character(0)
-  
+
   # Check if data is a list
   if (!is.list(data)) {
     if (is.data.frame(data)) {
@@ -401,19 +402,19 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
     }
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
-  
+
   # Check required list elements exist
   required_elements <- c("baseline_expression", "expression_dispersion_curve")
   missing_elements <- setdiff(required_elements, names(data))
   if (length(missing_elements) > 0) {
     errors <- c(errors, paste("Missing required list elements:", paste(missing_elements, collapse = ", ")))
   }
-  
+
   # If missing required elements, return early
   if (length(errors) > 0) {
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
-  
+
   # Validate baseline_expression data frame
   baseline_df <- data$baseline_expression
   if (!is.data.frame(baseline_df)) {
@@ -429,7 +430,7 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
       if (!is.character(baseline_df$response_id) && !is.factor(baseline_df$response_id)) {
         errors <- c(errors, "response_id column must be character or factor")
       }
-      
+
       if (!is.numeric(baseline_df$relative_expression)) {
         errors <- c(errors, "relative_expression column must be numeric")
       } else {
@@ -438,11 +439,11 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
         }
         if (any(baseline_df$relative_expression > 1, na.rm = TRUE)) {
           max_val <- max(baseline_df$relative_expression, na.rm = TRUE)
-          warnings <- c(warnings, paste0("Some relative_expression values > 1 (max: ", round(max_val, 4), 
+          warnings <- c(warnings, paste0("Some relative_expression values > 1 (max: ", round(max_val, 4),
                                         "). Ensure values are on TPM/1e6 scale, not raw TPM."))
         }
       }
-      
+
       if (!is.numeric(baseline_df$expression_size)) {
         errors <- c(errors, "expression_size column must be numeric")
       } else {
@@ -450,7 +451,7 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
           errors <- c(errors, "expression_size values must be positive")
         }
       }
-      
+
       # Check for missing values
       for (col in required_cols) {
         if (any(is.na(baseline_df[[col]]))) {
@@ -458,7 +459,7 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
           errors <- c(errors, paste0("baseline_expression column '", col, "' contains ", na_count, " missing values"))
         }
       }
-      
+
       # Check for duplicate gene IDs
       if (any(duplicated(baseline_df$response_id))) {
         dup_count <- sum(duplicated(baseline_df$response_id))
@@ -468,7 +469,7 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
       }
     }
   }
-  
+
   # Validate expression_dispersion_curve function
   if (!is.function(data$expression_dispersion_curve)) {
     errors <- c(errors, "expression_dispersion_curve must be a function")
@@ -483,16 +484,16 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
       errors <- c(errors, paste("expression_dispersion_curve function error:", e$message))
     })
   }
-  
+
   # Create summary statistics
   if (length(errors) == 0 && is.data.frame(baseline_df)) {
     n_genes <- nrow(baseline_df)
-    
+
     # Check for reasonable number of genes
     if (n_genes < 100) {
       warnings <- c(warnings, paste0("Only ", n_genes, " genes provided. Consider using more genes for robust analysis."))
     }
-    
+
     # Validate Ensembl gene ID format (warn if not)
     ensembl_pattern <- "^ENSG[0-9]{11}$"
     non_ensembl <- !grepl(ensembl_pattern, baseline_df$response_id)
@@ -500,7 +501,7 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
       non_ensembl_count <- sum(non_ensembl)
       warnings <- c(warnings, paste0(non_ensembl_count, " gene IDs do not match Ensembl format (ENSGXXXXXXXXXXX)"))
     }
-    
+
     # Convert relative expression back to TPM for display
     tpm_values <- baseline_df$relative_expression * 1e6
     summary_text <- paste0(
@@ -510,7 +511,7 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
   } else {
     summary_text <- ""
   }
-  
+
   # Return validation results
   valid <- length(errors) == 0
   return(list(
@@ -526,7 +527,7 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
 #' Validate custom library RDS file structure and content
 #'
 #' @description
-#' This function validates that an uploaded RDS file contains valid library parameters 
+#' This function validates that an uploaded RDS file contains valid library parameters
 #' with the correct structure and value ranges for power analysis.
 #'
 #' @param data The loaded RDS data to validate
@@ -554,26 +555,26 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
 validate_custom_library_rds <- function(data, filename = "uploaded file") {
   errors <- character(0)
   warnings <- character(0)
-  
+
   # Check if data is a list
   if (!is.list(data)) {
     errors <- c(errors, "RDS file must contain a list object")
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
-  
+
   # Check required elements
   required_elements <- c("UMI_per_cell", "variation")
   missing_elements <- setdiff(required_elements, names(data))
   if (length(missing_elements) > 0) {
     errors <- c(errors, paste("Missing required elements:", paste(missing_elements, collapse = ", ")))
   }
-  
+
   # Check for unexpected elements
   unexpected_elements <- setdiff(names(data), required_elements)
   if (length(unexpected_elements) > 0) {
     warnings <- c(warnings, paste("Unexpected elements will be ignored:", paste(unexpected_elements, collapse = ", ")))
   }
-  
+
   # Validate UMI_per_cell
   if ("UMI_per_cell" %in% names(data)) {
     umi_val <- data$UMI_per_cell
@@ -589,7 +590,7 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
       warnings <- c(warnings, "UMI_per_cell is unusually high (> 50000)")
     }
   }
-  
+
   # Validate variation
   if ("variation" %in% names(data)) {
     var_val <- data$variation
@@ -603,7 +604,7 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
       warnings <- c(warnings, "variation parameter is unusually high (> 1)")
     }
   }
-  
+
   # Generate summary if validation passed
   if (length(errors) == 0) {
     summary_text <- paste0(
@@ -614,7 +615,7 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
   } else {
     summary_text <- ""
   }
-  
+
   # Return validation results
   valid <- length(errors) == 0
   return(list(
@@ -672,17 +673,17 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
 #' \code{\link{validate_custom_library_rds}} for library parameter validation
 #' @export
 validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
-  
+
   errors <- character(0)
   warnings <- character(0)
   summary_parts <- character(0)
-  
+
   # Check if data is a list
   if (!is.list(data)) {
     errors <- c(errors, paste("RDS data must be a list, but received:", class(data)[1]))
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
-  
+
   # Check required top-level elements
   required_elements <- c("baseline_expression", "library_parameters")
   missing_elements <- setdiff(required_elements, names(data))
@@ -691,25 +692,25 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
     errors <- c(errors, "Expected structure: list(baseline_expression = ..., library_parameters = ...)")
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
-  
+
   # Check for unexpected top-level elements
   unexpected_elements <- setdiff(names(data), required_elements)
   if (length(unexpected_elements) > 0) {
     warnings <- c(warnings, paste("Unexpected top-level elements will be ignored:", paste(unexpected_elements, collapse = ", ")))
   }
-  
+
   # Validate baseline_expression component
-  baseline_result <- validate_custom_baseline_rds(data$baseline_expression, 
+  baseline_result <- validate_custom_baseline_rds(data$baseline_expression,
                                                   paste0(file_path, " > baseline_expression"))
-  
-  # Validate library_parameters component  
+
+  # Validate library_parameters component
   library_result <- validate_custom_library_rds(data$library_parameters,
                                                 paste0(file_path, " > library_parameters"))
-  
+
   # Combine validation results
   all_errors <- c(errors, baseline_result$errors, library_result$errors)
   all_warnings <- c(warnings, baseline_result$warnings, library_result$warnings)
-  
+
   # Create combined summary
   if (baseline_result$valid && library_result$valid) {
     summary_parts <- c(baseline_result$summary, library_result$summary)
@@ -717,10 +718,10 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
   } else {
     combined_summary <- ""
   }
-  
+
   # Overall validation status
   valid <- length(all_errors) == 0
-  
+
   # Prepare validated data
   validated_data <- NULL
   if (valid) {
@@ -729,7 +730,7 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
       library_parameters = library_result$data
     )
   }
-  
+
   return(list(
     valid = valid,
     data = validated_data,
@@ -764,7 +765,7 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
 #' @seealso \code{\link{get_pilot_data_from_package}} for obtaining curve parameters
 #' @export
 fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
-  
+
   # Wrapper function that calls the optimized C++ implementation
   return(fit_read_UMI_curve_cpp(reads_per_cell, UMI_per_cell, variation))
 }
@@ -772,7 +773,7 @@ fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
 #' Identify optimal reads per cell range for power analysis grid
 #'
 #' @description
-#' This function determines the minimum and maximum reads per cell values for 
+#' This function determines the minimum and maximum reads per cell values for
 #' power analysis grid generation based on experimental platform capabilities
 #' and S-M curve saturation analysis.
 #'
@@ -788,36 +789,36 @@ fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
 #' }
 #'
 #' @details
-#' This function is a wrapper around the optimized C++ implementation 
-#' \code{identify_library_size_range_cpp} which provides significant 
+#' This function is a wrapper around the optimized C++ implementation
+#' \code{identify_library_size_range_cpp} which provides significant
 #' performance improvements for power analysis computations.
-#' 
+#'
 #' The function operates in two phases:
-#' 
+#'
 #' **Minimum determination**: Platform-specific minimum sequencing depth
 #' based on typical experimental capabilities and quality thresholds.
-#' 
+#'
 #' **Maximum determination**: Uses binary search on the S-M curve to find
 #' the reads per cell that achieves approximately 80% UMI saturation. If
 #' 80% saturation is not achievable within practical limits (10x UMI_per_cell),
 #' returns the practical upper bound.
 #'
-#' @seealso 
+#' @seealso
 #' \code{\link{fit_read_UMI_curve}} for S-M curve evaluation
 #' \code{\link{get_pilot_data_from_package}} for obtaining library parameters
 #' \code{\link{identify_library_size_range_cpp}} for C++ implementation
 #' @export
 identify_library_size_range <- function(experimental_platform, library_info) {
-  
+
   # Input validation for library_info structure
   if (!is.list(library_info) || !all(c("UMI_per_cell", "variation") %in% names(library_info))) {
     stop("library_info must be a list with UMI_per_cell and variation elements")
   }
-  
+
   # Extract parameters and call optimized C++ implementation
   UMI_per_cell <- library_info$UMI_per_cell
   variation <- library_info$variation
-  
+
   # Wrapper around the C++ implementation
   return(identify_library_size_range_cpp(experimental_platform, UMI_per_cell, variation))
 }
@@ -873,7 +874,7 @@ identify_library_size_range <- function(experimental_platform, library_info) {
 #' # Extract required info
 #' fc_info <- extract_fc_expression_info(0.8, 0.1, "K562", B = 100)
 #' lib_info <- fc_info$pilot_data$library_parameters
-#' 
+#'
 #' # Generate experimental design
 #' design <- identify_cell_read_range(
 #'   experimental_platform = "10x Chromium v3",
@@ -881,20 +882,20 @@ identify_library_size_range <- function(experimental_platform, library_info) {
 #'   library_info = lib_info,
 #'   grid_size = 10
 #' )
-#' 
+#'
 #' # Examine the design
 #' print(design$cells_seq)      # Total cells: 100, 279, 777, ...
 #' print(design$reads_seq)      # Reads/cell: 500, 1753, 6145, ...
 #' print(design$num_trt_cells_seq)   # Treatment cells for each total
 #' }
 #'
-#' @seealso 
+#' @seealso
 #' \code{\link{identify_library_size_range_cpp}} for reads per cell range determination
 #' \code{\link{identify_cell_range_cpp}} for cell count range determination
 #' @export
 identify_cell_read_range <- function(
   experimental_platform,
-  fc_expression_info, 
+  fc_expression_info,
   library_info,
   grid_size = 10,
   min_power_threshold = 0.01,
@@ -908,7 +909,7 @@ identify_cell_read_range <- function(
   side = "left",
   prop_non_null = 0.1
 ) {
-  
+
   # Input validation
   if (grid_size < 2) {
     stop("grid_size must be at least 2")
@@ -922,13 +923,13 @@ identify_cell_read_range <- function(
   if (min_power_threshold >= max_power_threshold) {
     stop("min_power_threshold must be < max_power_threshold")
   }
-  
+
   # Step 1: Determine optimal reads per cell range using S-M curve analysis
   reads_range <- identify_library_size_range(
     experimental_platform = experimental_platform,
     library_info = library_info
   )
-  
+
   # Step 2: Determine optimal cell count range based on power thresholds
   cell_range <- identify_cell_range_cpp(
     min_reads_per_cell = reads_range$min_reads_per_cell,
@@ -949,42 +950,42 @@ identify_cell_read_range <- function(
     cell_lower_bound = 100.0,   # Start from 100 treatment cells for practical experimental design
     cell_upper_bound = 1e5      # Cap at 1e5 treatment cells for more reasonable ranges
   )
-  
+
   # Step 3: Generate logarithmically-spaced sequences
-  
+
   # Cell sequence (logarithmic spacing)
   log_min_cells <- log10(cell_range$min_cells)
   log_max_cells <- log10(cell_range$max_cells)
   log_cells_seq <- seq(log_min_cells, log_max_cells, length.out = grid_size)
   cells_seq <- round(10^log_cells_seq)
-  
+
   # Reads sequence (logarithmic spacing)
   log_min_reads <- log10(reads_range$min_reads_per_cell)
   log_max_reads <- log10(reads_range$max_reads_per_cell)
   log_reads_seq <- seq(log_min_reads, log_max_reads, length.out = grid_size)
   reads_seq <- round(10^log_reads_seq)
-  
+
   # Step 4: Pre-compute treatment and control cell allocations
   total_gRNAs <- num_targets * gRNAs_per_target + non_targeting_gRNAs
   num_trt_cells_seq <- (gRNAs_per_target * cells_seq * MOI) / total_gRNAs
-  
+
   if (control_group == "complement") {
     num_cntrl_cells_seq <- cells_seq - num_trt_cells_seq
   } else {  # "nt_cells"
     num_cntrl_cells_seq <- (non_targeting_gRNAs * cells_seq * MOI) / total_gRNAs
   }
-  
+
   # Round to whole cells
   num_trt_cells_seq <- round(num_trt_cells_seq)
   num_cntrl_cells_seq <- round(num_cntrl_cells_seq)
-  
+
   # Calculate library sizes corresponding to reads_seq
   library_size_seq <- fit_read_UMI_curve(
     reads_per_cell = reads_seq,
     UMI_per_cell = library_info$UMI_per_cell,
     variation = library_info$variation
   )
-  
+
   # Return comprehensive experimental design
   return(list(
     cells_seq = cells_seq,
@@ -1009,12 +1010,12 @@ identify_cell_read_range <- function(
 #'   cells_seq, reads_seq, library_size_seq, num_trt_cells_seq, and num_cntrl_cells_seq.
 #'
 #' @return Data frame with columns: num_total_cells, reads_per_cell, library_size,
-#'   num_trt_cells, num_cntrl_cells. Each row represents one experimental 
+#'   num_trt_cells, num_cntrl_cells. Each row represents one experimental
 #'   condition (cell count × reads per cell combination).
 #'
 #' @details
 #' The function creates all combinations of cell counts and reads per cell values,
-#' then assigns the appropriate treatment and control cell counts and library sizes 
+#' then assigns the appropriate treatment and control cell counts and library sizes
 #' based on the total cell count and reads per cell for each row.
 #'
 #' @examples
@@ -1023,7 +1024,7 @@ identify_cell_read_range <- function(
 #' fc_info <- extract_fc_expression_info(0.8, 0.1, "K562", B = 100)
 #' lib_info <- fc_info$pilot_data$library_parameters
 #' design <- identify_cell_read_range("10x Chromium v3", fc_info, lib_info)
-#' 
+#'
 #' # Convert to data frame for power analysis
 #' cells_reads_df <- convert_design_to_dataframe(design)
 #' print(head(cells_reads_df))
@@ -1032,14 +1033,14 @@ identify_cell_read_range <- function(
 #' @seealso \code{\link{identify_cell_read_range}} for experimental design generation
 #' @export
 convert_design_to_dataframe <- function(design_output) {
-  
+
   # Input validation
   required_elements <- c("cells_seq", "reads_seq", "num_trt_cells_seq", "num_cntrl_cells_seq")
   missing_elements <- setdiff(required_elements, names(design_output))
   if (length(missing_elements) > 0) {
     stop("Missing required elements in design_output: ", paste(missing_elements, collapse = ", "))
   }
-  
+
   # Create all combinations of cells and reads
   cells_reads_df <- expand.grid(
     cells_idx = 1:length(design_output$cells_seq),
@@ -1052,6 +1053,6 @@ convert_design_to_dataframe <- function(design_output) {
       num_cntrl_cells = design_output$num_cntrl_cells_seq[cells_idx]
     ) |>
     dplyr::select(reads_per_cell, library_size, num_trt_cells, num_cntrl_cells)
-  
+
   return(cells_reads_df)
 }
