@@ -259,6 +259,56 @@
 #' )
 "iPSC_10x"
 
+#' iPSC-derived neuron 10x Chromium reference data for CRISPR power analysis
+#'
+#' @description
+#' Pre-computed pilot data from iPSC-derived neurons generated using 10x Chromium 
+#' technology. Contains baseline gene expression parameters and library size 
+#' information for power analysis of CRISPR-based perturbation experiments.
+#'
+#' @format A list with 2 elements:
+#' \describe{
+#'   \item{baseline_expression}{List containing:
+#'     \itemize{
+#'       \item \code{baseline_expression}: Data frame with gene expression data
+#'       \item \code{expression_dispersion_curve}: Function for predicting dispersion from expression level
+#'     }
+#'   }
+#'   \item{library_parameters}{List containing:
+#'     \itemize{
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter from S-M curve
+#'       \item \code{variation}: Variation parameter characterizing PCR amplification bias
+#'     }
+#'   }
+#' }
+#'
+#' @source
+#' Processed from single-cell RNA-seq data of iPSC-derived neurons using 10x Chromium technology.
+#'
+#' @seealso
+#' \code{\link{get_pilot_data_from_package}} for accessing this data programmatically
+#' \code{\link{extract_fc_expression_info}} for using this data in power analysis
+#'
+#' @examples
+#' # Load iPSC-derived neuron data
+#' data(iPSC_neuron_10x)
+#' 
+#' # Examine baseline expression data
+#' baseline_expr <- iPSC_neuron_10x$baseline_expression$baseline_expression
+#' print(head(baseline_expr))
+#' 
+#' # Check library parameters
+#' lib_params <- iPSC_neuron_10x$library_parameters
+#' print(lib_params)
+#' 
+#' # Use with power analysis functions
+#' fc_info <- extract_fc_expression_info(
+#'   minimum_fold_change = 0.8,
+#'   gRNA_variability = 0.1,
+#'   biological_system = "iPSC_neuron"
+#' )
+"iPSC_neuron_10x"
+
 #' Reference expression datasets metadata
 #'
 #' @description
@@ -266,9 +316,9 @@
 #' perturbplan package. This table maps biological systems to their corresponding 
 #' data processing configurations and functions.
 #'
-#' @format A data frame with 5 rows and 4 columns:
+#' @format A data frame with 6 rows and 4 columns:
 #' \describe{
-#'   \item{cell_type}{Character. The biological system name (K562, THP-1, T_CD8, A549, iPSC)}
+#'   \item{cell_type}{Character. The biological system name (K562, THP-1, T_CD8, A549, iPSC, iPSC_neuron)}
 #'   \item{platform}{Character. The experimental platform used (all "10x" for 10x Chromium)}
 #'   \item{config_name}{Character. Configuration variable name for data source paths}
 #'   \item{process_function}{Character. Name of the processing function for each dataset}

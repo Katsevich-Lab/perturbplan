@@ -5,9 +5,9 @@
 \alias{reference_expression_datasets}
 \title{Reference expression datasets metadata}
 \format{
-A data frame with 5 rows and 4 columns:
+A data frame with 6 rows and 4 columns:
 \describe{
-\item{cell_type}{Character. The biological system name (K562, THP-1, T_CD8, A549, iPSC)}
+\item{cell_type}{Character. The biological system name (K562, THP-1, T_CD8, A549, iPSC, iPSC_neuron)}
 \item{platform}{Character. The experimental platform used (all "10x" for 10x Chromium)}
 \item{config_name}{Character. Configuration variable name for data source paths}
 \item{process_function}{Character. Name of the processing function for each dataset}

@@ -24,7 +24,8 @@ get_pilot_data_from_package <- function(biological_system) {
     "A549" = "A549_10x",
     "THP-1" = "THP_1_10x",
     "T_CD8" = "T_CD8_10x",
-    "iPSC" = "iPSC_10x"
+    "iPSC" = "iPSC_10x",
+    "iPSC_neuron" = "iPSC_neuron_10x"
   )
 
   # Check if biological system is supported
