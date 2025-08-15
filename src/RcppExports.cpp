@@ -201,6 +201,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_monte_carlo_teststat_cpp
+List compute_monte_carlo_teststat_cpp(DataFrame fc_expression_df, double library_size, double num_trt_cells, double num_cntrl_cells);
+RcppExport SEXP _perturbplan_compute_monte_carlo_teststat_cpp(SEXP fc_expression_dfSEXP, SEXP library_sizeSEXP, SEXP num_trt_cellsSEXP, SEXP num_cntrl_cellsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< DataFrame >::type fc_expression_df(fc_expression_dfSEXP);
+    Rcpp::traits::input_parameter< double >::type library_size(library_sizeSEXP);
+    Rcpp::traits::input_parameter< double >::type num_trt_cells(num_trt_cellsSEXP);
+    Rcpp::traits::input_parameter< double >::type num_cntrl_cells(num_cntrl_cellsSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_monte_carlo_teststat_cpp(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells));
+    return rcpp_result_gen;
+END_RCPP
+}
 // compute_power_plan_overall_cpp
 SEXP compute_power_plan_overall_cpp(DataFrame fc_expression_df, double library_size, double num_trt_cells, double num_cntrl_cells, double multiple_testing_alpha, std::string multiple_testing_method, std::string side, double prop_non_null, bool return_full_results);
 RcppExport SEXP _perturbplan_compute_power_plan_overall_cpp(SEXP fc_expression_dfSEXP, SEXP library_sizeSEXP, SEXP num_trt_cellsSEXP, SEXP num_cntrl_cellsSEXP, SEXP multiple_testing_alphaSEXP, SEXP multiple_testing_methodSEXP, SEXP sideSEXP, SEXP prop_non_nullSEXP, SEXP return_full_resultsSEXP) {
@@ -258,55 +272,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_fc_curve_cpp
-DataFrame compute_fc_curve_cpp(NumericVector fc_output_grid, DataFrame fc_expression_df, double library_size, double num_trt_cells, double num_cntrl_cells, std::string side, double cutoff);
-RcppExport SEXP _perturbplan_compute_fc_curve_cpp(SEXP fc_output_gridSEXP, SEXP fc_expression_dfSEXP, SEXP library_sizeSEXP, SEXP num_trt_cellsSEXP, SEXP num_cntrl_cellsSEXP, SEXP sideSEXP, SEXP cutoffSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type fc_output_grid(fc_output_gridSEXP);
-    Rcpp::traits::input_parameter< DataFrame >::type fc_expression_df(fc_expression_dfSEXP);
-    Rcpp::traits::input_parameter< double >::type library_size(library_sizeSEXP);
-    Rcpp::traits::input_parameter< double >::type num_trt_cells(num_trt_cellsSEXP);
-    Rcpp::traits::input_parameter< double >::type num_cntrl_cells(num_cntrl_cellsSEXP);
-    Rcpp::traits::input_parameter< std::string >::type side(sideSEXP);
-    Rcpp::traits::input_parameter< double >::type cutoff(cutoffSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_fc_curve_cpp(fc_output_grid, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, side, cutoff));
-    return rcpp_result_gen;
-END_RCPP
-}
-// compute_expression_curve_cpp
-DataFrame compute_expression_curve_cpp(NumericVector expr_output_grid, DataFrame fc_expression_df, double library_size, Function expression_dispersion_curve, double num_trt_cells, double num_cntrl_cells, std::string side, double cutoff);
-RcppExport SEXP _perturbplan_compute_expression_curve_cpp(SEXP expr_output_gridSEXP, SEXP fc_expression_dfSEXP, SEXP library_sizeSEXP, SEXP expression_dispersion_curveSEXP, SEXP num_trt_cellsSEXP, SEXP num_cntrl_cellsSEXP, SEXP sideSEXP, SEXP cutoffSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type expr_output_grid(expr_output_gridSEXP);
-    Rcpp::traits::input_parameter< DataFrame >::type fc_expression_df(fc_expression_dfSEXP);
-    Rcpp::traits::input_parameter< double >::type library_size(library_sizeSEXP);
-    Rcpp::traits::input_parameter< Function >::type expression_dispersion_curve(expression_dispersion_curveSEXP);
-    Rcpp::traits::input_parameter< double >::type num_trt_cells(num_trt_cellsSEXP);
-    Rcpp::traits::input_parameter< double >::type num_cntrl_cells(num_cntrl_cellsSEXP);
-    Rcpp::traits::input_parameter< std::string >::type side(sideSEXP);
-    Rcpp::traits::input_parameter< double >::type cutoff(cutoffSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_expression_curve_cpp(expr_output_grid, fc_expression_df, library_size, expression_dispersion_curve, num_trt_cells, num_cntrl_cells, side, cutoff));
-    return rcpp_result_gen;
-END_RCPP
-}
-// compute_monte_carlo_teststat_cpp
-List compute_monte_carlo_teststat_cpp(DataFrame fc_expression_df, double library_size, double num_trt_cells, double num_cntrl_cells);
-RcppExport SEXP _perturbplan_compute_monte_carlo_teststat_cpp(SEXP fc_expression_dfSEXP, SEXP library_sizeSEXP, SEXP num_trt_cellsSEXP, SEXP num_cntrl_cellsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< DataFrame >::type fc_expression_df(fc_expression_dfSEXP);
-    Rcpp::traits::input_parameter< double >::type library_size(library_sizeSEXP);
-    Rcpp::traits::input_parameter< double >::type num_trt_cells(num_trt_cellsSEXP);
-    Rcpp::traits::input_parameter< double >::type num_cntrl_cells(num_cntrl_cellsSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_monte_carlo_teststat_cpp(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_rejection_computation_cpp", (DL_FUNC) &_perturbplan_rejection_computation_cpp, 4},
@@ -321,12 +286,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_fit_read_UMI_curve_cpp", (DL_FUNC) &_perturbplan_fit_read_UMI_curve_cpp, 3},
     {"_perturbplan_identify_library_size_range_cpp", (DL_FUNC) &_perturbplan_identify_library_size_range_cpp, 3},
     {"_perturbplan_generate_reads_grid_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_cpp, 4},
+    {"_perturbplan_compute_monte_carlo_teststat_cpp", (DL_FUNC) &_perturbplan_compute_monte_carlo_teststat_cpp, 4},
     {"_perturbplan_compute_power_plan_overall_cpp", (DL_FUNC) &_perturbplan_compute_power_plan_overall_cpp, 9},
     {"_perturbplan_compute_single_power_cpp", (DL_FUNC) &_perturbplan_compute_single_power_cpp, 13},
     {"_perturbplan_theta_batch_cpp", (DL_FUNC) &_perturbplan_theta_batch_cpp, 5},
-    {"_perturbplan_compute_fc_curve_cpp", (DL_FUNC) &_perturbplan_compute_fc_curve_cpp, 7},
-    {"_perturbplan_compute_expression_curve_cpp", (DL_FUNC) &_perturbplan_compute_expression_curve_cpp, 8},
-    {"_perturbplan_compute_monte_carlo_teststat_cpp", (DL_FUNC) &_perturbplan_compute_monte_carlo_teststat_cpp, 4},
     {NULL, NULL, 0}
 };
 

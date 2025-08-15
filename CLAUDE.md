@@ -50,7 +50,6 @@ perturbplan::launch_app()
 
 1. **Power Analysis Pipeline** (`R/power_plan.R`, `R/plan_help.R`)
    - `calculate_power_grid()`: Main function for heatmap power analysis  
-   - `calculate_power_curves()`: Detailed power curves for selected conditions
    - `compute_power_grid_efficient()`: Efficient grid-based power analysis using C++ Monte Carlo
    - `compute_power_posthoc()`: Main function for post-hoc power analysis
    - Integrates with C++ implementations for performance

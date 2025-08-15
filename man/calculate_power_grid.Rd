@@ -29,7 +29,6 @@ Must be provided (from identify_cell_read_range() -> convert_design_to_dataframe
 List with power grid, cell/read sequences
 }
 \description{
-This function provides lightweight power analysis for the Shiny application heatmap.
+This function provides lightweight power analysis for heatmap visualization.
 It only computes overall power for each cell/read combination, not detailed curves.
-Use calculate_power_curves() for detailed curve computation on selected tiles.
 }

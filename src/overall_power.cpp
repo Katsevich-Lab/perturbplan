@@ -7,16 +7,72 @@ using namespace Rcpp;
  *------------------------------------------------------------ */
 
 // Forward declarations for functions from other files
-List compute_monte_carlo_teststat_cpp(DataFrame fc_expression_df,
-                                         double library_size,
-                                         double num_trt_cells,
-                                         double num_cntrl_cells);
-
 double compute_BH_plan(const NumericVector &mean_list,
                       const NumericVector &sd_list,
                       const std::string   &side,
                       double               multiple_testing_alpha,
                       double               prop_non_null);
+
+List compute_distribution_teststat_random_es_cpp(double num_trt_cell, 
+                                                  double num_cntrl_cell, 
+                                                  double expression_mean, 
+                                                  double expression_size, 
+                                                  double avg_fold_change, 
+                                                  double avg_fold_change_sq);
+
+//' Compute Monte Carlo test statistics for power analysis with random effect sizes
+//' 
+//' @param fc_expression_df Data frame with fold change and expression information
+//' @param library_size Library size parameter
+//' @param num_trt_cells Number of treatment cells
+//' @param num_cntrl_cells Number of control cells
+//' @return List with Monte Carlo mean and standard deviation vectors
+//'
+//' @export
+// [[Rcpp::export]]
+List compute_monte_carlo_teststat_cpp(DataFrame fc_expression_df,
+                                         double library_size,
+                                         double num_trt_cells,
+                                         double num_cntrl_cells) {
+  
+  const int n_samples = fc_expression_df.nrows();
+  
+  // Extract vectors from data frame
+  NumericVector relative_expression = fc_expression_df["relative_expression"];
+  NumericVector expression_size = fc_expression_df["expression_size"];
+  NumericVector avg_fold_change = fc_expression_df["avg_fold_change"];
+  NumericVector avg_fold_change_sq = fc_expression_df["avg_fold_change_sq"];
+  
+  // Pre-compute expression means
+  NumericVector mc_expression_means = library_size * relative_expression;
+  
+  // Initialize output vectors
+  NumericVector mc_means(n_samples);
+  NumericVector mc_sds(n_samples);
+  
+  // Loop through Monte Carlo samples
+  for (int i = 0; i < n_samples; i++) {
+    // Call the random effect size C++ function
+    List test_stats = compute_distribution_teststat_random_es_cpp(
+      num_trt_cells,
+      num_cntrl_cells,
+      mc_expression_means[i],
+      expression_size[i],
+      avg_fold_change[i],
+      avg_fold_change_sq[i]
+    );
+    
+    // Extract results
+    mc_means[i] = as<double>(test_stats["mean"]);
+    mc_sds[i] = as<double>(test_stats["sd"]);
+  }
+  
+  // Return as list
+  return List::create(
+    Named("means") = mc_means,
+    Named("sds") = mc_sds
+  );
+}
 
 NumericVector rejection_computation_cpp(const NumericVector &mean_list,
                                        const NumericVector &sd_list,

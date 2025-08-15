@@ -182,6 +182,19 @@ generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variati
     .Call(`_perturbplan_generate_reads_grid_cpp`, experimental_platform, UMI_per_cell, variation, grid_size)
 }
 
+#' Compute Monte Carlo test statistics for power analysis with random effect sizes
+#' 
+#' @param fc_expression_df Data frame with fold change and expression information
+#' @param library_size Library size parameter
+#' @param num_trt_cells Number of treatment cells
+#' @param num_cntrl_cells Number of control cells
+#' @return List with Monte Carlo mean and standard deviation vectors
+#'
+#' @export
+compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells) {
+    .Call(`_perturbplan_compute_monte_carlo_teststat_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells)
+}
+
 #' Compute overall power for power analysis (C++)
 #'
 #' @description
@@ -266,49 +279,5 @@ compute_single_power_cpp <- function(num_cells, reads_per_cell, fc_expression_df
 
 theta_batch_cpp <- function(Y, library_size, rel_expr, rough = FALSE, n_threads = 0L) {
     .Call(`_perturbplan_theta_batch_cpp`, Y, library_size, rel_expr, rough, n_threads)
-}
-
-compute_fc_curve_cpp <- function(fc_output_grid, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, side, cutoff) {
-    .Call(`_perturbplan_compute_fc_curve_cpp`, fc_output_grid, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, side, cutoff)
-}
-
-compute_expression_curve_cpp <- function(expr_output_grid, fc_expression_df, library_size, expression_dispersion_curve, num_trt_cells, num_cntrl_cells, side, cutoff) {
-    .Call(`_perturbplan_compute_expression_curve_cpp`, expr_output_grid, fc_expression_df, library_size, expression_dispersion_curve, num_trt_cells, num_cntrl_cells, side, cutoff)
-}
-
-#' Compute Monte Carlo Test Statistics for Random Effect Sizes
-#' 
-#' @description
-#' Computes Monte Carlo test statistics for random effect sizes across multiple
-#' expression samples using random effect sizes characterized by avg_fold_change 
-#' and avg_fold_change_sq instead of fixed fold changes.
-#' 
-#' @param fc_expression_df DataFrame containing Monte Carlo expression samples with columns:
-#'   \itemize{
-#'     \item \code{relative_expression}: Relative expression levels
-#'     \item \code{expression_size}: Size parameters for negative binomial distribution
-#'     \item \code{avg_fold_change}: Average fold change across perturbations
-#'     \item \code{avg_fold_change_sq}: Average of squared fold changes (second moment)
-#'   }
-#' @param library_size Numeric. Library size for scaling expression means
-#' @param num_trt_cells Numeric. Number of treatment cells
-#' @param num_cntrl_cells Numeric. Number of control cells
-#' 
-#' @return A list containing:
-#' \describe{
-#'   \item{means}{NumericVector. Asymptotic means of test statistics}
-#'   \item{sds}{NumericVector. Asymptotic standard deviations of test statistics}
-#' }
-#' 
-#' @details
-#' This function processes Monte Carlo samples where each sample has random effect sizes
-#' characterized by their first and second moments (avg_fold_change and avg_fold_change_sq).
-#' It calls compute_distribution_teststat_random_es_cpp for each sample to compute the
-#' asymptotic distribution of the test statistic, making it suitable for scenarios where
-#' perturbation effects vary across cells or conditions.
-#' 
-#' @export
-compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells) {
-    .Call(`_perturbplan_compute_monte_carlo_teststat_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells)
 }
 
