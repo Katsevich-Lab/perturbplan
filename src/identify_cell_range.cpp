@@ -27,8 +27,8 @@ double compute_single_power_cpp(
 //'
 //' @description
 //' Determines minimum and maximum cell counts for power analysis using binary search.
-//' Uses minimum reads per cell to find where power first reaches 1%, and maximum reads 
-//' per cell to find where power reaches 80%.
+//' Uses a cross-search strategy to guarantee logical ordering (min_cells <= max_cells):
+//' finds min_cells with best-case reads and max_cells with worst-case reads.
 //'
 //' @param min_reads_per_cell Numeric. Minimum reads per cell from library size range
 //' @param max_reads_per_cell Numeric. Maximum reads per cell from library size range
@@ -51,14 +51,14 @@ double compute_single_power_cpp(
 //' @return List with min_cells, max_cells, and achieved power values
 //'
 //' @details
-//' This function performs two binary searches:
+//' This function performs two binary searches using a cross-search strategy:
 //' \itemize{
-//'   \item Find minimum cells: Where power >= 1% using minimum reads per cell
-//'   \item Find maximum cells: Where power >= 80% using maximum reads per cell
+//'   \item Find minimum cells: Where power >= min_power_threshold using max_reads_per_cell (best-case)
+//'   \item Find maximum cells: Where power >= max_power_threshold using min_reads_per_cell (worst-case)
 //' }
 //' 
-//' The resulting cell range spans from barely useful (1% power) to highly powered 
-//' (80% power) experiments, providing guidance for experimental design.
+//' This cross-search strategy ensures min_cells <= max_cells and provides robust
+//' experimental design ranges from minimally acceptable to well-powered studies.
 //'
 //' @export
 // [[Rcpp::export]]
@@ -128,7 +128,8 @@ List identify_cell_range_cpp(
   
   //============================================================================
   // Step 1: Binary search for minimum treatment cells (power >= min_threshold)
-  // Use min_reads_per_cell to find where power first reaches min_power_threshold
+  // Use max_reads_per_cell to find where power first reaches min_power_threshold
+  // (Best-case sequencing: easier to achieve min power with high read depth)
   //============================================================================
   
   double lower_min_trt = cell_lower_bound;  // Treatment cells
@@ -140,7 +141,7 @@ List identify_cell_range_cpp(
   // Check if min_power_threshold is achievable within bounds
   double max_total_cells = trt_to_total_cells(cell_upper_bound);
   double power_at_max = compute_single_power_cpp(
-    max_total_cells, min_reads_per_cell, fc_expression_df,
+    max_total_cells, max_reads_per_cell, fc_expression_df,
     UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
     non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
   );
@@ -157,7 +158,7 @@ List identify_cell_range_cpp(
       double mid_total_cells = trt_to_total_cells(mid_trt_cells);
       
       double power = compute_single_power_cpp(
-        mid_total_cells, min_reads_per_cell, fc_expression_df,
+        mid_total_cells, max_reads_per_cell, fc_expression_df,
         UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
         non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
       );
@@ -173,7 +174,7 @@ List identify_cell_range_cpp(
     min_trt_cells = upper_min_trt;
     double min_total_cells = trt_to_total_cells(min_trt_cells);
     actual_min_power = compute_single_power_cpp(
-      min_total_cells, min_reads_per_cell, fc_expression_df,
+      min_total_cells, max_reads_per_cell, fc_expression_df,
       UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
       non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
     );
@@ -181,7 +182,8 @@ List identify_cell_range_cpp(
   
   //============================================================================
   // Step 2: Binary search for maximum treatment cells (power >= max_threshold)
-  // Use max_reads_per_cell to find where power reaches max_power_threshold
+  // Use min_reads_per_cell to find where power reaches max_power_threshold
+  // (Cross-search strategy: guarantees min_cells <= max_cells logical ordering)
   //============================================================================
   
   double lower_max_trt = cell_lower_bound;  // Treatment cells
@@ -192,7 +194,7 @@ List identify_cell_range_cpp(
   
   // Check if max_power_threshold is achievable within bounds (reuse max_total_cells)
   power_at_max = compute_single_power_cpp(
-    max_total_cells, max_reads_per_cell, fc_expression_df,
+    max_total_cells, min_reads_per_cell, fc_expression_df,
     UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
     non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
   );
@@ -209,7 +211,7 @@ List identify_cell_range_cpp(
       double mid_total_cells = trt_to_total_cells(mid_trt_cells);
       
       double power = compute_single_power_cpp(
-        mid_total_cells, max_reads_per_cell, fc_expression_df,
+        mid_total_cells, min_reads_per_cell, fc_expression_df,
         UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
         non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
       );
@@ -225,7 +227,7 @@ List identify_cell_range_cpp(
     max_trt_cells = upper_max_trt;
     double max_total_cells_final = trt_to_total_cells(max_trt_cells);
     actual_max_power = compute_single_power_cpp(
-      max_total_cells_final, max_reads_per_cell, fc_expression_df,
+      max_total_cells_final, min_reads_per_cell, fc_expression_df,
       UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
       non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
     );
@@ -283,6 +285,21 @@ List identify_cell_range_cpp(
   // Calculate final total cell ranges for return
   double min_total_cells_final = trt_to_total_cells(min_trt_cells);
   double max_total_cells_final = trt_to_total_cells(max_trt_cells);
+  
+  // Check for degenerate cases and provide user-friendly error messages
+  if (std::abs(min_total_cells_final - max_total_cells_final) < 1.0) {
+    stop("Power threshold gap too small: min_power_threshold (" + std::to_string(min_power_threshold) + 
+         ") and max_power_threshold (" + std::to_string(max_power_threshold) + 
+         ") result in the same optimal cell count (" + std::to_string(min_total_cells_final) + 
+         " cells). Please increase the gap between power thresholds for meaningful experimental design ranges.");
+  }
+  
+  if (std::abs(min_reads_per_cell - max_reads_per_cell) < 1.0) {
+    stop("Reads per cell range too narrow: min_reads_per_cell (" + std::to_string(min_reads_per_cell) + 
+         ") and max_reads_per_cell (" + std::to_string(max_reads_per_cell) + 
+         ") are essentially identical. This may indicate insufficient UMI_per_cell (" + std::to_string(UMI_per_cell) + 
+         ") or variation (" + std::to_string(variation) + ") parameters for meaningful sequencing depth ranges.");
+  }
   
   // Return comprehensive results
   return List::create(

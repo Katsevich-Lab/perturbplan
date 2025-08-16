@@ -77,8 +77,8 @@ compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_
 #'
 #' @description
 #' Determines minimum and maximum cell counts for power analysis using binary search.
-#' Uses minimum reads per cell to find where power first reaches 1%, and maximum reads 
-#' per cell to find where power reaches 80%.
+#' Uses a cross-search strategy to guarantee logical ordering (min_cells <= max_cells):
+#' finds min_cells with best-case reads and max_cells with worst-case reads.
 #'
 #' @param min_reads_per_cell Numeric. Minimum reads per cell from library size range
 #' @param max_reads_per_cell Numeric. Maximum reads per cell from library size range
@@ -101,14 +101,14 @@ compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_
 #' @return List with min_cells, max_cells, and achieved power values
 #'
 #' @details
-#' This function performs two binary searches:
+#' This function performs two binary searches using a cross-search strategy:
 #' \itemize{
-#'   \item Find minimum cells: Where power >= 1% using minimum reads per cell
-#'   \item Find maximum cells: Where power >= 80% using maximum reads per cell
+#'   \item Find minimum cells: Where power >= min_power_threshold using max_reads_per_cell (best-case)
+#'   \item Find maximum cells: Where power >= max_power_threshold using min_reads_per_cell (worst-case)
 #' }
 #' 
-#' The resulting cell range spans from barely useful (1% power) to highly powered 
-#' (80% power) experiments, providing guidance for experimental design.
+#' This cross-search strategy ensures min_cells <= max_cells and provides robust
+#' experimental design ranges from minimally acceptable to well-powered studies.
 #'
 #' @export
 identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI = 10.0, num_targets = 100L, gRNAs_per_target = 4L, non_targeting_gRNAs = 10L, control_group = "complement", multiple_testing_alpha = 0.05, side = "left", prop_non_null = 0.1, min_power_threshold = 0.01, max_power_threshold = 0.8, cell_lower_bound = 100.0, cell_upper_bound = 1e5) {
@@ -144,8 +144,9 @@ fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
 #' @description
 #' C++ implementation that determines the minimum and maximum reads per cell values 
 #' for power analysis grid generation using binary search on the S-M curve.
+#' Uses saturation-based thresholds (10% and 80%) instead of platform-specific minimums.
 #'
-#' @param experimental_platform String. Experimental platform identifier.
+#' @param experimental_platform String. Experimental platform identifier (kept for compatibility, not used).
 #' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
 #' @param variation Numeric. Variation parameter for S-M curve.
 #'
@@ -153,10 +154,9 @@ fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
 #'
 #' @details
 #' This C++ implementation uses efficient binary search to find the reads per cell
-#' that achieves approximately 80% UMI saturation. Platform-specific minimums:
-#' - "10x Chromium v3": 500 reads/cell
-#' - "Other": 1000 reads/cell
-#' - Default: 500 reads/cell
+#' range for power analysis. Uses saturation-based thresholds:
+#' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell)
+#' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 #'
 #' @seealso \code{\link{identify_library_size_range}} for R version
 #' @export
@@ -180,6 +180,46 @@ identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell,
 #' @export
 generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variation, grid_size = 10L) {
     .Call(`_perturbplan_generate_reads_grid_cpp`, experimental_platform, UMI_per_cell, variation, grid_size)
+}
+
+#' Identify optimal reads per cell range (streamlined version)
+#'
+#' @description
+#' Streamlined C++ implementation that determines the minimum and maximum reads per cell values 
+#' for power analysis grid generation using binary search on the S-M curve.
+#' Uses saturation-based thresholds (10% and 80%) with a clean API.
+#'
+#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
+#' @param variation Numeric. Variation parameter for S-M curve.
+#'
+#' @return List with min_reads_per_cell and max_reads_per_cell elements.
+#'
+#' @details
+#' This streamlined version removes the unused experimental_platform parameter.
+#' Uses efficient binary search to find the reads per cell range for power analysis:
+#' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell)
+#' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
+#'
+#' @export
+identify_reads_range_cpp <- function(UMI_per_cell, variation) {
+    .Call(`_perturbplan_identify_reads_range_cpp`, UMI_per_cell, variation)
+}
+
+#' Generate reads per cell grid (streamlined version)
+#'
+#' @description
+#' Streamlined convenience function that combines range identification with grid generation
+#' for power analysis heatmaps.
+#'
+#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
+#' @param variation Numeric. Variation parameter for S-M curve.
+#' @param grid_size Integer. Number of points in the grid (default: 10).
+#'
+#' @return NumericVector. Sequence of reads per cell values for grid.
+#'
+#' @export
+generate_reads_grid_streamlined_cpp <- function(UMI_per_cell, variation, grid_size = 10L) {
+    .Call(`_perturbplan_generate_reads_grid_streamlined_cpp`, UMI_per_cell, variation, grid_size)
 }
 
 #' Compute Monte Carlo test statistics for power analysis with random effect sizes

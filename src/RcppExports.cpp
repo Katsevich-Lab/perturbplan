@@ -201,6 +201,31 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// identify_reads_range_cpp
+List identify_reads_range_cpp(double UMI_per_cell, double variation);
+RcppExport SEXP _perturbplan_identify_reads_range_cpp(SEXP UMI_per_cellSEXP, SEXP variationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
+    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
+    rcpp_result_gen = Rcpp::wrap(identify_reads_range_cpp(UMI_per_cell, variation));
+    return rcpp_result_gen;
+END_RCPP
+}
+// generate_reads_grid_streamlined_cpp
+NumericVector generate_reads_grid_streamlined_cpp(double UMI_per_cell, double variation, int grid_size);
+RcppExport SEXP _perturbplan_generate_reads_grid_streamlined_cpp(SEXP UMI_per_cellSEXP, SEXP variationSEXP, SEXP grid_sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
+    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
+    Rcpp::traits::input_parameter< int >::type grid_size(grid_sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(generate_reads_grid_streamlined_cpp(UMI_per_cell, variation, grid_size));
+    return rcpp_result_gen;
+END_RCPP
+}
 // compute_monte_carlo_teststat_cpp
 List compute_monte_carlo_teststat_cpp(DataFrame fc_expression_df, double library_size, double num_trt_cells, double num_cntrl_cells);
 RcppExport SEXP _perturbplan_compute_monte_carlo_teststat_cpp(SEXP fc_expression_dfSEXP, SEXP library_sizeSEXP, SEXP num_trt_cellsSEXP, SEXP num_cntrl_cellsSEXP) {
@@ -286,6 +311,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_fit_read_UMI_curve_cpp", (DL_FUNC) &_perturbplan_fit_read_UMI_curve_cpp, 3},
     {"_perturbplan_identify_library_size_range_cpp", (DL_FUNC) &_perturbplan_identify_library_size_range_cpp, 3},
     {"_perturbplan_generate_reads_grid_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_cpp, 4},
+    {"_perturbplan_identify_reads_range_cpp", (DL_FUNC) &_perturbplan_identify_reads_range_cpp, 2},
+    {"_perturbplan_generate_reads_grid_streamlined_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_streamlined_cpp, 3},
     {"_perturbplan_compute_monte_carlo_teststat_cpp", (DL_FUNC) &_perturbplan_compute_monte_carlo_teststat_cpp, 4},
     {"_perturbplan_compute_power_plan_overall_cpp", (DL_FUNC) &_perturbplan_compute_power_plan_overall_cpp, 9},
     {"_perturbplan_compute_single_power_cpp", (DL_FUNC) &_perturbplan_compute_single_power_cpp, 13},
