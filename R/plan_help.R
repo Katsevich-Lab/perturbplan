@@ -1,5 +1,4 @@
-# Suppress R CMD check warnings for variables used in dplyr contexts
-utils::globalVariables(c("response_id"))
+# Variable bindings are handled in R/perturbplan.R
 
 #' Get pilot data from package data directory
 #'
@@ -913,7 +912,7 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
     }
   } else {
     # Load complete pilot data from data/ directory based on biological_system
-    pilot_data <- perturbplan:::get_pilot_data_from_package(biological_system)
+    pilot_data <- get_pilot_data_from_package(biological_system)
     # Try new key first, fall back to old key for backward compatibility
     baseline_expression_stats <- if (!is.null(pilot_data$baseline_expression_stats)) {
       pilot_data$baseline_expression_stats

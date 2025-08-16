@@ -1,6 +1,9 @@
 library(dplyr)
 library(testthat)
 
+# Load test data
+source("helper-compute_power_posthoc.R")
+
 # load simulation results
 file_path_cutoff <- system.file("extdata", "simulation_power_cutoff.rds", package = "perturbplan")
 file_path_BH <- system.file("extdata", "simulation_power_BH.rds", package = "perturbplan")
