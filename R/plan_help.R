@@ -824,3 +824,155 @@ identify_library_size_range <- function(experimental_platform, library_info) {
   return(identify_library_size_range_cpp(experimental_platform, UMI_per_cell, variation))
 }
 
+#' Extract baseline expression information without fold change augmentation
+#'
+#' @description
+#' This function extracts and processes baseline expression data for power analysis
+#' without adding fold change parameters. It handles pilot data loading, TPM filtering,
+#' and gene sampling. This is a modularized version of the first part of extract_fc_expression_info.
+#'
+#' @param biological_system Character. Biological system for baseline expression. Available options:
+#'   "K562", "A549", "THP-1", "T_CD8", "iPSC" (default: "K562").
+#' @param B Integer. Number of Monte Carlo samples to generate when gene_list is NULL (default: 200).
+#'   Ignored when gene_list is provided.
+#' @param gene_list Character vector. Optional list of Ensembl gene IDs to use for analysis.
+#'   If provided, expression parameters will be extracted for ALL specified genes (no sampling).
+#'   If NULL (default), B genes are randomly sampled from baseline data.
+#' @param tpm_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
+#'   levels below tpm_threshold/1e6 are filtered out before power calculation.
+#' @param custom_pilot_data List. Optional custom pilot data. If provided,
+#'   this data is used instead of the default biological_system data. Must contain
+#'   baseline_expression (with baseline_expression data frame and expression_dispersion_curve function)
+#'   and library_parameters (with UMI_per_cell and variation).
+#'
+#' @return A list with elements:
+#' \describe{
+#'   \item{expression_df}{Data frame with baseline expression parameters (response_id, relative_expression, expression_size)}
+#'   \item{expression_dispersion_curve}{Function relating expression mean to dispersion}
+#'   \item{pilot_data}{Complete pilot data object for further use}
+#'   \item{n_genes}{Integer number of genes in the processed dataset}
+#' }
+#'
+#' @details
+#' The function operates in two modes:
+#' \itemize{
+#'   \item \strong{Gene-specific mode} (gene_list provided): Uses ALL specified genes with importance sampling
+#'   \item \strong{Random sampling mode} (gene_list = NULL): Randomly samples B genes from baseline
+#' }
+#'
+#' Processing steps:
+#' \enumerate{
+#'   \item Load pilot data (custom or from package)
+#'   \item Apply TPM threshold filtering
+#'   \item Sample genes according to specified mode
+#'   \item Return baseline expression data ready for fold change augmentation
+#' }
+#'
+#' @export
+extract_expression_info <- function(biological_system = "K562", B = 200, gene_list = NULL, tpm_threshold = 10, custom_pilot_data = NULL) {
+
+  # set the random seed for reproducibility
+  set.seed(1)
+
+  ############## Load pilot data ################
+  # Use custom pilot data if provided, otherwise load from data/ directory
+  if (!is.null(custom_pilot_data)) {
+    pilot_data <- custom_pilot_data
+    baseline_expression_stats <- custom_pilot_data$baseline_expression
+  } else {
+    # Load complete pilot data from data/ directory based on biological_system
+    pilot_data <- perturbplan:::get_pilot_data_from_package(biological_system)
+    baseline_expression_stats <- pilot_data$baseline_expression
+  }
+  baseline_df <- baseline_expression_stats$baseline_expression
+
+  #################### apply TPM threshold filtering FIRST ###################
+  # Convert TPM threshold to relative expression scale (TPM / 1e6)
+  tpm_threshold_relative <- tpm_threshold / 1e6
+
+  # Filter the full baseline dataset by TPM threshold first
+  if ("relative_expression" %in% colnames(baseline_df)) {
+    pre_filter_n <- nrow(baseline_df)
+    filtered_baseline_df <- baseline_df |>
+      dplyr::filter(relative_expression >= tpm_threshold_relative)
+    post_filter_n <- nrow(filtered_baseline_df)
+
+    # Check if we have any genes left after filtering
+    if (post_filter_n == 0) {
+      stop("No genes remain after TPM threshold filtering. Consider lowering tpm_threshold.")
+    }
+
+    # Print filtering summary
+    cat("TPM filtering: Kept", post_filter_n, "out of", pre_filter_n, "genes (threshold:", tpm_threshold, "TPM)\n")
+  } else {
+    warning("No relative_expression column found for TPM filtering. Using unfiltered data.")
+    filtered_baseline_df <- baseline_df
+    post_filter_n <- nrow(filtered_baseline_df)
+  }
+
+  ################# sample B genes from filtered pool with importance weights ###################
+  # Always sample B genes, but use importance sampling when gene_list is provided
+  if (!is.null(gene_list)) {
+    # User provided specific genes - use importance sampling based on gene weights
+    if ("response_id" %in% colnames(filtered_baseline_df)) {
+
+      # Calculate gene weights from the original gene list
+      gene_weights <- table(gene_list)
+      unique_genes <- names(gene_weights)
+
+      # Filter baseline data for unique genes that passed TPM filtering
+      unique_genes_df <- filtered_baseline_df |>
+        dplyr::filter(response_id %in% unique_genes)
+
+      # Check if we found any matching genes in the filtered pool
+      if (nrow(unique_genes_df) == 0) {
+        stop("No matching genes found in TPM-filtered baseline expression data. Genes may be below TPM threshold or not in dataset.")
+      }
+
+      # Check which requested genes were not found
+      found_genes <- unique_genes_df$response_id
+      missing_genes <- setdiff(unique_genes, found_genes)
+      if (length(missing_genes) > 0) {
+        warning("Some requested genes were filtered out: ", paste(missing_genes, collapse = ", "))
+      }
+
+      # Use importance sampling: sample B genes based on weights from found genes
+      weights <- as.numeric(gene_weights[found_genes])
+
+      # Sample B genes with replacement according to importance weights
+      sampled_indices <- sample(seq_len(nrow(unique_genes_df)),
+                               size = B,
+                               prob = weights,
+                               replace = TRUE)
+
+      expression_df <- unique_genes_df[sampled_indices, ]
+      n_genes <- B
+      cat("Gene-specific mode with importance sampling: Using", length(found_genes), "unique genes, sampled", B, "times with weights\n")
+
+    } else {
+      stop("Baseline expression data does not contain response_id column. Cannot use specified gene list.")
+    }
+  } else {
+    # No specific genes provided - sample B genes uniformly from filtered pool with replacement
+    sampled_indices <- sample(seq_len(nrow(filtered_baseline_df)),
+                             size = B,
+                             replace = TRUE)
+    expression_df <- filtered_baseline_df[sampled_indices, ]
+    n_genes <- B
+    cat("Random mode with replacement: Sampled", B, "genes from", post_filter_n, "available genes\n")
+  }
+
+  ################## extract the expression-dispersion curve ###################
+  expression_dispersion_curve <- baseline_expression_stats$expression_dispersion_curve
+
+  # return the baseline expression data without fold change augmentation
+  result <- list(
+    expression_df = expression_df,
+    expression_dispersion_curve = expression_dispersion_curve,
+    pilot_data = pilot_data,
+    n_genes = n_genes
+  )
+
+  return(result)
+}
+
