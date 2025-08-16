@@ -35,11 +35,8 @@ create_minimal_baseline <- function() {
     pmax(0.01, 0.1 + 0.5 / sqrt(v))
   }
   
-  # Create the complete structure
-  custom_baseline <- list(
-    baseline_expression = baseline_df,
-    expression_dispersion_curve = dispersion_curve
-  )
+  # Create the simplified structure (new format)
+  custom_baseline <- baseline_df
   
   return(custom_baseline)
 }
@@ -57,11 +54,8 @@ create_from_existing <- function() {
   # Example: Increase expression levels by 20%
   # subset_baseline$relative_expression <- subset_baseline$relative_expression * 1.2
   
-  # Create modified baseline structure
-  custom_baseline <- list(
-    baseline_expression = subset_baseline,
-    expression_dispersion_curve = default_data$expression_dispersion_curve
-  )
+  # Create modified baseline structure (new simplified format)
+  custom_baseline <- subset_baseline
   
   return(custom_baseline)
 }

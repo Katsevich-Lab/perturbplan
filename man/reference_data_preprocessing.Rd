@@ -30,17 +30,14 @@ as obtained via \code{\link{obtain_qc_read_umi_table}}.}
 
 \item{D2_rough}{Numeric. Rough prior value for library variation parameter. Default: 0.3.}
 
-\item{h5_only}{Logical. If TRUE, skips baseline expression and dispersion estimation
-steps (only processes read_umi_table). Default: FALSE.}
+\item{h5_only}{Logical. If TRUE, skips baseline expression estimation
+step (only processes read_umi_table). Default: FALSE.}
 }
 \value{
 A list containing:
 \describe{
-\item{baseline_expression}{List with:
-\itemize{
-\item \code{baseline_expression}: Data frame with gene-level expression statistics.
-\item \code{expression_dispersion_curve}: Function mapping expression to dispersion.
-}}
+\item{baseline_expression}{Data frame with gene-level expression statistics including
+response_id, relative_expression, and expression_size columns.}
 \item{library_parameters}{List with:
 \itemize{
 \item \code{UMI_per_cell}: Estimated UMI/cell count.
@@ -57,14 +54,12 @@ compatible with built-in pilot examples.
 This function executes the core steps in the pilot data setup for PerturbPlan:
 \enumerate{
 \item Computes gene expression means and variances from response matrix.
-\item Fits a nonparametric dispersion curve.
 \item Extracts library-level statistics from HDF5 molecule info.
-\item Outputs a list structure matching internal pilot examples.
+\item Outputs a simplified list structure for power analysis.
 }
 }
 \seealso{
 \code{\link{obtain_expression_information}},
-\code{\link{obtain_expression_dispersion_curve}},
 \code{\link{obtain_qc_read_umi_table}},
 \code{\link{library_estimation}}
 }

@@ -243,15 +243,10 @@ The RDS file must contain a list with exactly two named elements:
 
 ```r
 combined_pilot_data <- list(
-  baseline_expression = list(
-    baseline_expression = data.frame(
-      response_id = c("ENSG00000141510", "ENSG00000157764", ...),    # Ensembl gene IDs
-      relative_expression = c(1.23e-05, 4.56e-06, ...),             # TPM/1e6 scale
-      expression_size = c(0.45, 1.23, ...)                          # Dispersion parameters
-    ),
-    expression_dispersion_curve = function(v) {                     # Dispersion function
-      pmax(0.01, 0.1 + 0.5 / sqrt(v))
-    }
+  baseline_expression = data.frame(
+    response_id = c("ENSG00000141510", "ENSG00000157764", ...),    # Ensembl gene IDs
+    relative_expression = c(1.23e-05, 4.56e-06, ...),             # TPM/1e6 scale
+    expression_size = c(0.45, 1.23, ...)                          # Dispersion parameters
   ),
   library_parameters = list(
     UMI_per_cell = 15000,    # Maximum UMI per cell parameter (positive numeric)
@@ -272,7 +267,6 @@ saveRDS(combined_pilot_data, "my_combined_pilot_data.rds")
   - **expression_size**: Numeric vector of positive dispersion parameters 
   - **No missing values** in any column
   - **Unique gene IDs** (duplicates will be removed, keeping first occurrence)
-- **expression_dispersion_curve**: Function that accepts a numeric vector and returns dispersion values of the same length
 
 **library_parameters component:**
 - **UMI_per_cell**: Maximum UMI per cell parameter from saturation curve fitting (typically 1000-50000)
@@ -302,13 +296,10 @@ saveRDS(combined_pilot_data, "my_combined_pilot_data.rds")
 #### Method 2: From Your Own Measurements
 ```r
 # Create your own baseline expression data
-my_baseline <- list(
-  baseline_expression = data.frame(
-    response_id = c("ENSG00000141510", "ENSG00000157764"),
-    relative_expression = c(1.23e-05, 4.56e-06),
-    expression_size = c(0.45, 1.23)
-  ),
-  expression_dispersion_curve = function(v) pmax(0.01, 0.1 + 0.5 / sqrt(v))
+my_baseline <- data.frame(
+  response_id = c("ENSG00000141510", "ENSG00000157764"),
+  relative_expression = c(1.23e-05, 4.56e-06),
+  expression_size = c(0.45, 1.23)
 )
 
 # Create your own library parameters

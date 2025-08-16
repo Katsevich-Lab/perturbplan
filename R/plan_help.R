@@ -11,7 +11,7 @@ utils::globalVariables(c("response_id"))
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{baseline_expression}{List with baseline_expression data frame and expression_dispersion_curve function}
+#'   \item{baseline_expression}{Data frame with gene expression data or list with baseline_expression data frame (legacy format)}
 #'   \item{library_parameters}{List with UMI_per_cell and variation parameters}
 #' }
 #'
@@ -68,7 +68,7 @@ get_pilot_data_from_package <- function(biological_system) {
 #'   levels below tpm_threshold/1e6 are filtered out before power calculation.
 #' @param custom_pilot_data List. Optional custom pilot data. If provided,
 #'   this data is used instead of the default biological_system data. Must contain
-#'   baseline_expression (with baseline_expression data frame and expression_dispersion_curve function)
+#'   baseline_expression (data frame with gene expression data)
 #'   and library_parameters (with UMI_per_cell and variation).
 #' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
 #'   Each target will have gRNAs_per_target individual gRNA effect sizes drawn from the
@@ -78,7 +78,8 @@ get_pilot_data_from_package <- function(biological_system) {
 #' @return A list with elements:
 #' \describe{
 #'   \item{fc_expression_df}{Data frame with avg_fold_change, avg_fold_change_sq, and expression parameters}
-#'   \item{expression_dispersion_curve}{Function relating expression mean to dispersion}
+#'   \item{minimum_fold_change}{Numeric. The input minimum fold change for reference}
+#'   \item{pilot_data}{List. Complete pilot data object for further use}
 #' }
 #'
 #' @details
@@ -114,7 +115,15 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
     pilot_data <- get_pilot_data_from_package(biological_system)
     baseline_expression_stats <- pilot_data$baseline_expression
   }
-  baseline_df <- baseline_expression_stats$baseline_expression
+  
+  # Handle both old nested structure and new simplified structure
+  if (is.data.frame(baseline_expression_stats)) {
+    # New simplified structure: baseline_expression is directly a data frame
+    baseline_df <- baseline_expression_stats
+  } else {
+    # Old nested structure: baseline_expression contains baseline_expression data frame
+    baseline_df <- baseline_expression_stats$baseline_expression
+  }
 
   #################### apply TPM threshold filtering FIRST ###################
   # Convert TPM threshold to relative expression scale (TPM / 1e6)
@@ -217,13 +226,9 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
   ) |>
     dplyr::bind_cols(expression_df)
 
-  ################## extract the expression-dispersion curve ###################
-  expression_dispersion_curve <- baseline_expression_stats$expression_dispersion_curve
-
   # return the data frame with complete pilot data access
   result <- list(
     fc_expression_df = fc_expression_df,
-    expression_dispersion_curve = expression_dispersion_curve,
     minimum_fold_change = minimum_fold_change,  # Include for adaptive grid generation
     pilot_data = pilot_data  # Always include pilot data (either built-in or custom)
   )
@@ -394,30 +399,34 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
   errors <- character(0)
   warnings <- character(0)
 
-  # Check if data is a list
-  if (!is.list(data)) {
-    if (is.data.frame(data)) {
-      errors <- c(errors, "Uploaded file contains a data frame, but should be a list. Please use the data frame as 'baseline_expression' element within a list structure.")
+  # Handle both data frame (new format) and list (old format) inputs
+  if (is.data.frame(data)) {
+    # New simplified format: direct data frame
+    baseline_df <- data
+  } else if (is.list(data)) {
+    # Check if it's old nested structure or new simplified structure
+    if ("baseline_expression" %in% names(data)) {
+      # Old nested structure - validate it has the baseline_expression data frame
+      if (!is.data.frame(data$baseline_expression)) {
+        errors <- c(errors, "baseline_expression must be a data frame")
+        return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
+      }
+      baseline_df <- data$baseline_expression
+      
+      # Warn about deprecated structure but don't fail
+      if ("expression_dispersion_curve" %in% names(data)) {
+        warnings <- c(warnings, "expression_dispersion_curve is deprecated and will be ignored")
+      }
     } else {
-      errors <- c(errors, paste("RDS data must be a list, but received:", class(data)[1], ". Please check the file structure."))
+      errors <- c(errors, "List must contain 'baseline_expression' element")
+      return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
     }
+  } else {
+    errors <- c(errors, paste("RDS data must be a data frame or list, but received:", class(data)[1]))
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
 
-  # Check required list elements exist
-  required_elements <- c("baseline_expression", "expression_dispersion_curve")
-  missing_elements <- setdiff(required_elements, names(data))
-  if (length(missing_elements) > 0) {
-    errors <- c(errors, paste("Missing required list elements:", paste(missing_elements, collapse = ", ")))
-  }
-
-  # If missing required elements, return early
-  if (length(errors) > 0) {
-    return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
-  }
-
-  # Validate baseline_expression data frame
-  baseline_df <- data$baseline_expression
+  # Now validate the baseline_df we extracted
   if (!is.data.frame(baseline_df)) {
     errors <- c(errors, "baseline_expression must be a data frame")
   } else {
@@ -471,20 +480,6 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
     }
   }
 
-  # Validate expression_dispersion_curve function
-  if (!is.function(data$expression_dispersion_curve)) {
-    errors <- c(errors, "expression_dispersion_curve must be a function")
-  } else {
-    # Test if the function works with a numeric input
-    tryCatch({
-      test_result <- data$expression_dispersion_curve(c(1, 10, 100))
-      if (!is.numeric(test_result) || length(test_result) != 3) {
-        errors <- c(errors, "expression_dispersion_curve must return numeric values of same length as input")
-      }
-    }, error = function(e) {
-      errors <- c(errors, paste("expression_dispersion_curve function error:", e$message))
-    })
-  }
 
   # Create summary statistics
   if (length(errors) == 0 && is.data.frame(baseline_df)) {
@@ -515,9 +510,22 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
 
   # Return validation results
   valid <- length(errors) == 0
+  
+  # Prepare validated data in simplified format
+  validated_data <- NULL
+  if (valid) {
+    if (is.data.frame(data)) {
+      # Already in new format
+      validated_data <- data
+    } else {
+      # Convert from old format to new format
+      validated_data <- baseline_df
+    }
+  }
+  
   return(list(
     valid = valid,
-    data = if (valid) data else NULL,
+    data = validated_data,
     errors = errors,
     warnings = warnings,
     summary = summary_text
@@ -842,13 +850,12 @@ identify_library_size_range <- function(experimental_platform, library_info) {
 #'   levels below tpm_threshold/1e6 are filtered out before power calculation.
 #' @param custom_pilot_data List. Optional custom pilot data. If provided,
 #'   this data is used instead of the default biological_system data. Must contain
-#'   baseline_expression (with baseline_expression data frame and expression_dispersion_curve function)
+#'   baseline_expression (data frame with gene expression data)
 #'   and library_parameters (with UMI_per_cell and variation).
 #'
 #' @return A list with elements:
 #' \describe{
 #'   \item{expression_df}{Data frame with baseline expression parameters (response_id, relative_expression, expression_size)}
-#'   \item{expression_dispersion_curve}{Function relating expression mean to dispersion}
 #'   \item{pilot_data}{Complete pilot data object for further use}
 #'   \item{n_genes}{Integer number of genes in the processed dataset}
 #' }
@@ -884,7 +891,15 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
     pilot_data <- perturbplan:::get_pilot_data_from_package(biological_system)
     baseline_expression_stats <- pilot_data$baseline_expression
   }
-  baseline_df <- baseline_expression_stats$baseline_expression
+  
+  # Handle both old nested structure and new simplified structure
+  if (is.data.frame(baseline_expression_stats)) {
+    # New simplified structure: baseline_expression is directly a data frame
+    baseline_df <- baseline_expression_stats
+  } else {
+    # Old nested structure: baseline_expression contains baseline_expression data frame
+    baseline_df <- baseline_expression_stats$baseline_expression
+  }
 
   #################### apply TPM threshold filtering FIRST ###################
   # Convert TPM threshold to relative expression scale (TPM / 1e6)
@@ -962,13 +977,9 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
     cat("Random mode with replacement: Sampled", B, "genes from", post_filter_n, "available genes\n")
   }
 
-  ################## extract the expression-dispersion curve ###################
-  expression_dispersion_curve <- baseline_expression_stats$expression_dispersion_curve
-
   # return the baseline expression data without fold change augmentation
   result <- list(
     expression_df = expression_df,
-    expression_dispersion_curve = expression_dispersion_curve,
     pilot_data = pilot_data,
     n_genes = n_genes
   )

@@ -28,14 +28,13 @@ levels below tpm_threshold/1e6 are filtered out before power calculation.}
 
 \item{custom_pilot_data}{List. Optional custom pilot data. If provided,
 this data is used instead of the default biological_system data. Must contain
-baseline_expression (with baseline_expression data frame and expression_dispersion_curve function)
+baseline_expression (data frame with gene expression data)
 and library_parameters (with UMI_per_cell and variation).}
 }
 \value{
 A list with elements:
 \describe{
 \item{expression_df}{Data frame with baseline expression parameters (response_id, relative_expression, expression_size)}
-\item{expression_dispersion_curve}{Function relating expression mean to dispersion}
 \item{pilot_data}{Complete pilot data object for further use}
 \item{n_genes}{Integer number of genes in the processed dataset}
 }

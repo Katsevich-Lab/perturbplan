@@ -112,16 +112,13 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #' @param downsample_ratio Numeric. Proportion of downsampling used for library size estimation. Default: 0.7.
 #' @param TPM_thres Numeric. Threshold for filtering low-expression genes during preprocessing.
 #' @param D2_rough Numeric. Rough prior value for library variation parameter. Default: 0.3.
-#' @param h5_only Logical. If TRUE, skips baseline expression and dispersion estimation
-#'   steps (only processes read_umi_table). Default: FALSE.
+#' @param h5_only Logical. If TRUE, skips baseline expression estimation
+#'   step (only processes read_umi_table). Default: FALSE.
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{baseline_expression}{List with:
-#'     \itemize{
-#'       \item \code{baseline_expression}: Data frame with gene-level expression statistics.
-#'       \item \code{expression_dispersion_curve}: Function mapping expression to dispersion.
-#'     }}
+#'   \item{baseline_expression}{Data frame with gene-level expression statistics including
+#'     response_id, relative_expression, and expression_size columns.}
 #'   \item{library_parameters}{List with:
 #'     \itemize{
 #'       \item \code{UMI_per_cell}: Estimated UMI/cell count.
@@ -133,14 +130,12 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #' This function executes the core steps in the pilot data setup for PerturbPlan:
 #' \enumerate{
 #'   \item Computes gene expression means and variances from response matrix.
-#'   \item Fits a nonparametric dispersion curve.
 #'   \item Extracts library-level statistics from HDF5 molecule info.
-#'   \item Outputs a list structure matching internal pilot examples.
+#'   \item Outputs a simplified list structure for power analysis.
 #' }
 #'
 #' @seealso
 #' \code{\link{obtain_expression_information}},
-#' \code{\link{obtain_expression_dispersion_curve}},
 #' \code{\link{obtain_qc_read_umi_table}},
 #' \code{\link{library_estimation}}
 #'
@@ -162,28 +157,21 @@ reference_data_preprocessing <- function(response_matrix = NULL,
     TPM_thres = TPM_thres,  # No filtering during preprocessing
     n_threads = n_threads
   )
-
-  message("Step 2: Computing expression-dispersion curve...")
-  expression_dispersion_curve <- obtain_expression_dispersion_curve(baseline_expression_df)
   } else {
-    message("Skipping Step 1 and Step 2 as h5_only is TRUE")
+    message("Skipping Step 1 as h5_only is TRUE")
     baseline_expression_df <- NULL
-    expression_dispersion_curve <- NULL
   }
 
-  message("Step 3: Estimating library parameters...")
+  message("Step 2: Estimating library parameters...")
   library_params <- library_estimation(
     QC_data = read_umi_table,
     downsample_ratio = downsample_ratio,
     D2_rough = D2_rough
   )
 
-  # Construct the final output structure to match pilot_example.rds format
+  # Construct the final output structure with simplified baseline expression
   result <- list(
-    baseline_expression = list(
-      baseline_expression = baseline_expression_df,
-      expression_dispersion_curve = expression_dispersion_curve
-    ),
+    baseline_expression = baseline_expression_df,
     library_parameters = library_params  # Already has UMI_per_cell and variation
   )
 
