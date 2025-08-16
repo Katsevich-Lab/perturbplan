@@ -17,7 +17,7 @@ compute_power_plan_full_grid(
   multiple_testing_alpha = 0.05,
   prop_non_null = 0.1,
   baseline_expression_stats,
-  library_info,
+  library_parameters,
   grid_size = 10,
   min_power_threshold = 0.01,
   max_power_threshold = 0.8
@@ -48,7 +48,7 @@ compute_power_plan_full_grid(
 
 \item{baseline_expression_stats}{Data frame. Baseline expression statistics.}
 
-\item{library_info}{List. Library parameters with UMI_per_cell and variation.}
+\item{library_parameters}{List. Library parameters with UMI_per_cell and variation.}
 
 \item{grid_size}{Integer. Grid size for each dimension (default: 10).}
 

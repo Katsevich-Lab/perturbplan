@@ -14,13 +14,13 @@ if (!file.exists(baseline_rds_path)) {
 
 # Load the data directly
 baseline_expression_raw <- readRDS(baseline_rds_path)
-library_info_raw <- readRDS(library_rds_path)
+library_parameters_raw <- readRDS(library_rds_path)
 
 # Format baseline expression data (simplified structure)
 baseline_data <- baseline_expression_raw$baseline_expression
 
 # Format library data (same as extract_library_info)
-params <- library_info_raw$S_M_curve_params
+params <- library_parameters_raw$S_M_curve_params
 library_data <- list(
   UMI_per_cell = unname(as.numeric(params[["UMI_per_cell"]])),
   variation = unname(as.numeric(params[["variation"]]))
@@ -28,19 +28,19 @@ library_data <- list(
 
 # Combine into the expected structure with informative names
 combined_pilot_data <- list(
-  baseline_expression = baseline_data,
+  baseline_expression_stats = baseline_data,
   library_parameters = library_data
 )
 
 # Simple validation of structure
 if (is.list(combined_pilot_data) && 
-    "baseline_expression" %in% names(combined_pilot_data) &&
+    "baseline_expression_stats" %in% names(combined_pilot_data) &&
     "library_parameters" %in% names(combined_pilot_data)) {
   cat("✓ Combined pilot data structure looks correct\n")
   cat("Components:", paste(names(combined_pilot_data), collapse = ", "), "\n")
   
   # Show sample info
-  n_genes <- nrow(combined_pilot_data$baseline_expression)
+  n_genes <- nrow(combined_pilot_data$baseline_expression_stats)
   cat("Baseline expression: ", n_genes, " genes\n")
   cat("Library parameters: UMI_per_cell =", combined_pilot_data$library_parameters$UMI_per_cell, 
       ", variation =", combined_pilot_data$library_parameters$variation, "\n")
@@ -56,7 +56,7 @@ cat("Saved example combined pilot data to:", output_path, "\n")
 # Example of how users would create their own custom combined data:
 cat("\n# Example user code to create custom combined pilot data:\n")
 cat("combined_pilot_data <- list(\n")
-cat("  baseline_expression = data.frame(\n")
+cat("  baseline_expression_stats = data.frame(\n")
 cat("    response_id = c('ENSG00000141510', 'ENSG00000157764', ...),\n")
 cat("    relative_expression = c(1.23e-05, 4.56e-06, ...),  # TPM/1e6 scale\n")
 cat("    expression_size = c(0.45, 1.23, ...)              # Dispersion parameters\n")

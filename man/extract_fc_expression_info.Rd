@@ -35,7 +35,7 @@ levels below tpm_threshold/1e6 are filtered out before power calculation.}
 
 \item{custom_pilot_data}{List. Optional custom pilot data. If provided,
 this data is used instead of the default biological_system data. Must contain
-baseline_expression (data frame with gene expression data)
+baseline_expression_stats (data frame with gene expression data)
 and library_parameters (with UMI_per_cell and variation).}
 
 \item{gRNAs_per_target}{Integer. Number of gRNAs per target (default: 4).

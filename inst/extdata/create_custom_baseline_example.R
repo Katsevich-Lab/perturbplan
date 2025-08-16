@@ -44,11 +44,18 @@ create_minimal_baseline <- function() {
 # Method 2: Modify existing data (recommended)
 create_from_existing <- function() {
   # Load default baseline data
-  default_data <- extract_baseline_expression("K562")
+  default_data <- get_pilot_data_from_package("K562")
+  
+  # Extract baseline expression stats (handles both old and new key names)
+  baseline_stats <- if (!is.null(default_data$baseline_expression_stats)) {
+    default_data$baseline_expression_stats
+  } else {
+    default_data$baseline_expression$baseline_expression
+  }
   
   # Subset to specific genes of interest (example: first 1000 genes)
   subset_indices <- 1:1000
-  subset_baseline <- default_data$baseline_expression[subset_indices, ]
+  subset_baseline <- baseline_stats[subset_indices, ]
   
   # You can modify expression values if needed
   # Example: Increase expression levels by 20%

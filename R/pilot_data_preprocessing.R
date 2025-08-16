@@ -117,7 +117,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{baseline_expression}{Data frame with gene-level expression statistics including
+#'   \item{baseline_expression_stats}{Data frame with gene-level expression statistics including
 #'     response_id, relative_expression, and expression_size columns.}
 #'   \item{library_parameters}{List with:
 #'     \itemize{
@@ -171,7 +171,7 @@ reference_data_preprocessing <- function(response_matrix = NULL,
 
   # Construct the final output structure with simplified baseline expression
   result <- list(
-    baseline_expression = baseline_expression_df,
+    baseline_expression_stats = baseline_expression_df,
     library_parameters = library_params  # Already has UMI_per_cell and variation
   )
 

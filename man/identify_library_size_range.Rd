@@ -4,13 +4,13 @@
 \alias{identify_library_size_range}
 \title{Identify optimal reads per cell range for power analysis grid}
 \usage{
-identify_library_size_range(experimental_platform, library_info)
+identify_library_size_range(experimental_platform, library_parameters)
 }
 \arguments{
 \item{experimental_platform}{Character. Experimental platform identifier
 (e.g., "10x Chromium v3", "Other").}
 
-\item{library_info}{List. Library parameters containing
+\item{library_parameters}{List. Library parameters containing
 UMI_per_cell and variation parameters for S-M curve analysis.}
 }
 \value{

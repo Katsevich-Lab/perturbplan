@@ -12,7 +12,7 @@ get_pilot_data_from_package(biological_system)
 \value{
 A list containing:
 \describe{
-\item{baseline_expression}{Data frame with gene expression data or list with baseline_expression data frame (legacy format)}
+\item{baseline_expression_stats}{Data frame with gene expression data or list with baseline_expression_stats data frame}
 \item{library_parameters}{List with UMI_per_cell and variation parameters}
 }
 }

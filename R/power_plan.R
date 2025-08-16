@@ -57,7 +57,7 @@ compute_power_plan_overall <- function(
 #' with experimental design combinations and their corresponding power values.
 #'
 #' @param fc_expression_df Data frame with fold change and expression information.
-#' @param library_info List containing UMI_per_cell and variation parameters.
+#' @param library_parameters List containing UMI_per_cell and variation parameters.
 #' @param grid_size Integer. Number of points in each dimension of the grid (default: 10).
 #' @param min_power_threshold Numeric. Minimum power threshold for cell range determination (default: 0.01).
 #' @param max_power_threshold Numeric. Maximum power threshold for cell range determination (default: 0.8).
@@ -92,7 +92,7 @@ compute_power_plan_overall <- function(
 #' @export
 compute_power_plan_per_grid <- function(
   fc_expression_df,
-  library_info,
+  library_parameters,
   grid_size = 10,
   min_power_threshold = 0.01,
   max_power_threshold = 0.8,
@@ -107,8 +107,8 @@ compute_power_plan_per_grid <- function(
 ) {
 
   # Extract needed data
-  UMI_per_cell <- library_info$UMI_per_cell
-  variation <- library_info$variation
+  UMI_per_cell <- library_parameters$UMI_per_cell
+  variation <- library_parameters$variation
 
   # Step 1: Determine reads per cell range using library size curves
   reads_range <- identify_reads_range_cpp(
@@ -220,7 +220,7 @@ compute_power_plan_per_grid <- function(
 #' @param multiple_testing_alpha Numeric. FDR level (default: 0.05).
 #' @param prop_non_null Numeric. Proportion of non-null hypotheses (default: 0.1).
 #' @param baseline_expression_stats Data frame. Baseline expression statistics.
-#' @param library_info List. Library parameters with UMI_per_cell and variation.
+#' @param library_parameters List. Library parameters with UMI_per_cell and variation.
 #' @param grid_size Integer. Grid size for each dimension (default: 10).
 #' @param min_power_threshold Numeric. Minimum power threshold (default: 0.01).
 #' @param max_power_threshold Numeric. Maximum power threshold (default: 0.8).
@@ -245,7 +245,7 @@ compute_power_plan_full_grid <- function(
     # analysis parameters
     control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,
     # data inputs
-    baseline_expression_stats, library_info,
+    baseline_expression_stats, library_parameters,
     # grid parameters
     grid_size = 10, min_power_threshold = 0.01, max_power_threshold = 0.8
 ){
@@ -302,7 +302,7 @@ compute_power_plan_full_grid <- function(
       power_grid = list(
         compute_power_plan_per_grid(
           fc_expression_df = fc_expression_df,
-          library_info = library_info,
+          library_parameters = library_parameters,
           grid_size = grid_size,
           min_power_threshold = min_power_threshold,
           max_power_threshold = max_power_threshold,

@@ -36,7 +36,7 @@ step (only processes read_umi_table). Default: FALSE.}
 \value{
 A list containing:
 \describe{
-\item{baseline_expression}{Data frame with gene-level expression statistics including
+\item{baseline_expression_stats}{Data frame with gene-level expression statistics including
 response_id, relative_expression, and expression_size columns.}
 \item{library_parameters}{List with:
 \itemize{

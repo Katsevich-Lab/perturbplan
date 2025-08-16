@@ -243,7 +243,7 @@ The RDS file must contain a list with exactly two named elements:
 
 ```r
 combined_pilot_data <- list(
-  baseline_expression = data.frame(
+  baseline_expression_stats = data.frame(
     response_id = c("ENSG00000141510", "ENSG00000157764", ...),    # Ensembl gene IDs
     relative_expression = c(1.23e-05, 4.56e-06, ...),             # TPM/1e6 scale
     expression_size = c(0.45, 1.23, ...)                          # Dispersion parameters
@@ -260,8 +260,8 @@ saveRDS(combined_pilot_data, "my_combined_pilot_data.rds")
 
 ### Data Requirements
 
-**baseline_expression component:**
-- **baseline_expression**: Data frame with required columns:
+**baseline_expression_stats component:**
+- **baseline_expression_stats**: Data frame with required columns:
   - **response_id**: Character vector of gene IDs (preferably Ensembl format: ENSGXXXXXXXXXXX)
   - **relative_expression**: Numeric vector of expression levels on TPM/1e6 scale (i.e., raw TPM divided by 1,000,000)
   - **expression_size**: Numeric vector of positive dispersion parameters 
@@ -280,12 +280,17 @@ saveRDS(combined_pilot_data, "my_combined_pilot_data.rds")
 ```r
 # Load the package and default data
 library(perturbplan)
-baseline_data <- extract_baseline_expression("K562")
-library_data <- extract_library_info("K562")
+pilot_data <- get_pilot_data_from_package("K562")
+baseline_data <- if (!is.null(pilot_data$baseline_expression_stats)) {
+  pilot_data$baseline_expression_stats
+} else {
+  pilot_data$baseline_expression$baseline_expression
+}
+library_data <- pilot_data$library_parameters
 
 # Combine into the expected structure
 combined_pilot_data <- list(
-  baseline_expression = baseline_data,
+  baseline_expression_stats = baseline_data,
   library_parameters = library_data
 )
 
@@ -310,7 +315,7 @@ my_library <- list(
 
 # Combine and save
 combined_pilot_data <- list(
-  baseline_expression = my_baseline,
+  baseline_expression_stats = my_baseline,
   library_parameters = my_library
 )
 

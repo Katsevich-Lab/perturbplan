@@ -11,7 +11,7 @@ utils::globalVariables(c("response_id"))
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{baseline_expression}{Data frame with gene expression data or list with baseline_expression data frame (legacy format)}
+#'   \item{baseline_expression_stats}{Data frame with gene expression data or list with baseline_expression_stats data frame}
 #'   \item{library_parameters}{List with UMI_per_cell and variation parameters}
 #' }
 #'
@@ -68,7 +68,7 @@ get_pilot_data_from_package <- function(biological_system) {
 #'   levels below tpm_threshold/1e6 are filtered out before power calculation.
 #' @param custom_pilot_data List. Optional custom pilot data. If provided,
 #'   this data is used instead of the default biological_system data. Must contain
-#'   baseline_expression (data frame with gene expression data)
+#'   baseline_expression_stats (data frame with gene expression data)
 #'   and library_parameters (with UMI_per_cell and variation).
 #' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
 #'   Each target will have gRNAs_per_target individual gRNA effect sizes drawn from the
@@ -109,16 +109,26 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
   # Use custom pilot data if provided, otherwise load from data/ directory
   if (!is.null(custom_pilot_data)) {
     pilot_data <- custom_pilot_data
-    baseline_expression_stats <- custom_pilot_data$baseline_expression
+    # Try new key first, fall back to old key for backward compatibility
+    baseline_expression_stats <- if (!is.null(custom_pilot_data$baseline_expression_stats)) {
+      custom_pilot_data$baseline_expression_stats
+    } else {
+      custom_pilot_data$baseline_expression
+    }
   } else {
     # Load complete pilot data from data/ directory based on biological_system
     pilot_data <- get_pilot_data_from_package(biological_system)
-    baseline_expression_stats <- pilot_data$baseline_expression
+    # Try new key first, fall back to old key for backward compatibility
+    baseline_expression_stats <- if (!is.null(pilot_data$baseline_expression_stats)) {
+      pilot_data$baseline_expression_stats
+    } else {
+      pilot_data$baseline_expression
+    }
   }
   
   # Handle both old nested structure and new simplified structure
   if (is.data.frame(baseline_expression_stats)) {
-    # New simplified structure: baseline_expression is directly a data frame
+    # New simplified structure: baseline_expression_stats is directly a data frame
     baseline_df <- baseline_expression_stats
   } else {
     # Old nested structure: baseline_expression contains baseline_expression data frame
@@ -404,8 +414,15 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
     # New simplified format: direct data frame
     baseline_df <- data
   } else if (is.list(data)) {
-    # Check if it's old nested structure or new simplified structure
-    if ("baseline_expression" %in% names(data)) {
+    # Check if it's new structure (baseline_expression_stats) or old structure (baseline_expression)
+    if ("baseline_expression_stats" %in% names(data)) {
+      # New structure - validate it has the baseline_expression_stats data frame
+      if (!is.data.frame(data$baseline_expression_stats)) {
+        errors <- c(errors, "baseline_expression_stats must be a data frame")
+        return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
+      }
+      baseline_df <- data$baseline_expression_stats
+    } else if ("baseline_expression" %in% names(data)) {
       # Old nested structure - validate it has the baseline_expression data frame
       if (!is.data.frame(data$baseline_expression)) {
         errors <- c(errors, "baseline_expression must be a data frame")
@@ -413,12 +430,15 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
       }
       baseline_df <- data$baseline_expression
       
+      # Warn about deprecated key name but don't fail
+      warnings <- c(warnings, "Key 'baseline_expression' is deprecated, use 'baseline_expression_stats' instead")
+      
       # Warn about deprecated structure but don't fail
       if ("expression_dispersion_curve" %in% names(data)) {
         warnings <- c(warnings, "expression_dispersion_curve is deprecated and will be ignored")
       }
     } else {
-      errors <- c(errors, "List must contain 'baseline_expression' element")
+      errors <- c(errors, "List must contain 'baseline_expression_stats' (preferred) or 'baseline_expression' element")
       return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
     }
   } else {
@@ -788,7 +808,7 @@ fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
 #'
 #' @param experimental_platform Character. Experimental platform identifier
 #'   (e.g., "10x Chromium v3", "Other").
-#' @param library_info List. Library parameters containing
+#' @param library_parameters List. Library parameters containing
 #'   UMI_per_cell and variation parameters for S-M curve analysis.
 #'
 #' @return List with elements:
@@ -817,16 +837,16 @@ fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
 #' \code{\link{get_pilot_data_from_package}} for obtaining library parameters
 #' \code{\link{identify_library_size_range_cpp}} for C++ implementation
 #' @export
-identify_library_size_range <- function(experimental_platform, library_info) {
+identify_library_size_range <- function(experimental_platform, library_parameters) {
 
-  # Input validation for library_info structure
-  if (!is.list(library_info) || !all(c("UMI_per_cell", "variation") %in% names(library_info))) {
-    stop("library_info must be a list with UMI_per_cell and variation elements")
+  # Input validation for library_parameters structure
+  if (!is.list(library_parameters) || !all(c("UMI_per_cell", "variation") %in% names(library_parameters))) {
+    stop("library_parameters must be a list with UMI_per_cell and variation elements")
   }
 
   # Extract parameters and call optimized C++ implementation
-  UMI_per_cell <- library_info$UMI_per_cell
-  variation <- library_info$variation
+  UMI_per_cell <- library_parameters$UMI_per_cell
+  variation <- library_parameters$variation
 
   # Wrapper around the C++ implementation
   return(identify_library_size_range_cpp(experimental_platform, UMI_per_cell, variation))
@@ -850,7 +870,7 @@ identify_library_size_range <- function(experimental_platform, library_info) {
 #'   levels below tpm_threshold/1e6 are filtered out before power calculation.
 #' @param custom_pilot_data List. Optional custom pilot data. If provided,
 #'   this data is used instead of the default biological_system data. Must contain
-#'   baseline_expression (data frame with gene expression data)
+#'   baseline_expression_stats (data frame with gene expression data)
 #'   and library_parameters (with UMI_per_cell and variation).
 #'
 #' @return A list with elements:
@@ -885,16 +905,26 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
   # Use custom pilot data if provided, otherwise load from data/ directory
   if (!is.null(custom_pilot_data)) {
     pilot_data <- custom_pilot_data
-    baseline_expression_stats <- custom_pilot_data$baseline_expression
+    # Try new key first, fall back to old key for backward compatibility
+    baseline_expression_stats <- if (!is.null(custom_pilot_data$baseline_expression_stats)) {
+      custom_pilot_data$baseline_expression_stats
+    } else {
+      custom_pilot_data$baseline_expression
+    }
   } else {
     # Load complete pilot data from data/ directory based on biological_system
     pilot_data <- perturbplan:::get_pilot_data_from_package(biological_system)
-    baseline_expression_stats <- pilot_data$baseline_expression
+    # Try new key first, fall back to old key for backward compatibility
+    baseline_expression_stats <- if (!is.null(pilot_data$baseline_expression_stats)) {
+      pilot_data$baseline_expression_stats
+    } else {
+      pilot_data$baseline_expression
+    }
   }
   
   # Handle both old nested structure and new simplified structure
   if (is.data.frame(baseline_expression_stats)) {
-    # New simplified structure: baseline_expression is directly a data frame
+    # New simplified structure: baseline_expression_stats is directly a data frame
     baseline_df <- baseline_expression_stats
   } else {
     # Old nested structure: baseline_expression contains baseline_expression data frame

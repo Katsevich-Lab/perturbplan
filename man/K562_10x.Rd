@@ -7,10 +7,11 @@
 \format{
 A list with 2 elements:
 \describe{
-\item{baseline_expression}{List containing:
+\item{baseline_expression_stats}{Data frame with gene expression data:
 \itemize{
-\item \code{baseline_expression}: Data frame with gene expression data
-\item \code{expression_dispersion_curve}: Function for predicting dispersion from expression level
+\item \code{response_id}: Character vector of Ensembl gene IDs
+\item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
+\item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 }
 }
 \item{library_parameters}{List containing:

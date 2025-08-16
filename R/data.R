@@ -8,15 +8,11 @@
 #'
 #' @format A list with 2 elements:
 #' \describe{
-#'   \item{baseline_expression}{List containing:
+#'   \item{baseline_expression_stats}{Data frame with gene expression data (14,179 genes × 3 columns):
 #'     \itemize{
-#'       \item \code{baseline_expression}: Data frame with gene expression data (14,179 genes × 3 columns):
-#'         \itemize{
-#'           \item \code{response_id}: Character vector of Ensembl gene IDs
-#'           \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
-#'           \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
-#'         }
-#'       \item \code{expression_dispersion_curve}: Function for predicting dispersion from expression level
+#'       \item \code{response_id}: Character vector of Ensembl gene IDs
+#'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
+#'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
 #'   \item{library_parameters}{List containing:
@@ -53,7 +49,7 @@
 #' str(A549_10x, max.level = 2)
 #' 
 #' # Access baseline expression data
-#' baseline <- A549_10x$baseline_expression$baseline_expression
+#' baseline <- A549_10x$baseline_expression_stats
 #' head(baseline)
 #' 
 #' # Access library parameters
@@ -78,10 +74,11 @@
 #'
 #' @format A list with 2 elements:
 #' \describe{
-#'   \item{baseline_expression}{List containing:
+#'   \item{baseline_expression_stats}{Data frame with gene expression data:
 #'     \itemize{
-#'       \item \code{baseline_expression}: Data frame with gene expression data
-#'       \item \code{expression_dispersion_curve}: Function for predicting dispersion from expression level
+#'       \item \code{response_id}: Character vector of Ensembl gene IDs
+#'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
+#'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
 #'   \item{library_parameters}{List containing:
@@ -126,10 +123,11 @@
 #'
 #' @format A list with 2 elements:
 #' \describe{
-#'   \item{baseline_expression}{List containing:
+#'   \item{baseline_expression_stats}{Data frame with gene expression data:
 #'     \itemize{
-#'       \item \code{baseline_expression}: Data frame with gene expression data
-#'       \item \code{expression_dispersion_curve}: Function for predicting dispersion from expression level
+#'       \item \code{response_id}: Character vector of Ensembl gene IDs
+#'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
+#'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
 #'   \item{library_parameters}{List containing:
@@ -173,10 +171,11 @@
 #'
 #' @format A list with 2 elements:
 #' \describe{
-#'   \item{baseline_expression}{List containing:
+#'   \item{baseline_expression_stats}{Data frame with gene expression data:
 #'     \itemize{
-#'       \item \code{baseline_expression}: Data frame with gene expression data
-#'       \item \code{expression_dispersion_curve}: Function for predicting dispersion from expression level
+#'       \item \code{response_id}: Character vector of Ensembl gene IDs
+#'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
+#'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
 #'   \item{library_parameters}{List containing:
@@ -221,10 +220,11 @@
 #'
 #' @format A list with 2 elements:
 #' \describe{
-#'   \item{baseline_expression}{List containing:
+#'   \item{baseline_expression_stats}{Data frame with gene expression data:
 #'     \itemize{
-#'       \item \code{baseline_expression}: Data frame with gene expression data
-#'       \item \code{expression_dispersion_curve}: Function for predicting dispersion from expression level
+#'       \item \code{response_id}: Character vector of Ensembl gene IDs
+#'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
+#'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
 #'   \item{library_parameters}{List containing:
@@ -268,10 +268,11 @@
 #'
 #' @format A list with 2 elements:
 #' \describe{
-#'   \item{baseline_expression}{List containing:
+#'   \item{baseline_expression_stats}{Data frame with gene expression data:
 #'     \itemize{
-#'       \item \code{baseline_expression}: Data frame with gene expression data
-#'       \item \code{expression_dispersion_curve}: Function for predicting dispersion from expression level
+#'       \item \code{response_id}: Character vector of Ensembl gene IDs
+#'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
+#'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
 #'   \item{library_parameters}{List containing:
@@ -294,7 +295,7 @@
 #' data(iPSC_neuron_10x)
 #' 
 #' # Examine baseline expression data
-#' baseline_expr <- iPSC_neuron_10x$baseline_expression$baseline_expression
+#' baseline_expr <- iPSC_neuron_10x$baseline_expression_stats
 #' print(head(baseline_expr))
 #' 
 #' # Check library parameters

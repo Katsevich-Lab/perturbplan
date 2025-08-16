@@ -6,7 +6,7 @@
 \usage{
 compute_power_plan_per_grid(
   fc_expression_df,
-  library_info,
+  library_parameters,
   grid_size = 10,
   min_power_threshold = 0.01,
   max_power_threshold = 0.8,
@@ -23,7 +23,7 @@ compute_power_plan_per_grid(
 \arguments{
 \item{fc_expression_df}{Data frame with fold change and expression information.}
 
-\item{library_info}{List containing UMI_per_cell and variation parameters.}
+\item{library_parameters}{List containing UMI_per_cell and variation parameters.}
 
 \item{grid_size}{Integer. Number of points in each dimension of the grid (default: 10).}
 
