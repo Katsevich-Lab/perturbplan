@@ -19,8 +19,6 @@ Imports:
     rhdf5,
     minpack.lm,
     Rcpp,
-    tibble,
-    dtplyr,
     data.table,
     methods,
     utils,

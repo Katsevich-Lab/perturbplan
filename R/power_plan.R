@@ -236,6 +236,7 @@ compute_power_plan_per_grid <- function(
 #'   \item Combining results into a flat dataframe for analysis
 #' }
 #'
+#' @importFrom stats quantile
 #' @export
 compute_power_plan_full_grid <- function(
     # power-determining parameters
