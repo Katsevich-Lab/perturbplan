@@ -712,24 +712,43 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
 
-  # Check required top-level elements
-  required_elements <- c("baseline_expression", "library_parameters")
-  missing_elements <- setdiff(required_elements, names(data))
-  if (length(missing_elements) > 0) {
-    errors <- c(errors, paste("Missing required list elements:", paste(missing_elements, collapse = ", ")))
-    errors <- c(errors, "Expected structure: list(baseline_expression = ..., library_parameters = ...)")
+  # Check for required elements - prefer new naming but support backward compatibility
+  has_new_baseline <- "baseline_expression_stats" %in% names(data)
+  has_old_baseline <- "baseline_expression" %in% names(data)
+  has_library <- "library_parameters" %in% names(data)
+
+  # Determine which baseline key to use
+  baseline_key <- NULL
+  if (has_new_baseline) {
+    baseline_key <- "baseline_expression_stats"
+  } else if (has_old_baseline) {
+    baseline_key <- "baseline_expression"
+    warnings <- c(warnings, "Using deprecated 'baseline_expression' key. Consider updating to 'baseline_expression_stats'")
+  }
+
+  # Check required elements
+  if (is.null(baseline_key)) {
+    errors <- c(errors, "Missing baseline expression data. Expected 'baseline_expression_stats' or 'baseline_expression'")
+  }
+  if (!has_library) {
+    errors <- c(errors, "Missing required 'library_parameters' element")
+  }
+
+  if (length(errors) > 0) {
+    errors <- c(errors, "Expected structure: list(baseline_expression_stats = data.frame(...), library_parameters = list(...))")
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
 
   # Check for unexpected top-level elements
-  unexpected_elements <- setdiff(names(data), required_elements)
+  expected_elements <- c("baseline_expression_stats", "baseline_expression", "library_parameters")
+  unexpected_elements <- setdiff(names(data), expected_elements)
   if (length(unexpected_elements) > 0) {
     warnings <- c(warnings, paste("Unexpected top-level elements will be ignored:", paste(unexpected_elements, collapse = ", ")))
   }
 
-  # Validate baseline_expression component
-  baseline_result <- validate_custom_baseline_rds(data$baseline_expression,
-                                                  paste0(file_path, " > baseline_expression"))
+  # Validate baseline expression component
+  baseline_result <- validate_custom_baseline_rds(data[[baseline_key]],
+                                                  paste0(file_path, " > ", baseline_key))
 
   # Validate library_parameters component
   library_result <- validate_custom_library_rds(data$library_parameters,
@@ -750,11 +769,11 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
   # Overall validation status
   valid <- length(all_errors) == 0
 
-  # Prepare validated data
+  # Prepare validated data - always use new naming in output
   validated_data <- NULL
   if (valid) {
     validated_data <- list(
-      baseline_expression = baseline_result$data,
+      baseline_expression_stats = baseline_result$data,
       library_parameters = library_result$data
     )
   }
