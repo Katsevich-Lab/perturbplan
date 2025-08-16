@@ -64,16 +64,16 @@ List with min_cells, max_cells, and achieved power values
 }
 \description{
 Determines minimum and maximum cell counts for power analysis using binary search.
-Uses minimum reads per cell to find where power first reaches 1\%, and maximum reads
-per cell to find where power reaches 80\%.
+Uses a cross-search strategy to guarantee logical ordering (min_cells <= max_cells):
+finds min_cells with best-case reads and max_cells with worst-case reads.
 }
 \details{
-This function performs two binary searches:
+This function performs two binary searches using a cross-search strategy:
 \itemize{
-\item Find minimum cells: Where power >= 1\% using minimum reads per cell
-\item Find maximum cells: Where power >= 80\% using maximum reads per cell
+\item Find minimum cells: Where power >= min_power_threshold using max_reads_per_cell (best-case)
+\item Find maximum cells: Where power >= max_power_threshold using min_reads_per_cell (worst-case)
 }
 
-The resulting cell range spans from barely useful (1\% power) to highly powered
-(80\% power) experiments, providing guidance for experimental design.
+This cross-search strategy ensures min_cells <= max_cells and provides robust
+experimental design ranges from minimally acceptable to well-powered studies.
 }

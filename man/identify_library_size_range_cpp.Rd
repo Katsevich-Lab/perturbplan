@@ -7,7 +7,7 @@
 identify_library_size_range_cpp(experimental_platform, UMI_per_cell, variation)
 }
 \arguments{
-\item{experimental_platform}{String. Experimental platform identifier.}
+\item{experimental_platform}{String. Experimental platform identifier (kept for compatibility, not used).}
 
 \item{UMI_per_cell}{Numeric. Maximum UMI per cell parameter.}
 
@@ -19,14 +19,14 @@ List with min_reads_per_cell and max_reads_per_cell elements.
 \description{
 C++ implementation that determines the minimum and maximum reads per cell values
 for power analysis grid generation using binary search on the S-M curve.
+Uses saturation-based thresholds (10\% and 80\%) instead of platform-specific minimums.
 }
 \details{
 This C++ implementation uses efficient binary search to find the reads per cell
-that achieves approximately 80\% UMI saturation. Platform-specific minimums:
+range for power analysis. Uses saturation-based thresholds:
 \itemize{
-\item "10x Chromium v3": 500 reads/cell
-\item "Other": 1000 reads/cell
-\item Default: 500 reads/cell
+\item Minimum reads: 10\% UMI saturation (dynamic based on UMI_per_cell)
+\item Maximum reads: 80\% UMI saturation (diminishing returns beyond this point)
 }
 }
 \seealso{

@@ -43,6 +43,7 @@
 #'   \item Return baseline expression data ready for fold change augmentation
 #' }
 #'
+#' @export
 extract_expression_info <- function(biological_system = "K562", B = 200, gene_list = NULL, tpm_threshold = 10, custom_pilot_data = NULL) {
 
   # set the random seed for reproducibility
@@ -189,6 +190,7 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
 #'   \item Returning a clean dataframe ready for analysis
 #' }
 #'
+#' @export
 compute_power_plan_per_grid <- function(
   fc_expression_df,
   library_info,
@@ -307,6 +309,7 @@ compute_power_plan_per_grid <- function(
 #' This function integrates compute_power_plan_per_grid() to create a comprehensive
 #' power analysis across multiple parameter combinations (TPM thresholds, fold changes).
 #'
+#' @export
 compute_power_plan_full_grid <- function(
     # power-determining parameters
     tpm_threshold, minimum_fold_change,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/power_plan.R
 \name{compute_power_plan_overall}
 \alias{compute_power_plan_overall}
-\title{Compute overall power for power analysis (lightweight computation)}
+\title{Compute overall power for power analysis (core utility function)}
 \usage{
 compute_power_plan_overall(
   num_trt_cells,
@@ -17,21 +17,21 @@ compute_power_plan_overall(
 )
 }
 \arguments{
-\item{num_trt_cells}{Number of treatment cells (pre-computed)}
+\item{num_trt_cells}{Number of treatment cells}
 
-\item{num_cntrl_cells}{Number of control cells (pre-computed)}
+\item{num_cntrl_cells}{Number of control cells}
 
-\item{library_size}{Library size (reads per cell)}
+\item{library_size}{Library size (effective UMIs per cell)}
 
-\item{multiple_testing_alpha}{Alpha level for multiple testing}
+\item{multiple_testing_alpha}{Alpha level for multiple testing (default: 0.05)}
 
-\item{multiple_testing_method}{Multiple testing method}
+\item{multiple_testing_method}{Multiple testing method (default: "BH")}
 
-\item{side}{Test sidedness}
+\item{side}{Test sidedness ("left", "right", "both", default: "left")}
 
 \item{fc_expression_df}{Data frame with fold change and expression info}
 
-\item{prop_non_null}{Proportion of non-null hypotheses}
+\item{prop_non_null}{Proportion of non-null hypotheses (default: 0.1)}
 
 \item{return_full_results}{If TRUE, return list with all intermediate results; if FALSE, return only overall power}
 }
@@ -39,7 +39,16 @@ compute_power_plan_overall(
 Overall power value (scalar) or list with full results depending on return_full_results
 }
 \description{
-This function computes overall power and BH cutoff without expensive curve calculations.
-Used for heatmap generation and as a base for detailed curve computation.
-Treatment and control cell counts should be pre-computed.
+This function computes overall power and BH cutoff for a single experimental design.
+This is a core utility function used by grid-based power analysis functions.
+}
+\details{
+This function serves as the core power calculation utility that:
+\itemize{
+\item Computes test statistic distributions for each gene
+\item Applies Benjamini-Hochberg multiple testing correction
+\item Calculates overall statistical power
+}
+
+The function delegates to the optimized C++ implementation for performance.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{compute_monte_carlo_teststat_cpp}
 \alias{compute_monte_carlo_teststat_cpp}
-\title{Compute Monte Carlo Test Statistics for Random Effect Sizes}
+\title{Compute Monte Carlo test statistics for power analysis with random effect sizes}
 \usage{
 compute_monte_carlo_teststat_cpp(
   fc_expression_df,
@@ -12,36 +12,17 @@ compute_monte_carlo_teststat_cpp(
 )
 }
 \arguments{
-\item{fc_expression_df}{DataFrame containing Monte Carlo expression samples with columns:
-\itemize{
-\item \code{relative_expression}: Relative expression levels
-\item \code{expression_size}: Size parameters for negative binomial distribution
-\item \code{avg_fold_change}: Average fold change across perturbations
-\item \code{avg_fold_change_sq}: Average of squared fold changes (second moment)
-}}
+\item{fc_expression_df}{Data frame with fold change and expression information}
 
-\item{library_size}{Numeric. Library size for scaling expression means}
+\item{library_size}{Library size parameter}
 
-\item{num_trt_cells}{Numeric. Number of treatment cells}
+\item{num_trt_cells}{Number of treatment cells}
 
-\item{num_cntrl_cells}{Numeric. Number of control cells}
+\item{num_cntrl_cells}{Number of control cells}
 }
 \value{
-A list containing:
-\describe{
-\item{means}{NumericVector. Asymptotic means of test statistics}
-\item{sds}{NumericVector. Asymptotic standard deviations of test statistics}
-}
+List with Monte Carlo mean and standard deviation vectors
 }
 \description{
-Computes Monte Carlo test statistics for random effect sizes across multiple
-expression samples using random effect sizes characterized by avg_fold_change
-and avg_fold_change_sq instead of fixed fold changes.
-}
-\details{
-This function processes Monte Carlo samples where each sample has random effect sizes
-characterized by their first and second moments (avg_fold_change and avg_fold_change_sq).
-It calls compute_distribution_teststat_random_es_cpp for each sample to compute the
-asymptotic distribution of the test statistic, making it suitable for scenarios where
-perturbation effects vary across cells or conditions.
+Compute Monte Carlo test statistics for power analysis with random effect sizes
 }
