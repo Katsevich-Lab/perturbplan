@@ -56,8 +56,8 @@ compute_power_plan_overall <- function(
 #' Simplified version of identify_cell_read_range that returns a clean dataframe
 #' with experimental design combinations and their corresponding power values.
 #'
-#' @param cells_per_target Numeric or character. Number of cells per target or "varying" for auto-generated grid.
-#' @param reads_per_cell Numeric or character. Reads per cell or "varying" for auto-generated grid.
+#' @param cells_per_target Numeric, numeric vector, or character. Number of cells per target, custom sequence, or "varying" for auto-generated grid.
+#' @param reads_per_cell Numeric, numeric vector, or character. Reads per cell, custom sequence, or "varying" for auto-generated grid.
 #' @param fc_expression_df Data frame with fold change and expression information.
 #' @param library_parameters List containing UMI_per_cell and variation parameters.
 #' @param grid_size Integer. Number of points in each dimension of the grid (default: 10).
@@ -90,14 +90,13 @@ compute_power_plan_overall <- function(
 #' @details
 #' This function simplifies the experimental design process by:
 #' \enumerate{
-#'   \item Determining parameter ranges based on "varying" vs fixed inputs:
-#'     - If cells_per_target = "varying": Uses identify_cell_range_cpp() to determine optimal cell range
-#'     - If reads_per_cell = "varying": Uses identify_reads_range_cpp() to determine optimal read range
-#'     - If parameters are numeric: Uses the specified fixed values
-#'   \item Creating logarithmically-spaced grids dynamically:
-#'     - Both varying: grid_size × grid_size combinations
-#'     - One varying: grid_size × 1 (or 1 × grid_size) combinations
-#'     - Both fixed: 1 × 1 single combination
+#'   \item Determining parameter sequences based on input type:
+#'     - Numeric value: Single fixed value (length = 1)
+#'     - Numeric vector: Custom sequence (length = vector length)
+#'     - "varying": Auto-generated sequence using optimal ranges (length = grid_size)
+#'   \item Creating dynamic grids based on sequence lengths:
+#'     - Grid size = length(cells_seq) × length(reads_seq)
+#'     - Examples: 1×1 (both fixed), 5×1 (custom cells, fixed reads), 10×10 (both varying)
 #'   \item Computing power for all parameter combinations
 #'   \item Returning a clean dataframe ready for analysis
 #' }
@@ -128,24 +127,36 @@ compute_power_plan_per_grid <- function(
   UMI_per_cell <- library_parameters$UMI_per_cell
   variation <- library_parameters$variation
 
-  # Step 1: Determine reads per cell range using library size curves
-  if(reads_per_cell == "varying"){
+  # Step 1: Determine reads per cell sequence
+  if (is.numeric(reads_per_cell)) {
+    # Both single value and custom sequence
+    reads_seq <- reads_per_cell
+  } else if (reads_per_cell == "varying") {
+    # Auto-generated sequence using library size curves
     reads_range <- identify_reads_range_cpp(
       UMI_per_cell = UMI_per_cell,
       variation = variation
     )
-  }else{
-    reads_range <- list(
-      min_reads_per_cell = reads_per_cell,
-      max_reads_per_cell = reads_per_cell
-    )
+    min_reads_per_cell <- reads_range$min_reads_per_cell
+    max_reads_per_cell <- reads_range$max_reads_per_cell
+    reads_seq <- exp(seq(log(min_reads_per_cell), log(max_reads_per_cell), length.out = grid_size))
   }
 
-  min_reads_per_cell <- reads_range$min_reads_per_cell
-  max_reads_per_cell <- reads_range$max_reads_per_cell
-
-  # Step 2: Determine cell count range based on power thresholds
-  if(cells_per_target == "varying"){
+  # Step 2: Determine cell sequence
+  if (is.numeric(cells_per_target)) {
+    # Both single value and custom sequence - convert to total cells
+    total_gRNAs <- num_targets * gRNAs_per_target + non_targeting_gRNAs
+    cells_seq <- (cells_per_target * total_gRNAs) / (gRNAs_per_target * MOI)
+  } else if (cells_per_target == "varying") {
+    # Auto-generated sequence using power thresholds
+    # Need reads range for cell range calculation
+    if (is.numeric(reads_per_cell)) {
+      min_reads_per_cell <- min(reads_per_cell)
+      max_reads_per_cell <- max(reads_per_cell)
+    } else {
+      # Already calculated above when reads_per_cell == "varying"
+    }
+    
     cell_range <- identify_cell_range_cpp(
       min_reads_per_cell = min_reads_per_cell,
       max_reads_per_cell = max_reads_per_cell,
@@ -163,41 +174,14 @@ compute_power_plan_per_grid <- function(
       min_power_threshold = min_power_threshold,
       max_power_threshold = max_power_threshold
     )
-  }else{
-    cell_range <- list(
-      min_cells = cells_per_target,
-      max_cells = cells_per_target
-    )
+    min_total_cells <- cell_range$min_cells
+    max_total_cells <- cell_range$max_cells
+    cells_seq <- exp(seq(log(min_total_cells), log(max_total_cells), length.out = grid_size))
   }
 
-  min_total_cells <- cell_range$min_cells
-  max_total_cells <- cell_range$max_cells
-
-  # Step 3: Create grids based on which parameters are varying
-  # Determine grid sizes based on parameter variation
-  cells_varying <- cells_per_target == "varying"
-  reads_varying <- reads_per_cell == "varying"
-  
-  cells_grid_size <- if (cells_varying) grid_size else 1
-  reads_grid_size <- if (reads_varying) grid_size else 1
-
-  # Create sequences based on parameter variation
-  if (cells_varying) {
-    # Logarithmic spacing for cells (total cells)
-    cells_seq <- exp(seq(log(min_total_cells), log(max_total_cells), length.out = cells_grid_size))
-  } else {
-    # Fixed cell count - convert cells_per_target to total cells
-    total_gRNAs <- num_targets * gRNAs_per_target + non_targeting_gRNAs
-    cells_seq <- (cells_per_target * total_gRNAs) / (gRNAs_per_target * MOI)
-  }
-
-  if (reads_varying) {
-    # Logarithmic spacing for reads per cell
-    reads_seq <- exp(seq(log(min_reads_per_cell), log(max_reads_per_cell), length.out = reads_grid_size))
-  } else {
-    # Fixed reads per cell
-    reads_seq <- reads_per_cell
-  }
+  # Step 3: Determine grid sizes based on sequence lengths
+  cells_grid_size <- length(cells_seq)
+  reads_grid_size <- length(reads_seq)
 
   # Step 4: Calculate treatment cell counts and control cell counts
   # Convert total cells to treatment cells using experimental design parameters
@@ -265,10 +249,10 @@ compute_power_plan_per_grid <- function(
 #' This function integrates compute_power_plan_per_grid() to create a comprehensive
 #' power analysis across multiple parameter combinations (TPM thresholds, fold changes).
 #'
-#' @param tpm_threshold Numeric or character. TPM threshold value or "varying" for auto-selection.
-#' @param minimum_fold_change Numeric or character. Minimum fold change value or "varying" for auto-selection.
-#' @param cells_per_target Numeric or character. Number of cells per target or "varying" for auto-generated grid.
-#' @param reads_per_cell Numeric or character. Reads per cell or "varying" for auto-generated grid.
+#' @param tpm_threshold Numeric, numeric vector, or character. TPM threshold value, custom sequence, or "varying" for auto-selection.
+#' @param minimum_fold_change Numeric, numeric vector, or character. Minimum fold change value, custom sequence, or "varying" for auto-selection.
+#' @param cells_per_target Numeric, numeric vector, or character. Number of cells per target, custom sequence, or "varying" for auto-generated grid.
+#' @param reads_per_cell Numeric, numeric vector, or character. Reads per cell, custom sequence, or "varying" for auto-generated grid.
 #' @param MOI Numeric. Multiplicity of infection (default: 10).
 #' @param num_targets Integer. Number of targets (default: 100).
 #' @param non_targeting_gRNAs Integer. Number of non-targeting gRNAs (default: 10).
@@ -316,22 +300,22 @@ compute_power_plan_full_grid <- function(
 ){
 
   ####################### construct the tpm_threshold ##########################
-  if(tpm_threshold == "varying"){
+  if (is.numeric(tpm_threshold)) {
+    tpm_threshold_list <- tpm_threshold  # Works for both single values and vectors
+  } else if (tpm_threshold == "varying") {
     tpm_threshold_list <- unname(round(quantile(baseline_expression_stats$relative_expression,
                                                 probs = seq(0.1, 0.9, length.out = 5)) * 1e6))
-  }else{
-    tpm_threshold_list <- tpm_threshold
   }
 
   ####################### construct the minimum_fold_change ####################
-  if(minimum_fold_change == "varying"){
+  if (is.numeric(minimum_fold_change)) {
+    minimum_fold_change_list <- minimum_fold_change  # Works for both single values and vectors
+  } else if (minimum_fold_change == "varying") {
     minimum_fold_change_list <- switch (side,
       both = {c(seq(0.5, 0.95, length.out = 5), seq(1.05, 1.5, length.out = 5))},
       left = {seq(0.5, 0.95, length.out = 10)},
       right = {seq(1.05, 1.5, length.out = 10)}
     )
-  }else{
-    minimum_fold_change_list <- minimum_fold_change
   }
 
   # construct parameter grid by expanding the grid

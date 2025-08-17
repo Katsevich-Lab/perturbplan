@@ -26,9 +26,9 @@ compute_power_plan_per_grid(
 )
 }
 \arguments{
-\item{cells_per_target}{Numeric or character. Number of cells per target or "varying" for auto-generated grid.}
+\item{cells_per_target}{Numeric, numeric vector, or character. Number of cells per target, custom sequence, or "varying" for auto-generated grid.}
 
-\item{reads_per_cell}{Numeric or character. Reads per cell or "varying" for auto-generated grid.}
+\item{reads_per_cell}{Numeric, numeric vector, or character. Reads per cell, custom sequence, or "varying" for auto-generated grid.}
 
 \item{fc_expression_df}{Data frame with fold change and expression information.}
 
@@ -82,14 +82,13 @@ with experimental design combinations and their corresponding power values.
 \details{
 This function simplifies the experimental design process by:
 \enumerate{
-\item Determining parameter ranges based on "varying" vs fixed inputs:
-- If cells_per_target = "varying": Uses identify_cell_range_cpp() to determine optimal cell range
-- If reads_per_cell = "varying": Uses identify_reads_range_cpp() to determine optimal read range
-- If parameters are numeric: Uses the specified fixed values
-\item Creating logarithmically-spaced grids dynamically:
-- Both varying: grid_size × grid_size combinations
-- One varying: grid_size × 1 (or 1 × grid_size) combinations
-- Both fixed: 1 × 1 single combination
+\item Determining parameter sequences based on input type:
+- Numeric value: Single fixed value (length = 1)
+- Numeric vector: Custom sequence (length = vector length)
+- "varying": Auto-generated sequence using optimal ranges (length = grid_size)
+\item Creating dynamic grids based on sequence lengths:
+- Grid size = length(cells_seq) × length(reads_seq)
+- Examples: 1×1 (both fixed), 5×1 (custom cells, fixed reads), 10×10 (both varying)
 \item Computing power for all parameter combinations
 \item Returning a clean dataframe ready for analysis
 }

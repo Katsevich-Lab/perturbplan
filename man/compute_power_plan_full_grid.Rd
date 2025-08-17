@@ -29,13 +29,13 @@ compute_power_plan_full_grid(
 )
 }
 \arguments{
-\item{tpm_threshold}{Numeric or character. TPM threshold value or "varying" for auto-selection.}
+\item{tpm_threshold}{Numeric, numeric vector, or character. TPM threshold value, custom sequence, or "varying" for auto-selection.}
 
-\item{minimum_fold_change}{Numeric or character. Minimum fold change value or "varying" for auto-selection.}
+\item{minimum_fold_change}{Numeric, numeric vector, or character. Minimum fold change value, custom sequence, or "varying" for auto-selection.}
 
-\item{cells_per_target}{Numeric or character. Number of cells per target or "varying" for auto-generated grid.}
+\item{cells_per_target}{Numeric, numeric vector, or character. Number of cells per target, custom sequence, or "varying" for auto-generated grid.}
 
-\item{reads_per_cell}{Numeric or character. Reads per cell or "varying" for auto-generated grid.}
+\item{reads_per_cell}{Numeric, numeric vector, or character. Reads per cell, custom sequence, or "varying" for auto-generated grid.}
 
 \item{MOI}{Numeric. Multiplicity of infection (default: 10).}
 
