@@ -14,9 +14,9 @@
 #' @param fc_expression_df Data frame with fold change and expression info
 #' @param prop_non_null Proportion of non-null hypotheses (default: 0.1)
 #' @param return_full_results If TRUE, return list with all intermediate results; if FALSE, return only overall power
-#' 
+#'
 #' @return Overall power value (scalar) or list with full results depending on return_full_results
-#' 
+#'
 #' @details
 #' This function serves as the core power calculation utility that:
 #' \itemize{
@@ -24,9 +24,9 @@
 #'   \item Applies Benjamini-Hochberg multiple testing correction
 #'   \item Calculates overall statistical power
 #' }
-#' 
+#'
 #' The function delegates to the optimized C++ implementation for performance.
-#' 
+#'
 #' @export
 compute_power_plan_overall <- function(
     # experimental information
@@ -69,14 +69,20 @@ compute_power_plan_overall <- function(
 #' @param multiple_testing_alpha Numeric. Alpha level for multiple testing (default: 0.05).
 #' @param side String. Test sidedness: "left", "right", or "both" (default: "left").
 #' @param prop_non_null Numeric. Proportion of non-null hypotheses (default: 0.1).
+#' @param mapping_efficiency Numeric. Mapping efficiency for raw reads to usable reads (default: 0.72).
+#' @param cell_recovery_rate Numeric. Rate of cell recovery from loading to capture (default: 0.5).
+#' @param QC_rate Numeric. Quality control rate from captured to usable cells (default: 1.0).
 #'
 #' @return Data frame with columns:
 #' \describe{
 #'   \item{cells_per_target}{Numeric. Number of treatment cells per target}
-#'   \item{num_total_cells}{Numeric. Total number of cells in the experiment}
 #'   \item{reads_per_cell}{Numeric. Sequencing reads per cell}
 #'   \item{library_size}{Numeric. Effective library size (UMIs)}
 #'   \item{overall_power}{Numeric. Statistical power for this experimental design}
+#'   \item{num_usable_cells}{Numeric. Number of usable cells after QC}
+#'   \item{num_captured_cells}{Numeric. Number of captured cells}
+#'   \item{num_loaded_cells}{Numeric. Number of loaded cells}
+#'   \item{raw_reads_per_cell}{Numeric. Raw reads per cell before mapping}
 #' }
 #'
 #' @details
@@ -103,7 +109,10 @@ compute_power_plan_per_grid <- function(
   control_group = "complement",
   multiple_testing_alpha = 0.05,
   side = "left",
-  prop_non_null = 0.1
+  prop_non_null = 0.1,
+  mapping_efficiency = 0.72,
+  cell_recovery_rate = 0.5,
+  QC_rate = 1
 ) {
 
   # Extract needed data
@@ -197,7 +206,13 @@ compute_power_plan_per_grid <- function(
       )
     ) |>
     dplyr::ungroup() |>
-    dplyr::select(cells_per_target, num_total_cells, reads_per_cell, library_size, overall_power)
+    dplyr::select(cells_per_target, num_total_cells,
+                  reads_per_cell, library_size, overall_power) |>
+    dplyr::mutate(num_usable_cells = num_total_cells,
+                  num_captured_cells = num_usable_cells / QC_rate,
+                  num_loaded_cells = num_captured_cells / cell_recovery_rate,
+                  raw_reads_per_cell = reads_per_cell / mapping_efficiency) |>
+    dplyr::select(-num_total_cells)
 
   return(design_grid)
 }

@@ -8,7 +8,8 @@ utils::globalVariables(c("expression_mean", "expression_size", "gRNA_target",
                          "num_total_cells", "reads_per_cell", "power_output",
                          "fold_change", "cells_idx", "reads_idx", "cells_per_target",
                          "fc_expression_df", "grna_effects", "library_size", 
-                         "overall_power", "power_grid"))
+                         "overall_power", "power_grid", "num_usable_cells", 
+                         "num_captured_cells", "num_loaded_cells", "raw_reads_per_cell"))
 
 .datatable.aware <- TRUE
 
