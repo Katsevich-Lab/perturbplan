@@ -45,8 +45,8 @@ double compute_single_power_cpp(
 //' @param prop_non_null Numeric. Proportion of non-null hypotheses (default 0.1)
 //' @param min_power_threshold Numeric. Minimum power threshold for min cells (default 0.01)
 //' @param max_power_threshold Numeric. Target power threshold for max cells (default 0.8)
-//' @param cell_lower_bound Numeric. Lower bound for treatment cell search (default 100)
-//' @param cell_upper_bound Numeric. Upper bound for treatment cell search (default 1e5)
+//' @param cell_lower_bound Numeric. Lower bound for total cell search (default 100)
+//' @param cell_upper_bound Numeric. Upper bound for total cell search (default 1e7)
 //'
 //' @return List with min_cells, max_cells, and achieved power values
 //'
@@ -79,7 +79,7 @@ List identify_cell_range_cpp(
   double min_power_threshold = 0.01,
   double max_power_threshold = 0.8,
   double cell_lower_bound = 100.0,
-  double cell_upper_bound = 1e5) {
+  double cell_upper_bound = 1e7) {
   
   // Input validation
   if (min_reads_per_cell <= 0) {

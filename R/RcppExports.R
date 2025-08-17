@@ -95,8 +95,8 @@ compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_
 #' @param prop_non_null Numeric. Proportion of non-null hypotheses (default 0.1)
 #' @param min_power_threshold Numeric. Minimum power threshold for min cells (default 0.01)
 #' @param max_power_threshold Numeric. Target power threshold for max cells (default 0.8)
-#' @param cell_lower_bound Numeric. Lower bound for treatment cell search (default 100)
-#' @param cell_upper_bound Numeric. Upper bound for treatment cell search (default 1e5)
+#' @param cell_lower_bound Numeric. Lower bound for total cell search (default 100)
+#' @param cell_upper_bound Numeric. Upper bound for total cell search (default 1e7)
 #'
 #' @return List with min_cells, max_cells, and achieved power values
 #'
@@ -111,7 +111,7 @@ compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_
 #' experimental design ranges from minimally acceptable to well-powered studies.
 #'
 #' @export
-identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI = 10.0, num_targets = 100L, gRNAs_per_target = 4L, non_targeting_gRNAs = 10L, control_group = "complement", multiple_testing_alpha = 0.05, side = "left", prop_non_null = 0.1, min_power_threshold = 0.01, max_power_threshold = 0.8, cell_lower_bound = 100.0, cell_upper_bound = 1e5) {
+identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI = 10.0, num_targets = 100L, gRNAs_per_target = 4L, non_targeting_gRNAs = 10L, control_group = "complement", multiple_testing_alpha = 0.05, side = "left", prop_non_null = 0.1, min_power_threshold = 0.01, max_power_threshold = 0.8, cell_lower_bound = 100.0, cell_upper_bound = 1e7) {
     .Call(`_perturbplan_identify_cell_range_cpp`, min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null, min_power_threshold, max_power_threshold, cell_lower_bound, cell_upper_bound)
 }
 

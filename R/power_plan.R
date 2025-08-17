@@ -97,6 +97,8 @@ compute_power_plan_overall <- function(
 #'
 #' @export
 compute_power_plan_per_grid <- function(
+  cells_per_target,
+  reads_per_cell,
   fc_expression_df,
   library_parameters,
   grid_size = 10,
@@ -239,6 +241,9 @@ compute_power_plan_per_grid <- function(
 #' @param grid_size Integer. Grid size for each dimension (default: 10).
 #' @param min_power_threshold Numeric. Minimum power threshold (default: 0.01).
 #' @param max_power_threshold Numeric. Maximum power threshold (default: 0.8).
+#' @param mapping_efficiency Numeric. Mapping efficiency for raw reads to usable reads (default: 0.72).
+#' @param cell_recovery_rate Numeric. Rate of cell recovery from loading to capture (default: 0.5).
+#' @param QC_rate Numeric. Quality control rate from captured to usable cells (default: 1.0).
 #'
 #' @return Data frame with comprehensive power analysis results across parameter combinations.
 #'
@@ -255,7 +260,7 @@ compute_power_plan_per_grid <- function(
 #' @export
 compute_power_plan_full_grid <- function(
     # power-determining parameters
-    tpm_threshold, minimum_fold_change,
+    tpm_threshold, minimum_fold_change, cells_per_target, reads_per_cell,
     # experimental parameters
     MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
     # analysis parameters
@@ -263,7 +268,9 @@ compute_power_plan_full_grid <- function(
     # data inputs
     baseline_expression_stats, library_parameters,
     # grid parameters
-    grid_size = 10, min_power_threshold = 0.01, max_power_threshold = 0.8
+    grid_size = 10, min_power_threshold = 0.01, max_power_threshold = 0.8,
+    # efficiency of library preparation and sequencing platform
+    mapping_efficiency = 0.72, cell_recovery_rate = 0.5, QC_rate = 1
 ){
 
   ####################### construct the tpm_threshold ##########################
@@ -329,7 +336,10 @@ compute_power_plan_full_grid <- function(
           control_group = control_group,
           multiple_testing_alpha = multiple_testing_alpha,
           side = side,
-          prop_non_null = prop_non_null
+          prop_non_null = prop_non_null,
+          mapping_efficiency = mapping_efficiency,
+          cell_recovery_rate = cell_recovery_rate,
+          QC_rate = QC_rate
         )
       )
     ) |>
@@ -340,7 +350,7 @@ compute_power_plan_full_grid <- function(
     dplyr::select(-fc_expression_df) |>  # Remove intermediate data
     tidyr::unnest(power_grid) |>
     dplyr::select(minimum_fold_change, tpm_threshold,
-                  cells_per_target, num_total_cells, reads_per_cell,
+                  cells_per_target, num_captured_cells, raw_reads_per_cell,
                   library_size, overall_power)
 
   return(result)
