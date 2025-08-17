@@ -56,6 +56,8 @@ compute_power_plan_overall <- function(
 #' Simplified version of identify_cell_read_range that returns a clean dataframe
 #' with experimental design combinations and their corresponding power values.
 #'
+#' @param cells_per_target Numeric or character. Number of cells per target or "varying" for auto-generated grid.
+#' @param reads_per_cell Numeric or character. Reads per cell or "varying" for auto-generated grid.
 #' @param fc_expression_df Data frame with fold change and expression information.
 #' @param library_parameters List containing UMI_per_cell and variation parameters.
 #' @param grid_size Integer. Number of points in each dimension of the grid (default: 10).
@@ -88,10 +90,15 @@ compute_power_plan_overall <- function(
 #' @details
 #' This function simplifies the experimental design process by:
 #' \enumerate{
-#'   \item Determining optimal reads per cell range using library size curves
-#'   \item Determining optimal cell count range based on power thresholds
-#'   \item Creating logarithmically-spaced grids for both dimensions
-#'   \item Computing power for all combinations
+#'   \item Determining parameter ranges based on "varying" vs fixed inputs:
+#'     - If cells_per_target = "varying": Uses identify_cell_range_cpp() to determine optimal cell range
+#'     - If reads_per_cell = "varying": Uses identify_reads_range_cpp() to determine optimal read range
+#'     - If parameters are numeric: Uses the specified fixed values
+#'   \item Creating logarithmically-spaced grids dynamically:
+#'     - Both varying: grid_size × grid_size combinations
+#'     - One varying: grid_size × 1 (or 1 × grid_size) combinations
+#'     - Both fixed: 1 × 1 single combination
+#'   \item Computing power for all parameter combinations
 #'   \item Returning a clean dataframe ready for analysis
 #' }
 #'
@@ -122,42 +129,75 @@ compute_power_plan_per_grid <- function(
   variation <- library_parameters$variation
 
   # Step 1: Determine reads per cell range using library size curves
-  reads_range <- identify_reads_range_cpp(
-    UMI_per_cell = UMI_per_cell,
-    variation = variation
-  )
+  if(reads_per_cell == "varying"){
+    reads_range <- identify_reads_range_cpp(
+      UMI_per_cell = UMI_per_cell,
+      variation = variation
+    )
+  }else{
+    reads_range <- list(
+      min_reads_per_cell = reads_per_cell,
+      max_reads_per_cell = reads_per_cell
+    )
+  }
 
   min_reads_per_cell <- reads_range$min_reads_per_cell
   max_reads_per_cell <- reads_range$max_reads_per_cell
 
   # Step 2: Determine cell count range based on power thresholds
-  cell_range <- identify_cell_range_cpp(
-    min_reads_per_cell = min_reads_per_cell,
-    max_reads_per_cell = max_reads_per_cell,
-    fc_expression_df = fc_expression_df,
-    UMI_per_cell = UMI_per_cell,
-    variation = variation,
-    MOI = MOI,
-    num_targets = num_targets,
-    gRNAs_per_target = gRNAs_per_target,
-    non_targeting_gRNAs = non_targeting_gRNAs,
-    control_group = control_group,
-    multiple_testing_alpha = multiple_testing_alpha,
-    side = side,
-    prop_non_null = prop_non_null,
-    min_power_threshold = min_power_threshold,
-    max_power_threshold = max_power_threshold
-  )
+  if(cells_per_target == "varying"){
+    cell_range <- identify_cell_range_cpp(
+      min_reads_per_cell = min_reads_per_cell,
+      max_reads_per_cell = max_reads_per_cell,
+      fc_expression_df = fc_expression_df,
+      UMI_per_cell = UMI_per_cell,
+      variation = variation,
+      MOI = MOI,
+      num_targets = num_targets,
+      gRNAs_per_target = gRNAs_per_target,
+      non_targeting_gRNAs = non_targeting_gRNAs,
+      control_group = control_group,
+      multiple_testing_alpha = multiple_testing_alpha,
+      side = side,
+      prop_non_null = prop_non_null,
+      min_power_threshold = min_power_threshold,
+      max_power_threshold = max_power_threshold
+    )
+  }else{
+    cell_range <- list(
+      min_cells = cells_per_target,
+      max_cells = cells_per_target
+    )
+  }
 
   min_total_cells <- cell_range$min_cells
   max_total_cells <- cell_range$max_cells
 
-  # Step 3: Create logarithmically-spaced grids
-  # Logarithmic spacing for cells (total cells)
-  cells_seq <- exp(seq(log(min_total_cells), log(max_total_cells), length.out = grid_size))
+  # Step 3: Create grids based on which parameters are varying
+  # Determine grid sizes based on parameter variation
+  cells_varying <- cells_per_target == "varying"
+  reads_varying <- reads_per_cell == "varying"
+  
+  cells_grid_size <- if (cells_varying) grid_size else 1
+  reads_grid_size <- if (reads_varying) grid_size else 1
 
-  # Logarithmic spacing for reads per cell
-  reads_seq <- exp(seq(log(min_reads_per_cell), log(max_reads_per_cell), length.out = grid_size))
+  # Create sequences based on parameter variation
+  if (cells_varying) {
+    # Logarithmic spacing for cells (total cells)
+    cells_seq <- exp(seq(log(min_total_cells), log(max_total_cells), length.out = cells_grid_size))
+  } else {
+    # Fixed cell count - convert cells_per_target to total cells
+    total_gRNAs <- num_targets * gRNAs_per_target + non_targeting_gRNAs
+    cells_seq <- (cells_per_target * total_gRNAs) / (gRNAs_per_target * MOI)
+  }
+
+  if (reads_varying) {
+    # Logarithmic spacing for reads per cell
+    reads_seq <- exp(seq(log(min_reads_per_cell), log(max_reads_per_cell), length.out = reads_grid_size))
+  } else {
+    # Fixed reads per cell
+    reads_seq <- reads_per_cell
+  }
 
   # Step 4: Calculate treatment cell counts and control cell counts
   # Convert total cells to treatment cells using experimental design parameters
@@ -173,10 +213,10 @@ compute_power_plan_per_grid <- function(
     num_cntrl_cells_seq <- (cells_seq * non_targeting_gRNAs * MOI) / total_gRNAs
   }
 
-  # Step 5: Create all combinations and compute power
+  # Step 5: Create dynamic grid based on which parameters are varying
   design_grid <- expand.grid(
-    cells_idx = 1:grid_size,
-    reads_idx = 1:grid_size
+    cells_idx = 1:cells_grid_size,
+    reads_idx = 1:reads_grid_size
   ) |>
     dplyr::mutate(
       cells_per_target = cells_per_target_seq[cells_idx],
@@ -227,6 +267,8 @@ compute_power_plan_per_grid <- function(
 #'
 #' @param tpm_threshold Numeric or character. TPM threshold value or "varying" for auto-selection.
 #' @param minimum_fold_change Numeric or character. Minimum fold change value or "varying" for auto-selection.
+#' @param cells_per_target Numeric or character. Number of cells per target or "varying" for auto-generated grid.
+#' @param reads_per_cell Numeric or character. Reads per cell or "varying" for auto-generated grid.
 #' @param MOI Numeric. Multiplicity of infection (default: 10).
 #' @param num_targets Integer. Number of targets (default: 100).
 #' @param non_targeting_gRNAs Integer. Number of non-targeting gRNAs (default: 10).
@@ -324,6 +366,8 @@ compute_power_plan_full_grid <- function(
       # Generate experimental design grid with power calculations
       power_grid = list(
         compute_power_plan_per_grid(
+          cells_per_target = cells_per_target,
+          reads_per_cell = reads_per_cell,
           fc_expression_df = fc_expression_df,
           library_parameters = library_parameters,
           grid_size = grid_size,

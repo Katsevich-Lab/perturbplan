@@ -5,6 +5,8 @@
 \title{Compute power analysis for experimental design grid}
 \usage{
 compute_power_plan_per_grid(
+  cells_per_target,
+  reads_per_cell,
   fc_expression_df,
   library_parameters,
   grid_size = 10,
@@ -24,6 +26,10 @@ compute_power_plan_per_grid(
 )
 }
 \arguments{
+\item{cells_per_target}{Numeric or character. Number of cells per target or "varying" for auto-generated grid.}
+
+\item{reads_per_cell}{Numeric or character. Reads per cell or "varying" for auto-generated grid.}
+
 \item{fc_expression_df}{Data frame with fold change and expression information.}
 
 \item{library_parameters}{List containing UMI_per_cell and variation parameters.}
@@ -76,10 +82,15 @@ with experimental design combinations and their corresponding power values.
 \details{
 This function simplifies the experimental design process by:
 \enumerate{
-\item Determining optimal reads per cell range using library size curves
-\item Determining optimal cell count range based on power thresholds
-\item Creating logarithmically-spaced grids for both dimensions
-\item Computing power for all combinations
+\item Determining parameter ranges based on "varying" vs fixed inputs:
+- If cells_per_target = "varying": Uses identify_cell_range_cpp() to determine optimal cell range
+- If reads_per_cell = "varying": Uses identify_reads_range_cpp() to determine optimal read range
+- If parameters are numeric: Uses the specified fixed values
+\item Creating logarithmically-spaced grids dynamically:
+- Both varying: grid_size × grid_size combinations
+- One varying: grid_size × 1 (or 1 × grid_size) combinations
+- Both fixed: 1 × 1 single combination
+\item Computing power for all parameter combinations
 \item Returning a clean dataframe ready for analysis
 }
 }

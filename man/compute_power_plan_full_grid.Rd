@@ -7,6 +7,8 @@
 compute_power_plan_full_grid(
   tpm_threshold,
   minimum_fold_change,
+  cells_per_target,
+  reads_per_cell,
   MOI = 10,
   num_targets = 100,
   non_targeting_gRNAs = 10,
@@ -30,6 +32,10 @@ compute_power_plan_full_grid(
 \item{tpm_threshold}{Numeric or character. TPM threshold value or "varying" for auto-selection.}
 
 \item{minimum_fold_change}{Numeric or character. Minimum fold change value or "varying" for auto-selection.}
+
+\item{cells_per_target}{Numeric or character. Number of cells per target or "varying" for auto-generated grid.}
+
+\item{reads_per_cell}{Numeric or character. Reads per cell or "varying" for auto-generated grid.}
 
 \item{MOI}{Numeric. Multiplicity of infection (default: 10).}
 
