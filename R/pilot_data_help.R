@@ -78,7 +78,7 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
 #'
 #' @export
 obtain_expression_information <- function(response_matrix,
-                                          TPM_thres = 1,
+                                          TPM_thres = 0.1,
                                           rough     = FALSE,
                                           n_threads = NULL) {
   # --- decide #threads ------------------------------------------------------
