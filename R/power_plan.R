@@ -156,7 +156,7 @@ compute_power_plan_per_grid <- function(
     } else {
       # Already calculated above when reads_per_cell == "varying"
     }
-    
+
     cell_range <- identify_cell_range_cpp(
       min_reads_per_cell = min_reads_per_cell,
       max_reads_per_cell = max_reads_per_cell,
@@ -340,7 +340,7 @@ compute_power_plan_full_grid <- function(
           dplyr::mutate(
             grna_effects = list(stats::rnorm(n = gRNAs_per_target,
                                             mean = minimum_fold_change,
-                                            sd = gRNA_variability) |> pmax(0)),
+                                            sd = gRNA_variability) |> pmax(.Machine$double.eps)),
             avg_fold_change = mean(grna_effects),
             avg_fold_change_sq = mean(grna_effects^2)
           ) |>
@@ -383,3 +383,254 @@ compute_power_plan_full_grid <- function(
 
   return(result)
 }
+
+
+#' Cost-Power Optimization for Perturb-seq Experimental Design
+#'
+#' Performs cost-constrained optimization to find the minimal parameter value that achieves
+#' target statistical power within a specified budget for perturb-seq experiments.
+#'
+#' @param minimizing_variable Character. The parameter to minimize during optimization.
+#'   Options: "tpm_threshold" or "minimum_fold_change". Default: "tpm_threshold".
+#' @param fixed_variable List. Fixed values for other analysis parameters. Can include:
+#'   \itemize{
+#'     \item \code{minimum_fold_change}: Fixed fold change threshold (when optimizing tpm_threshold)
+#'     \item \code{tpm_threshold}: Fixed TPM threshold (when optimizing minimum_fold_change)
+#'     \item \code{cells_per_target}: Fixed cells per target (otherwise uses "varying")
+#'     \item \code{reads_per_cell}: Fixed reads per cell (otherwise uses "varying")
+#'   }
+#' @param MOI Numeric. Multiplicity of infection (default: 10).
+#' @param num_targets Integer. Number of targets (default: 100).
+#' @param non_targeting_gRNAs Integer. Number of non-targeting gRNAs (default: 10).
+#' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
+#' @param gRNA_variability Numeric. gRNA variability parameter (default: 0.13).
+#' @param control_group Character. Control group type: "complement" or "non_targeting" (default: "complement").
+#' @param side Character. Test side: "left", "right", or "both" (default: "left").
+#' @param multiple_testing_alpha Numeric. Multiple testing significance level (default: 0.05).
+#' @param prop_non_null Numeric. Proportion of non-null hypotheses (default: 0.1).
+#' @param baseline_expression_stats Data frame. Baseline expression statistics with columns:
+#'   \code{response_id}, \code{relative_expression}, \code{expression_size}.
+#' @param library_parameters List. Library parameters containing \code{UMI_per_cell} and \code{variation}.
+#' @param grid_size Integer. Grid size for coarse search (default: 20).
+#' @param power_target Numeric. Target statistical power (default: 0.8).
+#' @param power_precision Numeric. Acceptable precision around power target (default: 0.01).
+#' @param budget_precision Numeric. Budget utilization factor (default: 0.9).
+#'   Filters designs with total cost ≤ budget_precision × cost_constraint.
+#' @param cost_per_captured_cell Numeric. Cost per captured cell in dollars (default: 0.086).
+#' @param cost_per_million_reads Numeric. Cost per million sequencing reads in dollars (default: 0.374).
+#' @param cost_constraint Numeric. Maximum budget constraint in dollars (default: 1e4).
+#'   Set to \code{NULL} to disable cost constraints.
+#' @param mapping_efficiency Numeric. Sequencing mapping efficiency (default: 0.72).
+#' @param cell_recovery_rate Numeric. Cell recovery rate (default: 0.5).
+#' @param QC_rate Numeric. Quality control pass rate (default: 1).
+#'
+#' @return Data frame with power analysis results including:
+#'   \itemize{
+#'     \item Analysis parameters (tpm_threshold, minimum_fold_change, etc.)
+#'     \item Experimental design (cells_per_target, num_captured_cells, raw_reads_per_cell)
+#'     \item Power metrics (overall_power)
+#'     \item Cost breakdown (library_cost, sequencing_cost, total_cost) - when cost_constraint is specified
+#'     \item Power threshold indicator (meets_threshold) - when cost_constraint is NULL
+#'   }
+#'
+#' @details
+#' This function implements a two-stage optimization algorithm:
+#'
+#' \strong{Stage 1: Coarse Grid Search}
+#' \enumerate{
+#'   \item Creates parameter grid for the minimizing variable:
+#'     \itemize{
+#'       \item tpm_threshold: 20 log-spaced values from 1 to 1000 TPM
+#'       \item minimum_fold_change: 20 values based on test side (left: 0.01-1.0, right: 1.0-10.0, both: combined)
+#'     }
+#'   \item Runs power analysis across experimental design space
+#'   \item Applies dual filtering:
+#'     \itemize{
+#'       \item Power filter: \code{power_target ± power_precision}
+#'       \item Cost filter: \code{total_cost ≤ budget_precision × cost_constraint}
+#'     }
+#'   \item Identifies minimum parameter value meeting both constraints
+#' }
+#'
+#' \strong{Stage 2: Fine Grid Search}
+#' \enumerate{
+#'   \item Re-runs power analysis with optimal parameter and higher resolution (100 grid points)
+#'   \item Combines coarse and fine search results for comprehensive output
+#' }
+#'
+#' \strong{Cost Model:}
+#' \deqn{Total Cost = Library Cost + Sequencing Cost}
+#' \deqn{Library Cost = cost\_per\_captured\_cell \times num\_captured\_cells}
+#' \deqn{Sequencing Cost = cost\_per\_million\_reads \times raw\_reads\_per\_cell \times num\_captured\_cells / 10^6}
+#'
+#' @examples
+#' \dontrun{
+#' # Load pilot data
+#' pilot_data <- get_pilot_data_from_package("K562")
+#'
+#' # Optimize TPM threshold with fixed fold change
+#' result1 <- cost_power_optimization(
+#'   minimizing_variable = "tpm_threshold",
+#'   fixed_variable = list(minimum_fold_change = 0.8),
+#'   baseline_expression_stats = pilot_data$baseline_expression_stats,
+#'   library_parameters = pilot_data$library_parameters,
+#'   power_target = 0.8,
+#'   cost_constraint = 15000,
+#'   budget_precision = 0.9
+#' )
+#'
+#' # Optimize fold change with fixed TPM threshold
+#' result2 <- cost_power_optimization(
+#'   minimizing_variable = "minimum_fold_change",
+#'   fixed_variable = list(tpm_threshold = 10),
+#'   baseline_expression_stats = pilot_data$baseline_expression_stats,
+#'   library_parameters = pilot_data$library_parameters,
+#'   power_target = 0.9,
+#'   cost_constraint = NULL  # No cost constraint
+#' )
+#' }
+#'
+#' @seealso
+#' \code{\link{compute_power_plan_full_grid}} for the underlying power analysis
+#' \code{\link{cost_computation}} for cost calculation details
+#'
+#' @export
+cost_power_optimization <- function(minimizing_variable = "tpm_threshold", fixed_variable = list(minimum_fold_change = 0.8),
+                                    # experimental parameters
+                                    MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
+                                    # analysis parameters
+                                    control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,
+                                    # data inputs
+                                    baseline_expression_stats, library_parameters,
+                                    # grid parameters for power
+                                    grid_size = 20, power_target = 0.8, power_precision = 0.01,
+                                    # grid parameters for budge
+                                    budget_precision = 0.9,
+                                    # cost parameters
+                                    cost_per_captured_cell = 0.086, cost_per_million_reads = 0.374, cost_constraint = NULL,
+                                    # efficiency of library preparation and sequencing platform
+                                    mapping_efficiency = 0.72, cell_recovery_rate = 0.5, QC_rate = 1){
+
+  # set the seed for computation
+  set.seed(1)
+
+  ################# Power-determining parameters setup #########################
+  # specify the parameter grid for TPM threshold and minimum_fold_change
+  switch (minimizing_variable,
+    tpm_threshold = {
+      tpm_threshold <- unname(quantile(baseline_expression_stats$relative_expression, probs = seq(0.1, .99, length.out = 20))) * 1e6
+      minimum_fold_change <- fixed_variable$minimum_fold_change
+    },
+    minimum_fold_change = {
+      minimum_fold_change <- switch(side,
+                                    left = {seq(0.5, 0.9, length.out = 20)},
+                                    right = {10^{seq(0, 1, length.out = 20)}},
+                                    both = {c(seq(0.5, 0.9, length.out = 10), 10^{seq(0, 1, length.out = 10)})})
+      tpm_threshold <- fixed_variable$tpm_threshold
+    }
+  )
+
+  # specify cells per target and reads per cell
+  cells_per_target <- ifelse(is.null(fixed_variable$cells_per_target), "varying", fixed_variable$cells_per_target)
+  reads_per_cell <- ifelse(is.null(fixed_variable$reads_per_cell), "varying", fixed_variable$reads_per_cell)
+
+  ########################## Perform grid power search #########################
+  # perform power calculation
+  power_search <- compute_power_plan_full_grid(
+    # power-determining parameters
+    tpm_threshold = tpm_threshold, minimum_fold_change = minimum_fold_change, cells_per_target = cells_per_target, reads_per_cell = reads_per_cell,
+    # experimental parameters
+    MOI = MOI, num_targets = num_targets, non_targeting_gRNAs = non_targeting_gRNAs, gRNAs_per_target = gRNAs_per_target, gRNA_variability = gRNA_variability,
+    # analysis parameters
+    control_group = control_group, side = side, multiple_testing_alpha = multiple_testing_alpha, prop_non_null = prop_non_null,
+    # data inputs
+    baseline_expression_stats = baseline_expression_stats, library_parameters = library_parameters,
+    # grid parameters
+    grid_size = grid_size, min_power_threshold = max(power_target - 0.1, 0.05), max_power_threshold = min(power_target + 0.1, 0.95),
+    # efficiency of library preparation and sequencing platform
+    mapping_efficiency = mapping_efficiency, cell_recovery_rate = cell_recovery_rate, QC_rate = QC_rate
+  )
+
+  # extract the optimal value
+  if(!is.null(cost_constraint)){
+    # filter the grid based on cost_constraint
+    cost_power_rough_search <- power_search |>
+      # compute the cost
+      dplyr::mutate(
+        library_cost = cost_per_captured_cell * num_captured_cells,
+        sequencing_cost = cost_per_million_reads * raw_reads_per_cell * num_captured_cells / 1e6,
+        total_cost = library_cost + sequencing_cost
+      ) |>
+      # filter power
+      dplyr::filter(
+        (overall_power > power_target - power_precision) & (overall_power < power_target + power_precision)
+      ) |>
+      # constraining the cost
+      dplyr::filter(total_cost <= budget_precision * cost_constraint)
+
+    # Return error message when filtering fails!
+    if(nrow(cost_power_rough_search) == 0){
+      stop("The cost-power optimization failed! Consider adjusting power target or cost budget!")
+    }else{
+      minimizing_variable_sequence <- cost_power_rough_search |> dplyr::pull(minimizing_variable)
+      optimal_value <- switch (minimizing_variable,
+        tpm_threshold = {min(minimizing_variable_sequence)},
+        minimum_fold_change = {
+          minimizing_variable_sequence[which.min(abs(minimizing_variable_sequence - 1))]
+        }
+      )
+    }
+
+    # perform a finer grid search given the optimal value
+    switch(minimizing_variable,
+           tpm_threshold = {tpm_threshold <- optimal_value},
+           minimum_fold_change = {minimum_fold_change <- optimal_value})
+    power_results <- compute_power_plan_full_grid(
+      # power-determining parameters
+      tpm_threshold = tpm_threshold, minimum_fold_change = minimum_fold_change, cells_per_target = cells_per_target, reads_per_cell = reads_per_cell,
+      # experimental parameters
+      MOI = MOI, num_targets = num_targets, non_targeting_gRNAs = non_targeting_gRNAs, gRNAs_per_target = gRNAs_per_target, gRNA_variability = gRNA_variability,
+      # analysis parameters
+      control_group = control_group, side = side, multiple_testing_alpha = multiple_testing_alpha, prop_non_null = prop_non_null,
+      # data inputs
+      baseline_expression_stats = baseline_expression_stats, library_parameters = library_parameters,
+      # grid parameters
+      grid_size = 100, min_power_threshold = max(power_target - 0.1, 0.05), max_power_threshold = min(power_target + 0.1, 0.95),
+      # efficiency of library preparation and sequencing platform
+      mapping_efficiency = mapping_efficiency, cell_recovery_rate = cell_recovery_rate, QC_rate = QC_rate
+    ) |>
+      # compute the cost
+      dplyr::mutate(
+        library_cost = cost_per_captured_cell * num_captured_cells,
+        sequencing_cost = cost_per_million_reads * raw_reads_per_cell * num_captured_cells / 1e6,
+        total_cost = library_cost + sequencing_cost
+      ) |>
+      # select filter the power
+      dplyr::filter(
+        (overall_power > power_target - power_precision) & (overall_power < power_target + power_precision)
+      )
+
+    # return error when cost-power analysis fails!
+    if(min(power_results$total_cost) > cost_constraint){
+      stop("The cost-power optimization failed! Consider adjusting power target or cost budget!")
+    }
+
+  }else{
+    # tag each column based on power_target and power_precision
+    power_results <- power_search |>
+      dplyr::mutate(
+        meets_threshold = ifelse(overall_power >= power_target, TRUE, FALSE)
+      ) |>
+      # select filter the power
+      dplyr::filter(
+        (overall_power > power_target - power_precision) & (overall_power < power_target + power_precision)
+      )
+  }
+
+  # return the final results
+  return(power_results)
+}
+
+
+
+
