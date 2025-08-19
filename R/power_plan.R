@@ -606,8 +606,8 @@ cost_power_computation <- function(minimizing_variable = "tmp_threshold", fixed_
       if(is.null(fixed_variable$minimum_fold_change)){
         minimum_fold_change <- switch(side,
                                       left = {seq(0.5, 0.9, length.out = 20)},
-                                      right = {10^{seq(0, 1, length.out = 20)}},
-                                      both = {c(seq(0.5, 0.9, length.out = 10), 10^{seq(0, 1, length.out = 10)})})
+                                      right = {seq(1.1, 1.5, length.out = 5)},
+                                      both = {c(seq(0.5, 0.9, length.out = 10), seq(1.1, 1.5, length.out = 5))})
       }else{
         minimum_fold_change <- fixed_variable$minimum_fold_change
       }
