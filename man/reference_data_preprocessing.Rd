@@ -7,11 +7,16 @@
 reference_data_preprocessing(
   response_matrix = NULL,
   read_umi_table,
+  mapping_efficiency = NULL,
   n_threads = NULL,
+  TPM_thres = 0.1,
   downsample_ratio = 0.7,
-  TPM_thres = 1,
   D2_rough = 0.3,
-  h5_only = FALSE
+  h5_only = FALSE,
+  TAP = FALSE,
+  primer_threshold = 0.2,
+  TAP_target_list = NULL,
+  TAP_origin_reference = NULL
 )
 }
 \arguments{
@@ -24,14 +29,19 @@ as obtained via \code{\link{obtain_qc_read_umi_table}}.}
 
 \item{n_threads}{Integer. Number of threads used for parallel processing. Default: NULL (single-threaded).}
 
-\item{downsample_ratio}{Numeric. Proportion of downsampling used for library size estimation. Default: 0.7.}
-
 \item{TPM_thres}{Numeric. Threshold for filtering low-expression genes during preprocessing.}
+
+\item{downsample_ratio}{Numeric. Proportion of downsampling used for library size estimation. Default: 0.7.}
 
 \item{D2_rough}{Numeric. Rough prior value for library variation parameter. Default: 0.3.}
 
-\item{h5_only}{Logical. If TRUE, skips baseline expression estimation
-step (only processes read_umi_table). Default: FALSE.}
+\item{h5_only}{Logical. If TRUE, skips baseline expression estimation step (only processes read_umi_table). Default: FALSE.
+@param mapping_efficiency Numeric. Estimated mapping efficiency from
+\code{obtain_mapping_efficiency}.
+@param TAP Logical. If TRUE, applies Targeted Analysis Pipeline (TAP)
+@param primer_threshold Numeric. Threshold for primer efficiency banding in TAP. Default: 0.2.
+@param TAP_target_list Character vector. List of target genes for TAP filtering. If NULL, no filtering is applied.
+@param TAP_origin_reference List. Reference data containing baseline expression statistics for TAP.}
 }
 \value{
 A list containing:

@@ -28,6 +28,7 @@ A list with two elements:
 combined across SRR directories.}
 \item{read_umi_table}{A data frame of molecule-level QC data from one or more SRRs,
 including the SRR label.}
+\item{mapping_efficiency}{A numeric value representing the mapping efficiency}
 }
 }
 \description{

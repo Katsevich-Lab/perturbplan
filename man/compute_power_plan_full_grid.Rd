@@ -23,9 +23,7 @@ compute_power_plan_full_grid(
   grid_size = 10,
   min_power_threshold = 0.01,
   max_power_threshold = 0.8,
-  mapping_efficiency = 0.72,
-  cell_recovery_rate = 0.5,
-  QC_rate = 1
+  mapping_efficiency = 0.72
 )
 }
 \arguments{
@@ -66,10 +64,6 @@ compute_power_plan_full_grid(
 \item{max_power_threshold}{Numeric. Maximum power threshold (default: 0.8).}
 
 \item{mapping_efficiency}{Numeric. Mapping efficiency for raw reads to usable reads (default: 0.72).}
-
-\item{cell_recovery_rate}{Numeric. Rate of cell recovery from loading to capture (default: 0.5).}
-
-\item{QC_rate}{Numeric. Quality control rate from captured to usable cells (default: 1.0).}
 }
 \value{
 Data frame with comprehensive power analysis results across parameter combinations.

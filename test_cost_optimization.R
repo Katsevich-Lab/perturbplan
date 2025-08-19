@@ -14,7 +14,7 @@ baseline_expression_stats <- extract_expression_info(B = 1e3, tpm_threshold = 0,
 # Test 1: Optimize tpm_threshold with cost constraint
 cat("Test 1: Optimizing tpm_threshold with cost constraint...\n")
 tryCatch({
-  result1 <- cost_power_optimization(
+  result1 <- cost_power_computation(
     minimizing_variable = "tpm_threshold",
     fixed_variable = list(minimum_fold_change = 0.85),
     baseline_expression_stats = baseline_expression_stats,
@@ -23,7 +23,7 @@ tryCatch({
     MOI = 10,
     power_target = 0.8,
     cost_constraint = 60000,
-    grid_size = 50
+    grid_size = 20
   )
   cat("✓ Test 1 PASSED: ", nrow(result1), " rows returned\n")
   cat("  Columns:", paste(names(result1), collapse = ", "), "\n")
@@ -32,12 +32,10 @@ tryCatch({
   cat("✗ Test 1 FAILED:", e$message, "\n")
 })
 
-cat("\n" %+% strrep("-", 60) %+% "\n")
-
 # Test 2: Optimize minimum_fold_change with cost constraint
 cat("Test 2: Optimizing minimum_fold_change with cost constraint...\n")
 tryCatch({
-  result2 <- cost_power_optimization(
+  result2 <- cost_power_computation(
     minimizing_variable = "minimum_fold_change",
     fixed_variable = list(tpm_threshold = 50,
                           cells_per_target = 400,
@@ -57,12 +55,11 @@ tryCatch({
   cat("✗ Test 2 FAILED:", e$message, "\n")
 })
 
-cat("\n" %+% strrep("-", 60) %+% "\n")
 
 # Test 3: Optimize without cost constraint
 cat("Test 3: Optimizing tmp_threshold without cost constraint...\n")
 tryCatch({
-  result3 <- cost_power_optimization(
+  result3 <- cost_power_computation(
     minimizing_variable = "tpm_threshold",
     fixed_variable = list(minimum_fold_change = 0.8),
     baseline_expression_stats = pilot_data$baseline_expression_stats,
@@ -78,12 +75,10 @@ tryCatch({
   cat("✗ Test 3 FAILED:", e$message, "\n")
 })
 
-cat("\n" %+% strrep("-", 60) %+% "\n")
-
 # Test 4: Fixed experimental design (no varying parameters)
 cat("Test 4: Fixed experimental design optimization...\n")
 tryCatch({
-  result4 <- cost_power_optimization(
+  result4 <- cost_power_computation(
     minimizing_variable = "tpm_threshold",
     fixed_variable = list(
       minimum_fold_change = 0.8,
@@ -103,19 +98,17 @@ tryCatch({
   cat("✗ Test 4 FAILED:", e$message, "\n")
 })
 
-cat("\n" %+% strrep("-", 60) %+% "\n")
-
 # Test 5: Lower power target to avoid threshold issues
 cat("Test 5: Lower power target optimization...\n")
 tryCatch({
-  result5 <- cost_power_optimization(
+  result5 <- cost_power_computation(
     minimizing_variable = "minimum_fold_change",
     fixed_variable = list(tpm_threshold = 100),
     baseline_expression_stats = pilot_data$baseline_expression_stats,
     library_parameters = pilot_data$library_parameters,
-    power_target = 0.6,
+    power_target = 0.8,
     cost_constraint = 20000,
-    grid_size = 3
+    grid_size = 20
   )
   cat("✓ Test 5 PASSED: ", nrow(result5), " rows returned\n")
   cat("  Columns:", paste(names(result5), collapse = ", "), "\n")
@@ -124,6 +117,5 @@ tryCatch({
   cat("✗ Test 5 FAILED:", e$message, "\n")
 })
 
-cat("\n" %+% strrep("=", 60) %+% "\n")
 cat("Test completed! Run the script as: Rscript test_cost_optimization.R\n")
 cat("or source it in R: source('test_cost_optimization.R')\n")

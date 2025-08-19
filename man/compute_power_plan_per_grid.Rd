@@ -20,9 +20,7 @@ compute_power_plan_per_grid(
   multiple_testing_alpha = 0.05,
   side = "left",
   prop_non_null = 0.1,
-  mapping_efficiency = 0.72,
-  cell_recovery_rate = 0.5,
-  QC_rate = 1
+  mapping_efficiency = 0.72
 )
 }
 \arguments{
@@ -57,10 +55,6 @@ compute_power_plan_per_grid(
 \item{prop_non_null}{Numeric. Proportion of non-null hypotheses (default: 0.1).}
 
 \item{mapping_efficiency}{Numeric. Mapping efficiency for raw reads to usable reads (default: 0.72).}
-
-\item{cell_recovery_rate}{Numeric. Rate of cell recovery from loading to capture (default: 0.5).}
-
-\item{QC_rate}{Numeric. Quality control rate from captured to usable cells (default: 1.0).}
 }
 \value{
 Data frame with columns:
@@ -69,9 +63,7 @@ Data frame with columns:
 \item{reads_per_cell}{Numeric. Sequencing reads per cell}
 \item{library_size}{Numeric. Effective library size (UMIs)}
 \item{overall_power}{Numeric. Statistical power for this experimental design}
-\item{num_usable_cells}{Numeric. Number of usable cells after QC}
 \item{num_captured_cells}{Numeric. Number of captured cells}
-\item{num_loaded_cells}{Numeric. Number of loaded cells}
 \item{raw_reads_per_cell}{Numeric. Raw reads per cell before mapping}
 }
 }

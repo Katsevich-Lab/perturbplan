@@ -6,7 +6,7 @@
 \usage{
 obtain_expression_information(
   response_matrix,
-  TPM_thres = 1,
+  TPM_thres = 0.1,
   rough = FALSE,
   n_threads = NULL
 )
