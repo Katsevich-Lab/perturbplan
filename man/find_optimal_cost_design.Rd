@@ -11,6 +11,8 @@ find_optimal_cost_design(
   power_precision,
   MOI = 10,
   num_targets = 100,
+  non_targeting_gRNAs = 10,
+  gRNAs_per_target = 4,
   cost_per_captured_cell = 0.086,
   cost_per_million_reads = 0.374,
   cost_grid_size = 200
@@ -40,6 +42,12 @@ calculations (default: 10). Used to compute number of captured cells.}
 
 \item{num_targets}{Integer. Number of target genes in the experiment (default: 100).
 Used for cost calculations.}
+
+\item{non_targeting_gRNAs}{Integer. Number of non-targeting gRNAs in the experiment
+(default: 10). Used to calculate total library size and captured cell requirements.}
+
+\item{gRNAs_per_target}{Integer. Number of gRNAs per target gene (default: 4).
+Used to calculate total gRNAs and experimental design parameters.}
 
 \item{cost_per_captured_cell}{Numeric. Cost per captured cell in dollars
 (default: 0.086). Used for library preparation cost calculations.}
@@ -94,7 +102,7 @@ This function implements a three-stage cost optimization process:
 \deqn{Total Cost = Library Cost + Sequencing Cost}
 \deqn{Library Cost = cost\_per\_captured\_cell \times num\_captured\_cells}
 \deqn{Sequencing Cost = cost\_per\_million\_reads \times reads\_per\_cell \times num\_captured\_cells / 10^6}
-\deqn{num\_captured\_cells = num\_targets \times cells\_per\_target / MOI}
+\deqn{num\_captured\_cells = \frac{(gRNAs\_per\_target \times num\_targets + non\_targeting\_gRNAs) \times cells\_per\_target}{gRNAs\_per\_target \times MOI}}
 
 The function is designed to work with output from \code{cost_power_computation()}
 and provides fine-grained cost optimization for experimental design selection.
@@ -118,6 +126,9 @@ optimal_designs <- find_optimal_cost_design(
   minimizing_variable = "tpm_threshold",
   power_target = 0.8,
   power_precision = 0.02,
+  num_targets = 100,
+  non_targeting_gRNAs = 10,
+  gRNAs_per_target = 4,
   cost_grid_size = 100
 )
 

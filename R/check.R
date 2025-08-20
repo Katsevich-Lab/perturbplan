@@ -762,7 +762,7 @@ input_check_cost_power_computation <- function(
 #' @return NULL
 input_check_find_optimal_cost_design <- function(
     cost_power_df, minimizing_variable, power_target, power_precision,
-    MOI = 10, num_targets = 100,
+    MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4,
     cost_per_captured_cell = 0.086, cost_per_million_reads = 0.374,
     cost_grid_size = 200
 ) {
@@ -833,6 +833,14 @@ input_check_find_optimal_cost_design <- function(
   
   if (!is.numeric(num_targets) || length(num_targets) != 1 || num_targets <= 0 || num_targets != round(num_targets)) {
     stop("`num_targets` must be a positive integer!")
+  }
+  
+  if (!is.numeric(non_targeting_gRNAs) || length(non_targeting_gRNAs) != 1 || non_targeting_gRNAs < 0 || non_targeting_gRNAs != round(non_targeting_gRNAs)) {
+    stop("`non_targeting_gRNAs` must be a non-negative integer!")
+  }
+  
+  if (!is.numeric(gRNAs_per_target) || length(gRNAs_per_target) != 1 || gRNAs_per_target <= 0 || gRNAs_per_target != round(gRNAs_per_target)) {
+    stop("`gRNAs_per_target` must be a positive integer!")
   }
   
   ###################### Cost parameters ################################

@@ -11,6 +11,8 @@ input_check_find_optimal_cost_design(
   power_precision,
   MOI = 10,
   num_targets = 100,
+  non_targeting_gRNAs = 10,
+  gRNAs_per_target = 4,
   cost_per_captured_cell = 0.086,
   cost_per_million_reads = 0.374,
   cost_grid_size = 200
@@ -40,6 +42,12 @@ calculations (default: 10). Used to compute number of captured cells.}
 
 \item{num_targets}{Integer. Number of target genes in the experiment (default: 100).
 Used for cost calculations.}
+
+\item{non_targeting_gRNAs}{Integer. Number of non-targeting gRNAs in the experiment
+(default: 10). Used to calculate total library size and captured cell requirements.}
+
+\item{gRNAs_per_target}{Integer. Number of gRNAs per target gene (default: 4).
+Used to calculate total gRNAs and experimental design parameters.}
 
 \item{cost_per_captured_cell}{Numeric. Cost per captured cell in dollars
 (default: 0.086). Used for library preparation cost calculations.}

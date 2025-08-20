@@ -1,8 +1,8 @@
 # Core power calculation utilities
 
 # Suppress R CMD check notes for NSE (non-standard evaluation) variables
-utils::globalVariables(c("total_cost", "library_cost", "sequencing_cost", ".data", 
-                         "minimum_cost", "min_cells", "max_cells", "min_reads", 
+utils::globalVariables(c("total_cost", "library_cost", "sequencing_cost", ".data",
+                         "minimum_cost", "min_cells", "max_cells", "min_reads",
                          "max_reads", "cost_precision", "cost_of_interest", "cost_grid"))
 
 #' Compute overall power for power analysis (core utility function)
@@ -774,6 +774,10 @@ check_power_results <- function(power_df,
 #'   calculations (default: 10). Used to compute number of captured cells.
 #' @param num_targets Integer. Number of target genes in the experiment (default: 100).
 #'   Used for cost calculations.
+#' @param non_targeting_gRNAs Integer. Number of non-targeting gRNAs in the experiment
+#'   (default: 10). Used to calculate total library size and captured cell requirements.
+#' @param gRNAs_per_target Integer. Number of gRNAs per target gene (default: 4).
+#'   Used to calculate total gRNAs and experimental design parameters.
 #' @param cost_per_captured_cell Numeric. Cost per captured cell in dollars
 #'   (default: 0.086). Used for library preparation cost calculations.
 #' @param cost_per_million_reads Numeric. Cost per million sequencing reads in dollars
@@ -818,7 +822,7 @@ check_power_results <- function(power_df,
 #' \deqn{Total Cost = Library Cost + Sequencing Cost}
 #' \deqn{Library Cost = cost\_per\_captured\_cell \times num\_captured\_cells}
 #' \deqn{Sequencing Cost = cost\_per\_million\_reads \times reads\_per\_cell \times num\_captured\_cells / 10^6}
-#' \deqn{num\_captured\_cells = num\_targets \times cells\_per\_target / MOI}
+#' \deqn{num\_captured\_cells = \frac{(gRNAs\_per\_target \times num\_targets + non\_targeting\_gRNAs) \times cells\_per\_target}{gRNAs\_per\_target \times MOI}}
 #'
 #' The function is designed to work with output from \code{cost_power_computation()}
 #' and provides fine-grained cost optimization for experimental design selection.
@@ -842,6 +846,9 @@ check_power_results <- function(power_df,
 #'   minimizing_variable = "tpm_threshold",
 #'   power_target = 0.8,
 #'   power_precision = 0.02,
+#'   num_targets = 100,
+#'   non_targeting_gRNAs = 10,
+#'   gRNAs_per_target = 4,
 #'   cost_grid_size = 100
 #' )
 #'
@@ -858,7 +865,7 @@ check_power_results <- function(power_df,
 #' @export
 find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
                                      power_target, power_precision,
-                                     MOI = 10, num_targets = 100,
+                                     MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4,
                                      cost_per_captured_cell = 0.086, cost_per_million_reads = 0.374,
                                      cost_grid_size = 200){
 
@@ -870,6 +877,8 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
     power_precision = power_precision,
     MOI = MOI,
     num_targets = num_targets,
+    non_targeting_gRNAs = non_targeting_gRNAs,
+    gRNAs_per_target = gRNAs_per_target,
     cost_per_captured_cell = cost_per_captured_cell,
     cost_per_million_reads = cost_per_million_reads,
     cost_grid_size = cost_grid_size
@@ -907,7 +916,7 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
         ) |>
           dplyr::mutate(
             # compute number of captured cells
-            num_captured_cells = num_targets * cells_per_target / MOI,
+            num_captured_cells = ((gRNAs_per_target * num_targets + non_targeting_gRNAs) * cells_per_target / gRNAs_per_target) / MOI,
             # compute the library cost, sequencing cost and total cost
             library_cost = cost_per_captured_cell * num_captured_cells,
             sequencing_cost = cost_per_million_reads * raw_reads_per_cell * num_captured_cells / 1e6,
