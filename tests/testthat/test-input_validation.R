@@ -52,7 +52,7 @@ test_that("input_check_compute_power_plan_full_grid validates tpm_threshold para
       library_parameters = test_data$library_parameters,
       num_targets = 10
     ),
-    regexp = "values must be positive"
+    regexp = "`tpm_threshold` values must be non-negative!"
   )
 
   # Test valid inputs - should not throw error

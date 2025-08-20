@@ -99,7 +99,7 @@ Data frame with power analysis results including:
 
 Data frame with power analysis results including:
 \itemize{
-\item Analysis parameters (tmp_threshold, minimum_fold_change, etc.)
+\item Analysis parameters (tpm_threshold, minimum_fold_change, etc.)
 \item Experimental design (cells_per_target, num_captured_cells, raw_reads_per_cell)
 \item Power metrics (overall_power)
 \item Cost breakdown (library_cost, sequencing_cost, total_cost)

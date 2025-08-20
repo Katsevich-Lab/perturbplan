@@ -1,7 +1,9 @@
 # Core power calculation utilities
 
 # Suppress R CMD check notes for NSE (non-standard evaluation) variables
-utils::globalVariables(c("total_cost", "library_cost", "sequencing_cost"))
+utils::globalVariables(c("total_cost", "library_cost", "sequencing_cost", ".data", 
+                         "minimum_cost", "min_cells", "max_cells", "min_reads", 
+                         "max_reads", "cost_precision", "cost_of_interest", "cost_grid"))
 
 #' Compute overall power for power analysis (core utility function)
 #'
@@ -294,13 +296,13 @@ compute_power_plan_full_grid <- function(
 
   ####################### Input validation ####################################
   input_check_compute_power_plan_full_grid(
-    tpm_threshold = tpm_threshold, minimum_fold_change = minimum_fold_change, 
+    tpm_threshold = tpm_threshold, minimum_fold_change = minimum_fold_change,
     cells_per_target = cells_per_target, reads_per_cell = reads_per_cell,
-    MOI = MOI, num_targets = num_targets, non_targeting_gRNAs = non_targeting_gRNAs, 
+    MOI = MOI, num_targets = num_targets, non_targeting_gRNAs = non_targeting_gRNAs,
     gRNAs_per_target = gRNAs_per_target, gRNA_variability = gRNA_variability,
-    control_group = control_group, side = side, multiple_testing_alpha = multiple_testing_alpha, 
-    prop_non_null = prop_non_null, baseline_expression_stats = baseline_expression_stats, 
-    library_parameters = library_parameters, grid_size = grid_size, 
+    control_group = control_group, side = side, multiple_testing_alpha = multiple_testing_alpha,
+    prop_non_null = prop_non_null, baseline_expression_stats = baseline_expression_stats,
+    library_parameters = library_parameters, grid_size = grid_size,
     min_power_threshold = min_power_threshold, max_power_threshold = max_power_threshold,
     mapping_efficiency = mapping_efficiency
   )
@@ -536,7 +538,7 @@ compute_power_plan_full_grid <- function(
 #'
 #' @return Data frame with power analysis results including:
 #'   \itemize{
-#'     \item Analysis parameters (tmp_threshold, minimum_fold_change, etc.)
+#'     \item Analysis parameters (tpm_threshold, minimum_fold_change, etc.)
 #'     \item Experimental design (cells_per_target, num_captured_cells, raw_reads_per_cell)
 #'     \item Power metrics (overall_power)
 #'     \item Cost breakdown (library_cost, sequencing_cost, total_cost)
@@ -603,13 +605,13 @@ cost_power_computation <- function(minimizing_variable = "tpm_threshold", fixed_
   ####################### Input validation ####################################
   input_check_cost_power_computation(
     minimizing_variable = minimizing_variable, fixed_variable = fixed_variable,
-    MOI = MOI, num_targets = num_targets, non_targeting_gRNAs = non_targeting_gRNAs, 
+    MOI = MOI, num_targets = num_targets, non_targeting_gRNAs = non_targeting_gRNAs,
     gRNAs_per_target = gRNAs_per_target, gRNA_variability = gRNA_variability,
-    control_group = control_group, side = side, multiple_testing_alpha = multiple_testing_alpha, 
-    prop_non_null = prop_non_null, baseline_expression_stats = baseline_expression_stats, 
-    library_parameters = library_parameters, grid_size = grid_size, power_target = power_target, 
+    control_group = control_group, side = side, multiple_testing_alpha = multiple_testing_alpha,
+    prop_non_null = prop_non_null, baseline_expression_stats = baseline_expression_stats,
+    library_parameters = library_parameters, grid_size = grid_size, power_target = power_target,
     power_precision = power_precision, min_power = min_power, max_power = max_power,
-    cost_precision = cost_precision, cost_per_captured_cell = cost_per_captured_cell, 
+    cost_precision = cost_precision, cost_per_captured_cell = cost_per_captured_cell,
     cost_per_million_reads = cost_per_million_reads, cost_constraint = cost_constraint,
     mapping_efficiency = mapping_efficiency
   )
@@ -744,4 +746,198 @@ check_power_results <- function(power_df,
 
   # Return the original unfiltered data
   return(power_df)
+}
+
+#' Find Optimal Cost-Efficient Experimental Designs
+#'
+#' @description
+#' Identifies cost-optimal experimental designs that achieve target statistical power
+#' within specified precision bounds. This function processes cost-power analysis results
+#' to find minimal-cost designs for each parameter level and generates detailed cost
+#' grids for design optimization.
+#'
+#' @param cost_power_df Data frame. Output from \code{\link{cost_power_computation}}
+#'   containing power analysis results with cost calculations. Must include columns:
+#'   \code{overall_power}, \code{total_cost}, \code{cells_per_target},
+#'   \code{raw_reads_per_cell}, plus the specified minimizing variable.
+#' @param minimizing_variable Character. The parameter being optimized. Must be one of:
+#'   \itemize{
+#'     \item "tpm_threshold": TPM expression threshold optimization
+#'     \item "minimum_fold_change": Minimum fold change threshold optimization
+#'   }
+#' @param power_target Numeric. Target statistical power level (typically 0.8 for 80% power).
+#'   Must be between 0 and 1.
+#' @param power_precision Numeric. Acceptable precision around power target. Designs with
+#'   power within \code{power_target ± power_precision} are considered acceptable.
+#'   Must be between 0 and 1.
+#' @param MOI Numeric. Multiplicity of infection parameter for experimental design
+#'   calculations (default: 10). Used to compute number of captured cells.
+#' @param num_targets Integer. Number of target genes in the experiment (default: 100).
+#'   Used for cost calculations.
+#' @param cost_per_captured_cell Numeric. Cost per captured cell in dollars
+#'   (default: 0.086). Used for library preparation cost calculations.
+#' @param cost_per_million_reads Numeric. Cost per million sequencing reads in dollars
+#'   (default: 0.374). Used for sequencing cost calculations.
+#' @param cost_grid_size Integer. Number of grid points for cost optimization grid
+#'   (default: 200). Higher values provide finer resolution but longer computation time.
+#'
+#' @return A list containing two elements:
+#' \describe{
+#'   \item{optimal_cost_power_df}{Data frame with optimal power-cost combinations,
+#'     including columns from input plus minimum cost information and cost precision.}
+#'   \item{optimal_cost_grid}{Data frame with nested cost grids for each parameter level,
+#'     containing detailed design alternatives within cost precision bounds.}
+#' }
+#'
+#' @details
+#' This function implements a three-stage cost optimization process:
+#'
+#' \strong{Stage 1: Power Filtering}
+#' \enumerate{
+#'   \item Filters input data to designs achieving power within target ± precision
+#'   \item Ensures only viable designs (meeting power requirements) are considered
+#' }
+#'
+#' \strong{Stage 2: Cost Optimization}
+#' \enumerate{
+#'   \item Groups designs by minimizing variable (e.g., tpm_threshold levels)
+#'   \item Identifies minimum cost for each parameter level
+#'   \item Computes cost precision (1% of minimum cost) for grid generation
+#'   \item Records parameter ranges (min/max cells and reads per cell) for each level
+#' }
+#'
+#' \strong{Stage 3: Design Grid Generation}
+#' \enumerate{
+#'   \item Creates log-spaced grids within parameter ranges for each level
+#'   \item Computes detailed cost components (library + sequencing costs)
+#'   \item Filters to designs within cost precision bounds (±1% of minimum cost)
+#'   \item Applies sampling to reduce redundant designs while preserving diversity
+#' }
+#'
+#' \strong{Cost Model:}
+#' \deqn{Total Cost = Library Cost + Sequencing Cost}
+#' \deqn{Library Cost = cost\_per\_captured\_cell \times num\_captured\_cells}
+#' \deqn{Sequencing Cost = cost\_per\_million\_reads \times reads\_per\_cell \times num\_captured\_cells / 10^6}
+#' \deqn{num\_captured\_cells = num\_targets \times cells\_per\_target / MOI}
+#'
+#' The function is designed to work with output from \code{cost_power_computation()}
+#' and provides fine-grained cost optimization for experimental design selection.
+#'
+#' @examples
+#' \dontrun{
+#' # Load pilot data and perform cost-power analysis
+#' pilot_data <- get_pilot_data_from_package("K562")
+#' cost_results <- cost_power_computation(
+#'   minimizing_variable = "tpm_threshold",
+#'   fixed_variable = list(minimum_fold_change = 0.8),
+#'   baseline_expression_stats = pilot_data$baseline_expression_stats,
+#'   library_parameters = pilot_data$library_parameters,
+#'   power_target = 0.8,
+#'   cost_constraint = 15000
+#' )
+#'
+#' # Find optimal cost-efficient designs
+#' optimal_designs <- find_optimal_cost_design(
+#'   cost_power_df = cost_results,
+#'   minimizing_variable = "tpm_threshold",
+#'   power_target = 0.8,
+#'   power_precision = 0.02,
+#'   cost_grid_size = 100
+#' )
+#'
+#' # Examine optimal designs
+#' head(optimal_designs$optimal_cost_power_df)
+#'
+#' # Examine detailed cost grids
+#' optimal_designs$optimal_cost_grid$cost_grid[[1]]
+#' }
+#'
+#' @seealso
+#' \code{\link{cost_power_computation}} for the underlying cost-power analysis
+#'
+#' @export
+find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
+                                     power_target, power_precision,
+                                     MOI = 10, num_targets = 100,
+                                     cost_per_captured_cell = 0.086, cost_per_million_reads = 0.374,
+                                     cost_grid_size = 200){
+
+  # Input validation
+  input_check_find_optimal_cost_design(
+    cost_power_df = cost_power_df,
+    minimizing_variable = minimizing_variable,
+    power_target = power_target,
+    power_precision = power_precision,
+    MOI = MOI,
+    num_targets = num_targets,
+    cost_per_captured_cell = cost_per_captured_cell,
+    cost_per_million_reads = cost_per_million_reads,
+    cost_grid_size = cost_grid_size
+  )
+
+  # filter the dataframe based on power_target
+  cost_power_df_filtered <- cost_power_df |>
+    dplyr::filter((overall_power > power_target - power_precision) & (overall_power < power_target + power_precision))
+
+  # Return error if cost_power_df_filtered has dimension 0
+  if(nrow(cost_power_df_filtered) == 0){
+    stop("0 row preserved after applying power filtering! Try adjusting power_precision!")
+  }
+
+  # compute the optimal cost dataframe
+  optimal_design_df <- cost_power_df_filtered |>
+    dplyr::group_by(.data[[minimizing_variable]]) |>
+    dplyr::summarise(minimum_cost = min(total_cost),
+                     min_reads = min(raw_reads_per_cell),
+                     max_reads = max(raw_reads_per_cell),
+                     min_cells = min(cells_per_target),
+                     max_cells = max(cells_per_target)) |>
+    dplyr::ungroup() |>
+    dplyr::mutate(cost_precision = unname(minimum_cost / 100))
+
+  # obtain cost grid
+  cost_grid_df <- optimal_design_df |>
+    dplyr::rowwise() |>
+    dplyr::mutate(
+      cost_grid = list(
+        # expand the grid
+        expand.grid(
+          cells_per_target = 10^seq(log10(min_cells), log10(max_cells), length.out = cost_grid_size),
+          raw_reads_per_cell = 10^seq(log10(min_reads), log10(max_reads), length.out = cost_grid_size)
+        ) |>
+          dplyr::mutate(
+            # compute number of captured cells
+            num_captured_cells = num_targets * cells_per_target / MOI,
+            # compute the library cost, sequencing cost and total cost
+            library_cost = cost_per_captured_cell * num_captured_cells,
+            sequencing_cost = cost_per_million_reads * raw_reads_per_cell * num_captured_cells / 1e6,
+            total_cost = library_cost + sequencing_cost
+          ) |>
+          dplyr::filter(total_cost > minimum_cost - cost_precision & total_cost < minimum_cost + cost_precision) |>
+          dplyr::mutate(cost_of_interest = round(minimum_cost)) |>
+          dplyr::group_by(num_captured_cells, cost_of_interest) |>
+          dplyr::slice_sample(n = 1) |>
+          dplyr::ungroup() |>
+          dplyr::group_by(raw_reads_per_cell, cost_of_interest) |>
+          dplyr::slice_sample(n = 1) |>
+          dplyr::ungroup()
+      )
+    ) |>
+    dplyr::ungroup()
+
+  # merge optimal cost and power dataframe
+  optimal_cost_power_df <- cost_power_df_filtered |>
+    dplyr::left_join(optimal_design_df, by = minimizing_variable) |>
+    dplyr::rename(reads_per_cell = raw_reads_per_cell)
+
+  # rename the reads_per_cell column in cost_grid_df (inside the nested cost_grid)
+  optimal_cost_grid <- cost_grid_df |>
+    tidyr::unnest(cost_grid) |>
+    dplyr::rename(reads_per_cell = raw_reads_per_cell)
+
+  # return the results
+  return(list(
+    optimal_cost_power_df = optimal_cost_power_df,
+    optimal_cost_grid = optimal_cost_grid
+  ))
 }

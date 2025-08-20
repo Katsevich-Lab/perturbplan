@@ -754,3 +754,131 @@ input_check_cost_power_computation <- function(
   invisible(NULL)
 }
 
+
+#' Input checking function for find_optimal_cost_design
+#'
+#' @inheritParams find_optimal_cost_design
+#'
+#' @return NULL
+input_check_find_optimal_cost_design <- function(
+    cost_power_df, minimizing_variable, power_target, power_precision,
+    MOI = 10, num_targets = 100,
+    cost_per_captured_cell = 0.086, cost_per_million_reads = 0.374,
+    cost_grid_size = 200
+) {
+  
+  ########################## cost_power_df ################################
+  if (missing(cost_power_df)) {
+    stop("`cost_power_df` must be specified!")
+  }
+  if (!is.data.frame(cost_power_df)) {
+    stop("`cost_power_df` must be a data frame!")
+  }
+  if (nrow(cost_power_df) == 0) {
+    stop("`cost_power_df` cannot be empty!")
+  }
+  
+  # Check required columns
+  required_cols <- c("overall_power", "total_cost", "cells_per_target", "raw_reads_per_cell")
+  missing_cols <- setdiff(required_cols, names(cost_power_df))
+  if (length(missing_cols) > 0) {
+    stop("`cost_power_df` is missing required columns: ",
+         paste(missing_cols, collapse = ", "), "!")
+  }
+  
+  ######################## minimizing_variable ##############################
+  if (!is.character(minimizing_variable) || length(minimizing_variable) != 1) {
+    stop("`minimizing_variable` must be a single character string!")
+  }
+  valid_minimizing_vars <- c("tpm_threshold", "minimum_fold_change")
+  if (!minimizing_variable %in% valid_minimizing_vars) {
+    stop("`minimizing_variable` must be one of: ",
+         paste(valid_minimizing_vars, collapse = ", "), "!")
+  }
+  
+  # Check that minimizing_variable column exists
+  if (!minimizing_variable %in% names(cost_power_df)) {
+    stop("`cost_power_df` must contain a column named '", minimizing_variable, "'!")
+  }
+  
+  ########################## power_target #################################
+  if (missing(power_target)) {
+    stop("`power_target` must be specified!")
+  }
+  if (!is.numeric(power_target) || length(power_target) != 1) {
+    stop("`power_target` must be a single numeric value!")
+  }
+  if (power_target <= 0 || power_target >= 1) {
+    stop("`power_target` must be between 0 and 1!")
+  }
+  
+  ######################## power_precision ################################
+  if (missing(power_precision)) {
+    stop("`power_precision` must be specified!")
+  }
+  if (!is.numeric(power_precision) || length(power_precision) != 1) {
+    stop("`power_precision` must be a single numeric value!")
+  }
+  if (power_precision <= 0 || power_precision >= 1) {
+    stop("`power_precision` must be between 0 and 1!")
+  }
+  if (power_precision >= power_target) {
+    stop("`power_precision` should be smaller than `power_target`!")
+  }
+  
+  ###################### Experimental parameters ############################
+  if (!is.numeric(MOI) || length(MOI) != 1 || MOI <= 0) {
+    stop("`MOI` must be a positive numeric value!")
+  }
+  
+  if (!is.numeric(num_targets) || length(num_targets) != 1 || num_targets <= 0 || num_targets != round(num_targets)) {
+    stop("`num_targets` must be a positive integer!")
+  }
+  
+  ###################### Cost parameters ################################
+  if (!is.numeric(cost_per_captured_cell) || length(cost_per_captured_cell) != 1 || cost_per_captured_cell < 0) {
+    stop("`cost_per_captured_cell` must be a non-negative numeric value!")
+  }
+  
+  if (!is.numeric(cost_per_million_reads) || length(cost_per_million_reads) != 1 || cost_per_million_reads < 0) {
+    stop("`cost_per_million_reads` must be a non-negative numeric value!")
+  }
+  
+  if (!is.numeric(cost_grid_size) || length(cost_grid_size) != 1 || cost_grid_size <= 0 || cost_grid_size != round(cost_grid_size)) {
+    stop("`cost_grid_size` must be a positive integer!")
+  }
+  if (cost_grid_size > 1000) {
+    warning("`cost_grid_size` is very large (>1000), which may result in long computation times!")
+  }
+  
+  ###################### Data validation ################################
+  # Check for required numeric columns
+  numeric_cols <- c("overall_power", "total_cost", "cells_per_target", "raw_reads_per_cell")
+  for (col in numeric_cols) {
+    if (!is.numeric(cost_power_df[[col]])) {
+      stop("Column `", col, "` in `cost_power_df` must be numeric!")
+    }
+    if (any(is.na(cost_power_df[[col]]))) {
+      stop("Column `", col, "` in `cost_power_df` cannot contain missing values!")
+    }
+    if (col != "overall_power" && any(cost_power_df[[col]] <= 0)) {
+      stop("Column `", col, "` in `cost_power_df` must contain positive values!")
+    }
+  }
+  
+  # Check overall_power is between 0 and 1
+  if (any(cost_power_df$overall_power < 0) || any(cost_power_df$overall_power > 1)) {
+    stop("Column `overall_power` in `cost_power_df` must contain values between 0 and 1!")
+  }
+  
+  # Check that there are designs that could meet power criteria
+  power_range <- range(cost_power_df$overall_power)
+  target_range <- c(power_target - power_precision, power_target + power_precision)
+  if (power_range[2] < target_range[1] || power_range[1] > target_range[2]) {
+    stop("No designs in `cost_power_df` can meet the power criteria (target +/- precision)!",
+         " Power range: [", round(power_range[1], 3), ", ", round(power_range[2], 3), "]",
+         " Target range: [", round(target_range[1], 3), ", ", round(target_range[2], 3), "]")
+  }
+  
+  invisible(NULL)
+}
