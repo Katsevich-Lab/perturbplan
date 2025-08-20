@@ -388,8 +388,8 @@ input_check_compute_power_plan_full_grid <- function(
     stop("`tpm_threshold` must be specified!")
   }
   if (is.numeric(tpm_threshold)) {
-    if (any(tpm_threshold <= 0)) {
-      stop("`tpm_threshold` values must be positive!")
+    if (any(tpm_threshold < 0)) {
+      stop("`tpm_threshold` values must be non-negative!")
     }
     if (any(tpm_threshold > 1000000)) {
       stop("`tpm_threshold` values seem unreasonably large (>1,000,000 TPM)!")
@@ -601,7 +601,7 @@ input_check_cost_power_computation <- function(
     if (!"tpm_threshold" %in% names(fixed_variable)) {
       stop("When minimizing minimum_fold_change, `fixed_variable` must contain 'tpm_threshold'!")
     }
-    if (!is.numeric(fixed_variable$tpm_threshold) || fixed_variable$tpm_threshold <= 0) {
+    if (!is.numeric(fixed_variable$tpm_threshold) || fixed_variable$tpm_threshold < 0) {
       stop("`fixed_variable$tpm_threshold` must be a positive numeric value!")
     }
   }
