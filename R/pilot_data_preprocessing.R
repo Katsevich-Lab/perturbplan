@@ -1,3 +1,6 @@
+# Suppress R CMD check notes for NSE (non-standard evaluation) variables
+utils::globalVariables(c("Perturb_tpm", "Tap_tpm", "in_band", "expression_status"))
+
 #' Aggregate Expression and QC Data from Multiple SRR-Level Cell Ranger Outputs
 #'
 #' @description
@@ -32,6 +35,8 @@
 #'   \item Optionally reads h5 QC data from one or all SRRs.
 #' }
 #'
+#' @importFrom stats median
+#' @importFrom dplyr mutate between
 #' @seealso \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}
 #' @export
 reference_data_preprocessing_10x <- function(path_to_top_level_output,
@@ -124,12 +129,12 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #' @param downsample_ratio Numeric. Proportion of downsampling used for library size estimation. Default: 0.7.
 #' @param D2_rough Numeric. Rough prior value for library variation parameter. Default: 0.3.
 #' @param h5_only Logical. If TRUE, skips baseline expression estimation step (only processes read_umi_table). Default: FALSE.
-#'  @param mapping_efficiency Numeric. Estimated mapping efficiency from
-#'  \code{obtain_mapping_efficiency}.
-#'  @param TAP Logical. If TRUE, applies Targeted Analysis Pipeline (TAP)
-#'  @param primer_threshold Numeric. Threshold for primer efficiency banding in TAP. Default: 0.2.
-#'  @param TAP_target_list Character vector. List of target genes for TAP filtering. If NULL, no filtering is applied.
-#'  @param TAP_origin_reference List. Reference data containing baseline expression statistics for TAP.  
+#' @param mapping_efficiency Numeric. Estimated mapping efficiency from
+#'   \code{obtain_mapping_efficiency}.
+#' @param TAP Logical. If TRUE, applies Targeted Analysis Pipeline (TAP).
+#' @param primer_threshold Numeric. Threshold for primer efficiency banding in TAP. Default: 0.2.
+#' @param TAP_target_list Character vector. List of target genes for TAP filtering. If NULL, no filtering is applied.
+#' @param TAP_origin_reference List. Reference data containing baseline expression statistics for TAP.  
 #'
 #' @return A list containing:
 #' \describe{
@@ -150,6 +155,8 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   \item Outputs a simplified list structure for power analysis.
 #' }
 #'
+#' @importFrom stats median
+#' @importFrom dplyr mutate between
 #' @seealso
 #' \code{\link{obtain_expression_information}},
 #' \code{\link{obtain_qc_read_umi_table}},
@@ -205,7 +212,7 @@ reference_data_preprocessing <- function(response_matrix = NULL, read_umi_table,
         dplyr::distinct() |> 
         dplyr::left_join(
           TAP_origin_reference$baseline_expression_stats |> 
-            dplyr:::mutate(Perturb_tpm = relative_expression * 1e6) |>
+            dplyr::mutate(Perturb_tpm = relative_expression * 1e6) |>
             dplyr::select(Perturb_tpm, response_id) |>
             dplyr::distinct(), 
           by = "response_id"

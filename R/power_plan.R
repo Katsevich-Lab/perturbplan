@@ -1,5 +1,8 @@
 # Core power calculation utilities
 
+# Suppress R CMD check notes for NSE (non-standard evaluation) variables
+utils::globalVariables(c("total_cost", "library_cost", "sequencing_cost"))
+
 #' Compute overall power for power analysis (core utility function)
 #'
 #' This function computes overall power and BH cutoff for a single experimental design.
@@ -289,6 +292,19 @@ compute_power_plan_full_grid <- function(
     mapping_efficiency = 0.72
 ){
 
+  ####################### Input validation ####################################
+  input_check_compute_power_plan_full_grid(
+    tpm_threshold = tpm_threshold, minimum_fold_change = minimum_fold_change, 
+    cells_per_target = cells_per_target, reads_per_cell = reads_per_cell,
+    MOI = MOI, num_targets = num_targets, non_targeting_gRNAs = non_targeting_gRNAs, 
+    gRNAs_per_target = gRNAs_per_target, gRNA_variability = gRNA_variability,
+    control_group = control_group, side = side, multiple_testing_alpha = multiple_testing_alpha, 
+    prop_non_null = prop_non_null, baseline_expression_stats = baseline_expression_stats, 
+    library_parameters = library_parameters, grid_size = grid_size, 
+    min_power_threshold = min_power_threshold, max_power_threshold = max_power_threshold,
+    mapping_efficiency = mapping_efficiency
+  )
+
   ####################### construct the tpm_threshold ##########################
   if (is.numeric(tpm_threshold)) {
     tpm_threshold_list <- tpm_threshold  # Works for both single values and vectors
@@ -402,8 +418,6 @@ compute_power_plan_full_grid <- function(
 #' @param grid_size Integer. Grid size for coarse search (default: 20).
 #' @param power_target Numeric. Target statistical power (default: 0.8).
 #' @param power_precision Numeric. Acceptable precision around power target (default: 0.01).
-#' @param budget_precision Numeric. Budget utilization factor (default: 0.9).
-#'   Filters designs with total cost ≤ budget_precision × cost_constraint.
 #' @param cost_per_captured_cell Numeric. Cost per captured cell in dollars (default: 0.086).
 #' @param cost_per_million_reads Numeric. Cost per million sequencing reads in dollars (default: 0.374).
 #' @param cost_constraint Numeric. Maximum budget constraint in dollars (default: 1e4).
@@ -570,7 +584,7 @@ compute_power_plan_full_grid <- function(
 #' }
 #'
 #' @export
-cost_power_computation <- function(minimizing_variable = "tmp_threshold", fixed_variable = list(minimum_fold_change = 0.8),
+cost_power_computation <- function(minimizing_variable = "tpm_threshold", fixed_variable = list(minimum_fold_change = 0.8),
                                    # experimental parameters
                                    MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
                                    # analysis parameters
@@ -585,6 +599,20 @@ cost_power_computation <- function(minimizing_variable = "tmp_threshold", fixed_
                                    cost_per_captured_cell = 0.086, cost_per_million_reads = 0.374, cost_constraint = NULL,
                                    # efficiency of library preparation and sequencing platform
                                    mapping_efficiency = 0.72){
+
+  ####################### Input validation ####################################
+  input_check_cost_power_computation(
+    minimizing_variable = minimizing_variable, fixed_variable = fixed_variable,
+    MOI = MOI, num_targets = num_targets, non_targeting_gRNAs = non_targeting_gRNAs, 
+    gRNAs_per_target = gRNAs_per_target, gRNA_variability = gRNA_variability,
+    control_group = control_group, side = side, multiple_testing_alpha = multiple_testing_alpha, 
+    prop_non_null = prop_non_null, baseline_expression_stats = baseline_expression_stats, 
+    library_parameters = library_parameters, grid_size = grid_size, power_target = power_target, 
+    power_precision = power_precision, min_power = min_power, max_power = max_power,
+    cost_precision = cost_precision, cost_per_captured_cell = cost_per_captured_cell, 
+    cost_per_million_reads = cost_per_million_reads, cost_constraint = cost_constraint,
+    mapping_efficiency = mapping_efficiency
+  )
 
   # set the seed for computation
   set.seed(1)

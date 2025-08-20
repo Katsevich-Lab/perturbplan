@@ -369,3 +369,388 @@ input_check_library_computation <- function(
   invisible(NULL)
 }
 
+#' Input checking function for compute_power_plan_full_grid
+#'
+#' @inheritParams compute_power_plan_full_grid
+#'
+#' @return NULL
+input_check_compute_power_plan_full_grid <- function(
+    tpm_threshold, minimum_fold_change, cells_per_target, reads_per_cell,
+    MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
+    control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,
+    baseline_expression_stats, library_parameters,
+    grid_size = 10, min_power_threshold = 0.01, max_power_threshold = 0.8,
+    mapping_efficiency = 0.72
+) {
+  
+  ############################ tpm_threshold #############################
+  if (missing(tpm_threshold)) {
+    stop("`tpm_threshold` must be specified!")
+  }
+  if (is.numeric(tpm_threshold)) {
+    if (any(tpm_threshold <= 0)) {
+      stop("`tpm_threshold` values must be positive!")
+    }
+    if (any(tpm_threshold > 1000000)) {
+      stop("`tpm_threshold` values seem unreasonably large (>1,000,000 TPM)!")
+    }
+  } else if (is.character(tpm_threshold)) {
+    if (length(tpm_threshold) != 1 || tpm_threshold != "varying") {
+      stop("`tpm_threshold` must be numeric or the string 'varying'!")
+    }
+  } else {
+    stop("`tpm_threshold` must be numeric or the string 'varying'!")
+  }
+  
+  ######################## minimum_fold_change ############################
+  if (missing(minimum_fold_change)) {
+    stop("`minimum_fold_change` must be specified!")
+  }
+  if (is.numeric(minimum_fold_change)) {
+    if (any(minimum_fold_change <= 0)) {
+      stop("`minimum_fold_change` values must be positive!")
+    }
+  } else if (is.character(minimum_fold_change)) {
+    if (length(minimum_fold_change) != 1 || minimum_fold_change != "varying") {
+      stop("`minimum_fold_change` must be numeric or the string 'varying'!")
+    }
+  } else {
+    stop("`minimum_fold_change` must be numeric or the string 'varying'!")
+  }
+  
+  ########################## cells_per_target ##############################
+  if (missing(cells_per_target)) {
+    stop("`cells_per_target` must be specified!")
+  }
+  if (is.numeric(cells_per_target)) {
+    if (any(cells_per_target <= 0)) {
+      stop("`cells_per_target` values must be positive!")
+    }
+    if (any(cells_per_target != round(cells_per_target))) {
+      stop("`cells_per_target` values must be integers!")
+    }
+  } else if (is.character(cells_per_target)) {
+    if (length(cells_per_target) != 1 || cells_per_target != "varying") {
+      stop("`cells_per_target` must be numeric or the string 'varying'!")
+    }
+  } else {
+    stop("`cells_per_target` must be numeric or the string 'varying'!")
+  }
+  
+  ########################## reads_per_cell #################################
+  if (missing(reads_per_cell)) {
+    stop("`reads_per_cell` must be specified!")
+  }
+  if (is.numeric(reads_per_cell)) {
+    if (any(reads_per_cell <= 0)) {
+      stop("`reads_per_cell` values must be positive!")
+    }
+    if (any(reads_per_cell != round(reads_per_cell))) {
+      stop("`reads_per_cell` values must be integers!")
+    }
+  } else if (is.character(reads_per_cell)) {
+    if (length(reads_per_cell) != 1 || reads_per_cell != "varying") {
+      stop("`reads_per_cell` must be numeric or the string 'varying'!")
+    }
+  } else {
+    stop("`reads_per_cell` must be numeric or the string 'varying'!")
+  }
+  
+  ###################### Experimental parameters ############################
+  if (!is.numeric(MOI) || length(MOI) != 1 || MOI <= 0) {
+    stop("`MOI` must be a positive numeric value!")
+  }
+  
+  if (!is.numeric(num_targets) || length(num_targets) != 1 || num_targets <= 0 || num_targets != round(num_targets)) {
+    stop("`num_targets` must be a positive integer!")
+  }
+  
+  if (!is.numeric(non_targeting_gRNAs) || length(non_targeting_gRNAs) != 1 || non_targeting_gRNAs < 0 || non_targeting_gRNAs != round(non_targeting_gRNAs)) {
+    stop("`non_targeting_gRNAs` must be a non-negative integer!")
+  }
+  
+  if (!is.numeric(gRNAs_per_target) || length(gRNAs_per_target) != 1 || gRNAs_per_target <= 0 || gRNAs_per_target != round(gRNAs_per_target)) {
+    stop("`gRNAs_per_target` must be a positive integer!")
+  }
+  
+  if (!is.numeric(gRNA_variability) || length(gRNA_variability) != 1 || gRNA_variability < 0) {
+    stop("`gRNA_variability` must be a non-negative numeric value!")
+  }
+  
+  ###################### Analysis parameters ###############################
+  if (!is.character(control_group) || length(control_group) != 1 || !control_group %in% c("complement", "nt_cells")) {
+    stop("`control_group` must be either 'complement' or 'nt_cells'!")
+  }
+  
+  if (!is.character(side) || length(side) != 1 || !side %in% c("left", "right", "both")) {
+    stop("`side` must be 'left', 'right', or 'both'!")
+  }
+  
+  if (!is.numeric(multiple_testing_alpha) || length(multiple_testing_alpha) != 1 || multiple_testing_alpha <= 0 || multiple_testing_alpha >= 1) {
+    stop("`multiple_testing_alpha` must be a numeric value in (0,1)!")
+  }
+  
+  if (!is.numeric(prop_non_null) || length(prop_non_null) != 1 || prop_non_null <= 0 || prop_non_null > 1) {
+    stop("`prop_non_null` must be a numeric value in (0,1]!")
+  }
+  
+  ###################### Data inputs #####################################
+  if (missing(baseline_expression_stats)) {
+    stop("`baseline_expression_stats` must be specified!")
+  }
+  if (!is.data.frame(baseline_expression_stats)) {
+    stop("`baseline_expression_stats` must be a data frame!")
+  }
+  required_cols_baseline <- c("response_id", "relative_expression", "expression_size")
+  if (!all(required_cols_baseline %in% colnames(baseline_expression_stats))) {
+    stop("`baseline_expression_stats` must contain columns: ",
+         paste(required_cols_baseline, collapse = ", "), "!")
+  }
+  if (nrow(baseline_expression_stats) == 0) {
+    stop("`baseline_expression_stats` cannot be empty!")
+  }
+  if (any(baseline_expression_stats$relative_expression <= 0, na.rm = TRUE)) {
+    stop("`relative_expression` values must be positive!")
+  }
+  if (any(baseline_expression_stats$expression_size <= 0, na.rm = TRUE)) {
+    stop("`expression_size` values must be positive!")
+  }
+  
+  if (missing(library_parameters)) {
+    stop("`library_parameters` must be specified!")
+  }
+  if (!is.list(library_parameters)) {
+    stop("`library_parameters` must be a list!")
+  }
+  required_params_library <- c("UMI_per_cell", "variation")
+  if (!all(required_params_library %in% names(library_parameters))) {
+    stop("`library_parameters` must contain elements: ",
+         paste(required_params_library, collapse = ", "), "!")
+  }
+  if (!is.numeric(library_parameters$UMI_per_cell) || library_parameters$UMI_per_cell <= 0) {
+    stop("`library_parameters$UMI_per_cell` must be a positive numeric value!")
+  }
+  if (!is.numeric(library_parameters$variation) || library_parameters$variation <= 0) {
+    stop("`library_parameters$variation` must be a positive numeric value!")
+  }
+  
+  ###################### Grid parameters ################################
+  if (!is.numeric(grid_size) || length(grid_size) != 1 || grid_size <= 0 || grid_size != round(grid_size)) {
+    stop("`grid_size` must be a positive integer!")
+  }
+  
+  if (!is.numeric(min_power_threshold) || length(min_power_threshold) != 1 || min_power_threshold <= 0 || min_power_threshold >= 1) {
+    stop("`min_power_threshold` must be a numeric value in (0,1)!")
+  }
+  
+  if (!is.numeric(max_power_threshold) || length(max_power_threshold) != 1 || max_power_threshold <= 0 || max_power_threshold >= 1) {
+    stop("`max_power_threshold` must be a numeric value in (0,1)!")
+  }
+  
+  if (min_power_threshold >= max_power_threshold) {
+    stop("`min_power_threshold` must be less than `max_power_threshold`!")
+  }
+  
+  if (!is.numeric(mapping_efficiency) || length(mapping_efficiency) != 1 || mapping_efficiency <= 0 || mapping_efficiency > 1) {
+    stop("`mapping_efficiency` must be a numeric value in (0,1]!")
+  }
+  
+  invisible(NULL)
+}
+
+#' Input checking function for cost_power_computation
+#'
+#' @inheritParams cost_power_computation
+#'
+#' @return NULL
+input_check_cost_power_computation <- function(
+    minimizing_variable = "tpm_threshold", fixed_variable = list(minimum_fold_change = 0.8),
+    MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
+    control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,
+    baseline_expression_stats, library_parameters,
+    grid_size = 20, power_target = 0.8, power_precision = 0.01, min_power = 0.05, max_power = 0.95,
+    cost_precision = 0.9,
+    cost_per_captured_cell = 0.086, cost_per_million_reads = 0.374, cost_constraint = NULL,
+    mapping_efficiency = 0.72
+) {
+  
+  ######################## minimizing_variable ##############################
+  if (!is.character(minimizing_variable) || length(minimizing_variable) != 1) {
+    stop("`minimizing_variable` must be a single character string!")
+  }
+  valid_minimizing_vars <- c("tpm_threshold", "minimum_fold_change")
+  if (!minimizing_variable %in% valid_minimizing_vars) {
+    stop("`minimizing_variable` must be one of: ",
+         paste(valid_minimizing_vars, collapse = ", "), "!")
+  }
+  
+  ########################## fixed_variable #################################
+  if (!is.list(fixed_variable)) {
+    stop("`fixed_variable` must be a list!")
+  }
+  
+  # Check required fixed variables based on minimizing variable
+  if (minimizing_variable == "tpm_threshold") {
+    if (!"minimum_fold_change" %in% names(fixed_variable)) {
+      stop("When minimizing tpm_threshold, `fixed_variable` must contain 'minimum_fold_change'!")
+    }
+    if (!is.numeric(fixed_variable$minimum_fold_change) || fixed_variable$minimum_fold_change <= 0) {
+      stop("`fixed_variable$minimum_fold_change` must be a positive numeric value!")
+    }
+  } else if (minimizing_variable == "minimum_fold_change") {
+    if (!"tpm_threshold" %in% names(fixed_variable)) {
+      stop("When minimizing minimum_fold_change, `fixed_variable` must contain 'tpm_threshold'!")
+    }
+    if (!is.numeric(fixed_variable$tpm_threshold) || fixed_variable$tpm_threshold <= 0) {
+      stop("`fixed_variable$tpm_threshold` must be a positive numeric value!")
+    }
+  }
+  
+  # Check optional fixed variables
+  if ("cells_per_target" %in% names(fixed_variable)) {
+    if (!is.numeric(fixed_variable$cells_per_target) || fixed_variable$cells_per_target <= 0 || 
+        fixed_variable$cells_per_target != round(fixed_variable$cells_per_target)) {
+      stop("`fixed_variable$cells_per_target` must be a positive integer!")
+    }
+  }
+  
+  if ("reads_per_cell" %in% names(fixed_variable)) {
+    if (!is.numeric(fixed_variable$reads_per_cell) || fixed_variable$reads_per_cell <= 0 || 
+        fixed_variable$reads_per_cell != round(fixed_variable$reads_per_cell)) {
+      stop("`fixed_variable$reads_per_cell` must be a positive integer!")
+    }
+  }
+  
+  ###################### Experimental parameters ############################
+  if (!is.numeric(MOI) || length(MOI) != 1 || MOI <= 0) {
+    stop("`MOI` must be a positive numeric value!")
+  }
+  
+  if (!is.numeric(num_targets) || length(num_targets) != 1 || num_targets <= 0 || num_targets != round(num_targets)) {
+    stop("`num_targets` must be a positive integer!")
+  }
+  
+  if (!is.numeric(non_targeting_gRNAs) || length(non_targeting_gRNAs) != 1 || non_targeting_gRNAs < 0 || non_targeting_gRNAs != round(non_targeting_gRNAs)) {
+    stop("`non_targeting_gRNAs` must be a non-negative integer!")
+  }
+  
+  if (!is.numeric(gRNAs_per_target) || length(gRNAs_per_target) != 1 || gRNAs_per_target <= 0 || gRNAs_per_target != round(gRNAs_per_target)) {
+    stop("`gRNAs_per_target` must be a positive integer!")
+  }
+  
+  if (!is.numeric(gRNA_variability) || length(gRNA_variability) != 1 || gRNA_variability < 0) {
+    stop("`gRNA_variability` must be a non-negative numeric value!")
+  }
+  
+  ###################### Analysis parameters ###############################
+  if (!is.character(control_group) || length(control_group) != 1 || !control_group %in% c("complement", "nt_cells")) {
+    stop("`control_group` must be either 'complement' or 'nt_cells'!")
+  }
+  
+  if (!is.character(side) || length(side) != 1 || !side %in% c("left", "right", "both")) {
+    stop("`side` must be 'left', 'right', or 'both'!")
+  }
+  
+  if (!is.numeric(multiple_testing_alpha) || length(multiple_testing_alpha) != 1 || multiple_testing_alpha <= 0 || multiple_testing_alpha >= 1) {
+    stop("`multiple_testing_alpha` must be a numeric value in (0,1)!")
+  }
+  
+  if (!is.numeric(prop_non_null) || length(prop_non_null) != 1 || prop_non_null <= 0 || prop_non_null > 1) {
+    stop("`prop_non_null` must be a numeric value in (0,1]!")
+  }
+  
+  ###################### Data inputs #####################################
+  if (missing(baseline_expression_stats)) {
+    stop("`baseline_expression_stats` must be specified!")
+  }
+  if (!is.data.frame(baseline_expression_stats)) {
+    stop("`baseline_expression_stats` must be a data frame!")
+  }
+  required_cols_baseline <- c("response_id", "relative_expression", "expression_size")
+  if (!all(required_cols_baseline %in% colnames(baseline_expression_stats))) {
+    stop("`baseline_expression_stats` must contain columns: ",
+         paste(required_cols_baseline, collapse = ", "), "!")
+  }
+  if (nrow(baseline_expression_stats) == 0) {
+    stop("`baseline_expression_stats` cannot be empty!")
+  }
+  if (any(baseline_expression_stats$relative_expression <= 0, na.rm = TRUE)) {
+    stop("`relative_expression` values must be positive!")
+  }
+  if (any(baseline_expression_stats$expression_size <= 0, na.rm = TRUE)) {
+    stop("`expression_size` values must be positive!")
+  }
+  
+  if (missing(library_parameters)) {
+    stop("`library_parameters` must be specified!")
+  }
+  if (!is.list(library_parameters)) {
+    stop("`library_parameters` must be a list!")
+  }
+  required_params_library <- c("UMI_per_cell", "variation")
+  if (!all(required_params_library %in% names(library_parameters))) {
+    stop("`library_parameters` must contain elements: ",
+         paste(required_params_library, collapse = ", "), "!")
+  }
+  if (!is.numeric(library_parameters$UMI_per_cell) || library_parameters$UMI_per_cell <= 0) {
+    stop("`library_parameters$UMI_per_cell` must be a positive numeric value!")
+  }
+  if (!is.numeric(library_parameters$variation) || library_parameters$variation <= 0) {
+    stop("`library_parameters$variation` must be a positive numeric value!")
+  }
+  
+  ###################### Power optimization parameters ###################
+  if (!is.numeric(grid_size) || length(grid_size) != 1 || grid_size <= 0 || grid_size != round(grid_size)) {
+    stop("`grid_size` must be a positive integer!")
+  }
+  
+  if (!is.numeric(power_target) || length(power_target) != 1 || power_target <= 0 || power_target >= 1) {
+    stop("`power_target` must be a numeric value in (0,1)!")
+  }
+  
+  if (!is.numeric(power_precision) || length(power_precision) != 1 || power_precision <= 0 || power_precision >= 1) {
+    stop("`power_precision` must be a numeric value in (0,1)!")
+  }
+  
+  if (!is.numeric(min_power) || length(min_power) != 1 || min_power <= 0 || min_power >= 1) {
+    stop("`min_power` must be a numeric value in (0,1)!")
+  }
+  
+  if (!is.numeric(max_power) || length(max_power) != 1 || max_power <= 0 || max_power >= 1) {
+    stop("`max_power` must be a numeric value in (0,1)!")
+  }
+  
+  if (min_power >= max_power) {
+    stop("`min_power` must be less than `max_power`!")
+  }
+  
+  if (power_target <= min_power || power_target >= max_power) {
+    stop("`power_target` must be between `min_power` and `max_power`!")
+  }
+  
+  ###################### Cost parameters ################################
+  if (!is.numeric(cost_precision) || length(cost_precision) != 1 || cost_precision <= 0 || cost_precision > 1) {
+    stop("`cost_precision` must be a numeric value in (0,1]!")
+  }
+  
+  if (!is.numeric(cost_per_captured_cell) || length(cost_per_captured_cell) != 1 || cost_per_captured_cell < 0) {
+    stop("`cost_per_captured_cell` must be a non-negative numeric value!")
+  }
+  
+  if (!is.numeric(cost_per_million_reads) || length(cost_per_million_reads) != 1 || cost_per_million_reads < 0) {
+    stop("`cost_per_million_reads` must be a non-negative numeric value!")
+  }
+  
+  if (!is.null(cost_constraint)) {
+    if (!is.numeric(cost_constraint) || length(cost_constraint) != 1 || cost_constraint <= 0) {
+      stop("`cost_constraint` must be NULL or a positive numeric value!")
+    }
+  }
+  
+  if (!is.numeric(mapping_efficiency) || length(mapping_efficiency) != 1 || mapping_efficiency <= 0 || mapping_efficiency > 1) {
+    stop("`mapping_efficiency` must be a numeric value in (0,1]!")
+  }
+  
+  invisible(NULL)
+}
+

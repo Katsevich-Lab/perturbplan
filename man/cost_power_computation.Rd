@@ -5,7 +5,7 @@
 \title{Cost-Power Optimization for Perturb-seq Experimental Design}
 \usage{
 cost_power_computation(
-  minimizing_variable = "tmp_threshold",
+  minimizing_variable = "tpm_threshold",
   fixed_variable = list(minimum_fold_change = 0.8),
   MOI = 10,
   num_targets = 100,
@@ -86,9 +86,6 @@ Filters designs with total cost ≤ cost_precision × cost_constraint.}
 Set to \code{NULL} to disable cost constraints.}
 
 \item{mapping_efficiency}{Numeric. Sequencing mapping efficiency (default: 0.72).}
-
-\item{budget_precision}{Numeric. Budget utilization factor (default: 0.9).
-Filters designs with total cost ≤ budget_precision × cost_constraint.}
 }
 \value{
 Data frame with power analysis results including:

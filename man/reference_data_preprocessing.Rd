@@ -27,6 +27,9 @@ this can be NULL.}
 \item{read_umi_table}{Data frame. QC information from molecule_info.h5 or filtered_feature_bc_matrix.h5,
 as obtained via \code{\link{obtain_qc_read_umi_table}}.}
 
+\item{mapping_efficiency}{Numeric. Estimated mapping efficiency from
+\code{obtain_mapping_efficiency}.}
+
 \item{n_threads}{Integer. Number of threads used for parallel processing. Default: NULL (single-threaded).}
 
 \item{TPM_thres}{Numeric. Threshold for filtering low-expression genes during preprocessing.}
@@ -35,13 +38,15 @@ as obtained via \code{\link{obtain_qc_read_umi_table}}.}
 
 \item{D2_rough}{Numeric. Rough prior value for library variation parameter. Default: 0.3.}
 
-\item{h5_only}{Logical. If TRUE, skips baseline expression estimation step (only processes read_umi_table). Default: FALSE.
-@param mapping_efficiency Numeric. Estimated mapping efficiency from
-\code{obtain_mapping_efficiency}.
-@param TAP Logical. If TRUE, applies Targeted Analysis Pipeline (TAP)
-@param primer_threshold Numeric. Threshold for primer efficiency banding in TAP. Default: 0.2.
-@param TAP_target_list Character vector. List of target genes for TAP filtering. If NULL, no filtering is applied.
-@param TAP_origin_reference List. Reference data containing baseline expression statistics for TAP.}
+\item{h5_only}{Logical. If TRUE, skips baseline expression estimation step (only processes read_umi_table). Default: FALSE.}
+
+\item{TAP}{Logical. If TRUE, applies Targeted Analysis Pipeline (TAP).}
+
+\item{primer_threshold}{Numeric. Threshold for primer efficiency banding in TAP. Default: 0.2.}
+
+\item{TAP_target_list}{Character vector. List of target genes for TAP filtering. If NULL, no filtering is applied.}
+
+\item{TAP_origin_reference}{List. Reference data containing baseline expression statistics for TAP.}
 }
 \value{
 A list containing:

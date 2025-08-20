@@ -359,44 +359,44 @@ test_that("compute_power_plan_full_grid matches compute_power_plan_overall", {
   # Set up consistent test data and parameters
   test_data <- setup_grid_test_data()
   set.seed(12345)  # Set seed for reproducible fold change generation
-  
+
   # Fixed experimental parameters for direct comparison
   tpm_threshold_val <- 10
-  minimum_fold_change_val <- 0.8
+  minimum_fold_change_val <- 0.5
   cells_per_target_val <- 1000
   reads_per_cell_val <- 8000
   num_targets_val <- 20
   gRNAs_per_target_val <- 4
   non_targeting_gRNAs_val <- 10
   MOI_val <- 10
-  
+
   # Calculate experimental design parameters for compute_power_plan_overall
   total_gRNAs <- num_targets_val * gRNAs_per_target_val + non_targeting_gRNAs_val
   num_total_cells <- (cells_per_target_val * total_gRNAs) / (gRNAs_per_target_val * MOI_val)
   num_trt_cells <- cells_per_target_val
   num_cntrl_cells <- num_total_cells - num_trt_cells
-  
+
   # Calculate library size
   library_size <- fit_read_UMI_curve_cpp(
     reads_per_cell = reads_per_cell_val,
     UMI_per_cell = test_data$library_parameters$UMI_per_cell,
     variation = test_data$library_parameters$variation
   )
-  
+
   # Create fc_expression_df for compute_power_plan_overall
   set.seed(12345)  # Reset seed to ensure same fold changes
   filtered_expression_df <- dplyr::filter(
-    test_data$baseline_expression_stats, 
+    test_data$baseline_expression_stats,
     relative_expression >= tpm_threshold_val / 1e6
   )
-  
+
   fc_expression_df <- filtered_expression_df |>
     dplyr::rowwise() |>
     dplyr::mutate(
       grna_effects_vec = list(pmax(
-        stats::rnorm(n = gRNAs_per_target_val, 
-                    mean = minimum_fold_change_val, 
-                    sd = 0.15),  # default gRNA_variability
+        stats::rnorm(n = gRNAs_per_target_val,
+                    mean = minimum_fold_change_val,
+                    sd = 0.13),  # default gRNA_variability
         .Machine$double.eps
       )),
       avg_fold_change = mean(grna_effects_vec),
@@ -404,7 +404,7 @@ test_that("compute_power_plan_full_grid matches compute_power_plan_overall", {
     ) |>
     dplyr::ungroup() |>
     dplyr::select(-grna_effects_vec)
-  
+
   # Test 1: Get result from compute_power_plan_full_grid
   set.seed(12345)  # Reset seed
   result_full_grid <- compute_power_plan_full_grid(
@@ -420,8 +420,8 @@ test_that("compute_power_plan_full_grid matches compute_power_plan_overall", {
     MOI = MOI_val,
     grid_size = 1  # Single point for exact comparison
   )
-  
-  # Test 2: Get result from compute_power_plan_overall 
+
+  # Test 2: Get result from compute_power_plan_overall
   result_overall <- compute_power_plan_overall(
     num_trt_cells = num_trt_cells,
     num_cntrl_cells = num_cntrl_cells,
@@ -431,15 +431,15 @@ test_that("compute_power_plan_full_grid matches compute_power_plan_overall", {
     side = "left",
     prop_non_null = 0.1
   )
-  
+
   # Test 3: Compare power values
   expect_equal(nrow(result_full_grid), 1)
   expect_type(result_overall, "double")
   expect_length(result_overall, 1)
-  
-  # The power values should match within tolerance
-  expect_equal(result_full_grid$overall_power, result_overall, tolerance = 1e-6)
-  
+
+  # The power values should match within tolerance (allow for Monte Carlo variability)
+  expect_equal(result_full_grid$overall_power, result_overall, tolerance = .Machine$double.eps)
+
   # Test 4: Validate other calculated values match expected
   expect_equal(result_full_grid$cells_per_target, cells_per_target_val)
   expect_equal(result_full_grid$library_size, library_size, tolerance = 1e-6)
