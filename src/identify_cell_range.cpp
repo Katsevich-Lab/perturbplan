@@ -294,12 +294,7 @@ List identify_cell_range_cpp(
          " cells). Please increase the gap between power thresholds for meaningful experimental design ranges.");
   }
   
-  if (std::abs(min_reads_per_cell - max_reads_per_cell) < 1.0) {
-    stop("Reads per cell range too narrow: min_reads_per_cell (" + std::to_string(min_reads_per_cell) + 
-         ") and max_reads_per_cell (" + std::to_string(max_reads_per_cell) + 
-         ") are essentially identical. This may indicate insufficient UMI_per_cell (" + std::to_string(UMI_per_cell) + 
-         ") or variation (" + std::to_string(variation) + ") parameters for meaningful sequencing depth ranges.");
-  }
+  // Note: Removed check for equal min/max reads per cell - this is valid when user specifies fixed reads per cell
   
   // Return comprehensive results
   return List::create(
