@@ -636,8 +636,8 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
       if(is.null(fixed_variable$minimum_fold_change)){
         minimum_fold_change <- switch(side,
                                       left = {seq(0.5, 0.9, length.out = 20)},
-                                      right = {seq(1.1, 1.5, length.out = 5)},
-                                      both = {c(seq(0.5, 0.9, length.out = 10), seq(1.1, 1.5, length.out = 5))})
+                                      right = {seq(1.1, 1.5, length.out = 20)},
+                                      both = {c(seq(0.5, 0.9, length.out = 10), seq(1.1, 1.5, length.out = 10))})
       }else{
         minimum_fold_change <- fixed_variable$minimum_fold_change
       }
@@ -954,5 +954,182 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
   return(list(
     optimal_cost_power_df = optimal_cost_power_df,
     optimal_cost_grid = optimal_cost_grid
+  ))
+}
+
+#' Calculate optimal experimental design parameters under cost constraints
+#'
+#' @description
+#' This function determines the optimal experimental design parameters (cells per target 
+#' and reads per cell) given a total cost constraint. It handles two optimization scenarios:
+#' 
+#' \itemize{
+#'   \item When \code{reads_per_cell} is NULL: Calculates the maximum reads per cell 
+#'         achievable given a fixed \code{cells_per_target} within the cost constraint
+#'   \item When \code{cells_per_target} is NULL: Calculates the maximum cells per target 
+#'         achievable given a fixed \code{reads_per_cell} within the cost constraint
+#' }
+#'
+#' @param cost_per_captured_cell Numeric. Cost per captured cell in dollars (default: 0.086).
+#'   Used for library preparation cost calculations.
+#' @param cost_per_million_reads Numeric. Cost per million sequencing reads in dollars 
+#'   (default: 0.374). Used for sequencing cost calculations.
+#' @param cost_constraint Numeric. Total budget constraint in dollars. Must be positive.
+#' @param MOI Numeric. Multiplicity of infection parameter (default: 10). Used to compute 
+#'   the number of captured cells from cells per target.
+#' @param num_targets Integer. Number of target genes in the experiment (default: 100).
+#' @param non_targeting_gRNAs Integer. Number of non-targeting gRNAs (default: 10).
+#' @param gRNAs_per_target Integer. Number of gRNAs per target gene (default: 4).
+#' @param reads_per_cell Numeric or NULL. If provided, this parameter is fixed and 
+#'   \code{cells_per_target} will be optimized. If NULL, this parameter will be optimized.
+#' @param cells_per_target Numeric or NULL. If provided, this parameter is fixed and 
+#'   \code{reads_per_cell} will be optimized. If NULL, this parameter will be optimized.
+#' @param mapping_efficiency Numeric. Mapping efficiency of sequencing platform 
+#'   (default: 0.72). Used to convert between raw reads and mapped reads.
+#'
+#' @return A list containing:
+#' \describe{
+#'   \item{cells_per_target}{Numeric. Optimized or provided cells per target value}
+#'   \item{reads_per_cell}{Numeric. Optimized or provided reads per cell value}
+#' }
+#'
+#' @details
+#' The function uses a cost model where total cost = cell preparation cost + sequencing cost:
+#' \itemize{
+#'   \item Cell preparation cost = \code{cost_per_captured_cell * num_captured_cells}
+#'   \item Sequencing cost = \code{cost_per_million_reads * total_reads / 1e6}
+#'   \item \code{num_captured_cells = ((gRNAs_per_target * num_targets + non_targeting_gRNAs) * cells_per_target / gRNAs_per_target) / MOI}
+#'   \item \code{total_reads = num_captured_cells * reads_per_cell / mapping_efficiency}
+#' }
+#'
+#' **Optimization Logic:**
+#' 
+#' **Scenario 1 (reads_per_cell = NULL):** Given fixed \code{cells_per_target}, maximizes 
+#' \code{reads_per_cell} within cost constraint by allocating remaining budget after cell 
+#' preparation costs to sequencing.
+#' 
+#' **Scenario 2 (cells_per_target = NULL):** Given fixed \code{reads_per_cell}, maximizes 
+#' \code{cells_per_target} (equivalently, captured cells) within cost constraint using 
+#' the total cost per captured cell (including both preparation and sequencing costs).
+#'
+#' @section Error Handling:
+#' The function validates that the cost constraint is sufficient for meaningful experiments:
+#' \itemize{
+#'   \item Ensures at least 10 reads per cell can be achieved
+#'   \item Ensures at least 10 captured cells can be achieved
+#'   \item Provides clear error messages when constraints are too tight
+#' }
+#'
+#' @examples
+#' \dontrun{
+#' # Optimize reads per cell given fixed cells per target
+#' result1 <- obtain_fixed_variable_constraining_cost(
+#'   cost_constraint = 1000,
+#'   cells_per_target = 100,
+#'   reads_per_cell = NULL
+#' )
+#' 
+#' # Optimize cells per target given fixed reads per cell  
+#' result2 <- obtain_fixed_variable_constraining_cost(
+#'   cost_constraint = 1000,
+#'   cells_per_target = NULL, 
+#'   reads_per_cell = 5000
+#' )
+#' }
+#'
+#' @seealso 
+#' \code{\link{cost_power_computation}} for cost-constrained power analysis that uses this function
+#'
+#' @export
+obtain_fixed_variable_constraining_cost <- function(
+    cost_per_captured_cell = 0.086, cost_per_million_reads = 0.374, cost_constraint,
+    MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4,
+    reads_per_cell, cells_per_target, mapping_efficiency = 0.72){
+
+  # Input validation
+  if (missing(cost_constraint) || !is.numeric(cost_constraint) || length(cost_constraint) != 1 || cost_constraint <= 0) {
+    stop("`cost_constraint` must be a positive numeric value!")
+  }
+  
+  if (!is.numeric(cost_per_captured_cell) || cost_per_captured_cell <= 0) {
+    stop("`cost_per_captured_cell` must be positive!")
+  }
+  
+  if (!is.numeric(cost_per_million_reads) || cost_per_million_reads <= 0) {
+    stop("`cost_per_million_reads` must be positive!")
+  }
+  
+  if (!is.numeric(mapping_efficiency) || mapping_efficiency <= 0 || mapping_efficiency > 1) {
+    stop("`mapping_efficiency` must be between 0 and 1!")
+  }
+  
+  # Check that exactly one parameter is NULL for optimization
+  if (is.null(reads_per_cell) && is.null(cells_per_target)) {
+    stop("Exactly one of `reads_per_cell` or `cells_per_target` must be NULL for optimization!")
+  }
+  
+  if (!is.null(reads_per_cell) && !is.null(cells_per_target)) {
+    stop("Exactly one of `reads_per_cell` or `cells_per_target` must be NULL for optimization!")
+  }
+  
+  # Validate non-NULL parameters
+  if (!is.null(reads_per_cell) && (!is.numeric(reads_per_cell) || reads_per_cell <= 0)) {
+    stop("`reads_per_cell` must be positive when provided!")
+  }
+  
+  if (!is.null(cells_per_target) && (!is.numeric(cells_per_target) || cells_per_target <= 0)) {
+    stop("`cells_per_target` must be positive when provided!")
+  }
+
+  # Optimization logic: determine which parameter to optimize
+  if(is.null(reads_per_cell)){
+    ################## Scenario 1: Optimize reads_per_cell given fixed cells_per_target ##################
+    
+    # Step 1: Calculate number of captured cells needed for the given cells_per_target
+    num_captured_cells <- ((gRNAs_per_target * num_targets + non_targeting_gRNAs) * cells_per_target / gRNAs_per_target) / MOI
+
+    # Step 2: Calculate cell preparation costs
+    cells_budget <- cost_per_captured_cell * num_captured_cells
+
+    # Step 3: Calculate remaining budget for sequencing 
+    reads_budget <- cost_constraint - cells_budget
+    if(reads_budget < 0){
+      stop("Cost constraint is too tight to get any reads per cell!")
+    }else{
+      # Step 4: Calculate maximum reads per cell achievable with remaining budget
+      # Formula: reads_budget = (total_reads / 1e6) * cost_per_million_reads
+      # where total_reads = num_captured_cells * reads_per_cell / mapping_efficiency
+      reads_per_cell <- (1e6 * mapping_efficiency * reads_budget / cost_per_million_reads) / num_captured_cells
+      
+      # Step 5: Validate minimum meaningful sequencing depth
+      if(reads_per_cell < 10){
+        stop("Cost constraint is too tight to get more than 10 reads per cell!")
+      }
+    }
+  }else{
+    ################## Scenario 2: Optimize cells_per_target given fixed reads_per_cell ##################
+    
+    # Step 1: Calculate raw reads per cell (before mapping efficiency)
+    raw_reads_per_cell <- reads_per_cell / mapping_efficiency
+
+    # Step 2: Calculate total cost per captured cell (preparation + sequencing)
+    cost_per_captured_cell_total <- raw_reads_per_cell * cost_per_million_reads / 1e6 + cost_per_captured_cell
+
+    # Step 3: Calculate maximum number of captured cells within budget
+    num_captured_cells <- round(cost_constraint / cost_per_captured_cell_total)
+
+    # Step 4: Convert captured cells back to cells per target
+    cells_per_target <- num_captured_cells * MOI * gRNAs_per_target / (gRNAs_per_target * num_targets + non_targeting_gRNAs)
+    
+    # Step 5: Validate minimum meaningful cell count
+    if(num_captured_cells < 10){
+      stop("Cost constraint is too tight to get more than 10 captured cells!")
+    }
+  }
+
+  # Return optimized experimental design parameters
+  return(list(
+    cells_per_target = cells_per_target,
+    reads_per_cell = reads_per_cell
   ))
 }
