@@ -5,7 +5,7 @@
 \title{Input checking function for compute_power_plan_full_grid}
 \usage{
 input_check_compute_power_plan_full_grid(
-  tpm_threshold,
+  TPM_threshold,
   minimum_fold_change,
   cells_per_target,
   reads_per_cell,
@@ -27,7 +27,7 @@ input_check_compute_power_plan_full_grid(
 )
 }
 \arguments{
-\item{tpm_threshold}{Numeric, numeric vector, or character. TPM threshold value, custom sequence, or "varying" for auto-selection.}
+\item{TPM_threshold}{Numeric, numeric vector, or character. TPM threshold value, custom sequence, or "varying" for auto-selection.}
 
 \item{minimum_fold_change}{Numeric, numeric vector, or character. Minimum fold change value, custom sequence, or "varying" for auto-selection.}
 

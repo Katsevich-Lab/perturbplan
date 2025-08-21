@@ -210,18 +210,18 @@ importFrom("utils", "read.csv")
 
 ## Parameter Naming Convention
 
-**IMPORTANT**: Use `tpm_threshold` instead of `tmp_threshold` everywhere in the package.
+**IMPORTANT**: Use `TPM_threshold` instead of `TPM_threshold` everywhere in the package.
 
-- All function parameters should use `tpm_threshold`
-- All variable names should use `tpm_threshold`  
-- All documentation should reference `tpm_threshold`
-- UI inputs should use `"tpm_threshold"` as input ID
+- All function parameters should use `TPM_threshold`
+- All variable names should use `TPM_threshold`  
+- All documentation should reference `TPM_threshold`
+- UI inputs should use `"TPM_threshold"` as input ID
 
 This ensures consistency across the entire codebase and avoids confusion between "TPM" (Transcripts Per Million) and "tmp" (temporary).
 
 ## Common Typos to Avoid
 
-- **`tpm_threshold` vs `tmp_threshold`**: Always use `tpm_threshold` (Transcripts Per Million), not `tmp_threshold` (temporary)
+- **`TPM_threshold` vs `TPM_threshold`**: Always use `TPM_threshold` (Transcripts Per Million), not `TPM_threshold` (temporary)
 - **Parameter consistency**: When adding parameters to functions, double-check spelling matches existing usage
 - **Function signatures**: Ensure parameter names match between function definitions and calls
 - **Careful attention to existing code**: When modifying existing functions, preserve existing parameter names exactly as they are

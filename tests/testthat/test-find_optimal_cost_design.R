@@ -21,7 +21,7 @@ setup_optimal_cost_test_data <- function() {
   # Create mock cost-power data frame (simulating output from cost_power_computation)
   set.seed(12345)
   cost_power_df <- expand.grid(
-    tpm_threshold = c(5, 10, 15, 20),
+    TPM_threshold = c(5, 10, 15, 20),
     cells_per_target = c(500, 1000, 1500),
     raw_reads_per_cell = c(5000, 8000, 12000)
   ) |>
@@ -37,7 +37,7 @@ setup_optimal_cost_test_data <- function() {
       overall_power = pmax(0.1, pmin(0.95,
         0.5 + 0.3 * log10(cells_per_target / 500) +
         0.2 * log10(raw_reads_per_cell / 5000) -
-        0.15 * (tpm_threshold - 5) / 15 + rnorm(36, 0, 0.05)))
+        0.15 * (TPM_threshold - 5) / 15 + rnorm(36, 0, 0.05)))
     )
 
   list(
@@ -52,7 +52,7 @@ test_that("find_optimal_cost_design basic functionality", {
 
   result <- find_optimal_cost_design(
     cost_power_df = test_data$cost_power_df,
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     power_target = 0.8,
     power_precision = 0.05
   )
@@ -64,13 +64,13 @@ test_that("find_optimal_cost_design basic functionality", {
 
   # Validate optimal_cost_power_df
   expect_s3_class(result$optimal_cost_power_df, "data.frame")
-  required_cols_power <- c("tpm_threshold", "overall_power", "total_cost",
+  required_cols_power <- c("TPM_threshold", "overall_power", "total_cost",
                           "cells_per_target", "reads_per_cell", "minimum_cost")
   expect_true(all(required_cols_power %in% names(result$optimal_cost_power_df)))
 
   # Validate optimal_cost_grid
   expect_s3_class(result$optimal_cost_grid, "data.frame")
-  required_cols_grid <- c("tpm_threshold", "minimum_cost", "reads_per_cell", "total_cost")
+  required_cols_grid <- c("TPM_threshold", "minimum_cost", "reads_per_cell", "total_cost")
   expect_true(all(required_cols_grid %in% names(result$optimal_cost_grid)))
 
   # Check that optimal_cost_grid has the flattened structure from unnest
@@ -98,7 +98,7 @@ test_that("find_optimal_cost_design with minimum_fold_change minimizing variable
     power_precision = 0.05
   )
 
-  # Should group by minimum_fold_change instead of tpm_threshold
+  # Should group by minimum_fold_change instead of TPM_threshold
   expect_true("minimum_fold_change" %in% names(result$optimal_cost_power_df))
   expect_true("minimum_fold_change" %in% names(result$optimal_cost_grid))
 
@@ -111,7 +111,7 @@ test_that("find_optimal_cost_design cost calculations", {
 
   result <- find_optimal_cost_design(
     cost_power_df = test_data$cost_power_df,
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     power_target = 0.6,  # Lower target to get more data
     power_precision = 0.1,
     cost_per_captured_cell = 0.1,
@@ -147,7 +147,7 @@ test_that("find_optimal_cost_design MOI and num_targets effects", {
   # Test with different MOI values
   result_moi5 <- find_optimal_cost_design(
     cost_power_df = test_data$cost_power_df,
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     power_target = 0.6,
     power_precision = 0.1,
     MOI = 5,  # Lower MOI
@@ -156,7 +156,7 @@ test_that("find_optimal_cost_design MOI and num_targets effects", {
 
   result_moi20 <- find_optimal_cost_design(
     cost_power_df = test_data$cost_power_df,
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     power_target = 0.6,
     power_precision = 0.1,
     MOI = 20,  # Higher MOI
@@ -174,7 +174,7 @@ test_that("find_optimal_cost_design different cost_grid_size", {
 
   result_small_grid <- find_optimal_cost_design(
     cost_power_df = test_data$cost_power_df,
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     power_target = 0.6,
     power_precision = 0.1,
     cost_grid_size = 10  # Small grid
@@ -182,7 +182,7 @@ test_that("find_optimal_cost_design different cost_grid_size", {
 
   result_large_grid <- find_optimal_cost_design(
     cost_power_df = test_data$cost_power_df,
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     power_target = 0.6,
     power_precision = 0.1,
     cost_grid_size = 50  # Larger grid
@@ -198,7 +198,7 @@ test_that("find_optimal_cost_design parameter range validation", {
 
   result <- find_optimal_cost_design(
     cost_power_df = test_data$cost_power_df,
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     power_target = 0.6,
     power_precision = 0.1
   )
@@ -221,7 +221,7 @@ test_that("find_optimal_cost_design column renaming", {
 
   result <- find_optimal_cost_design(
     cost_power_df = test_data$cost_power_df,
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     power_target = 0.6,
     power_precision = 0.1
   )

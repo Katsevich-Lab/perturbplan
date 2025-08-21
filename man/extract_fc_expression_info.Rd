@@ -10,7 +10,7 @@ extract_fc_expression_info(
   biological_system = "K562",
   B = 200,
   gene_list = NULL,
-  tpm_threshold = 10,
+  TPM_threshold = 10,
   custom_pilot_data = NULL,
   gRNAs_per_target = 4
 )
@@ -30,8 +30,8 @@ Ignored when gene_list is provided.}
 If provided, expression parameters will be extracted for ALL specified genes (no sampling).
 If NULL (default), B genes are randomly sampled from baseline data.}
 
-\item{tpm_threshold}{Numeric. Minimum TPM threshold (default: 10). Genes with expression
-levels below tpm_threshold/1e6 are filtered out before power calculation.}
+\item{TPM_threshold}{Numeric. Minimum TPM threshold (default: 10). Genes with expression
+levels below TPM_threshold/1e6 are filtered out before power calculation.}
 
 \item{custom_pilot_data}{List. Optional custom pilot data. If provided,
 this data is used instead of the default biological_system data. Must contain
@@ -66,7 +66,7 @@ The function operates in two modes:
 In both modes:
 \itemize{
 \item Sets a random seed for reproducibility
-\item Filters genes below TPM threshold (relative_expression < tpm_threshold/1e6)
+\item Filters genes below TPM threshold (relative_expression < TPM_threshold/1e6)
 \item Generates gRNAs_per_target effect sizes per target from a normal distribution
 \item Calculates avg_fold_change and avg_fold_change_sq from the gRNA effect sizes
 \item Returns combined data for Monte Carlo integration with random effect sizes

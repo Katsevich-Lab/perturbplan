@@ -26,7 +26,7 @@ containing power analysis results with cost calculations. Must include columns:
 
 \item{minimizing_variable}{Character. The parameter being optimized. Must be one of:
 \itemize{
-\item "tpm_threshold": TPM expression threshold optimization
+\item "TPM_threshold": TPM expression threshold optimization
 \item "minimum_fold_change": Minimum fold change threshold optimization
 }}
 

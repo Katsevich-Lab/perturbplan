@@ -24,13 +24,13 @@ setup_validation_test_data <- function() {
   )
 }
 
-test_that("input_check_compute_power_plan_full_grid validates tpm_threshold parameter", {
+test_that("input_check_compute_power_plan_full_grid validates TPM_threshold parameter", {
   test_data <- setup_validation_test_data()
 
-  # Test invalid tpm_threshold type
+  # Test invalid TPM_threshold type
   expect_error(
     input_check_compute_power_plan_full_grid(
-      tpm_threshold = "invalid",
+      TPM_threshold = "invalid",
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
       reads_per_cell = 8000,
@@ -44,7 +44,7 @@ test_that("input_check_compute_power_plan_full_grid validates tpm_threshold para
   # Test negative tmp_threshold
   expect_error(
     input_check_compute_power_plan_full_grid(
-      tpm_threshold = -5,
+      TPM_threshold = -5,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
       reads_per_cell = 8000,
@@ -52,13 +52,13 @@ test_that("input_check_compute_power_plan_full_grid validates tpm_threshold para
       library_parameters = test_data$library_parameters,
       num_targets = 10
     ),
-    regexp = "`tpm_threshold` values must be non-negative!"
+    regexp = "`TPM_threshold` values must be non-negative!"
   )
 
   # Test valid inputs - should not throw error
   expect_silent(
     input_check_compute_power_plan_full_grid(
-      tpm_threshold = 10,
+      TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
       reads_per_cell = 8000,
@@ -75,7 +75,7 @@ test_that("input_check_compute_power_plan_full_grid validates minimum_fold_chang
   # Test invalid minimum_fold_change type
   expect_error(
     input_check_compute_power_plan_full_grid(
-      tpm_threshold = 10,
+      TPM_threshold = 10,
       minimum_fold_change = "invalid",
       cells_per_target = 1000,
       reads_per_cell = 8000,
@@ -89,7 +89,7 @@ test_that("input_check_compute_power_plan_full_grid validates minimum_fold_chang
   # Test negative minimum_fold_change
   expect_error(
     input_check_compute_power_plan_full_grid(
-      tpm_threshold = 10,
+      TPM_threshold = 10,
       minimum_fold_change = -0.5,
       cells_per_target = 1000,
       reads_per_cell = 8000,
@@ -107,7 +107,7 @@ test_that("input_check_compute_power_plan_full_grid validates baseline expressio
   # Test missing baseline_expression_stats
   expect_error(
     input_check_compute_power_plan_full_grid(
-      tpm_threshold = 10,
+      TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
       reads_per_cell = 8000,
@@ -121,7 +121,7 @@ test_that("input_check_compute_power_plan_full_grid validates baseline expressio
   # Test invalid baseline_expression_stats structure
   expect_error(
     input_check_compute_power_plan_full_grid(
-      tpm_threshold = 10,
+      TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
       reads_per_cell = 8000,
@@ -139,7 +139,7 @@ test_that("input_check_compute_power_plan_full_grid validates library parameters
   # Test missing library_parameters
   expect_error(
     input_check_compute_power_plan_full_grid(
-      tpm_threshold = 10,
+      TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
       reads_per_cell = 8000,
@@ -153,7 +153,7 @@ test_that("input_check_compute_power_plan_full_grid validates library parameters
   # Test invalid library_parameters structure
   expect_error(
     input_check_compute_power_plan_full_grid(
-      tpm_threshold = 10,
+      TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
       reads_per_cell = 8000,
@@ -179,13 +179,13 @@ test_that("input_check_cost_power_computation validates minimizing_variable para
       power_target = 0.6,
       cost_constraint = 10000
     ),
-    regexp = "must be one of: tpm_threshold, minimum_fold_change"
+    regexp = "must be one of: TPM_threshold, minimum_fold_change"
   )
 
   # Test valid minimizing_variable - should not throw error
   expect_silent(
     input_check_cost_power_computation(
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       fixed_variable = list(minimum_fold_change = 0.8),
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
@@ -202,7 +202,7 @@ test_that("input_check_cost_power_computation validates power_target parameter",
   # Test invalid power_target range
   expect_error(
     input_check_cost_power_computation(
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       fixed_variable = list(minimum_fold_change = 0.8),
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
@@ -216,7 +216,7 @@ test_that("input_check_cost_power_computation validates power_target parameter",
   # Test negative power_target
   expect_error(
     input_check_cost_power_computation(
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       fixed_variable = list(minimum_fold_change = 0.8),
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
@@ -234,7 +234,7 @@ test_that("input_check_cost_power_computation validates cost_constraint paramete
   # Test negative cost_constraint
   expect_error(
     input_check_cost_power_computation(
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       fixed_variable = list(minimum_fold_change = 0.8),
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
@@ -248,7 +248,7 @@ test_that("input_check_cost_power_computation validates cost_constraint paramete
   # Test NULL cost_constraint - should not throw error
   expect_silent(
     input_check_cost_power_computation(
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       fixed_variable = list(minimum_fold_change = 0.8),
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
@@ -265,7 +265,7 @@ test_that("input_check_cost_power_computation validates fixed_variable parameter
   # Test missing fixed_variable
   expect_error(
     input_check_cost_power_computation(
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       fixed_variable = NULL,
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
@@ -279,7 +279,7 @@ test_that("input_check_cost_power_computation validates fixed_variable parameter
   # Test empty fixed_variable
   expect_error(
     input_check_cost_power_computation(
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       fixed_variable = list(),
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
@@ -293,7 +293,7 @@ test_that("input_check_cost_power_computation validates fixed_variable parameter
   # Test invalid fixed_variable parameter names
   expect_error(
     input_check_cost_power_computation(
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       fixed_variable = list(invalid_param = 0.8),
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
@@ -311,7 +311,7 @@ test_that("input validation functions work with varying parameters", {
   # Test with "varying" parameters - should not throw error
   expect_silent(
     input_check_compute_power_plan_full_grid(
-      tpm_threshold = "varying",
+      TPM_threshold = "varying",
       minimum_fold_change = "varying",
       cells_per_target = "varying",
       reads_per_cell = "varying",
@@ -324,7 +324,7 @@ test_that("input validation functions work with varying parameters", {
   # Test with mixed numeric and varying parameters - should not throw error
   expect_silent(
     input_check_compute_power_plan_full_grid(
-      tpm_threshold = c(5, 10, 15),
+      TPM_threshold = c(5, 10, 15),
       minimum_fold_change = "varying",
       cells_per_target = 1000,
       reads_per_cell = c(6000, 8000, 10000),

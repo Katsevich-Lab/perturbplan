@@ -6,7 +6,7 @@ library(testthat)
 setup_validation_test_data <- function() {
   # Valid cost-power data frame
   cost_power_df <- data.frame(
-    tpm_threshold = rep(c(5, 10, 15), each = 3),
+    TPM_threshold = rep(c(5, 10, 15), each = 3),
     overall_power = c(0.7, 0.8, 0.9, 0.75, 0.85, 0.95, 0.6, 0.7, 0.8),
     total_cost = c(1000, 1500, 2000, 1100, 1600, 2100, 900, 1400, 1900),
     cells_per_target = rep(c(500, 1000, 1500), 3),
@@ -23,7 +23,7 @@ test_that("input_check_find_optimal_cost_design validates cost_power_df", {
   # Test missing cost_power_df
   expect_error(
     input_check_find_optimal_cost_design(
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05
     ),
@@ -34,7 +34,7 @@ test_that("input_check_find_optimal_cost_design validates cost_power_df", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = list(a = 1, b = 2),
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05
     ),
@@ -45,7 +45,7 @@ test_that("input_check_find_optimal_cost_design validates cost_power_df", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = data.frame(),
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05
     ),
@@ -57,7 +57,7 @@ test_that("input_check_find_optimal_cost_design validates cost_power_df", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = incomplete_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05
     ),
@@ -87,18 +87,18 @@ test_that("input_check_find_optimal_cost_design validates minimizing_variable", 
       power_target = 0.8,
       power_precision = 0.05
     ),
-    "minimizing_variable.*must be one of.*tpm_threshold.*minimum_fold_change"
+    "minimizing_variable.*must be one of.*TPM_threshold.*minimum_fold_change"
   )
   
   # Test minimizing_variable not in data
   expect_error(
     input_check_find_optimal_cost_design(
-      cost_power_df = test_data$cost_power_df[, !names(test_data$cost_power_df) %in% "tpm_threshold"],
-      minimizing_variable = "tpm_threshold",
+      cost_power_df = test_data$cost_power_df[, !names(test_data$cost_power_df) %in% "TPM_threshold"],
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05
     ),
-    "cost_power_df.*must contain a column named.*tpm_threshold"
+    "cost_power_df.*must contain a column named.*TPM_threshold"
   )
 })
 
@@ -109,7 +109,7 @@ test_that("input_check_find_optimal_cost_design validates power parameters", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_precision = 0.05
     ),
     "power_target.*must be specified"
@@ -119,7 +119,7 @@ test_that("input_check_find_optimal_cost_design validates power parameters", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 1.5,
       power_precision = 0.05
     ),
@@ -130,7 +130,7 @@ test_that("input_check_find_optimal_cost_design validates power parameters", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = -0.1
     ),
@@ -141,7 +141,7 @@ test_that("input_check_find_optimal_cost_design validates power parameters", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.9
     ),
@@ -156,7 +156,7 @@ test_that("input_check_find_optimal_cost_design validates experimental parameter
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05,
       MOI = -5
@@ -168,7 +168,7 @@ test_that("input_check_find_optimal_cost_design validates experimental parameter
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05,
       num_targets = 50.5
@@ -184,7 +184,7 @@ test_that("input_check_find_optimal_cost_design validates cost parameters", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05,
       cost_per_captured_cell = -0.1
@@ -196,7 +196,7 @@ test_that("input_check_find_optimal_cost_design validates cost parameters", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05,
       cost_per_million_reads = -0.5
@@ -208,7 +208,7 @@ test_that("input_check_find_optimal_cost_design validates cost parameters", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05,
       cost_grid_size = 0
@@ -220,7 +220,7 @@ test_that("input_check_find_optimal_cost_design validates cost parameters", {
   expect_warning(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05,
       cost_grid_size = 1500
@@ -238,7 +238,7 @@ test_that("input_check_find_optimal_cost_design validates data columns", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = invalid_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05
     ),
@@ -251,7 +251,7 @@ test_that("input_check_find_optimal_cost_design validates data columns", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = invalid_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05
     ),
@@ -264,7 +264,7 @@ test_that("input_check_find_optimal_cost_design validates data columns", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = invalid_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05
     ),
@@ -277,7 +277,7 @@ test_that("input_check_find_optimal_cost_design validates data columns", {
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = invalid_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05
     ),
@@ -288,7 +288,7 @@ test_that("input_check_find_optimal_cost_design validates data columns", {
 test_that("input_check_find_optimal_cost_design validates power criteria feasibility", {
   # Create data where no designs can meet power criteria
   impossible_df <- data.frame(
-    tpm_threshold = c(5, 10, 15),
+    TPM_threshold = c(5, 10, 15),
     overall_power = c(0.1, 0.2, 0.3),  # All too low
     total_cost = c(1000, 1500, 2000),
     cells_per_target = c(500, 1000, 1500),
@@ -299,7 +299,7 @@ test_that("input_check_find_optimal_cost_design validates power criteria feasibi
   expect_error(
     input_check_find_optimal_cost_design(
       cost_power_df = impossible_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,  # Target 80% but data only has 10-30%
       power_precision = 0.05
     ),
@@ -314,7 +314,7 @@ test_that("input_check_find_optimal_cost_design passes with valid inputs", {
   expect_silent(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.8,
       power_precision = 0.05
     )
@@ -334,7 +334,7 @@ test_that("input_check_find_optimal_cost_design passes with valid inputs", {
   expect_silent(
     input_check_find_optimal_cost_design(
       cost_power_df = test_data$cost_power_df,
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       power_target = 0.85,
       power_precision = 0.02,
       MOI = 15,

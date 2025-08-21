@@ -63,8 +63,8 @@ get_pilot_data_from_package <- function(biological_system) {
 #' @param gene_list Character vector. Optional list of Ensembl gene IDs to use for analysis.
 #'   If provided, expression parameters will be extracted for ALL specified genes (no sampling).
 #'   If NULL (default), B genes are randomly sampled from baseline data.
-#' @param tpm_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
-#'   levels below tpm_threshold/1e6 are filtered out before power calculation.
+#' @param TPM_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
+#'   levels below TPM_threshold/1e6 are filtered out before power calculation.
 #' @param custom_pilot_data List. Optional custom pilot data. If provided,
 #'   this data is used instead of the default biological_system data. Must contain
 #'   baseline_expression_stats (data frame with gene expression data)
@@ -91,7 +91,7 @@ get_pilot_data_from_package <- function(biological_system) {
 #' In both modes:
 #' \itemize{
 #'   \item Sets a random seed for reproducibility
-#'   \item Filters genes below TPM threshold (relative_expression < tpm_threshold/1e6)
+#'   \item Filters genes below TPM threshold (relative_expression < TPM_threshold/1e6)
 #'   \item Generates gRNAs_per_target effect sizes per target from a normal distribution
 #'   \item Calculates avg_fold_change and avg_fold_change_sq from the gRNA effect sizes
 #'   \item Returns combined data for Monte Carlo integration with random effect sizes
@@ -99,7 +99,7 @@ get_pilot_data_from_package <- function(biological_system) {
 #'
 #' @seealso \code{\link{get_pilot_data_from_package}} for direct pilot data access
 #' @export
-extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, biological_system =  "K562", B = 200, gene_list = NULL, tpm_threshold = 10, custom_pilot_data = NULL, gRNAs_per_target = 4){
+extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, biological_system =  "K562", B = 200, gene_list = NULL, TPM_threshold = 10, custom_pilot_data = NULL, gRNAs_per_target = 4){
 
   # set the random seed
   set.seed(1)
@@ -136,22 +136,22 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
 
   #################### apply TPM threshold filtering FIRST ###################
   # Convert TPM threshold to relative expression scale (TPM / 1e6)
-  tpm_threshold_relative <- tpm_threshold / 1e6
+  TPM_threshold_relative <- TPM_threshold / 1e6
 
   # Filter the full baseline dataset by TPM threshold first
   if ("relative_expression" %in% colnames(baseline_df)) {
     pre_filter_n <- nrow(baseline_df)
     filtered_baseline_df <- baseline_df |>
-      dplyr::filter(relative_expression >= tpm_threshold_relative)
+      dplyr::filter(relative_expression >= TPM_threshold_relative)
     post_filter_n <- nrow(filtered_baseline_df)
 
     # Check if we have any genes left after filtering
     if (post_filter_n == 0) {
-      stop("No genes remain after TPM threshold filtering. Consider lowering tpm_threshold.")
+      stop("No genes remain after TPM threshold filtering. Consider lowering TPM_threshold.")
     }
 
     # Print filtering summary
-    cat("TPM filtering: Kept", post_filter_n, "out of", pre_filter_n, "genes (threshold:", tpm_threshold, "TPM)\n")
+    cat("TPM filtering: Kept", post_filter_n, "out of", pre_filter_n, "genes (threshold:", TPM_threshold, "TPM)\n")
   } else {
     warning("No relative_expression column found for TPM filtering. Using unfiltered data.")
     filtered_baseline_df <- baseline_df
@@ -884,8 +884,8 @@ identify_library_size_range <- function(experimental_platform, library_parameter
 #' @param gene_list Character vector. Optional list of Ensembl gene IDs to use for analysis.
 #'   If provided, expression parameters will be extracted for ALL specified genes (no sampling).
 #'   If NULL (default), B genes are randomly sampled from baseline data.
-#' @param tpm_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
-#'   levels below tpm_threshold/1e6 are filtered out before power calculation.
+#' @param TPM_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
+#'   levels below TPM_threshold/1e6 are filtered out before power calculation.
 #' @param custom_pilot_data List. Optional custom pilot data. If provided,
 #'   this data is used instead of the default biological_system data. Must contain
 #'   baseline_expression_stats (data frame with gene expression data)
@@ -914,7 +914,7 @@ identify_library_size_range <- function(experimental_platform, library_parameter
 #' }
 #'
 #' @export
-extract_expression_info <- function(biological_system = "K562", B = 200, gene_list = NULL, tpm_threshold = 10, custom_pilot_data = NULL) {
+extract_expression_info <- function(biological_system = "K562", B = 200, gene_list = NULL, TPM_threshold = 10, custom_pilot_data = NULL) {
 
   # set the random seed for reproducibility
   set.seed(1)
@@ -951,22 +951,22 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
 
   #################### apply TPM threshold filtering FIRST ###################
   # Convert TPM threshold to relative expression scale (TPM / 1e6)
-  tpm_threshold_relative <- tpm_threshold / 1e6
+  TPM_threshold_relative <- TPM_threshold / 1e6
 
   # Filter the full baseline dataset by TPM threshold first
   if ("relative_expression" %in% colnames(baseline_df)) {
     pre_filter_n <- nrow(baseline_df)
     filtered_baseline_df <- baseline_df |>
-      dplyr::filter(relative_expression >= tpm_threshold_relative)
+      dplyr::filter(relative_expression >= TPM_threshold_relative)
     post_filter_n <- nrow(filtered_baseline_df)
 
     # Check if we have any genes left after filtering
     if (post_filter_n == 0) {
-      stop("No genes remain after TPM threshold filtering. Consider lowering tpm_threshold.")
+      stop("No genes remain after TPM threshold filtering. Consider lowering TPM_threshold.")
     }
 
     # Print filtering summary
-    cat("TPM filtering: Kept", post_filter_n, "out of", pre_filter_n, "genes (threshold:", tpm_threshold, "TPM)\n")
+    cat("TPM filtering: Kept", post_filter_n, "out of", pre_filter_n, "genes (threshold:", TPM_threshold, "TPM)\n")
   } else {
     warning("No relative_expression column found for TPM filtering. Using unfiltered data.")
     filtered_baseline_df <- baseline_df

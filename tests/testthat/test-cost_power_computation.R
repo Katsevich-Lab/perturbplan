@@ -24,12 +24,12 @@ setup_test_data <- function() {
   )
 }
 
-test_that("cost_power_computation basic functionality with tpm_threshold optimization", {
+test_that("cost_power_computation basic functionality with TPM_threshold optimization", {
   test_data <- setup_test_data()
 
-  # Test basic tpm_threshold optimization
+  # Test basic TPM_threshold optimization
   result <- cost_power_computation(
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     fixed_variable = list(minimum_fold_change = 0.8),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
@@ -44,14 +44,14 @@ test_that("cost_power_computation basic functionality with tpm_threshold optimiz
   expect_true(nrow(result) > 0)
 
   # Check required columns
-  expected_cols <- c("minimum_fold_change", "tpm_threshold", "cells_per_target",
+  expected_cols <- c("minimum_fold_change", "TPM_threshold", "cells_per_target",
                      "num_captured_cells", "raw_reads_per_cell", "library_size",
                      "overall_power", "library_cost", "sequencing_cost", "total_cost")
   expect_true(all(expected_cols %in% names(result)))
 
   # Validate data types
   expect_type(result$minimum_fold_change, "double")
-  expect_type(result$tpm_threshold, "double")
+  expect_type(result$TPM_threshold, "double")
   expect_type(result$overall_power, "double")
   expect_type(result$total_cost, "double")
 
@@ -66,7 +66,7 @@ test_that("cost_power_computation with minimum_fold_change optimization", {
 
   result <- cost_power_computation(
     minimizing_variable = "minimum_fold_change",
-    fixed_variable = list(tpm_threshold = 100),
+    fixed_variable = list(TPM_threshold = 100),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     num_targets = 30,
@@ -78,7 +78,7 @@ test_that("cost_power_computation with minimum_fold_change optimization", {
   # Validate output
   expect_s3_class(result, "data.frame")
   expect_true(nrow(result) > 0)
-  expect_true(all(result$tpm_threshold == 100))  # Fixed value
+  expect_true(all(result$TPM_threshold == 100))  # Fixed value
   expect_true(length(unique(result$minimum_fold_change)) > 1)  # Should vary
 })
 
@@ -88,7 +88,7 @@ test_that("cost_power_computation with fixed experimental design", {
   result <- cost_power_computation(
     minimizing_variable = "minimum_fold_change",
     fixed_variable = list(
-      tpm_threshold = 50,
+      TPM_threshold = 50,
       cells_per_target = 500,
       reads_per_cell = 8000
     ),
@@ -112,7 +112,7 @@ test_that("cost_power_computation with very restrictive cost constraint", {
   # Test with cost constraint that should fail validation
   expect_error(
     cost_power_computation(
-      minimizing_variable = "tpm_threshold",
+      minimizing_variable = "TPM_threshold",
       fixed_variable = list(minimum_fold_change = 0.8),
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
@@ -129,7 +129,7 @@ test_that("cost_power_computation cost calculations are correct", {
   test_data <- setup_test_data()
 
   result <- cost_power_computation(
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     fixed_variable = list(minimum_fold_change = 0.8),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
@@ -157,7 +157,7 @@ test_that("cost_power_computation different test sides work correctly", {
   # Test left side (knockdown)
   result_left <- cost_power_computation(
     minimizing_variable = "minimum_fold_change",
-    fixed_variable = list(tpm_threshold = 100),
+    fixed_variable = list(TPM_threshold = 100),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     side = "left",
@@ -170,7 +170,7 @@ test_that("cost_power_computation different test sides work correctly", {
   # Test right side (overexpression)
   result_right <- cost_power_computation(
     minimizing_variable = "minimum_fold_change",
-    fixed_variable = list(tpm_threshold = 100),
+    fixed_variable = list(TPM_threshold = 100),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     side = "right",
@@ -190,7 +190,7 @@ test_that("cost_power_computation with different control groups", {
 
   # Test complement control
   result_complement <- cost_power_computation(
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     fixed_variable = list(minimum_fold_change = 0.8),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
@@ -203,7 +203,7 @@ test_that("cost_power_computation with different control groups", {
 
   # Test non-targeting control
   result_nt <- cost_power_computation(
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     fixed_variable = list(minimum_fold_change = 0.8),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
@@ -226,7 +226,7 @@ test_that("cost_power_computation reproducibility with set.seed", {
 
   # Run twice with same parameters
   result1 <- cost_power_computation(
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     fixed_variable = list(minimum_fold_change = 0.8),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
@@ -237,7 +237,7 @@ test_that("cost_power_computation reproducibility with set.seed", {
   )
 
   result2 <- cost_power_computation(
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     fixed_variable = list(minimum_fold_change = 0.8),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
@@ -255,7 +255,7 @@ test_that("cost_power_computation with cost_precision parameter", {
   test_data <- setup_test_data()
 
   result <- cost_power_computation(
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     fixed_variable = list(minimum_fold_change = 0.8),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
@@ -276,7 +276,7 @@ test_that("cost_power_computation matches compute_power_plan_overall", {
   set.seed(12345)  # Set seed for reproducible fold change generation
   
   # Fixed experimental parameters for direct comparison
-  tpm_threshold_val <- 5  # Lower threshold to include more genes
+  TPM_threshold_val <- 5  # Lower threshold to include more genes
   minimum_fold_change_val <- 0.7  # Stronger effect size for higher power
   cells_per_target_val <- 800
   reads_per_cell_val <- 8000
@@ -287,7 +287,7 @@ test_that("cost_power_computation matches compute_power_plan_overall", {
   
   # Test cost_power_computation with fixed experimental design
   result_cost <- cost_power_computation(
-    minimizing_variable = "tpm_threshold",
+    minimizing_variable = "TPM_threshold",
     fixed_variable = list(
       minimum_fold_change = minimum_fold_change_val,
       cells_per_target = cells_per_target_val,
@@ -320,7 +320,7 @@ test_that("cost_power_computation matches compute_power_plan_overall", {
   # Run cost_power_computation again to get the exact same fc_expression_df it used
   set.seed(12345)  # Reset seed 
   temp_result <- compute_power_plan_full_grid(
-    tpm_threshold = test_row$tpm_threshold,
+    TPM_threshold = test_row$TPM_threshold,
     minimum_fold_change = test_row$minimum_fold_change, 
     cells_per_target = test_row$cells_per_target,
     reads_per_cell = test_row$raw_reads_per_cell * 0.72,  # Convert back to mapped reads

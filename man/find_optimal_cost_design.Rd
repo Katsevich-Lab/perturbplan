@@ -26,7 +26,7 @@ containing power analysis results with cost calculations. Must include columns:
 
 \item{minimizing_variable}{Character. The parameter being optimized. Must be one of:
 \itemize{
-\item "tpm_threshold": TPM expression threshold optimization
+\item "TPM_threshold": TPM expression threshold optimization
 \item "minimum_fold_change": Minimum fold change threshold optimization
 }}
 
@@ -84,7 +84,7 @@ This function implements a three-stage cost optimization process:
 
 \strong{Stage 2: Cost Optimization}
 \enumerate{
-\item Groups designs by minimizing variable (e.g., tpm_threshold levels)
+\item Groups designs by minimizing variable (e.g., TPM_threshold levels)
 \item Identifies minimum cost for each parameter level
 \item Computes cost precision (1\% of minimum cost) for grid generation
 \item Records parameter ranges (min/max cells and reads per cell) for each level
@@ -112,7 +112,7 @@ and provides fine-grained cost optimization for experimental design selection.
 # Load pilot data and perform cost-power analysis
 pilot_data <- get_pilot_data_from_package("K562")
 cost_results <- cost_power_computation(
-  minimizing_variable = "tpm_threshold",
+  minimizing_variable = "TPM_threshold",
   fixed_variable = list(minimum_fold_change = 0.8),
   baseline_expression_stats = pilot_data$baseline_expression_stats,
   library_parameters = pilot_data$library_parameters,
@@ -123,7 +123,7 @@ cost_results <- cost_power_computation(
 # Find optimal cost-efficient designs
 optimal_designs <- find_optimal_cost_design(
   cost_power_df = cost_results,
-  minimizing_variable = "tpm_threshold",
+  minimizing_variable = "TPM_threshold",
   power_target = 0.8,
   power_precision = 0.02,
   num_targets = 100,

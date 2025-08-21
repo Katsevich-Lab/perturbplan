@@ -5,7 +5,7 @@
 \title{Cost-Power Optimization for Perturb-seq Experimental Design}
 \usage{
 cost_power_computation(
-  minimizing_variable = "tpm_threshold",
+  minimizing_variable = "TPM_threshold",
   fixed_variable = list(minimum_fold_change = 0.8),
   MOI = 10,
   num_targets = 100,
@@ -32,12 +32,12 @@ cost_power_computation(
 }
 \arguments{
 \item{minimizing_variable}{Character. The parameter to vary during analysis.
-Options: "tpm_threshold" or "minimum_fold_change". Default: "tpm_threshold".}
+Options: "TPM_threshold" or "minimum_fold_change". Default: "TPM_threshold".}
 
 \item{fixed_variable}{List. Fixed values for other analysis parameters. Can include:
 \itemize{
-\item \code{minimum_fold_change}: Fixed fold change threshold (when varying tpm_threshold)
-\item \code{tpm_threshold}: Fixed TPM threshold (when varying minimum_fold_change)
+\item \code{minimum_fold_change}: Fixed fold change threshold (when varying TPM_threshold)
+\item \code{TPM_threshold}: Fixed TPM threshold (when varying minimum_fold_change)
 \item \code{cells_per_target}: Fixed cells per target (otherwise uses "varying")
 \item \code{reads_per_cell}: Fixed reads per cell (otherwise uses "varying")
 }}
@@ -90,7 +90,7 @@ Set to \code{NULL} to disable cost constraints.}
 \value{
 Data frame with power analysis results including:
 \itemize{
-\item Analysis parameters (tpm_threshold, minimum_fold_change, etc.)
+\item Analysis parameters (TPM_threshold, minimum_fold_change, etc.)
 \item Experimental design (cells_per_target, num_captured_cells, raw_reads_per_cell)
 \item Power metrics (overall_power)
 \item Cost breakdown (library_cost, sequencing_cost, total_cost) - when cost_constraint is specified
@@ -99,7 +99,7 @@ Data frame with power analysis results including:
 
 Data frame with power analysis results including:
 \itemize{
-\item Analysis parameters (tpm_threshold, minimum_fold_change, etc.)
+\item Analysis parameters (TPM_threshold, minimum_fold_change, etc.)
 \item Experimental design (cells_per_target, num_captured_cells, raw_reads_per_cell)
 \item Power metrics (overall_power)
 \item Cost breakdown (library_cost, sequencing_cost, total_cost)
@@ -116,7 +116,7 @@ This function implements a two-stage optimization algorithm:
 \enumerate{
 \item Creates parameter grid for the minimizing variable:
 \itemize{
-\item tpm_threshold: 20 log-spaced values from 1 to 1000 TPM
+\item TPM_threshold: 20 log-spaced values from 1 to 1000 TPM
 \item minimum_fold_change: 20 values based on test side (left: 0.01-1.0, right: 1.0-10.0, both: combined)
 }
 \item Runs power analysis across experimental design space
@@ -149,7 +149,7 @@ This function performs comprehensive power analysis by:
 
 Parameter grid generation:
 \itemize{
-\item \code{tpm_threshold}: Uses quantiles of baseline expression (10th to 99th percentile)
+\item \code{TPM_threshold}: Uses quantiles of baseline expression (10th to 99th percentile)
 \item \code{minimum_fold_change}: Uses ranges based on test side (left: 0.5-0.9, right: 1-10, both: combined)
 }
 }
@@ -160,7 +160,7 @@ pilot_data <- get_pilot_data_from_package("K562")
 
 # Optimize TPM threshold with fixed fold change
 result1 <- cost_power_optimization(
-  minimizing_variable = "tpm_threshold",
+  minimizing_variable = "TPM_threshold",
   fixed_variable = list(minimum_fold_change = 0.8),
   baseline_expression_stats = pilot_data$baseline_expression_stats,
   library_parameters = pilot_data$library_parameters,
@@ -172,7 +172,7 @@ result1 <- cost_power_optimization(
 # Optimize fold change with fixed TPM threshold
 result2 <- cost_power_optimization(
   minimizing_variable = "minimum_fold_change",
-  fixed_variable = list(tpm_threshold = 10),
+  fixed_variable = list(TPM_threshold = 10),
   baseline_expression_stats = pilot_data$baseline_expression_stats,
   library_parameters = pilot_data$library_parameters,
   power_target = 0.9,
@@ -184,9 +184,9 @@ result2 <- cost_power_optimization(
 # Load pilot data
 pilot_data <- get_pilot_data_from_package("K562")
 
-# Compute power across tpm_threshold range
+# Compute power across TPM_threshold range
 result1 <- cost_power_computation(
-  minimizing_variable = "tpm_threshold",
+  minimizing_variable = "TPM_threshold",
   fixed_variable = list(minimum_fold_change = 0.8),
   baseline_expression_stats = pilot_data$baseline_expression_stats,
   library_parameters = pilot_data$library_parameters,
@@ -197,7 +197,7 @@ result1 <- cost_power_computation(
 # Compute power across fold change range
 result2 <- cost_power_computation(
   minimizing_variable = "minimum_fold_change",
-  fixed_variable = list(tpm_threshold = 50),
+  fixed_variable = list(TPM_threshold = 50),
   baseline_expression_stats = pilot_data$baseline_expression_stats,
   library_parameters = pilot_data$library_parameters,
   power_target = 0.8,

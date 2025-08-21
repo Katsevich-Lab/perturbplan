@@ -375,7 +375,7 @@ input_check_library_computation <- function(
 #'
 #' @return NULL
 input_check_compute_power_plan_full_grid <- function(
-    tpm_threshold, minimum_fold_change, cells_per_target, reads_per_cell,
+    TPM_threshold, minimum_fold_change, cells_per_target, reads_per_cell,
     MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
     control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,
     baseline_expression_stats, library_parameters,
@@ -383,23 +383,23 @@ input_check_compute_power_plan_full_grid <- function(
     mapping_efficiency = 0.72
 ) {
   
-  ############################ tpm_threshold #############################
-  if (missing(tpm_threshold)) {
-    stop("`tpm_threshold` must be specified!")
+  ############################ TPM_threshold #############################
+  if (missing(TPM_threshold)) {
+    stop("`TPM_threshold` must be specified!")
   }
-  if (is.numeric(tpm_threshold)) {
-    if (any(tpm_threshold < 0)) {
-      stop("`tpm_threshold` values must be non-negative!")
+  if (is.numeric(TPM_threshold)) {
+    if (any(TPM_threshold < 0)) {
+      stop("`TPM_threshold` values must be non-negative!")
     }
-    if (any(tpm_threshold > 1000000)) {
-      stop("`tpm_threshold` values seem unreasonably large (>1,000,000 TPM)!")
+    if (any(TPM_threshold > 1000000)) {
+      stop("`TPM_threshold` values seem unreasonably large (>1,000,000 TPM)!")
     }
-  } else if (is.character(tpm_threshold)) {
-    if (length(tpm_threshold) != 1 || tpm_threshold != "varying") {
-      stop("`tpm_threshold` must be numeric or the string 'varying'!")
+  } else if (is.character(TPM_threshold)) {
+    if (length(TPM_threshold) != 1 || TPM_threshold != "varying") {
+      stop("`TPM_threshold` must be numeric or the string 'varying'!")
     }
   } else {
-    stop("`tpm_threshold` must be numeric or the string 'varying'!")
+    stop("`TPM_threshold` must be numeric or the string 'varying'!")
   }
   
   ######################## minimum_fold_change ############################
@@ -564,7 +564,7 @@ input_check_compute_power_plan_full_grid <- function(
 #'
 #' @return NULL
 input_check_cost_power_computation <- function(
-    minimizing_variable = "tpm_threshold", fixed_variable = list(minimum_fold_change = 0.8),
+    minimizing_variable = "TPM_threshold", fixed_variable = list(minimum_fold_change = 0.8),
     MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
     control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,
     baseline_expression_stats, library_parameters,
@@ -578,7 +578,7 @@ input_check_cost_power_computation <- function(
   if (!is.character(minimizing_variable) || length(minimizing_variable) != 1) {
     stop("`minimizing_variable` must be a single character string!")
   }
-  valid_minimizing_vars <- c("tpm_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell")
+  valid_minimizing_vars <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell")
   if (!minimizing_variable %in% valid_minimizing_vars) {
     stop("`minimizing_variable` must be one of: ",
          paste(valid_minimizing_vars, collapse = ", "), "!")
@@ -590,19 +590,19 @@ input_check_cost_power_computation <- function(
   }
   
   # Check required fixed variables based on minimizing variable
-  if (minimizing_variable == "tpm_threshold") {
+  if (minimizing_variable == "TPM_threshold") {
     if (!"minimum_fold_change" %in% names(fixed_variable)) {
-      stop("When minimizing tpm_threshold, `fixed_variable` must contain 'minimum_fold_change'!")
+      stop("When minimizing TPM_threshold, `fixed_variable` must contain 'minimum_fold_change'!")
     }
     if (!is.numeric(fixed_variable$minimum_fold_change) || fixed_variable$minimum_fold_change <= 0) {
       stop("`fixed_variable$minimum_fold_change` must be a positive numeric value!")
     }
   } else if (minimizing_variable == "minimum_fold_change") {
-    if (!"tpm_threshold" %in% names(fixed_variable)) {
-      stop("When minimizing minimum_fold_change, `fixed_variable` must contain 'tpm_threshold'!")
+    if (!"TPM_threshold" %in% names(fixed_variable)) {
+      stop("When minimizing minimum_fold_change, `fixed_variable` must contain 'TPM_threshold'!")
     }
-    if (!is.numeric(fixed_variable$tpm_threshold) || fixed_variable$tpm_threshold < 0) {
-      stop("`fixed_variable$tpm_threshold` must be a positive numeric value!")
+    if (!is.numeric(fixed_variable$TPM_threshold) || fixed_variable$TPM_threshold < 0) {
+      stop("`fixed_variable$TPM_threshold` must be a positive numeric value!")
     }
   }
   
@@ -790,7 +790,7 @@ input_check_find_optimal_cost_design <- function(
   if (!is.character(minimizing_variable) || length(minimizing_variable) != 1) {
     stop("`minimizing_variable` must be a single character string!")
   }
-  valid_minimizing_vars <- c("tpm_threshold", "minimum_fold_change")
+  valid_minimizing_vars <- c("TPM_threshold", "minimum_fold_change")
   if (!minimizing_variable %in% valid_minimizing_vars) {
     stop("`minimizing_variable` must be one of: ",
          paste(valid_minimizing_vars, collapse = ", "), "!")

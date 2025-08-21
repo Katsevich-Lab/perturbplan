@@ -5,7 +5,7 @@
 \title{Input checking function for cost_power_computation}
 \usage{
 input_check_cost_power_computation(
-  minimizing_variable = "tpm_threshold",
+  minimizing_variable = "TPM_threshold",
   fixed_variable = list(minimum_fold_change = 0.8),
   MOI = 10,
   num_targets = 100,
@@ -32,12 +32,12 @@ input_check_cost_power_computation(
 }
 \arguments{
 \item{minimizing_variable}{Character. The parameter to vary during analysis.
-Options: "tpm_threshold" or "minimum_fold_change". Default: "tpm_threshold".}
+Options: "TPM_threshold" or "minimum_fold_change". Default: "TPM_threshold".}
 
 \item{fixed_variable}{List. Fixed values for other analysis parameters. Can include:
 \itemize{
-\item \code{minimum_fold_change}: Fixed fold change threshold (when varying tpm_threshold)
-\item \code{tpm_threshold}: Fixed TPM threshold (when varying minimum_fold_change)
+\item \code{minimum_fold_change}: Fixed fold change threshold (when varying TPM_threshold)
+\item \code{TPM_threshold}: Fixed TPM threshold (when varying minimum_fold_change)
 \item \code{cells_per_target}: Fixed cells per target (otherwise uses "varying")
 \item \code{reads_per_cell}: Fixed reads per cell (otherwise uses "varying")
 }}
