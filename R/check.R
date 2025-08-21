@@ -486,6 +486,15 @@ input_check_compute_power_plan_full_grid <- function(
     stop("`side` must be 'left', 'right', or 'both'!")
   }
   
+  # Check alignment between side and minimum_fold_change
+  if (is.numeric(minimum_fold_change)) {
+    if (side == "left" && any(minimum_fold_change >= 1)) {
+      stop("`side` is 'left' (downregulation) but `minimum_fold_change` contains values >= 1. For downregulation, minimum_fold_change should be < 1.")
+    }
+    if (side == "right" && any(minimum_fold_change <= 1)) {
+      stop("`side` is 'right' (upregulation) but `minimum_fold_change` contains values <= 1. For upregulation, minimum_fold_change should be > 1.")
+    }
+  }  
   if (!is.numeric(multiple_testing_alpha) || length(multiple_testing_alpha) != 1 || multiple_testing_alpha <= 0 || multiple_testing_alpha >= 1) {
     stop("`multiple_testing_alpha` must be a numeric value in (0,1)!")
   }
@@ -651,6 +660,15 @@ input_check_cost_power_computation <- function(
     stop("`side` must be 'left', 'right', or 'both'!")
   }
   
+  # Check alignment between side and minimum_fold_change
+  if (!is.null(fixed_variable$minimum_fold_change) && is.numeric(fixed_variable$minimum_fold_change)) {
+    if (side == "left" && any(fixed_variable$minimum_fold_change >= 1)) {
+      stop("`side` is 'left' (downregulation) but `fixed_variable$minimum_fold_change` contains values >= 1. For downregulation, minimum_fold_change should be < 1.")
+    }
+    if (side == "right" && any(fixed_variable$minimum_fold_change <= 1)) {
+      stop("`side` is 'right' (upregulation) but `fixed_variable$minimum_fold_change` contains values <= 1. For upregulation, minimum_fold_change should be > 1.")
+    }
+  }  
   if (!is.numeric(multiple_testing_alpha) || length(multiple_testing_alpha) != 1 || multiple_testing_alpha <= 0 || multiple_testing_alpha >= 1) {
     stop("`multiple_testing_alpha` must be a numeric value in (0,1)!")
   }
