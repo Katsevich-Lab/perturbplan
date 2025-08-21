@@ -578,7 +578,7 @@ input_check_cost_power_computation <- function(
   if (!is.character(minimizing_variable) || length(minimizing_variable) != 1) {
     stop("`minimizing_variable` must be a single character string!")
   }
-  valid_minimizing_vars <- c("tpm_threshold", "minimum_fold_change")
+  valid_minimizing_vars <- c("tpm_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell")
   if (!minimizing_variable %in% valid_minimizing_vars) {
     stop("`minimizing_variable` must be one of: ",
          paste(valid_minimizing_vars, collapse = ", "), "!")
