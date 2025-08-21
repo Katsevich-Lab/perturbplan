@@ -642,6 +642,12 @@ cost_power_computation <- function(minimizing_variable = "tpm_threshold", fixed_
         minimum_fold_change <- fixed_variable$minimum_fold_change
       }
       tpm_threshold <- fixed_variable$tpm_threshold
+    },
+    cells_per_target = ,
+    reads_per_cell = {
+      # When minimizing over cells_per_target or reads_per_cell, get fixed values from fixed_variable
+      tpm_threshold <- fixed_variable$tmp_threshold
+      minimum_fold_change <- fixed_variable$minimum_fold_change
     }
   )
 
