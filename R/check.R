@@ -821,14 +821,14 @@ input_check_find_optimal_cost_design <- function(
   if (!is.character(minimizing_variable) || length(minimizing_variable) != 1) {
     stop("`minimizing_variable` must be a single character string!")
   }
-  valid_minimizing_vars <- c("TPM_threshold", "minimum_fold_change")
+  valid_minimizing_vars <- c("TPM_threshold", "minimum_fold_change", "cost")
   if (!minimizing_variable %in% valid_minimizing_vars) {
     stop("`minimizing_variable` must be one of: ",
          paste(valid_minimizing_vars, collapse = ", "), "!")
   }
   
-  # Check that minimizing_variable column exists
-  if (!minimizing_variable %in% names(cost_power_df)) {
+  # Check that minimizing_variable column exists (except for cost optimization)
+  if (minimizing_variable != "cost" && !minimizing_variable %in% names(cost_power_df)) {
     stop("`cost_power_df` must contain a column named '", minimizing_variable, "'!")
   }
   

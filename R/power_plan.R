@@ -766,11 +766,12 @@ check_power_results <- function(power_df,
 #' @param cost_power_df Data frame. Output from \code{\link{cost_power_computation}}
 #'   containing power analysis results with cost calculations. Must include columns:
 #'   \code{overall_power}, \code{total_cost}, \code{cells_per_target},
-#'   \code{raw_reads_per_cell}, plus the specified minimizing variable.
+#'   \code{raw_reads_per_cell}, plus the specified minimizing variable (except for cost optimization).
 #' @param minimizing_variable Character. The parameter being optimized. Must be one of:
 #'   \itemize{
 #'     \item "TPM_threshold": TPM expression threshold optimization
 #'     \item "minimum_fold_change": Minimum fold change threshold optimization
+#'     \item "cost": Total cost optimization across all experimental designs
 #'   }
 #' @param power_target Numeric. Target statistical power level (typically 0.8 for 80% power).
 #'   Must be between 0 and 1.
@@ -900,16 +901,33 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
     stop("0 row preserved after applying power filtering! Try adjusting power_precision!")
   }
 
-  # compute the optimal cost dataframe
-  optimal_design_df <- cost_power_df_filtered |>
-    dplyr::group_by(.data[[minimizing_variable]]) |>
-    dplyr::summarise(minimum_cost = min(total_cost),
-                     min_reads = min(raw_reads_per_cell),
-                     max_reads = max(raw_reads_per_cell),
-                     min_cells = min(cells_per_target),
-                     max_cells = max(cells_per_target)) |>
-    dplyr::ungroup() |>
-    dplyr::mutate(cost_precision = unname(minimum_cost / 100))
+  # depend on the minimizing_variable
+  switch (minimizing_variable,
+    cost = {
+      # compute the optimal cost dataframe
+      optimal_design_df <- cost_power_df_filtered |>
+        dplyr::summarise(minimum_cost = min(total_cost),
+                         min_reads = min(raw_reads_per_cell),
+                         max_reads = max(raw_reads_per_cell),
+                         min_cells = min(cells_per_target),
+                         max_cells = max(cells_per_target)) |>
+        dplyr::ungroup() |>
+        dplyr::mutate(cost_precision = unname(minimum_cost / 100))
+    },
+    TPM_threshold,
+    minimum_fold_change = {
+      # compute the optimal cost dataframe
+      optimal_design_df <- cost_power_df_filtered |>
+        dplyr::group_by(.data[[minimizing_variable]]) |>
+        dplyr::summarise(minimum_cost = min(total_cost),
+                         min_reads = min(raw_reads_per_cell),
+                         max_reads = max(raw_reads_per_cell),
+                         min_cells = min(cells_per_target),
+                         max_cells = max(cells_per_target)) |>
+        dplyr::ungroup() |>
+        dplyr::mutate(cost_precision = unname(minimum_cost / 100))
+    }
+  )
 
   # obtain cost grid
   cost_grid_df <- optimal_design_df |>
