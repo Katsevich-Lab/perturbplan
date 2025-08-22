@@ -22,12 +22,13 @@ input_check_find_optimal_cost_design(
 \item{cost_power_df}{Data frame. Output from \code{\link{cost_power_computation}}
 containing power analysis results with cost calculations. Must include columns:
 \code{overall_power}, \code{total_cost}, \code{cells_per_target},
-\code{raw_reads_per_cell}, plus the specified minimizing variable.}
+\code{raw_reads_per_cell}, plus the specified minimizing variable (except for cost optimization).}
 
 \item{minimizing_variable}{Character. The parameter being optimized. Must be one of:
 \itemize{
 \item "TPM_threshold": TPM expression threshold optimization
 \item "minimum_fold_change": Minimum fold change threshold optimization
+\item "cost": Total cost optimization across all experimental designs
 }}
 
 \item{power_target}{Numeric. Target statistical power level (typically 0.8 for 80\% power).

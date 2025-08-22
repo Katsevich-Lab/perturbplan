@@ -903,7 +903,7 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
 
   # depend on the minimizing_variable
   switch (minimizing_variable,
-    cost = {
+    "cost" = {
       # compute the optimal cost dataframe
       optimal_design_df <- cost_power_df_filtered |>
         dplyr::summarise(minimum_cost = min(total_cost),
@@ -914,8 +914,8 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
         dplyr::ungroup() |>
         dplyr::mutate(cost_precision = unname(minimum_cost / 100))
     },
-    TPM_threshold,
-    minimum_fold_change = {
+    "TPM_threshold" = ,
+    "minimum_fold_change" = {
       # compute the optimal cost dataframe
       optimal_design_df <- cost_power_df_filtered |>
         dplyr::group_by(.data[[minimizing_variable]]) |>

@@ -100,10 +100,10 @@ result1 <- obtain_fixed_variable_constraining_cost(
   reads_per_cell = NULL
 )
 
-# Optimize cells per target given fixed reads per cell  
+# Optimize cells per target given fixed reads per cell
 result2 <- obtain_fixed_variable_constraining_cost(
   cost_constraint = 1000,
-  cells_per_target = NULL, 
+  cells_per_target = NULL,
   reads_per_cell = 5000
 )
 }
