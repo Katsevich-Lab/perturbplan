@@ -587,7 +587,7 @@ input_check_cost_power_computation <- function(
   if (!is.character(minimizing_variable) || length(minimizing_variable) != 1) {
     stop("`minimizing_variable` must be a single character string!")
   }
-  valid_minimizing_vars <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell")
+  valid_minimizing_vars <- c("TPM_threshold", "minimum_fold_change", "cells_per_target", "reads_per_cell", "cost")
   if (!minimizing_variable %in% valid_minimizing_vars) {
     stop("`minimizing_variable` must be one of: ",
          paste(valid_minimizing_vars, collapse = ", "), "!")
@@ -612,6 +612,19 @@ input_check_cost_power_computation <- function(
     }
     if (!is.numeric(fixed_variable$TPM_threshold) || fixed_variable$TPM_threshold < 0) {
       stop("`fixed_variable$TPM_threshold` must be a positive numeric value!")
+    }
+  } else if (minimizing_variable %in% c("cells_per_target", "reads_per_cell", "cost")) {
+    if (!"TPM_threshold" %in% names(fixed_variable)) {
+      stop("When minimizing ", minimizing_variable, ", `fixed_variable` must contain 'TPM_threshold'!")
+    }
+    if (!"minimum_fold_change" %in% names(fixed_variable)) {
+      stop("When minimizing ", minimizing_variable, ", `fixed_variable` must contain 'minimum_fold_change'!")
+    }
+    if (!is.numeric(fixed_variable$TPM_threshold) || fixed_variable$TPM_threshold < 0) {
+      stop("`fixed_variable$TPM_threshold` must be a positive numeric value!")
+    }
+    if (!is.numeric(fixed_variable$minimum_fold_change) || fixed_variable$minimum_fold_change <= 0) {
+      stop("`fixed_variable$minimum_fold_change` must be a positive numeric value!")
     }
   }
   
