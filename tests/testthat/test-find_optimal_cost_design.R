@@ -65,16 +65,16 @@ test_that("find_optimal_cost_design basic functionality", {
   # Validate optimal_cost_power_df
   expect_s3_class(result$optimal_cost_power_df, "data.frame")
   required_cols_power <- c("TPM_threshold", "overall_power", "total_cost",
-                          "cells_per_target", "reads_per_cell", "minimum_cost")
+                          "cells_per_target", "raw_reads_per_cell", "minimum_cost")
   expect_true(all(required_cols_power %in% names(result$optimal_cost_power_df)))
 
   # Validate optimal_cost_grid
   expect_s3_class(result$optimal_cost_grid, "data.frame")
-  required_cols_grid <- c("TPM_threshold", "minimum_cost", "reads_per_cell", "total_cost")
+  required_cols_grid <- c("TPM_threshold", "minimum_cost", "raw_reads_per_cell", "total_cost")
   expect_true(all(required_cols_grid %in% names(result$optimal_cost_grid)))
 
   # Check that optimal_cost_grid has the flattened structure from unnest
-  expect_true("reads_per_cell" %in% names(result$optimal_cost_grid))
+  expect_true("raw_reads_per_cell" %in% names(result$optimal_cost_grid))
   expect_true("cells_per_target" %in% names(result$optimal_cost_grid))
 })
 
@@ -132,7 +132,7 @@ test_that("find_optimal_cost_design cost calculations", {
 
     # Verify cost calculations
     expected_lib_cost <- 0.1 * grid_sample$num_captured_cells
-    expected_seq_cost <- 0.5 * grid_sample$reads_per_cell * grid_sample$num_captured_cells / 1e6
+    expected_seq_cost <- 0.5 * grid_sample$raw_reads_per_cell * grid_sample$num_captured_cells / 1e6
     expected_total <- expected_lib_cost + expected_seq_cost
 
     expect_equal(grid_sample$library_cost, expected_lib_cost, tolerance = 1e-6)
@@ -226,11 +226,11 @@ test_that("find_optimal_cost_design column renaming", {
     power_precision = 0.1
   )
 
-  # Check that raw_reads_per_cell is renamed to reads_per_cell
-  expect_true("reads_per_cell" %in% names(result$optimal_cost_power_df))
-  expect_false("raw_reads_per_cell" %in% names(result$optimal_cost_power_df))
+  # Check that raw_reads_per_cell column exists (no renaming)
+  expect_true("raw_reads_per_cell" %in% names(result$optimal_cost_power_df))
+  expect_false("reads_per_cell" %in% names(result$optimal_cost_power_df))
 
   # Same check for cost grid
-  expect_true("reads_per_cell" %in% names(result$optimal_cost_grid))
-  expect_false("raw_reads_per_cell" %in% names(result$optimal_cost_grid))
+  expect_true("raw_reads_per_cell" %in% names(result$optimal_cost_grid))
+  expect_false("reads_per_cell" %in% names(result$optimal_cost_grid))
 })

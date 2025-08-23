@@ -962,18 +962,15 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
   # merge optimal cost and power dataframe
   if(minimizing_variable == "cost"){
     optimal_cost_power_df <- cost_power_df_filtered |>
-      tidyr::crossing(optimal_design_df) |>
-      dplyr::rename(reads_per_cell = raw_reads_per_cell)
+      tidyr::crossing(optimal_design_df)
   }else{
     optimal_cost_power_df <- cost_power_df_filtered |>
-      dplyr::left_join(optimal_design_df, by = minimizing_variable) |>
-      dplyr::rename(reads_per_cell = raw_reads_per_cell)
+      dplyr::left_join(optimal_design_df, by = minimizing_variable)
   }
 
-  # rename the reads_per_cell column in cost_grid_df (inside the nested cost_grid)
+  # unnest the tibble
   optimal_cost_grid <- cost_grid_df |>
-    tidyr::unnest(cost_grid) |>
-    dplyr::rename(reads_per_cell = raw_reads_per_cell)
+    tidyr::unnest(cost_grid)
 
   # return the results
   return(list(
