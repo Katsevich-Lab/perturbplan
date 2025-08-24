@@ -471,18 +471,18 @@ compute_power_plan_full_grid <- function(
 #' pilot_data <- get_pilot_data_from_package("K562")
 #'
 #' # Optimize TPM threshold with fixed fold change
-#' result1 <- cost_power_optimization(
+#' result1 <- cost_power_computation(
 #'   minimizing_variable = "TPM_threshold",
 #'   fixed_variable = list(minimum_fold_change = 0.8),
 #'   baseline_expression_stats = pilot_data$baseline_expression_stats,
 #'   library_parameters = pilot_data$library_parameters,
 #'   power_target = 0.8,
 #'   cost_constraint = 15000,
-#'   budget_precision = 0.9
+#'   cost_precision = 0.9
 #' )
 #'
 #' # Optimize fold change with fixed TPM threshold
-#' result2 <- cost_power_optimization(
+#' result2 <- cost_power_computation(
 #'   minimizing_variable = "minimum_fold_change",
 #'   fixed_variable = list(TPM_threshold = 10),
 #'   baseline_expression_stats = pilot_data$baseline_expression_stats,
@@ -494,7 +494,7 @@ compute_power_plan_full_grid <- function(
 #'
 #' @seealso
 #' \code{\link{compute_power_plan_full_grid}} for the underlying power analysis
-#' \code{\link{cost_computation}} for cost calculation details
+#' \code{\link{find_optimal_cost_design}} for cost optimization
 
 #' Cost-Constrained Power Analysis for Perturb-seq Experiments
 #'
@@ -582,6 +582,26 @@ compute_power_plan_full_grid <- function(
 #'   library_parameters = pilot_data$library_parameters,
 #'   power_target = 0.8,
 #'   cost_constraint = NULL
+#' )
+#'
+#' # Optimize cost across all experimental designs
+#' result3 <- cost_power_computation(
+#'   minimizing_variable = "cost",
+#'   fixed_variable = list(TPM_threshold = 50, minimum_fold_change = 0.8),
+#'   baseline_expression_stats = pilot_data$baseline_expression_stats,
+#'   library_parameters = pilot_data$library_parameters,
+#'   power_target = 0.8,
+#'   cost_constraint = NULL
+#' )
+#'
+#' # Optimize cells per target with fixed detection parameters  
+#' result4 <- cost_power_computation(
+#'   minimizing_variable = "cells_per_target",
+#'   fixed_variable = list(TPM_threshold = 50, minimum_fold_change = 0.8),
+#'   baseline_expression_stats = pilot_data$baseline_expression_stats,
+#'   library_parameters = pilot_data$library_parameters,
+#'   power_target = 0.8,
+#'   cost_constraint = 10000
 #' )
 #' }
 #'
@@ -865,6 +885,15 @@ check_power_results <- function(power_df,
 #'
 #' # Examine detailed cost grids
 #' optimal_designs$optimal_cost_grid$cost_grid[[1]]
+#'
+#' # Find globally optimal cost design across all parameters
+#' cost_optimal <- find_optimal_cost_design(
+#'   cost_power_df = cost_results,
+#'   minimizing_variable = "cost",
+#'   power_target = 0.8,
+#'   power_precision = 0.02,
+#'   cost_grid_size = 50
+#' )
 #' }
 #'
 #' @seealso

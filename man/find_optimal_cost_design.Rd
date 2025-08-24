@@ -138,6 +138,15 @@ head(optimal_designs$optimal_cost_power_df)
 
 # Examine detailed cost grids
 optimal_designs$optimal_cost_grid$cost_grid[[1]]
+
+# Find globally optimal cost design across all parameters
+cost_optimal <- find_optimal_cost_design(
+  cost_power_df = cost_results,
+  minimizing_variable = "cost",
+  power_target = 0.8,
+  power_precision = 0.02,
+  cost_grid_size = 50
+)
 }
 
 }
