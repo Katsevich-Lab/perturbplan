@@ -50,7 +50,7 @@ Total cost = (cost_per_captured_cell × num_captured_cells) +
 # Calculate cost for a typical experiment
 cost_computation(
   experimental_platform = "10x Chromium v3",
-  sequencing_platform = "NovaSeq X 25B", 
+  sequencing_platform = "NovaSeq X 25B",
   num_captured_cells = 10000,
   raw_reads_per_cell = 50000
 )

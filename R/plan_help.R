@@ -221,7 +221,7 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
     grna_effects <- stats::rnorm(n = gRNAs_per_target,
                                  mean = minimum_fold_change,
                                  sd = gRNA_variability) |>
-      pmax(0)  # Ensure no negative effects
+      pmax(.Machine$double.eps)  # Ensure no negative effects
 
     # Calculate moments: mean and mean of squares
     avg_fold_change[i] <- mean(grna_effects)
@@ -1064,14 +1064,14 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
 #'   \item NovaSeq X 25B: $0.374 per million reads
 #' }
 #'
-#' Total cost = (cost_per_captured_cell × num_captured_cells) + 
+#' Total cost = (cost_per_captured_cell × num_captured_cells) +
 #'              (cost_per_million_reads × raw_reads_per_cell × num_captured_cells / 1e6)
 #'
 #' @examples
 #' # Calculate cost for a typical experiment
 #' cost_computation(
 #'   experimental_platform = "10x Chromium v3",
-#'   sequencing_platform = "NovaSeq X 25B", 
+#'   sequencing_platform = "NovaSeq X 25B",
 #'   num_captured_cells = 10000,
 #'   raw_reads_per_cell = 50000
 #' )

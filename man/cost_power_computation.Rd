@@ -12,6 +12,7 @@ cost_power_computation(
   non_targeting_gRNAs = 10,
   gRNAs_per_target = 4,
   gRNA_variability = 0.13,
+  assay = "perturb-seq",
   control_group = "complement",
   side = "left",
   multiple_testing_alpha = 0.05,
@@ -51,6 +52,8 @@ Options: "TPM_threshold" or "minimum_fold_change". Default: "TPM_threshold".}
 \item{gRNAs_per_target}{Integer. Number of gRNAs per target (default: 4).}
 
 \item{gRNA_variability}{Numeric. gRNA variability parameter (default: 0.13).}
+
+\item{assay}{Character. Assay type: "perturb-seq" or "TAP-seq" (default: "perturb-seq").}
 
 \item{control_group}{Character. Control group type: "complement" or "non_targeting" (default: "complement").}
 
