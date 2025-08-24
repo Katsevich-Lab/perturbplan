@@ -255,6 +255,7 @@ compute_power_plan_per_grid <- function(
 #' @param non_targeting_gRNAs Integer. Number of non-targeting gRNAs (default: 10).
 #' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
 #' @param gRNA_variability Numeric. Standard deviation for gRNA effect variation (default: 0.13).
+#' @param assay String. Assay type: "Perturb-seq" or "TAP-seq" (default: "Perturb-seq").
 #' @param control_group String. Control group type (default: "complement").
 #' @param side String. Test sidedness (default: "left").
 #' @param multiple_testing_alpha Numeric. FDR level (default: 0.05).
@@ -283,7 +284,7 @@ compute_power_plan_full_grid <- function(
     # power-determining parameters
     TPM_threshold, minimum_fold_change, cells_per_target, reads_per_cell,
     # experimental parameters
-    MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
+    MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13, assay = "Perturb-seq",
     # analysis parameters
     control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,
     # data inputs
@@ -339,8 +340,13 @@ compute_power_plan_full_grid <- function(
       # Create fold change expression dataframe for this combination
       fc_expression_df = list({
         # Filter expression data by TPM threshold
-        filtered_expression_df <- baseline_expression_stats |>
-          dplyr::filter(relative_expression >= TPM_threshold / 1e6)
+        if (assay == "perturb-seq") {
+          filtered_expression_df <- baseline_expression_stats |>
+            dplyr::filter(relative_expression >= TPM_threshold / 1e6)
+        } else if (assay == "TAP-seq") {
+          filtered_expression_df <- baseline_expression_stats |>
+            dplyr::filter(relative_expression_main >= TPM_threshold / 1e6)
+        }
 
         # Add fold change parameters
         filtered_expression_df |>
@@ -516,6 +522,7 @@ compute_power_plan_full_grid <- function(
 #' @param non_targeting_gRNAs Integer. Number of non-targeting gRNAs (default: 10).
 #' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
 #' @param gRNA_variability Numeric. gRNA variability parameter (default: 0.13).
+#' @param assay String. Assay type: "perturb-seq" or "TAP-seq" (default: "perturb-seq").
 #' @param control_group Character. Control group type: "complement" or "non_targeting" (default: "complement").
 #' @param side Character. Test side: "left", "right", or "both" (default: "left").
 #' @param multiple_testing_alpha Numeric. Multiple testing significance level (default: 0.05).
@@ -594,7 +601,7 @@ compute_power_plan_full_grid <- function(
 #'   cost_constraint = NULL
 #' )
 #'
-#' # Optimize cells per target with fixed detection parameters  
+#' # Optimize cells per target with fixed detection parameters
 #' result4 <- cost_power_computation(
 #'   minimizing_variable = "cells_per_target",
 #'   fixed_variable = list(TPM_threshold = 50, minimum_fold_change = 0.8),
@@ -608,7 +615,7 @@ compute_power_plan_full_grid <- function(
 #' @export
 cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_variable = list(minimum_fold_change = 0.8),
                                    # experimental parameters
-                                   MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
+                                   MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13, assay = "perturb-seq",
                                    # analysis parameters
                                    control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,
                                    # data inputs
@@ -682,7 +689,7 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
     # power-determining parameters
     TPM_threshold = TPM_threshold, minimum_fold_change = minimum_fold_change, cells_per_target = cells_per_target, reads_per_cell = reads_per_cell,
     # experimental parameters
-    MOI = MOI, num_targets = num_targets, non_targeting_gRNAs = non_targeting_gRNAs, gRNAs_per_target = gRNAs_per_target, gRNA_variability = gRNA_variability,
+    MOI = MOI, num_targets = num_targets, non_targeting_gRNAs = non_targeting_gRNAs, gRNAs_per_target = gRNAs_per_target, gRNA_variability = gRNA_variability, assay = assay,
     # analysis parameters
     control_group = control_group, side = side, multiple_testing_alpha = multiple_testing_alpha, prop_non_null = prop_non_null,
     # data inputs

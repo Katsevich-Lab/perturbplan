@@ -14,7 +14,7 @@ compute_power_plan_full_grid(
   non_targeting_gRNAs = 10,
   gRNAs_per_target = 4,
   gRNA_variability = 0.13,
-  assay = "perturb-seq",
+  assay = "Perturb-seq",
   control_group = "complement",
   side = "left",
   multiple_testing_alpha = 0.05,
@@ -46,7 +46,7 @@ compute_power_plan_full_grid(
 
 \item{gRNA_variability}{Numeric. Standard deviation for gRNA effect variation (default: 0.13).}
 
-\item{assay}{String. Assay type: "perturb-seq" or "TAP-seq" (default: "perturb-seq").}
+\item{assay}{String. Assay type: "Perturb-seq" or "TAP-seq" (default: "Perturb-seq").}
 
 \item{control_group}{String. Control group type (default: "complement").}
 

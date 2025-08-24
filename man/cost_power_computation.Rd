@@ -53,7 +53,7 @@ Options: "TPM_threshold" or "minimum_fold_change". Default: "TPM_threshold".}
 
 \item{gRNA_variability}{Numeric. gRNA variability parameter (default: 0.13).}
 
-\item{assay}{Character. Assay type: "perturb-seq" or "TAP-seq" (default: "perturb-seq").}
+\item{assay}{String. Assay type: "perturb-seq" or "TAP-seq" (default: "perturb-seq").}
 
 \item{control_group}{Character. Control group type: "complement" or "non_targeting" (default: "complement").}
 
@@ -217,7 +217,7 @@ result3 <- cost_power_computation(
   cost_constraint = NULL
 )
 
-# Optimize cells per target with fixed detection parameters  
+# Optimize cells per target with fixed detection parameters
 result4 <- cost_power_computation(
   minimizing_variable = "cells_per_target",
   fixed_variable = list(TPM_threshold = 50, minimum_fold_change = 0.8),
