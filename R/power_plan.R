@@ -255,7 +255,7 @@ compute_power_plan_per_grid <- function(
 #' @param non_targeting_gRNAs Integer. Number of non-targeting gRNAs (default: 10).
 #' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
 #' @param gRNA_variability Numeric. Standard deviation for gRNA effect variation (default: 0.13).
-#' @param assay String. Assay type: "Perturb-seq" or "TAP-seq" (default: "Perturb-seq").
+#' @param assay String. Assay type: "Perturb-seq" or "TAP-seq" (default: "perturb-seq").
 #' @param control_group String. Control group type (default: "complement").
 #' @param side String. Test sidedness (default: "left").
 #' @param multiple_testing_alpha Numeric. FDR level (default: 0.05).
@@ -284,7 +284,7 @@ compute_power_plan_full_grid <- function(
     # power-determining parameters
     TPM_threshold, minimum_fold_change, cells_per_target, reads_per_cell,
     # experimental parameters
-    MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13, assay = "Perturb-seq",
+    MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13, assay = "perturb-seq",
     # analysis parameters
     control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,
     # data inputs
