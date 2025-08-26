@@ -342,10 +342,10 @@ compute_power_plan_full_grid <- function(
         # Filter expression data by TPM threshold
         if (assay == "perturb-seq") {
           filtered_expression_df <- baseline_expression_stats |>
-            dplyr::filter(relative_expression >= TPM_threshold / 1e6)
+            dplyr::filter(.data$relative_expression >= TPM_threshold / 1e6)
         } else if (assay == "TAP-seq") {
           filtered_expression_df <- baseline_expression_stats |>
-            dplyr::filter(relative_expression_main >= TPM_threshold / 1e6)
+            dplyr::filter(.data$relative_expression_main >= TPM_threshold / 1e6)
         }
 
         # Add fold change parameters
@@ -652,10 +652,10 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
   reads_per_cell <- ifelse(is.null(fixed_variable$reads_per_cell), "varying", fixed_variable$reads_per_cell)
 
   # set the grid_size for TPM and FC based on setup
-  if(is.numeric(cells_per_target) & is.numeric(reads_per_cell)){
+  if(is.character(cells_per_target) & is.character(reads_per_cell)){
     grid_size_TPM_FC <- 5
   }else{
-    grid_size_TPM_FC <- 20
+    grid_size_TPM_FC <- 10
   }
 
   # specify the parameter grid for TPM threshold and minimum_fold_change
