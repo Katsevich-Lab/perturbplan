@@ -647,12 +647,23 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
   set.seed(1)
 
   ################# Power-determining parameters setup #########################
+  # specify cells per target and reads per cell
+  cells_per_target <- ifelse(is.null(fixed_variable$cells_per_target), "varying", fixed_variable$cells_per_target)
+  reads_per_cell <- ifelse(is.null(fixed_variable$reads_per_cell), "varying", fixed_variable$reads_per_cell)
+
+  # set the grid_size for TPM and FC based on setup
+  if(is.numeric(cells_per_target) & is.numeric(reads_per_cell)){
+    grid_size_TPM_FC <- 5
+  }else{
+    grid_size_TPM_FC <- 20
+  }
+
   # specify the parameter grid for TPM threshold and minimum_fold_change
   switch (minimizing_variable,
     TPM_threshold = {
       # specify the TPM_threshold based on if TPM_threshold is given in the fixed_variable list or not
       if(is.null(fixed_variable$TPM_threshold)){
-        TPM_threshold <- unname(quantile(baseline_expression_stats$relative_expression, probs = seq(0.1, .99, length.out = 20))) * 1e6
+        TPM_threshold <- unname(quantile(baseline_expression_stats$relative_expression, probs = seq(0.1, .99, length.out = grid_size_TPM_FC))) * 1e6
       }else{
         TPM_threshold <- fixed_variable$TPM_threshold
       }
@@ -662,9 +673,10 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
       # specify the minimum_fold_change based on if minimum_fold_change is given in the fixed_variable list or not
       if(is.null(fixed_variable$minimum_fold_change)){
         minimum_fold_change <- switch(side,
-                                      left = {seq(0.5, 0.9, length.out = 20)},
-                                      right = {seq(1.1, 1.5, length.out = 20)},
-                                      both = {c(seq(0.5, 0.9, length.out = 10), seq(1.1, 1.5, length.out = 10))})
+                                      left = {seq(0.5, 0.9, length.out = grid_size_TPM_FC)},
+                                      right = {seq(1.1, 1.5, length.out = grid_size_TPM_FC)},
+                                      both = {c(seq(0.5, 0.9, length.out = round(grid_size_TPM_FC / 2) + 1),
+                                                seq(1.1, 1.5, length.out = round(grid_size_TPM_FC / 2) + 1))})
       }else{
         minimum_fold_change <- fixed_variable$minimum_fold_change
       }
@@ -678,10 +690,6 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
       minimum_fold_change <- fixed_variable$minimum_fold_change
     }
   )
-
-  # specify cells per target and reads per cell
-  cells_per_target <- ifelse(is.null(fixed_variable$cells_per_target), "varying", fixed_variable$cells_per_target)
-  reads_per_cell <- ifelse(is.null(fixed_variable$reads_per_cell), "varying", fixed_variable$reads_per_cell)
 
   ########################## Perform grid power search #########################
   # perform power calculation
