@@ -158,3 +158,15 @@ process_ipsc_10x <- function(path_to_dataset) {
   return(perturbplan::reference_data_preprocessing(response_matrix=response_matrix,
                                                    read_umi_table=read_umi_table, downsample_ratio=0.4))
 }
+
+process_ipsc_neuron_10x <- function(path_to_dataset) {
+  message("Start processing iPSC_neuron_10x")
+  path_to_runs <- file.path(path_to_dataset, "processed")
+  ipsc_neuron_data <- perturbplan::reference_data_preprocessing_10x(path_to_runs)
+  response_matrix <- ipsc_neuron_data[[1]]
+  read_umi_table <- ipsc_neuron_data[[2]]
+
+  return(perturbplan::reference_data_preprocessing(response_matrix=response_matrix,
+                                                   read_umi_table=read_umi_table,
+                                                   downsample_ratio= c(0.1, 0.3, 0.5, 0.7)))
+}
