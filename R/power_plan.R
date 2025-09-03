@@ -156,22 +156,33 @@ compute_power_plan_per_grid <- function(
       # Already calculated above when reads_per_cell == "varying"
     }
 
-    cell_range <- identify_cell_range_cpp(
-      min_reads_per_cell = min_reads_per_cell,
-      max_reads_per_cell = max_reads_per_cell,
-      fc_expression_df = fc_expression_df,
-      UMI_per_cell = UMI_per_cell,
-      variation = variation,
-      MOI = MOI,
-      num_targets = num_targets,
-      gRNAs_per_target = gRNAs_per_target,
-      non_targeting_gRNAs = non_targeting_gRNAs,
-      control_group = control_group,
-      multiple_testing_alpha = multiple_testing_alpha,
-      side = side,
-      prop_non_null = prop_non_null,
-      min_power_threshold = min_power_threshold,
-      max_power_threshold = max_power_threshold
+    # Try to identify cell range, fallback to default range if failed
+    cell_range <- tryCatch(
+      {
+        identify_cell_range_cpp(
+          min_reads_per_cell = min_reads_per_cell,
+          max_reads_per_cell = max_reads_per_cell,
+          fc_expression_df = fc_expression_df,
+          UMI_per_cell = UMI_per_cell,
+          variation = variation,
+          MOI = MOI,
+          num_targets = num_targets,
+          gRNAs_per_target = gRNAs_per_target,
+          non_targeting_gRNAs = non_targeting_gRNAs,
+          control_group = control_group,
+          multiple_testing_alpha = multiple_testing_alpha,
+          side = side,
+          prop_non_null = prop_non_null,
+          min_power_threshold = min_power_threshold,
+          max_power_threshold = max_power_threshold
+        )
+      },
+      error = function(e) {
+        # Cell range identification failed (likely due to small effect size)
+        # Use default range as fallback
+        warning("Cell range identification failed (possibly due to small effect size). Using default range of 10-5000 cells.")
+        list(min_cells = 10, max_cells = 5000)
+      }
     )
     min_total_cells <- cell_range$min_cells
     max_total_cells <- cell_range$max_cells
@@ -655,7 +666,7 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
   if(is.character(cells_per_target) & is.character(reads_per_cell)){
     grid_size_TPM_FC <- 5
   }else{
-    grid_size_TPM_FC <- 10
+    grid_size_TPM_FC <- 15
   }
 
   # specify the parameter grid for TPM threshold and minimum_fold_change
