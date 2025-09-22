@@ -39,6 +39,35 @@ var_nb <- function(mean, size){
 #'     tests (accounting for QC failures)
 #' }
 #'
+#' @examples
+#' # Example test statistic distributions (means and SDs)
+#' mean_list <- c(-2.1, -1.5, -0.8, 1.2, 2.3)
+#' sd_list <- c(1.0, 1.1, 0.9, 1.2, 1.0)
+#' QC_prob <- c(0.05, 0.03, 0.08, 0.04, 0.06)
+#'
+#' # Calculate adjusted cutoff using BH correction
+#' cutoff_BH <- adjusted_cutoff(
+#'   mean_list = mean_list,
+#'   sd_list = sd_list,
+#'   multiple_testing_alpha = 0.1,
+#'   multiple_testing_method = "BH",
+#'   side = "left",
+#'   QC_prob = QC_prob
+#' )
+#'
+#' # Calculate adjusted cutoff using Bonferroni correction
+#' cutoff_bonf <- adjusted_cutoff(
+#'   mean_list = mean_list,
+#'   sd_list = sd_list,
+#'   multiple_testing_alpha = 0.1,
+#'   multiple_testing_method = "bonferroni",
+#'   side = "left",
+#'   QC_prob = QC_prob
+#' )
+#'
+#' print(paste("BH cutoff:", round(cutoff_BH, 4)))
+#' print(paste("Bonferroni cutoff:", round(cutoff_bonf, 4)))
+#'
 #' @seealso
 #' \code{\link{BH_cutoff_bisection}} for the BH-specific implementation
 #' \code{\link{compute_power_posthoc}} for the main power analysis function
@@ -225,6 +254,31 @@ score_test <- function(X, Y, expression_size){
 #'
 #' The score test statistic follows an asymptotically normal distribution
 #' under both null and alternative hypotheses.
+#'
+#' @examples
+#' # Compute test statistic distribution for a specific gene
+#' test_stat_dist <- compute_distribution_teststat(
+#'   num_trt_cells = 400,
+#'   num_cntrl_cells = 600,
+#'   num_trt_cells_sq = 400^2,
+#'   expression_mean = 12.5,  # UMIs per cell for this gene
+#'   expression_size = 2.1,   # Dispersion parameter
+#'   fold_change_mean = 0.8,  # Mean fold change effect
+#'   fold_change_sd = 0.15    # SD of fold change effect
+#' )
+#'
+#' print(paste("Test statistic mean:", round(test_stat_dist$mean, 3)))
+#' print(paste("Test statistic SD:", round(test_stat_dist$sd, 3)))
+#'
+#' # Use in power calculation
+#' cutoff <- 0.05
+#' power <- rejection_computation(
+#'   mean_list = test_stat_dist$mean,
+#'   sd_list = test_stat_dist$sd,
+#'   side = "left",
+#'   cutoff = cutoff
+#' )
+#' print(paste("Individual power:", round(power, 3)))
 #'
 #' @seealso
 #' \code{\link{var_nb}} for negative binomial variance calculation

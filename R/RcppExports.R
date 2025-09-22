@@ -66,8 +66,22 @@ compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_m
 #'   \item Compute treatment group variance (incorporating fold change variability)
 #'   \item Calculate final asymptotic mean and standard deviation
 #' }
-#' 
-#' 
+#'
+#' @examples
+#' # Single gene test statistic distribution calculation
+#' result <- compute_distribution_teststat_random_es_cpp(
+#'   num_trt_cell = 400,
+#'   num_cntrl_cell = 600,
+#'   expression_mean = 15.5,  # UMIs per cell for this gene
+#'   expression_size = 1.2,   # Dispersion parameter
+#'   avg_fold_change = 0.8,   # Average fold change across gRNAs
+#'   avg_fold_change_sq = 0.67  # Second moment of fold changes
+#' )
+#'
+#' print(paste("Test statistic mean:", round(result$mean, 3)))
+#' print(paste("Test statistic SD:", round(result$sd, 3)))
+#'
+#' @seealso \code{\link{compute_monte_carlo_teststat_cpp}} for batch processing multiple genes
 #' @export
 compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq) {
     .Call(`_perturbplan_compute_distribution_teststat_random_es_cpp`, num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq)
@@ -270,13 +284,58 @@ generate_reads_grid_streamlined_cpp <- function(UMI_per_cell, variation, grid_si
 }
 
 #' Compute Monte Carlo test statistics for power analysis with random effect sizes
-#' 
-#' @param fc_expression_df Data frame with fold change and expression information
-#' @param library_size Library size parameter
-#' @param num_trt_cells Number of treatment cells
-#' @param num_cntrl_cells Number of control cells
-#' @return List with Monte Carlo mean and standard deviation vectors
 #'
+#' @description
+#' This C++ function efficiently computes test statistic distributions using Monte Carlo
+#' integration for power analysis with random gRNA effect sizes. It processes multiple
+#' gene-perturbation pairs simultaneously for improved performance.
+#'
+#' @param fc_expression_df Data frame with fold change and expression information including:
+#'   avg_fold_change, avg_fold_change_sq, relative_expression, expression_size
+#' @param library_size Numeric. Effective library size (UMIs per cell)
+#' @param num_trt_cells Integer. Number of treatment cells
+#' @param num_cntrl_cells Integer. Number of control cells
+#'
+#' @return List with elements:
+#' \describe{
+#'   \item{means}{Numeric vector of mean test statistics for each gene}
+#'   \item{sds}{Numeric vector of standard deviations of test statistics for each gene}
+#' }
+#'
+#' @details
+#' This function performs Monte Carlo integration to compute test statistic distributions
+#' when gRNA effect sizes are random variables. It handles the random effect size framework
+#' where each gene-perturbation pair has a distribution of potential effects.
+#'
+#' @examples
+#' # Prepare fold change and expression data
+#' fc_expr_data <- extract_fc_expression_info(
+#'   minimum_fold_change = 0.8,
+#'   gRNA_variability = 0.13,
+#'   biological_system = "K562",
+#'   B = 50
+#' )$fc_expression_df
+#'
+#' # Calculate effective library size
+#' pilot_data <- get_pilot_data_from_package("K562")
+#' library_size <- fit_read_UMI_curve(
+#'   reads_per_cell = 25000,
+#'   UMI_per_cell = pilot_data$library_parameters$UMI_per_cell,
+#'   variation = pilot_data$library_parameters$variation
+#' )
+#'
+#' # Compute test statistic distributions
+#' mc_result <- compute_monte_carlo_teststat_cpp(
+#'   fc_expression_df = fc_expr_data,
+#'   library_size = library_size,
+#'   num_trt_cells = 400,
+#'   num_cntrl_cells = 600
+#' )
+#'
+#' # Examine results
+#' head(data.frame(means = mc_result$means, sds = mc_result$sds))
+#'
+#' @seealso \code{\link{compute_distribution_teststat_random_es_cpp}} for single gene calculations
 #' @export
 compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells) {
     .Call(`_perturbplan_compute_monte_carlo_teststat_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells)
@@ -355,8 +414,35 @@ compute_power_plan_overall_cpp <- function(fc_expression_df, library_size, num_t
 #'   \item Computing overall power using compute_power_plan_overall_cpp
 #' }
 #' 
-#' The function is designed for use in binary search algorithms that determine 
+#' The function is designed for use in binary search algorithms that determine
 #' optimal cell count ranges based on power thresholds.
+#'
+#' @examples
+#' # Extract fold change and expression information
+#' fc_expr_data <- extract_fc_expression_info(
+#'   minimum_fold_change = 0.8,
+#'   gRNA_variability = 0.13,
+#'   biological_system = "K562",
+#'   B = 100
+#' )$fc_expression_df
+#'
+#' # Get library parameters
+#' pilot_data <- get_pilot_data_from_package("K562")
+#' library_params <- pilot_data$library_parameters
+#'
+#' # Calculate power for specific experimental conditions
+#' power_result <- compute_single_power_cpp(
+#'   num_cells = 5000,
+#'   reads_per_cell = 25000,
+#'   fc_expression_df = fc_expr_data,
+#'   UMI_per_cell = library_params$UMI_per_cell,
+#'   variation = library_params$variation,
+#'   MOI = 10,
+#'   num_targets = 100,
+#'   side = "left"
+#' )
+#'
+#' print(paste("Power:", round(power_result, 3)))
 #'
 #' @seealso \code{\link{compute_power_plan_overall_cpp}} for full power analysis
 #' @export

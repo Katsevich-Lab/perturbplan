@@ -980,6 +980,29 @@ identify_library_size_range <- function(experimental_platform, library_parameter
 #'   \item Return baseline expression data ready for fold change augmentation
 #' }
 #'
+#' @examples
+#' # Extract expression info from K562 system
+#' expr_info <- extract_expression_info(
+#'   biological_system = "K562",
+#'   B = 100,
+#'   TPM_threshold = 5
+#' )
+#'
+#' # Examine the results
+#' head(expr_info$expression_df)
+#' print(paste("Extracted", expr_info$n_genes, "genes"))
+#'
+#' # Use with custom gene list
+#' gene_list <- c("ENSG00000141510", "ENSG00000157764", "ENSG00000175899")
+#' custom_expr <- extract_expression_info(
+#'   biological_system = "K562",
+#'   gene_list = gene_list,
+#'   TPM_threshold = 1
+#' )
+#'
+#' # Check expression levels
+#' summary(custom_expr$expression_df$relative_expression)
+#'
 #' @export
 extract_expression_info <- function(biological_system = "K562", B = 200, gene_list = NULL, TPM_threshold = 10, custom_pilot_data = NULL) {
 
