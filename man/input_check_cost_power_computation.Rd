@@ -90,3 +90,4 @@ Set to \code{NULL} to disable cost constraints.}
 \description{
 Input checking function for cost_power_computation
 }
+\keyword{internal}

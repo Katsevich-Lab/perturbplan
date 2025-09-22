@@ -66,6 +66,9 @@ compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_m
 #'   \item Compute treatment group variance (incorporating fold change variability)
 #'   \item Calculate final asymptotic mean and standard deviation
 #' }
+#' 
+#' 
+#' @export
 compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq) {
     .Call(`_perturbplan_compute_distribution_teststat_random_es_cpp`, num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq)
 }
@@ -107,6 +110,38 @@ compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_
 #' This cross-search strategy ensures min_cells <= max_cells and provides robust
 #' experimental design ranges from minimally acceptable to well-powered studies.
 #'
+#' @examples
+#' # Extract fold change and expression information
+#' fc_expr_data <- extract_fc_expression_info(
+#'   minimum_fold_change = 0.8,
+#'   gRNA_variability = 0.13,
+#'   biological_system = "K562",
+#'   B = 200
+#' )
+#' 
+#' # Get library parameters and reads range
+#' pilot_data <- get_pilot_data_from_package("K562")
+#' library_params <- pilot_data$library_parameters
+#' reads_range <- identify_reads_range_cpp(
+#'   UMI_per_cell = library_params$UMI_per_cell,
+#'   variation = library_params$variation
+#' )
+#' 
+#' # Find optimal cell count range
+#' cell_range <- identify_cell_range_cpp(
+#'   min_reads_per_cell = reads_range$min_reads_per_cell,
+#'   max_reads_per_cell = reads_range$max_reads_per_cell,
+#'   fc_expression_df = fc_expr_data,
+#'   UMI_per_cell = library_params$UMI_per_cell,
+#'   variation = library_params$variation,
+#'   MOI = 10,
+#'   num_targets = 100,
+#'   side = "left"
+#' )
+#' 
+#' # View results
+#' print(cell_range)
+#' 
 #' @export
 identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI = 10.0, num_targets = 100L, gRNAs_per_target = 4L, non_targeting_gRNAs = 10L, control_group = "complement", multiple_testing_alpha = 0.05, side = "left", prop_non_null = 0.1, min_power_threshold = 0.01, max_power_threshold = 0.8, cell_lower_bound = 100.0, cell_upper_bound = 1e7) {
     .Call(`_perturbplan_identify_cell_range_cpp`, min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null, min_power_threshold, max_power_threshold, cell_lower_bound, cell_upper_bound)
@@ -131,7 +166,7 @@ identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_e
 #' \deqn{effective\_UMI = UMI\_per\_cell \times (1 - exp(-reads\_per\_cell / UMI\_per\_cell) \times (1 + variation \times reads\_per\_cell^2 / (2 \times UMI\_per\_cell^2)))}
 #'
 #' @seealso \code{\link{fit_read_UMI_curve}} for R version
-#' @export
+#' @keywords internal
 fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
     .Call(`_perturbplan_fit_read_UMI_curve_cpp`, reads_per_cell, UMI_per_cell, variation)
 }
@@ -156,6 +191,7 @@ fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
 #' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 #'
 #' @seealso \code{\link{identify_library_size_range}} for R version
+#' @keywords internal
 identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell, variation) {
     .Call(`_perturbplan_identify_library_size_range_cpp`, experimental_platform, UMI_per_cell, variation)
 }
@@ -172,6 +208,8 @@ identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell,
 #' @param grid_size Integer. Number of points in the grid (default: 10).
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
+#'
+#' @keywords internal
 generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variation, grid_size = 10L) {
     .Call(`_perturbplan_generate_reads_grid_cpp`, experimental_platform, UMI_per_cell, variation, grid_size)
 }
@@ -194,6 +232,21 @@ generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variati
 #' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell)
 #' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 #'
+#' @examples
+#' # Get library parameters from pilot data
+#' pilot_data <- get_pilot_data_from_package("K562")
+#' library_params <- pilot_data$library_parameters
+#' 
+#' # Find optimal reads per cell range for power analysis
+#' reads_range <- identify_reads_range_cpp(
+#'   UMI_per_cell = library_params$UMI_per_cell,
+#'   variation = library_params$variation
+#' )
+#' 
+#' # View the range
+#' print(reads_range)
+#' print(paste("Range:", reads_range$min_reads_per_cell, "to", reads_range$max_reads_per_cell))
+#' 
 #' @export
 identify_reads_range_cpp <- function(UMI_per_cell, variation) {
     .Call(`_perturbplan_identify_reads_range_cpp`, UMI_per_cell, variation)
@@ -210,6 +263,8 @@ identify_reads_range_cpp <- function(UMI_per_cell, variation) {
 #' @param grid_size Integer. Number of points in the grid (default: 10).
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
+#'
+#' @keywords internal
 generate_reads_grid_streamlined_cpp <- function(UMI_per_cell, variation, grid_size = 10L) {
     .Call(`_perturbplan_generate_reads_grid_streamlined_cpp`, UMI_per_cell, variation, grid_size)
 }
@@ -264,6 +319,7 @@ compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num
 #' significant performance improvements by eliminating R function call overhead.
 #'
 #' @seealso \code{\link{compute_power_plan_overall}} for R version
+#' @keywords internal
 compute_power_plan_overall_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha = 0.05, multiple_testing_method = "BH", side = "left", prop_non_null = 0.1, return_full_results = FALSE) {
     .Call(`_perturbplan_compute_power_plan_overall_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha, multiple_testing_method, side, prop_non_null, return_full_results)
 }

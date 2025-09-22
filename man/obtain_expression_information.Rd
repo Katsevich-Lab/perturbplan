@@ -36,3 +36,20 @@ refined/MLE. Default \code{FALSE}.}
 \description{
 Estimate gene-level dispersion (theta)
 }
+\examples{
+# Get response matrix from Cell Ranger output
+cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+response_matrix <- obtain_qc_response_data(cellranger_path)
+
+# Extract expression information
+expr_info <- obtain_expression_information(
+  response_matrix = response_matrix,
+  TPM_thres = 0.1,
+  rough = TRUE
+)
+
+# Examine results
+head(expr_info)
+dim(expr_info)
+
+}

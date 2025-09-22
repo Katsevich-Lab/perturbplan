@@ -58,3 +58,4 @@ validated_results <- check_power_results(
 }
 
 }
+\keyword{internal}

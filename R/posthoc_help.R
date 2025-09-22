@@ -6,6 +6,7 @@
 #' @param size size parameter.
 #'
 #' @return variance of NB distribution.
+#' @keywords internal
 
 var_nb <- function(mean, size){
 
@@ -74,6 +75,7 @@ NULL
 #' @inheritParams adjusted_cutoff
 #'
 #' @return Adjusted cutoff/significance level.
+#' @keywords internal
 BH_cutoff_bisection <- function(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)
 {
   compute_BH_posthoc(mean_list, sd_list, side, multiple_testing_alpha, QC_prob)

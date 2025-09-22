@@ -109,7 +109,6 @@ The function is designed to work with output from \code{cost_power_computation()
 and provides fine-grained cost optimization for experimental design selection.
 }
 \examples{
-\dontrun{
 # Load pilot data and perform cost-power analysis
 pilot_data <- get_pilot_data_from_package("K562")
 cost_results <- cost_power_computation(
@@ -147,7 +146,6 @@ cost_optimal <- find_optimal_cost_design(
   power_precision = 0.02,
   cost_grid_size = 50
 )
-}
 
 }
 \seealso{

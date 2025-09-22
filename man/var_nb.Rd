@@ -17,3 +17,4 @@ variance of NB distribution.
 \description{
 Variance of NB distribution
 }
+\keyword{internal}

@@ -19,3 +19,4 @@ Probability of a NB variable being 0
 \description{
 Compute probability mass of NB distribution at zero
 }
+\keyword{internal}

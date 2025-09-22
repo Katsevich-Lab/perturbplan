@@ -28,6 +28,17 @@ NULL
 #'     \item \code{outs/filtered_feature_bc_matrix/barcodes.tsv.gz}
 #'   }
 #'
+#' @examples
+#' # Load example Cell Ranger output
+#' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+#' 
+#' # Extract response matrix
+#' response_matrix <- obtain_qc_response_data(cellranger_path)
+#' 
+#' # Examine the matrix
+#' dim(response_matrix)
+#' class(response_matrix)
+#' 
 #' @return A \code{dgCMatrix} (genes × cells) with cleaned, unique row names and column names.
 #' @export
 obtain_qc_response_data <- function(path_to_cellranger_output) {
@@ -69,6 +80,21 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
 #'     \item \code{NA}   – force use of \env{NSLOTS}
 #'     \item positive integer – user-supplied core count
 #'   }
+#' @examples
+#' # Get response matrix from Cell Ranger output
+#' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+#' response_matrix <- obtain_qc_response_data(cellranger_path)
+#' 
+#' # Extract expression information
+#' expr_info <- obtain_expression_information(
+#'   response_matrix = response_matrix,
+#'   TPM_thres = 0.1,
+#'   rough = TRUE
+#' )
+#' 
+#' # Examine results
+#' head(expr_info)
+#' dim(expr_info)
 #'
 #' @return \describe{
 #'   \item{response_id}{Gene symbol passing the TPM filter}
@@ -144,6 +170,18 @@ obtain_expression_information <- function(response_matrix,
 #' @param path_to_cellranger_output Character. Folder containing
 #'   \code{outs/molecule_info.h5} and \code{outs/filtered_feature_bc_matrix.h5}.
 #'
+#' @examples
+#' # Extract read/UMI information from Cell Ranger output
+#' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+#' 
+#' # Get QC read/UMI table
+#' qc_table <- obtain_qc_read_umi_table(cellranger_path)
+#' 
+#' # Examine the data
+#' head(qc_table)
+#' dim(qc_table)
+#' summary(qc_table)
+#' 
 #' @return Data frame with columns \code{num_reads}, \code{UMI_id},
 #'   \code{cell_id}, \code{response_id}.
 #' @export
@@ -174,6 +212,17 @@ obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
 #' @param QC_data Output of \code{obtain_qc_read_umi_table()}.
 #' @param path_to_cellranger_output Folder containing `outs/metrics_summary.csv`.
 #'
+#' @examples
+#' # Get mapping efficiency from Cell Ranger output
+#' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+#' qc_data <- obtain_qc_read_umi_table(cellranger_path)
+#' 
+#' # Calculate mapping efficiency
+#' mapping_eff <- obtain_mapping_efficiency(qc_data, cellranger_path)
+#' 
+#' # View result
+#' print(paste("Mapping efficiency:", round(mapping_eff, 3)))
+#' 
 #' @return Numeric proportion: mapped / total reads.
 #' @export
 obtain_mapping_efficiency <- function(QC_data, path_to_cellranger_output) {
@@ -214,6 +263,17 @@ obtain_mapping_efficiency <- function(QC_data, path_to_cellranger_output) {
 #'   \item Average reads per cell (total reads divided by number of cells)
 #' }
 #'
+#' @examples
+#' # Get QC data and summarize
+#' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+#' qc_data <- obtain_qc_read_umi_table(cellranger_path)
+#' 
+#' # Generate summary statistics
+#' h5_summary <- summary_h5_data(qc_data)
+#' 
+#' # View summary
+#' print(h5_summary)
+#' 
 #' @seealso \code{\link{obtain_qc_read_umi_table}} for generating the input data
 #' @export
 summary_h5_data <- function(QC_data){
@@ -286,6 +346,21 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 #'   \item Issues a warning if the relative error of the fitted model exceeds 7%
 #' }
 #'
+#' @examples
+#' # Get QC data and compute library parameters
+#' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+#' qc_data <- obtain_qc_read_umi_table(cellranger_path)
+#' 
+#' # Compute library size parameters
+#' lib_params <- library_computation(
+#'   QC_data = qc_data,
+#'   downsample_ratio = 0.7,
+#'   D2_rough = 0.3
+#' )
+#' 
+#' # View parameters
+#' print(lib_params)
+#' 
 #' @seealso
 #' \code{\link{obtain_qc_read_umi_table}} for input data preparation
 #' \code{\link{fit_read_UMI_curve}} for using the fitted parameters

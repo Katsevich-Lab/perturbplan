@@ -128,6 +128,7 @@ reference:
       - obtain_mapping_efficiency
       - obtain_expression_information
       - library_computation
+      - validate_combined_pilot_data
 
   - title: "Important functions in the library"
     desc: "These functions can help users investigate or modify some intermediate results of our experimental design."
@@ -158,6 +159,7 @@ reference:
       - THP_1_10x
       - iPSC_10x
       - iPSC_neuron_10x
+      - reference_expression_datasets
 
 # ----------------
 # Authors block (home sidebar)

@@ -33,3 +33,4 @@ Required columns:
 \item expression_size: Numeric vector of dispersion parameters (positive values)
 }
 }
+\keyword{internal}

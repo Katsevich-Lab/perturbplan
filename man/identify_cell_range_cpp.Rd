@@ -77,3 +77,36 @@ This function performs two binary searches using a cross-search strategy:
 This cross-search strategy ensures min_cells <= max_cells and provides robust
 experimental design ranges from minimally acceptable to well-powered studies.
 }
+\examples{
+# Extract fold change and expression information
+fc_expr_data <- extract_fc_expression_info(
+  minimum_fold_change = 0.8,
+  gRNA_variability = 0.13,
+  biological_system = "K562",
+  B = 200
+)
+
+# Get library parameters and reads range
+pilot_data <- get_pilot_data_from_package("K562")
+library_params <- pilot_data$library_parameters
+reads_range <- identify_reads_range_cpp(
+  UMI_per_cell = library_params$UMI_per_cell,
+  variation = library_params$variation
+)
+
+# Find optimal cell count range
+cell_range <- identify_cell_range_cpp(
+  min_reads_per_cell = reads_range$min_reads_per_cell,
+  max_reads_per_cell = reads_range$max_reads_per_cell,
+  fc_expression_df = fc_expr_data,
+  UMI_per_cell = library_params$UMI_per_cell,
+  variation = library_params$variation,
+  MOI = 10,
+  num_targets = 100,
+  side = "left"
+)
+
+# View results
+print(cell_range)
+
+}

@@ -92,7 +92,6 @@ The function validates that the cost constraint is sufficient for meaningful exp
 }
 
 \examples{
-\dontrun{
 # Optimize reads per cell given fixed cells per target
 result1 <- obtain_fixed_variable_constraining_cost(
   cost_constraint = 1000,
@@ -106,7 +105,6 @@ result2 <- obtain_fixed_variable_constraining_cost(
   cells_per_target = NULL,
   reads_per_cell = 5000
 )
-}
 
 }
 \seealso{

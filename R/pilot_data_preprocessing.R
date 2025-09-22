@@ -37,6 +37,20 @@ utils::globalVariables(c("Perturb_tpm", "Tap_tpm", "in_band", "expression_status
 #'
 #' @importFrom stats median
 #' @importFrom dplyr mutate between
+#' @examples
+#' # Process tiny example dataset
+#' extdata_path <- system.file("extdata", package = "perturbplan")
+#' 
+#' # Note: This is a minimal example dataset for testing
+#' result <- reference_data_preprocessing_10x(
+#'   path_to_top_level_output = extdata_path,
+#'   path_to_run_level_output = "cellranger_tiny",
+#'   h5_rough = TRUE
+#' )
+#' 
+#' # Examine the results
+#' str(result, max.level = 2)
+#' 
 #' @seealso \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}
 #' @export
 reference_data_preprocessing_10x <- function(path_to_top_level_output,
@@ -158,6 +172,29 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'
 #' @importFrom stats median
 #' @importFrom dplyr mutate between
+#' @examples
+#' # First get raw data using reference_data_preprocessing_10x
+#' extdata_path <- system.file("extdata", package = "perturbplan")
+#' 
+#' # Get raw data from 10x output
+#' raw_data <- reference_data_preprocessing_10x(
+#'   path_to_top_level_output = extdata_path,
+#'   path_to_run_level_output = "cellranger_tiny",
+#'   h5_rough = TRUE
+#' )
+#' 
+#' # Process into final pilot data format
+#' pilot_data <- reference_data_preprocessing(
+#'   response_matrix = raw_data$response_matrix,
+#'   read_umi_table = raw_data$read_umi_table,
+#'   mapping_efficiency = raw_data$mapping_efficiency,
+#'   TPM_thres = 0.1,
+#'   h5_only = FALSE
+#' )
+#' 
+#' # Examine results
+#' str(pilot_data, max.level = 2)
+#' 
 #' @seealso
 #' \code{\link{obtain_expression_information}},
 #' \code{\link{obtain_qc_read_umi_table}},

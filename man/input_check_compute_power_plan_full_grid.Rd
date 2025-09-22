@@ -68,3 +68,4 @@ input_check_compute_power_plan_full_grid(
 \description{
 Input checking function for compute_power_plan_full_grid
 }
+\keyword{internal}

@@ -32,3 +32,4 @@ range for power analysis. Uses saturation-based thresholds:
 \seealso{
 \code{\link{identify_library_size_range}} for R version
 }
+\keyword{internal}

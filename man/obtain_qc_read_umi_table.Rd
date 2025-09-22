@@ -17,3 +17,16 @@ Data frame with columns \code{num_reads}, \code{UMI_id},
 \description{
 Extract QC-filtered molecule information from Cell Ranger HDF5 files
 }
+\examples{
+# Extract read/UMI information from Cell Ranger output
+cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+
+# Get QC read/UMI table
+qc_table <- obtain_qc_read_umi_table(cellranger_path)
+
+# Examine the data
+head(qc_table)
+dim(qc_table)
+summary(qc_table)
+
+}

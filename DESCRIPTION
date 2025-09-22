@@ -6,6 +6,22 @@ Authors@R:
 Description: Tools for pilot data preprocessing, power calculations, and design optimization for CRISPR perturbation experiments.
 License: MIT + file LICENSE
 URL: https://katsevich-lab.github.io/perturbplan
+Imports:
+    Matrix,
+    Rcpp,
+    data.table,
+    dplyr,
+    methods,
+    minpack.lm,
+    parallel,
+    rhdf5,
+    stats,
+    tidyr,
+    utils
+LinkingTo: 
+    BH,
+    Rcpp,
+    RcppEigen
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

@@ -39,6 +39,22 @@ The function:
 \item Issues a warning if the relative error of the fitted model exceeds 7\%
 }
 }
+\examples{
+# Get QC data and compute library parameters
+cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+qc_data <- obtain_qc_read_umi_table(cellranger_path)
+
+# Compute library size parameters
+lib_params <- library_computation(
+  QC_data = qc_data,
+  downsample_ratio = 0.7,
+  D2_rough = 0.3
+)
+
+# View parameters
+print(lib_params)
+
+}
 \seealso{
 \code{\link{obtain_qc_read_umi_table}} for input data preparation
 \code{\link{fit_read_UMI_curve}} for using the fitted parameters

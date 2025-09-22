@@ -23,3 +23,4 @@ Represents the variation parameter in the saturation curve.}
 \description{
 Input checking function for library_computation
 }
+\keyword{internal}

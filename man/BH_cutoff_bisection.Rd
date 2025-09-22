@@ -23,3 +23,4 @@ Adjusted cutoff/significance level.
 \description{
 Thin wrapper that validates inputs and forwards to the compiled routine.
 }
+\keyword{internal}
