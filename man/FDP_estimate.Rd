@@ -40,3 +40,4 @@ where:
 \code{\link{adjusted_cutoff}} for computing appropriate cutoffs
 \code{\link{rejection_computation}} for computing rejection probabilities
 }
+\keyword{internal}

@@ -54,5 +54,4 @@ cost_computation(
   num_captured_cells = 10000,
   raw_reads_per_cell = 50000
 )
-
 }

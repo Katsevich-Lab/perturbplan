@@ -66,9 +66,6 @@ compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_m
 #'   \item Compute treatment group variance (incorporating fold change variability)
 #'   \item Calculate final asymptotic mean and standard deviation
 #' }
-#' 
-#' 
-#' @export
 compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq) {
     .Call(`_perturbplan_compute_distribution_teststat_random_es_cpp`, num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq)
 }
@@ -159,7 +156,6 @@ fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
 #' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 #'
 #' @seealso \code{\link{identify_library_size_range}} for R version
-#' @export
 identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell, variation) {
     .Call(`_perturbplan_identify_library_size_range_cpp`, experimental_platform, UMI_per_cell, variation)
 }
@@ -176,8 +172,6 @@ identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell,
 #' @param grid_size Integer. Number of points in the grid (default: 10).
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
-#'
-#' @export
 generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variation, grid_size = 10L) {
     .Call(`_perturbplan_generate_reads_grid_cpp`, experimental_platform, UMI_per_cell, variation, grid_size)
 }
@@ -216,8 +210,6 @@ identify_reads_range_cpp <- function(UMI_per_cell, variation) {
 #' @param grid_size Integer. Number of points in the grid (default: 10).
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
-#'
-#' @export
 generate_reads_grid_streamlined_cpp <- function(UMI_per_cell, variation, grid_size = 10L) {
     .Call(`_perturbplan_generate_reads_grid_streamlined_cpp`, UMI_per_cell, variation, grid_size)
 }
@@ -272,7 +264,6 @@ compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num
 #' significant performance improvements by eliminating R function call overhead.
 #'
 #' @seealso \code{\link{compute_power_plan_overall}} for R version
-#' @export
 compute_power_plan_overall_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha = 0.05, multiple_testing_method = "BH", side = "left", prop_non_null = 0.1, return_full_results = FALSE) {
     .Call(`_perturbplan_compute_power_plan_overall_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha, multiple_testing_method, side, prop_non_null, return_full_results)
 }

@@ -58,6 +58,7 @@ response_id, relative_expression, and expression_size columns.}
 \item \code{UMI_per_cell}: Estimated UMI/cell count.
 \item \code{variation}: Estimated variation parameter for PCR bias.
 }}
+\item{mapping_efficiency}{Numeric value representing mapping efficiency.
 }
 }
 \description{

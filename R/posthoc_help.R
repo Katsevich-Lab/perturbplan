@@ -109,6 +109,7 @@ BH_cutoff_bisection <- function(mean_list, sd_list, side, multiple_testing_alpha
 #' \code{\link{adjusted_cutoff}} for computing appropriate cutoffs
 #' \code{\link{rejection_computation}} for computing rejection probabilities
 #' @export
+#' @keywords internal
 FDP_estimate <- function(mean_list, sd_list, side, cutoff, QC_prob){
 
   # adjust the number of hypothesis by taking QC probability into consideration
@@ -124,14 +125,14 @@ FDP_estimate <- function(mean_list, sd_list, side, cutoff, QC_prob){
   return(num_hypo_adjusted * cutoff / rejection_size)
 }
 
-#' Compute the rejection probability.
+#' Compute the rejection probability of unadjusted score test.
 #'
 #' @inheritParams adjusted_cutoff
 #' @inheritParams compute_power_posthoc
 #'
 #' @return The rejection probablity.
 #' @export
-
+#' @keywords internal
 rejection_computation <- function(mean_list, sd_list, side, cutoff){
 
   # compute different rejection probability based on sideness of the test
@@ -164,7 +165,7 @@ rejection_computation <- function(mean_list, sd_list, side, cutoff){
 #'
 #' @return Score test statistic.
 #' @export
-
+#' @keywords internal
 score_test <- function(X, Y, expression_size){
 
   # compute the number of treat and number of control group

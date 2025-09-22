@@ -2,7 +2,7 @@
 % Please edit documentation in R/posthoc_help.R
 \name{rejection_computation}
 \alias{rejection_computation}
-\title{Compute the rejection probability.}
+\title{Compute the rejection probability of unadjusted score test.}
 \usage{
 rejection_computation(mean_list, sd_list, side, cutoff)
 }
@@ -19,5 +19,6 @@ rejection_computation(mean_list, sd_list, side, cutoff)
 The rejection probablity.
 }
 \description{
-Compute the rejection probability.
+Compute the rejection probability of unadjusted score test.
 }
+\keyword{internal}

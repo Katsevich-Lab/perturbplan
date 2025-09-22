@@ -81,6 +81,10 @@ obtain_expression_information <- function(response_matrix,
                                           TPM_thres = 0.1,
                                           rough     = FALSE,
                                           n_threads = NULL) {
+  # ensure response_matrix is CsparseMatrix
+  if (!inherits(response_matrix, "CsparseMatrix")){
+    response_matrix <- as(response_matrix, "dgCMatrix")
+  }
   # --- decide #threads ------------------------------------------------------
   if (is.null(n_threads)) {
     ns <- Sys.getenv("NSLOTS", unset = "")
@@ -237,6 +241,7 @@ summary_h5_data <- function(QC_data){
 #'   \item{variation}{Variation parameter characterizing PCR bias}
 #' }
 #' @export
+#' @keywords internal
 
 library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
   library_model <- library_computation(QC_data, downsample_ratio, D2_rough)

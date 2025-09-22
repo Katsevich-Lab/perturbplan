@@ -14,6 +14,10 @@
 #'   \item{library_parameters}{List with UMI_per_cell and variation parameters}
 #' }
 #'
+#'@examples
+#'# read pilot data for K562 
+#'get_pilot_data_from_package("K562")
+#'
 #' @keywords internal
 #' @importFrom utils data
 get_pilot_data_from_package <- function(biological_system) {
@@ -269,8 +273,6 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
 #' - response_id: Character vector of gene IDs (preferably Ensembl IDs)
 #' - relative_expression: Numeric vector of expression values (TPM/1e6 scale)
 #' - expression_size: Numeric vector of dispersion parameters (positive values)
-#'
-#' @export
 validate_custom_baseline <- function(data, file_path = "uploaded file") {
 
   errors <- character(0)
@@ -403,6 +405,7 @@ validate_custom_baseline <- function(data, file_path = "uploaded file") {
 #' - expression_dispersion_curve: Function that takes a numeric vector and returns dispersion values
 #'
 #' @export
+#' @keywords internal
 validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
 
   errors <- character(0)
@@ -580,6 +583,7 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
 #' }
 #'
 #' @export
+#' @keywords internal
 validate_custom_library_rds <- function(data, filename = "uploaded file") {
   errors <- character(0)
   warnings <- character(0)
@@ -1075,7 +1079,6 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
 #'   num_captured_cells = 10000,
 #'   raw_reads_per_cell = 50000
 #' )
-#'
 #' @export
 cost_computation <- function(experimental_platform = "10x Chromium v3",
                              sequencing_platform = "NovaSeq X 25B",
