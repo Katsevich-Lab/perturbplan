@@ -15,9 +15,6 @@
 #' }
 #'
 #'@examples
-#'# read pilot data for K562
-#'get_pilot_data_from_package("K562")
-#'
 #' @importFrom utils data
 #' @export
 get_pilot_data_from_package <- function(biological_system) {
@@ -101,7 +98,6 @@ get_pilot_data_from_package <- function(biological_system) {
 #'   \item Returns combined data for Monte Carlo integration with random effect sizes
 #' }
 #'
-#'
 #' @examples
 #' # Extract fold change and expression information
 #' fc_expr_data <- extract_fc_expression_info(
@@ -112,11 +108,6 @@ get_pilot_data_from_package <- function(biological_system) {
 #'   TPM_threshold = 10,
 #'   gRNAs_per_target = 4
 #' )
-#'
-#' # Examine the results
-#' head(fc_expr_data)
-#' dim(fc_expr_data)
-#'
 #' @seealso \code{\link{get_pilot_data_from_package}} for direct pilot data access
 #' @export
 extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, biological_system =  "K562", B = 200, gene_list = NULL, TPM_threshold = 10, custom_pilot_data = NULL, gRNAs_per_target = 4){
@@ -289,7 +280,6 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
 #' - response_id: Character vector of gene IDs (preferably Ensembl IDs)
 #' - relative_expression: Numeric vector of expression values (TPM/1e6 scale)
 #' - expression_size: Numeric vector of dispersion parameters (positive values)
-#'
 #' @keywords internal
 validate_custom_baseline <- function(data, file_path = "uploaded file") {
 
@@ -719,14 +709,12 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
 #' @examples
 #' # First create pilot data using the preprocessing pipeline
 #' extdata_path <- system.file("extdata", package = "perturbplan")
-#'
 #' # Get raw data from 10x output
 #' raw_data <- reference_data_preprocessing_10x(
 #'   path_to_top_level_output = extdata_path,
 #'   path_to_run_level_output = "cellranger_tiny",
 #'   h5_rough = TRUE
 #' )
-#'
 #' # Process into final pilot data format
 #' pilot_data <- reference_data_preprocessing(
 #'   response_matrix = raw_data$response_matrix,
@@ -735,14 +723,6 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
 #'   TPM_thres = 0.1,
 #'   h5_only = FALSE
 #' )
-#'
-#' # Validate the combined pilot data
-#' validation_result <- validate_combined_pilot_data(pilot_data)
-#'
-#' # Check validation results
-#' print(validation_result$valid)
-#' print(validation_result$summary)
-#'
 #' @seealso
 #' \code{\link{validate_custom_baseline_rds}} for baseline expression validation
 #' \code{\link{validate_custom_library_rds}} for library parameter validation
@@ -877,6 +857,28 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
 #'   saturation_pct = round(100 * effective_umis / library_params$UMI_per_cell, 1)
 #' )
 #'
+#' @examples
+#' # Get library parameters from pilot data
+#' pilot_data <- get_pilot_data_from_package("K562")
+#' library_params <- pilot_data$library_parameters
+#' 
+#' # Define read depths to test
+#' read_depths <- c(10000, 25000, 50000, 100000)
+#' 
+#' # Calculate effective library sizes
+#' effective_umis <- fit_read_UMI_curve(
+#'   reads_per_cell = read_depths,
+#'   UMI_per_cell = library_params$UMI_per_cell,
+#'   variation = library_params$variation
+#' )
+#' 
+#' # View the results
+#' data.frame(
+#'   reads_per_cell = read_depths,
+#'   effective_UMI = effective_umis,
+#'   saturation_pct = round(100 * effective_umis / library_params$UMI_per_cell, 1)
+#' )
+#' 
 #' @seealso \code{\link{get_pilot_data_from_package}} for obtaining curve parameters
 #' @export
 fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
@@ -1166,10 +1168,6 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
 #'   num_captured_cells = 10000,
 #'   raw_reads_per_cell = 50000
 #' )
-#'
-#' # View the cost breakdown
-#' print(cost_result)
-#'
 #' @export
 cost_computation <- function(experimental_platform = "10x Chromium v3",
                              sequencing_platform = "NovaSeq X 25B",

@@ -27,3 +27,19 @@ Uses efficient binary search to find the reads per cell range for power analysis
 \item Maximum reads: 80\% UMI saturation (diminishing returns beyond this point)
 }
 }
+\examples{
+# Get library parameters from pilot data
+pilot_data <- get_pilot_data_from_package("K562")
+library_params <- pilot_data$library_parameters
+
+# Find optimal reads per cell range for power analysis
+reads_range <- identify_reads_range_cpp(
+  UMI_per_cell = library_params$UMI_per_cell,
+  variation = library_params$variation
+)
+
+# View the range
+print(reads_range)
+print(paste("Range:", reads_range$min_reads_per_cell, "to", reads_range$max_reads_per_cell))
+
+}

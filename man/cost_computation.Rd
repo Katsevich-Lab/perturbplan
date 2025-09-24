@@ -54,6 +54,26 @@ cost_result <- cost_computation(
   num_captured_cells = 10000,
   raw_reads_per_cell = 50000
 )
+# Calculate cost for a typical experiment
+cost_result <- cost_computation(
+  experimental_platform = "10x Chromium v3",
+  sequencing_platform = "NovaSeq X 25B",
+  num_captured_cells = 10000,
+  raw_reads_per_cell = 50000
+)
+
+# View the cost breakdown
+print(cost_result)
+
+# Calculate cost for a smaller experiment  
+cost_small <- cost_computation(
+  experimental_platform = "10x Chromium v3",
+  sequencing_platform = "NovaSeq X 25B", 
+  num_captured_cells = 5000,
+  raw_reads_per_cell = 25000
+)
+
+print(paste("Small experiment cost:", cost_small))
 
 # View the cost breakdown
 print(cost_result)

@@ -1,0 +1,166 @@
+# ================================
+# pkgdown site configuration
+# Combined template (Library users + App integrators) + perturbplan-style home/sidebar
+# ================================
+
+# Site-level options
+url: https://katsevich-lab.github.io/perturbplan   # Public site URL (adjust if deploying elsewhere)
+
+template:
+  bootstrap: 5
+  bslib:
+    # Height of the fixed navbar in pixels
+    pkgdown-nav-height: 56
+
+# ----------------
+# Home page
+# ----------------
+home:
+  title: "YourPackage"
+  description: >
+    One-line package elevator pitch: tell library users what they can do
+    and tell app integrators what they can plug into.
+  links:
+    - text: Report a bug
+      href: https://github.com/Katsevich-Lab/sceptre/issues
+  sidebar:
+    # Order of sidebar blocks on the home page
+    structure: [links, license, citation, authors, custom, dev]
+    components:
+      custom:
+        title: Funders
+        text: |
+          [Analytics at Wharton](https://analytics.wharton.upenn.edu/)
+
+          [National Science Foundation](https://www.nsf.gov/)
+
+          [National Institutes of Health](https://www.nih.gov)
+
+# ----------------
+# Navbar
+# ----------------
+navbar:
+  # High-level layout of the navbar
+  structure:
+    left:  [intro, library, app, reference, articles, news]
+    right: [search, github]
+  components:
+    # Site overview / landing
+    intro:
+      text: "Overview"
+      href: index.html
+
+    # Documentation for library users (analysis/modeling/data processing)
+    library:
+      text: "For Library Users"
+      menu:
+        - text: "Get started in 5 minutes"
+          href: articles/getting-started-library.html
+        - text: "Typical workflows"
+          href: articles/workflows-library.html
+
+    # Documentation for app integrators (hooks, adapters, extension points)
+    app:
+      text: "For App Integrators"
+      menu:
+        - text: "Integration guide"
+          href: articles/integration-app.html
+        - text: "Extension points & hooks"
+          href: articles/extensibility-hooks.html
+
+    # Reference index
+    reference:
+      text: "Functions"
+      href: reference/index.html
+
+    # Tutorials / long-form docs
+    articles:
+      text: "More tutorials"
+      menu:
+        - text: "Get started (article)"
+          href: articles/sceptre.html
+        - text: "Manual (external)"
+          href: https://timothy-barry.github.io/sceptre-book/
+        - text: "FAQ (external)"
+          href: https://timothy-barry.github.io/sceptre-book/faq.html
+        - text: "Community (GitHub Discussions)"
+          href: https://github.com/Katsevich-Lab/sceptre/discussions
+
+    # News/changelog
+    news:
+      text: "Changelog"
+      href: news/index.html
+
+    # Right side: search comes from pkgdown; add your GitHub repo here
+    github:
+      icon: fa-github
+      aria-label: "GitHub repository"
+      href: https://github.com/Katsevich-Lab/sceptre
+
+# ----------------
+# Reference organization
+# Tip: keep high-frequency user APIs at the top; advanced/internal last.
+# ----------------
+reference:
+  - title: "Core functions for experimental design"
+    desc: "These functions can help users understand the basic pipeline of our experimental design."
+    contents:
+      - compute_power_plan_overall
+      - extract_fc_expression_info
+      - fit_read_UMI_curve
+      - cost_computation
+      - find_optimal_cost_design
+      - obtain_fixed_variable_constraining_cost
+      - cost_power_computation
+      - identify_reads_range_cpp
+      - identify_cell_range_cpp
+
+  - title: "Functions for pilot data preprocessing"
+    desc: "These functions can help users create custom pilot data."
+    contents:
+      - reference_data_preprocessing_10x
+      - reference_data_preprocessing
+      - obtain_qc_response_data
+      - obtain_expression_information
+      - obtain_qc_read_umi_table
+      - summary_h5_data
+      - library_computation
+      - obtain_mapping_efficiency
+      - validate_combined_pilot_data
+
+  - title: "Important functions in the library"
+    desc: "These functions can help users investigate or modify some intermediate results of our experimental design."
+    contents:
+      - compute_power_plan_per_grid
+      - compute_power_plan_full_grid
+      - extract_expression_info
+      - compute_distribution_teststat_random_es_cpp
+      - compute_monte_carlo_teststat_cpp
+      - compute_single_power_cpp
+
+  - title: "Key functions for posthoc power analysis"
+    desc: "These functions can help users do retrospective power analysis."
+    contents:
+      - compute_power_posthoc
+      - power_function
+      - adjusted_cutoff
+      - compute_distribution_teststat    
+
+  # Example datasets exposed to users
+  - title: "Example data"
+    desc: "Datasets used by default in the app."
+    contents:
+      - A549_10x
+      - T_CD8_10x
+      - K562_10x
+      - THP_1_10x
+      - iPSC_10x
+      - iPSC_neuron_10x
+      - reference_expression_datasets
+
+# ----------------
+# Authors block (home sidebar)
+# ----------------
+authors:
+  sidebar:
+    roles: [aut, ctb, ths]

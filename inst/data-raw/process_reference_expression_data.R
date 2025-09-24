@@ -49,7 +49,7 @@ pwalk(
     assign(package_name, obj, envir = .GlobalEnv)
     save(list = package_name,
          file = file.path("data", paste0(package_name, ".rda")),
-         envir = .GlobalEnv)
+         envir = .GlobalEnv, compress = "xz")
     # do.call(usethis::use_data, list(list = package_name, overwrite = TRUE, envir = .GlobalEnv))
   }
 )

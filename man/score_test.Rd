@@ -19,3 +19,4 @@ Score test statistic.
 \description{
 Compute the score test statistic.
 }
+\keyword{internal}

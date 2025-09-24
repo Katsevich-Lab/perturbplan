@@ -40,17 +40,12 @@ utils::globalVariables(c("Perturb_tpm", "Tap_tpm", "in_band", "expression_status
 #' @examples
 #' # Process tiny example dataset
 #' extdata_path <- system.file("extdata", package = "perturbplan")
-#'
 #' # Note: This is a minimal example dataset for testing
 #' result <- reference_data_preprocessing_10x(
 #'   path_to_top_level_output = extdata_path,
 #'   path_to_run_level_output = "cellranger_tiny",
 #'   h5_rough = TRUE
 #' )
-#'
-#' # Examine the results
-#' str(result, max.level = 2)
-#'
 #' @seealso \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}
 #' @export
 reference_data_preprocessing_10x <- function(path_to_top_level_output,
@@ -159,6 +154,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'       \item \code{UMI_per_cell}: Estimated UMI/cell count.
 #'       \item \code{variation}: Estimated variation parameter for PCR bias.
 #'     }}
+#'     \item{mapping_efficiency}{Numeric value representing mapping efficiency.
 #' }
 #'
 #' @details
@@ -174,14 +170,12 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #' @examples
 #' # First get raw data using reference_data_preprocessing_10x
 #' extdata_path <- system.file("extdata", package = "perturbplan")
-#'
 #' # Get raw data from 10x output
 #' raw_data <- reference_data_preprocessing_10x(
 #'   path_to_top_level_output = extdata_path,
 #'   path_to_run_level_output = "cellranger_tiny",
 #'   h5_rough = TRUE
 #' )
-#'
 #' # Process into final pilot data format
 #' pilot_data <- reference_data_preprocessing(
 #'   response_matrix = raw_data$response_matrix,
@@ -190,10 +184,6 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   TPM_thres = 0.1,
 #'   h5_only = FALSE
 #' )
-#'
-#' # Examine results
-#' str(pilot_data, max.level = 2)
-#'
 #' @seealso
 #' \code{\link{obtain_expression_information}},
 #' \code{\link{obtain_qc_read_umi_table}},
@@ -303,6 +293,7 @@ reference_data_preprocessing <- function(response_matrix = NULL, read_umi_table,
   message("Processed ", nrow(baseline_expression_df), " genes")
   message("Library parameters: UMI_per_cell = ", round(library_params$UMI_per_cell),
           ", variation = ", signif(library_params$variation, 3))
+  message("Mapping efficiency = ", ifelse(is.null(mapping_efficiency), "NA", round(mapping_efficiency, 3)))
 
   return(result)
 }

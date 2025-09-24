@@ -84,3 +84,33 @@ This function provides comprehensive power analysis by:
 \item Combining results into a flat dataframe for analysis
 }
 }
+\examples{
+# Define parameter ranges for comprehensive analysis
+TPM_threshold <- c(5, 10, 15)
+minimum_fold_change <- c(0.7, 0.8, 0.9)
+cells_per_target <- c(50, 100, 200) 
+reads_per_cell <- c(10000, 25000, 50000)
+
+# Get pilot data
+pilot_data <- get_pilot_data_from_package("K562")
+
+# Run comprehensive power analysis
+full_results <- compute_power_plan_full_grid(
+  TPM_threshold = TPM_threshold,
+  minimum_fold_change = minimum_fold_change,
+  cells_per_target = cells_per_target,
+  reads_per_cell = reads_per_cell,
+  baseline_expression_stats = pilot_data$baseline_expression_stats,
+  library_parameters = pilot_data$library_parameters,
+  biological_system = "K562",
+  MOI = 10,
+  num_targets = 100,
+  side = "left"
+)
+
+# Examine results
+dim(full_results)
+head(full_results)
+summary(full_results$power)
+
+}

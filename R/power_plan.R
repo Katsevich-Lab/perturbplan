@@ -32,6 +32,39 @@ utils::globalVariables(c("total_cost", "library_cost", "sequencing_cost", ".data
 #'
 #' The function delegates to the optimized C++ implementation for performance.
 #'
+#' @examples
+#' # Extract fold change and expression information
+#' fc_expr_data <- extract_fc_expression_info(
+#'   minimum_fold_change = 0.8,
+#'   gRNA_variability = 0.13,
+#'   biological_system = "K562",
+#'   B = 200
+#' )
+#' 
+#' # Get library parameters
+#' pilot_data <- get_pilot_data_from_package("K562")
+#' library_params <- pilot_data$library_parameters
+#' 
+#' # Calculate effective library size for 25000 reads per cell
+#' library_size <- fit_read_UMI_curve(
+#'   reads_per_cell = 25000,
+#'   UMI_per_cell = library_params$UMI_per_cell,
+#'   variation = library_params$variation
+#' )
+#' 
+#' # Calculate power for a specific experimental design
+#' power_result <- compute_power_plan_overall(
+#'   fc_expression_df = fc_expr_data,
+#'   library_size = library_size,
+#'   num_trt_cells = 400,
+#'   num_cntrl_cells = 600,
+#'   multiple_testing_alpha = 0.05,
+#'   side = "left",
+#'   prop_non_null = 0.1
+#' )
+#' 
+#' print(paste("Overall power:", round(power_result, 3)))
+#'
 #' @export
 compute_power_plan_overall <- function(
     # experimental information
@@ -101,6 +134,38 @@ compute_power_plan_overall <- function(
 #'   \item Computing power for all parameter combinations
 #'   \item Returning a clean dataframe ready for analysis
 #' }
+#'
+#' @examples
+#' # Extract fold change and expression information
+#' fc_expr_data <- extract_fc_expression_info(
+#'   minimum_fold_change = 0.8,
+#'   gRNA_variability = 0.13,
+#'   biological_system = "K562",
+#'   B = 200
+#' )
+#' 
+#' # Get library parameters 
+#' pilot_data <- get_pilot_data_from_package("K562")
+#' library_params <- pilot_data$library_parameters
+#' 
+#' # Define experimental design grids
+#' cells_per_target <- c(50, 100, 200)
+#' reads_per_cell <- c(10000, 25000, 50000)
+#' 
+#' # Compute power across the grid
+#' power_grid <- compute_power_plan_per_grid(
+#'   cells_per_target = cells_per_target,
+#'   reads_per_cell = reads_per_cell,
+#'   fc_expression_df = fc_expr_data,
+#'   library_parameters = library_params,
+#'   MOI = 10,
+#'   num_targets = 100,
+#'   side = "left"
+#' )
+#' 
+#' # View results
+#' head(power_grid)
+#' print(paste("Grid size:", nrow(power_grid)))
 #'
 #' @export
 compute_power_plan_per_grid <- function(
@@ -288,6 +353,35 @@ compute_power_plan_per_grid <- function(
 #'   \item Running compute_power_plan_per_grid() for each parameter set
 #'   \item Combining results into a flat dataframe for analysis
 #' }
+#'
+#' @examples 
+#' # Define parameter ranges for comprehensive analysis
+#' TPM_threshold <- c(5, 10, 15)
+#' minimum_fold_change <- c(0.7, 0.8, 0.9)
+#' cells_per_target <- c(50, 100, 200) 
+#' reads_per_cell <- c(10000, 25000, 50000)
+#' 
+#' # Get pilot data
+#' pilot_data <- get_pilot_data_from_package("K562")
+#' 
+#' # Run comprehensive power analysis
+#' full_results <- compute_power_plan_full_grid(
+#'   TPM_threshold = TPM_threshold,
+#'   minimum_fold_change = minimum_fold_change,
+#'   cells_per_target = cells_per_target,
+#'   reads_per_cell = reads_per_cell,
+#'   baseline_expression_stats = pilot_data$baseline_expression_stats,
+#'   library_parameters = pilot_data$library_parameters,
+#'   biological_system = "K562",
+#'   MOI = 10,
+#'   num_targets = 100,
+#'   side = "left"
+#' )
+#' 
+#' # Examine results
+#' dim(full_results)
+#' head(full_results)
+#' summary(full_results$power)
 #'
 #' @importFrom stats quantile
 #' @export
@@ -483,7 +577,6 @@ compute_power_plan_full_grid <- function(
 #' \deqn{Sequencing Cost = cost\_per\_million\_reads \times raw\_reads\_per\_cell \times num\_captured\_cells / 10^6}
 #'
 #' @examples
-#' \dontrun{
 #' # Load pilot data
 #' pilot_data <- get_pilot_data_from_package("K562")
 #'
@@ -507,7 +600,6 @@ compute_power_plan_full_grid <- function(
 #'   power_target = 0.9,
 #'   cost_constraint = NULL  # No cost constraint
 #' )
-#' }
 #'
 #' @seealso
 #' \code{\link{compute_power_plan_full_grid}} for the underlying power analysis
@@ -774,6 +866,7 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
 #' )
 #' }
 #'
+#' @keywords internal
 check_power_results <- function(power_df,
                                 cost_constraint, cost_precision,
                                 power_target, power_precision){
@@ -882,7 +975,6 @@ check_power_results <- function(power_df,
 #' and provides fine-grained cost optimization for experimental design selection.
 #'
 #' @examples
-#' \dontrun{
 #' # Load pilot data and perform cost-power analysis
 #' pilot_data <- get_pilot_data_from_package("K562")
 #' cost_results <- cost_power_computation(
@@ -920,7 +1012,6 @@ check_power_results <- function(power_df,
 #'   power_precision = 0.02,
 #'   cost_grid_size = 50
 #' )
-#' }
 #'
 #' @seealso
 #' \code{\link{cost_power_computation}} for the underlying cost-power analysis
@@ -1098,7 +1189,6 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
 #' }
 #'
 #' @examples
-#' \dontrun{
 #' # Optimize reads per cell given fixed cells per target
 #' result1 <- obtain_fixed_variable_constraining_cost(
 #'   cost_constraint = 1000,
@@ -1112,7 +1202,6 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
 #'   cells_per_target = NULL,
 #'   reads_per_cell = 5000
 #' )
-#' }
 #'
 #' @seealso
 #' \code{\link{cost_power_computation}} for cost-constrained power analysis that uses this function

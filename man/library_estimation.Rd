@@ -26,3 +26,4 @@ A list with elements:
 \description{
 Compute the average total UMI per cell and UMI variation parameters.
 }
+\keyword{internal}

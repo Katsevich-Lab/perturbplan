@@ -13,4 +13,4 @@ iPSC_neuron_10x <- reference_data_preprocessing(response_matrix = preprocessed_d
                                                 downsample_ratio = c(0.1, 0.3, 0.5, 0.7))
 
 # save the baseline information to data
-usethis::use_data(iPSC_neuron_10x, overwrite = TRUE)
+usethis::use_data(iPSC_neuron_10x, overwrite = TRUE, compress = "xz")

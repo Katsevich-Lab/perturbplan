@@ -52,3 +52,37 @@ This function serves as the core power calculation utility that:
 
 The function delegates to the optimized C++ implementation for performance.
 }
+\examples{
+# Extract fold change and expression information
+fc_expr_data <- extract_fc_expression_info(
+  minimum_fold_change = 0.8,
+  gRNA_variability = 0.13,
+  biological_system = "K562",
+  B = 200
+)
+
+# Get library parameters
+pilot_data <- get_pilot_data_from_package("K562")
+library_params <- pilot_data$library_parameters
+
+# Calculate effective library size for 25000 reads per cell
+library_size <- fit_read_UMI_curve(
+  reads_per_cell = 25000,
+  UMI_per_cell = library_params$UMI_per_cell,
+  variation = library_params$variation
+)
+
+# Calculate power for a specific experimental design
+power_result <- compute_power_plan_overall(
+  fc_expression_df = fc_expr_data,
+  library_size = library_size,
+  num_trt_cells = 400,
+  num_cntrl_cells = 600,
+  multiple_testing_alpha = 0.05,
+  side = "left",
+  prop_non_null = 0.1
+)
+
+print(paste("Overall power:", round(power_result, 3)))
+
+}

@@ -157,7 +157,6 @@ Parameter grid generation:
 }
 }
 \examples{
-\dontrun{
 # Load pilot data
 pilot_data <- get_pilot_data_from_package("K562")
 
@@ -181,7 +180,6 @@ result2 <- cost_power_computation(
   power_target = 0.9,
   cost_constraint = NULL  # No cost constraint
 )
-}
 
 \dontrun{
 # Load pilot data

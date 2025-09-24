@@ -17,6 +17,46 @@
 #' @param multiple_testing_alpha (Optional) A numeric value between 0 and 1 specifying the alpha level for multiple testing correction; defaults to 0.1
 #'
 #' @return A list with two elements: `individual_power` (a data frame with columns `grna_target`, `response_id`, and `power`) and `expected_num_discoveries` (a numeric value)
+#'
+#' @examples
+#' # Create example discovery pairs
+#' discovery_pairs <- data.frame(
+#'   grna_target = c("Gene1", "Gene1", "Gene2", "Gene2"),
+#'   response_id = c("ENSG00000141510", "ENSG00000157764",
+#'                   "ENSG00000141510", "ENSG00000175899")
+#' )
+#'
+#' # Create example cells per gRNA data
+#' cells_per_grna <- data.frame(
+#'   grna_id = c("gRNA1", "gRNA2", "gRNA3", "gRNA4", "NT1", "NT2"),
+#'   grna_target = c("Gene1", "Gene1", "Gene2", "Gene2",
+#'                   "non-targeting", "non-targeting"),
+#'   num_cells = c(150, 180, 160, 170, 200, 190)
+#' )
+#'
+#' # Create example baseline expression data
+#' baseline_expression_stats <- data.frame(
+#'   response_id = c("ENSG00000141510", "ENSG00000157764", "ENSG00000175899"),
+#'   expression_mean = c(12.5, 8.3, 15.7),
+#'   expression_size = c(2.1, 1.8, 2.5)
+#' )
+#'
+#' # Compute post-hoc power
+#' power_results <- compute_power_posthoc(
+#'   discovery_pairs = discovery_pairs,
+#'   cells_per_grna = cells_per_grna,
+#'   baseline_expression_stats = baseline_expression_stats,
+#'   control_group = "nt_cells",
+#'   fold_change_mean = 0.8,
+#'   fold_change_sd = 0.15,
+#'   multiple_testing_alpha = 0.1,
+#'   side = "left"
+#' )
+#'
+#' # View results
+#' print(power_results$individual_power)
+#' print(paste("Expected discoveries:", round(power_results$expected_num_discoveries, 2)))
+#'
 #' @export
 compute_power_posthoc <- function(
     discovery_pairs,
@@ -226,6 +266,49 @@ compute_power_posthoc <- function(
 #'   \item \code{expected_num_discoveries}: A numeric value indicating the expected total
 #'         number of discoveries.
 #' }
+#'
+#' @examples
+#' # Create example discovery pairs
+#' discovery_pairs <- data.frame(
+#'   grna_target = c("Gene1", "Gene2"),
+#'   response_id = c("ENSG00000141510", "ENSG00000157764")
+#' )
+#'
+#' # Create example cells per gRNA data
+#' cells_per_grna <- data.frame(
+#'   grna_id = c("gRNA1", "gRNA2", "NT1"),
+#'   grna_target = c("Gene1", "Gene2", "non-targeting"),
+#'   num_cells = c(200, 180, 300)
+#' )
+#'
+#' # Create example baseline relative expression data
+#' baseline_relative_expression_stats <- data.frame(
+#'   response_id = c("ENSG00000141510", "ENSG00000157764"),
+#'   relative_expression = c(15.5e-6, 8.3e-6),
+#'   expression_size = c(2.1, 1.8)
+#' )
+#'
+#' # Calculate power using pilot experimental parameters
+#' power_results <- power_function(
+#'   recovery_rate = 0.7,
+#'   num_total_reads = 150e6,
+#'   mapping_efficiency = 0.72,
+#'   cells_per_grna = cells_per_grna,
+#'   baseline_relative_expression_stats = baseline_relative_expression_stats,
+#'   fold_change_mean = 0.8,
+#'   fold_change_sd = 0.15,
+#'   num_planned_cells = 1000,
+#'   control_group = "nt_cells",
+#'   UMI_per_cell = 18000,
+#'   variation = 0.25,
+#'   discovery_pairs = discovery_pairs,
+#'   side = "left",
+#'   multiple_testing_alpha = 0.1
+#' )
+#'
+#' # View results
+#' print(power_results$individual_power)
+#' print(paste("Expected discoveries:", round(power_results$expected_num_discoveries, 2)))
 #'
 #' @export
 power_function <- function(
