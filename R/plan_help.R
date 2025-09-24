@@ -14,6 +14,10 @@
 #'   \item{library_parameters}{List with UMI_per_cell and variation parameters}
 #' }
 #'
+#'@examples
+#'# read pilot data for K562
+#'get_pilot_data_from_package("K562")
+#'
 #' @keywords internal
 #' @importFrom utils data
 get_pilot_data_from_package <- function(biological_system) {
@@ -96,6 +100,22 @@ get_pilot_data_from_package <- function(biological_system) {
 #'   \item Calculates avg_fold_change and avg_fold_change_sq from the gRNA effect sizes
 #'   \item Returns combined data for Monte Carlo integration with random effect sizes
 #' }
+#'
+#'
+#' @examples
+#' # Extract fold change and expression information
+#' fc_expr_data <- extract_fc_expression_info(
+#'   minimum_fold_change = 0.8,
+#'   gRNA_variability = 0.13,
+#'   biological_system = "K562",
+#'   B = 200,
+#'   TPM_threshold = 10,
+#'   gRNAs_per_target = 4
+#' )
+#'
+#' # Examine the results
+#' head(fc_expr_data)
+#' dim(fc_expr_data)
 #'
 #' @seealso \code{\link{get_pilot_data_from_package}} for direct pilot data access
 #' @export
@@ -696,6 +716,33 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
 #' )
 #' }
 #'
+#' @examples
+#' # First create pilot data using the preprocessing pipeline
+#' extdata_path <- system.file("extdata", package = "perturbplan")
+#'
+#' # Get raw data from 10x output
+#' raw_data <- reference_data_preprocessing_10x(
+#'   path_to_top_level_output = extdata_path,
+#'   path_to_run_level_output = "cellranger_tiny",
+#'   h5_rough = TRUE
+#' )
+#'
+#' # Process into final pilot data format
+#' pilot_data <- reference_data_preprocessing(
+#'   response_matrix = raw_data$response_matrix,
+#'   read_umi_table = raw_data$read_umi_table,
+#'   mapping_efficiency = raw_data$mapping_efficiency,
+#'   TPM_thres = 0.1,
+#'   h5_only = FALSE
+#' )
+#'
+#' # Validate the combined pilot data
+#' validation_result <- validate_combined_pilot_data(pilot_data)
+#'
+#' # Check validation results
+#' print(validation_result$valid)
+#' print(validation_result$summary)
+#'
 #' @seealso
 #' \code{\link{validate_custom_baseline_rds}} for baseline expression validation
 #' \code{\link{validate_custom_library_rds}} for library parameter validation
@@ -808,6 +855,27 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
 #'   \item Platform-specific technical biases
 #' }
 #'
+#' @examples
+#' # Get library parameters from pilot data
+#' pilot_data <- get_pilot_data_from_package("K562")
+#' library_params <- pilot_data$library_parameters
+#'
+#' # Define read depths to test
+#' read_depths <- c(10000, 25000, 50000, 100000)
+#'
+#' # Calculate effective library sizes
+#' effective_umis <- fit_read_UMI_curve(
+#'   reads_per_cell = read_depths,
+#'   UMI_per_cell = library_params$UMI_per_cell,
+#'   variation = library_params$variation
+#' )
+#'
+#' # View the results
+#' data.frame(
+#'   reads_per_cell = read_depths,
+#'   effective_UMI = effective_umis,
+#'   saturation_pct = round(100 * effective_umis / library_params$UMI_per_cell, 1)
+#' )
 #'
 #' @seealso \code{\link{get_pilot_data_from_package}} for obtaining curve parameters
 #' @export
@@ -912,6 +980,29 @@ identify_library_size_range <- function(experimental_platform, library_parameter
 #'   \item Sample genes according to specified mode
 #'   \item Return baseline expression data ready for fold change augmentation
 #' }
+#'
+#' @examples
+#' # Extract expression info from K562 system
+#' expr_info <- extract_expression_info(
+#'   biological_system = "K562",
+#'   B = 100,
+#'   TPM_threshold = 5
+#' )
+#'
+#' # Examine the results
+#' head(expr_info$expression_df)
+#' print(paste("Extracted", expr_info$n_genes, "genes"))
+#'
+#' # Use with custom gene list
+#' gene_list <- c("ENSG00000141510", "ENSG00000157764", "ENSG00000175899")
+#' custom_expr <- extract_expression_info(
+#'   biological_system = "K562",
+#'   gene_list = gene_list,
+#'   TPM_threshold = 1
+#' )
+#'
+#' # Check expression levels
+#' summary(custom_expr$expression_df$relative_expression)
 #'
 #' @export
 extract_expression_info <- function(biological_system = "K562", B = 200, gene_list = NULL, TPM_threshold = 10, custom_pilot_data = NULL) {
@@ -1069,12 +1160,15 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
 #'
 #' @examples
 #' # Calculate cost for a typical experiment
-#' cost_computation(
+#' cost_result <- cost_computation(
 #'   experimental_platform = "10x Chromium v3",
 #'   sequencing_platform = "NovaSeq X 25B",
 #'   num_captured_cells = 10000,
 #'   raw_reads_per_cell = 50000
 #' )
+#'
+#' # View the cost breakdown
+#' print(cost_result)
 #'
 #' @export
 cost_computation <- function(experimental_platform = "10x Chromium v3",
