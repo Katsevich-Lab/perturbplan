@@ -50,3 +50,4 @@ input_check_posthoc(
 \description{
 Input checking function for compute_power_posthoc
 }
+\keyword{internal}

@@ -45,3 +45,4 @@ returns the practical upper bound.
 \code{\link{get_pilot_data_from_package}} for obtaining library parameters
 \code{\link{identify_library_size_range_cpp}} for C++ implementation
 }
+\keyword{internal}

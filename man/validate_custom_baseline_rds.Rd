@@ -33,3 +33,4 @@ Required structure:
 \item expression_dispersion_curve: Function that takes a numeric vector and returns dispersion values
 }
 }
+\keyword{internal}

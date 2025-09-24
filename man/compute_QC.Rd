@@ -35,3 +35,4 @@ Probability of a enhancer-gene pair being filtered due to QC
 \description{
 Compute QC probability for each enhancer-gene pair
 }
+\keyword{internal}

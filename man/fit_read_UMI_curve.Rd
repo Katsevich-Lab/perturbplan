@@ -29,6 +29,29 @@ accounting for:
 \item Platform-specific technical biases
 }
 }
+\examples{
+# Get library parameters from pilot data
+pilot_data <- get_pilot_data_from_package("K562")
+library_params <- pilot_data$library_parameters
+
+# Define read depths to test
+read_depths <- c(10000, 25000, 50000, 100000)
+
+# Calculate effective library sizes
+effective_umis <- fit_read_UMI_curve(
+  reads_per_cell = read_depths,
+  UMI_per_cell = library_params$UMI_per_cell,
+  variation = library_params$variation
+)
+
+# View the results
+data.frame(
+  reads_per_cell = read_depths,
+  effective_UMI = effective_umis,
+  saturation_pct = round(100 * effective_umis / library_params$UMI_per_cell, 1)
+)
+
+}
 \seealso{
 \code{\link{get_pilot_data_from_package}} for obtaining curve parameters
 }

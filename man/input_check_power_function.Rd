@@ -89,3 +89,4 @@ of the same name; defaults to 7.}
 \description{
 Input checking function for power_function
 }
+\keyword{internal}

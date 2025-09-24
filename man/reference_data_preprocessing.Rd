@@ -73,6 +73,30 @@ This function executes the core steps in the pilot data setup for PerturbPlan:
 \item Outputs a simplified list structure for power analysis.
 }
 }
+\examples{
+# First get raw data using reference_data_preprocessing_10x
+extdata_path <- system.file("extdata", package = "perturbplan")
+
+# Get raw data from 10x output
+raw_data <- reference_data_preprocessing_10x(
+  path_to_top_level_output = extdata_path,
+  path_to_run_level_output = "cellranger_tiny",
+  h5_rough = TRUE
+)
+
+# Process into final pilot data format
+pilot_data <- reference_data_preprocessing(
+  response_matrix = raw_data$response_matrix,
+  read_umi_table = raw_data$read_umi_table,
+  mapping_efficiency = raw_data$mapping_efficiency,
+  TPM_thres = 0.1,
+  h5_only = FALSE
+)
+
+# Examine results
+str(pilot_data, max.level = 2)
+
+}
 \seealso{
 \code{\link{obtain_expression_information}},
 \code{\link{obtain_qc_read_umi_table}},

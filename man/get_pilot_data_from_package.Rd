@@ -20,4 +20,8 @@ A list containing:
 Internal function to load baseline expression and library parameters from the
 pilot datasets stored in the package data/ directory.
 }
-\keyword{internal}
+\examples{
+# read pilot data for K562
+get_pilot_data_from_package("K562")
+
+}

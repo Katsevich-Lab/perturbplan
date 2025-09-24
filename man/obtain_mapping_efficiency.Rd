@@ -17,3 +17,15 @@ Numeric proportion: mapped / total reads.
 \description{
 Mapping efficiency of a Cell Ranger run
 }
+\examples{
+# Get mapping efficiency from Cell Ranger output
+cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+qc_data <- obtain_qc_read_umi_table(cellranger_path)
+
+# Calculate mapping efficiency
+mapping_eff <- obtain_mapping_efficiency(qc_data, cellranger_path)
+
+# View result
+print(paste("Mapping efficiency:", round(mapping_eff, 3)))
+
+}

@@ -62,3 +62,4 @@ Used to calculate total gRNAs and experimental design parameters.}
 \description{
 Input checking function for find_optimal_cost_design
 }
+\keyword{internal}

@@ -56,3 +56,21 @@ The computation follows these steps:
 \item Calculate final asymptotic mean and standard deviation
 }
 }
+\examples{
+# Single gene test statistic distribution calculation
+result <- compute_distribution_teststat_random_es_cpp(
+  num_trt_cell = 400,
+  num_cntrl_cell = 600,
+  expression_mean = 15.5,  # UMIs per cell for this gene
+  expression_size = 1.2,   # Dispersion parameter
+  avg_fold_change = 0.8,   # Average fold change across gRNAs
+  avg_fold_change_sq = 0.67  # Second moment of fold changes
+)
+
+print(paste("Test statistic mean:", round(result$mean, 3)))
+print(paste("Test statistic SD:", round(result$sd, 3)))
+
+}
+\seealso{
+\code{\link{compute_monte_carlo_teststat_cpp}} for batch processing multiple genes
+}
