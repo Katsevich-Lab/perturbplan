@@ -18,8 +18,8 @@
 #'# read pilot data for K562
 #'get_pilot_data_from_package("K562")
 #'
-#' @keywords internal
 #' @importFrom utils data
+#' @export
 get_pilot_data_from_package <- function(biological_system) {
   # Map biological system names to data file names
   data_mapping <- list(
