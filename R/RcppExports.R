@@ -66,8 +66,22 @@ compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_m
 #'   \item Compute treatment group variance (incorporating fold change variability)
 #'   \item Calculate final asymptotic mean and standard deviation
 #' }
-#' 
-#' 
+#'
+#' @examples
+#' # Single gene test statistic distribution calculation
+#' result <- compute_distribution_teststat_random_es_cpp(
+#'   num_trt_cell = 400,
+#'   num_cntrl_cell = 600,
+#'   expression_mean = 15.5,  # UMIs per cell for this gene
+#'   expression_size = 1.2,   # Dispersion parameter
+#'   avg_fold_change = 0.8,   # Average fold change across gRNAs
+#'   avg_fold_change_sq = 0.67  # Second moment of fold changes
+#' )
+#'
+#' print(paste("Test statistic mean:", round(result$mean, 3)))
+#' print(paste("Test statistic SD:", round(result$sd, 3)))
+#'
+#' @seealso \code{\link{compute_monte_carlo_teststat_cpp}} for batch processing multiple genes
 #' @export
 compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq) {
     .Call(`_perturbplan_compute_distribution_teststat_random_es_cpp`, num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq)
@@ -109,6 +123,38 @@ compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_
 #' 
 #' This cross-search strategy ensures min_cells <= max_cells and provides robust
 #' experimental design ranges from minimally acceptable to well-powered studies.
+#'
+#' @examples
+#' # Extract fold change and expression information
+#' fc_expr_data <- extract_fc_expression_info(
+#'   minimum_fold_change = 0.8,
+#'   gRNA_variability = 0.13,
+#'   biological_system = "K562",
+#'   B = 200
+#' )
+#'
+#' # Get library parameters and reads range
+#' pilot_data <- get_pilot_data_from_package("K562")
+#' library_params <- pilot_data$library_parameters
+#' reads_range <- identify_reads_range_cpp(
+#'   UMI_per_cell = library_params$UMI_per_cell,
+#'   variation = library_params$variation
+#' )
+#'
+#' # Find optimal cell count range
+#' cell_range <- identify_cell_range_cpp(
+#'   min_reads_per_cell = reads_range$min_reads_per_cell,
+#'   max_reads_per_cell = reads_range$max_reads_per_cell,
+#'   fc_expression_df = fc_expr_data,
+#'   UMI_per_cell = library_params$UMI_per_cell,
+#'   variation = library_params$variation,
+#'   MOI = 10,
+#'   num_targets = 100,
+#'   side = "left"
+#' )
+#'
+#' # View results
+#' print(cell_range)
 #'
 #' @export
 identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI = 10.0, num_targets = 100L, gRNAs_per_target = 4L, non_targeting_gRNAs = 10L, control_group = "complement", multiple_testing_alpha = 0.05, side = "left", prop_non_null = 0.1, min_power_threshold = 0.01, max_power_threshold = 0.8, cell_lower_bound = 100.0, cell_upper_bound = 1e7) {
