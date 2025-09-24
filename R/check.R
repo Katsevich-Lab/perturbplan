@@ -3,6 +3,7 @@
 #' @inheritParams compute_power_posthoc
 #'
 #' @return NULL
+#' @keywords internal
 input_check_posthoc <- function(
     discovery_pairs = NULL,
     cells_per_grna = NULL,
@@ -234,6 +235,7 @@ input_check_posthoc <- function(
 #' @inheritParams power_function
 #'
 #' @return NULL
+#' @keywords internal
 input_check_power_function <- function(
     recovery_rate = NULL,
     num_total_reads = NULL,
@@ -331,6 +333,7 @@ input_check_power_function <- function(
 #' @inheritParams library_computation
 #'
 #' @return NULL
+#' @keywords internal
 input_check_library_computation <- function(
     QC_data = NULL,
     downsample_ratio = NULL,
@@ -374,6 +377,7 @@ input_check_library_computation <- function(
 #' @inheritParams compute_power_plan_full_grid
 #'
 #' @return NULL
+#' @keywords internal
 input_check_compute_power_plan_full_grid <- function(
     TPM_threshold, minimum_fold_change, cells_per_target, reads_per_cell,
     MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
@@ -572,6 +576,7 @@ input_check_compute_power_plan_full_grid <- function(
 #' @inheritParams cost_power_computation
 #'
 #' @return NULL
+#' @keywords internal
 input_check_cost_power_computation <- function(
     minimizing_variable = "TPM_threshold", fixed_variable = list(minimum_fold_change = 0.8),
     MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
@@ -791,6 +796,7 @@ input_check_cost_power_computation <- function(
 #' @inheritParams find_optimal_cost_design
 #'
 #' @return NULL
+#' @keywords internal
 input_check_find_optimal_cost_design <- function(
     cost_power_df, minimizing_variable, power_target, power_precision,
     MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4,

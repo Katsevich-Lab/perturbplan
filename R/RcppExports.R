@@ -180,7 +180,7 @@ identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_e
 #' \deqn{effective\_UMI = UMI\_per\_cell \times (1 - exp(-reads\_per\_cell / UMI\_per\_cell) \times (1 + variation \times reads\_per\_cell^2 / (2 \times UMI\_per\_cell^2)))}
 #'
 #' @seealso \code{\link{fit_read_UMI_curve}} for R version
-#' @export
+#' @keywords internal
 fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
     .Call(`_perturbplan_fit_read_UMI_curve_cpp`, reads_per_cell, UMI_per_cell, variation)
 }
@@ -205,7 +205,7 @@ fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
 #' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 #'
 #' @seealso \code{\link{identify_library_size_range}} for R version
-#' @export
+#' @keywords internal
 identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell, variation) {
     .Call(`_perturbplan_identify_library_size_range_cpp`, experimental_platform, UMI_per_cell, variation)
 }
@@ -223,7 +223,7 @@ identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell,
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
 #'
-#' @export
+#' @keywords internal
 generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variation, grid_size = 10L) {
     .Call(`_perturbplan_generate_reads_grid_cpp`, experimental_platform, UMI_per_cell, variation, grid_size)
 }
@@ -263,7 +263,7 @@ identify_reads_range_cpp <- function(UMI_per_cell, variation) {
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
 #'
-#' @export
+#' @keywords internal
 generate_reads_grid_streamlined_cpp <- function(UMI_per_cell, variation, grid_size = 10L) {
     .Call(`_perturbplan_generate_reads_grid_streamlined_cpp`, UMI_per_cell, variation, grid_size)
 }
@@ -318,7 +318,7 @@ compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num
 #' significant performance improvements by eliminating R function call overhead.
 #'
 #' @seealso \code{\link{compute_power_plan_overall}} for R version
-#' @export
+#' @keywords internal
 compute_power_plan_overall_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha = 0.05, multiple_testing_method = "BH", side = "left", prop_non_null = 0.1, return_full_results = FALSE) {
     .Call(`_perturbplan_compute_power_plan_overall_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha, multiple_testing_method, side, prop_non_null, return_full_results)
 }

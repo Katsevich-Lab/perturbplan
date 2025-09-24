@@ -6,6 +6,7 @@
 #'
 #' @importFrom stats pbinom
 #' @return Probability of a enhancer-gene pair being filtered due to QC
+#' @keywords internal
 compute_QC <- function(fold_change_mean, expression_mean, expression_size,
                        num_cntrl_cells, num_trt_cells,
                        n_nonzero_trt_thresh, n_nonzero_cntrl_thresh){
@@ -43,6 +44,7 @@ compute_QC <- function(fold_change_mean, expression_mean, expression_size,
 #' @inheritParams compute_QC
 #'
 #' @return Probability of a NB variable being 0
+#' @keywords internal
 compute_zero_prob <- function(fold_change_mean, expression_mean, expression_size){
 
   # compute treatment mean expression

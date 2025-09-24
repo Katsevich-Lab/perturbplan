@@ -290,7 +290,7 @@ extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, bi
 #' - relative_expression: Numeric vector of expression values (TPM/1e6 scale)
 #' - expression_size: Numeric vector of dispersion parameters (positive values)
 #'
-#' @export
+#' @keywords internal
 validate_custom_baseline <- function(data, file_path = "uploaded file") {
 
   errors <- character(0)
@@ -422,7 +422,7 @@ validate_custom_baseline <- function(data, file_path = "uploaded file") {
 #' - baseline_expression: Data frame with columns 'response_id', 'relative_expression', 'expression_size'
 #' - expression_dispersion_curve: Function that takes a numeric vector and returns dispersion values
 #'
-#' @export
+#' @keywords internal
 validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
 
   errors <- character(0)
@@ -599,7 +599,7 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
 #' )
 #' }
 #'
-#' @export
+#' @keywords internal
 validate_custom_library_rds <- function(data, filename = "uploaded file") {
   errors <- character(0)
   warnings <- character(0)
@@ -922,7 +922,7 @@ fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
 #' \code{\link{fit_read_UMI_curve}} for S-M curve evaluation
 #' \code{\link{get_pilot_data_from_package}} for obtaining library parameters
 #' \code{\link{identify_library_size_range_cpp}} for C++ implementation
-#' @export
+#' @keywords internal
 identify_library_size_range <- function(experimental_platform, library_parameters) {
 
   # Input validation for library_parameters structure
