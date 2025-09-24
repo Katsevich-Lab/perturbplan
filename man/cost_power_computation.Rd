@@ -79,7 +79,7 @@ Options: "TPM_threshold" or "minimum_fold_change". Default: "TPM_threshold".}
 \item{max_power}{Numeric. Maximum power threshold for grid search (default: 0.95).}
 
 \item{cost_precision}{Numeric. Cost utilization factor (default: 0.9).
-Filters designs with total cost ≤ cost_precision × cost_constraint.}
+Filters designs with total cost \\le cost_precision × cost_constraint.}
 
 \item{cost_per_captured_cell}{Numeric. Cost per captured cell in dollars (default: 0.086).}
 
@@ -126,7 +126,7 @@ This function implements a two-stage optimization algorithm:
 \item Applies dual filtering:
 \itemize{
 \item Power filter: \code{power_target ± power_precision}
-      \item Cost filter: \code{total_cost ≤ budget_precision × cost_constraint}
+      \item Cost filter: \code{total_cost \\le budget_precision × cost_constraint}
     }
 \item Identifies minimum parameter value meeting both constraints
 }

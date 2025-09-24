@@ -87,14 +87,14 @@ This function simplifies the experimental design process by:
 }
 \examples{
 # Extract fold change and expression information
-fc_expr_data <- extract_fc_expression_info(
+fc_expr_info <- extract_fc_expression_info(
   minimum_fold_change = 0.8,
   gRNA_variability = 0.13,
   biological_system = "K562",
   B = 200
 )
 
-# Get library parameters 
+# Get library parameters
 pilot_data <- get_pilot_data_from_package("K562")
 library_params <- pilot_data$library_parameters
 
@@ -106,7 +106,7 @@ reads_per_cell <- c(10000, 25000, 50000)
 power_grid <- compute_power_plan_per_grid(
   cells_per_target = cells_per_target,
   reads_per_cell = reads_per_cell,
-  fc_expression_df = fc_expr_data,
+  fc_expression_df = fc_expr_info$fc_expression_df,
   library_parameters = library_params,
   MOI = 10,
   num_targets = 100,

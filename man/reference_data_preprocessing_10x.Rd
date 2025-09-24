@@ -49,17 +49,12 @@ The function performs the following steps:
 \examples{
 # Process tiny example dataset
 extdata_path <- system.file("extdata", package = "perturbplan")
-
 # Note: This is a minimal example dataset for testing
 result <- reference_data_preprocessing_10x(
   path_to_top_level_output = extdata_path,
   path_to_run_level_output = "cellranger_tiny",
   h5_rough = TRUE
 )
-
-# Examine the results
-str(result, max.level = 2)
-
 }
 \seealso{
 \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}

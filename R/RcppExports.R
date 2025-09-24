@@ -66,22 +66,8 @@ compute_distribution_teststat_fixed_es_cpp <- function(fold_change, expression_m
 #'   \item Compute treatment group variance (incorporating fold change variability)
 #'   \item Calculate final asymptotic mean and standard deviation
 #' }
-#'
-#' @examples
-#' # Single gene test statistic distribution calculation
-#' result <- compute_distribution_teststat_random_es_cpp(
-#'   num_trt_cell = 400,
-#'   num_cntrl_cell = 600,
-#'   expression_mean = 15.5,  # UMIs per cell for this gene
-#'   expression_size = 1.2,   # Dispersion parameter
-#'   avg_fold_change = 0.8,   # Average fold change across gRNAs
-#'   avg_fold_change_sq = 0.67  # Second moment of fold changes
-#' )
-#'
-#' print(paste("Test statistic mean:", round(result$mean, 3)))
-#' print(paste("Test statistic SD:", round(result$sd, 3)))
-#'
-#' @seealso \code{\link{compute_monte_carlo_teststat_cpp}} for batch processing multiple genes
+#' 
+#' 
 #' @export
 compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq) {
     .Call(`_perturbplan_compute_distribution_teststat_random_es_cpp`, num_trt_cell, num_cntrl_cell, expression_mean, expression_size, avg_fold_change, avg_fold_change_sq)
@@ -124,38 +110,6 @@ compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_
 #' This cross-search strategy ensures min_cells <= max_cells and provides robust
 #' experimental design ranges from minimally acceptable to well-powered studies.
 #'
-#' @examples
-#' # Extract fold change and expression information
-#' fc_expr_data <- extract_fc_expression_info(
-#'   minimum_fold_change = 0.8,
-#'   gRNA_variability = 0.13,
-#'   biological_system = "K562",
-#'   B = 200
-#' )
-#'
-#' # Get library parameters and reads range
-#' pilot_data <- get_pilot_data_from_package("K562")
-#' library_params <- pilot_data$library_parameters
-#' reads_range <- identify_reads_range_cpp(
-#'   UMI_per_cell = library_params$UMI_per_cell,
-#'   variation = library_params$variation
-#' )
-#'
-#' # Find optimal cell count range
-#' cell_range <- identify_cell_range_cpp(
-#'   min_reads_per_cell = reads_range$min_reads_per_cell,
-#'   max_reads_per_cell = reads_range$max_reads_per_cell,
-#'   fc_expression_df = fc_expr_data,
-#'   UMI_per_cell = library_params$UMI_per_cell,
-#'   variation = library_params$variation,
-#'   MOI = 10,
-#'   num_targets = 100,
-#'   side = "left"
-#' )
-#'
-#' # View results
-#' print(cell_range)
-#'
 #' @export
 identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI = 10.0, num_targets = 100L, gRNAs_per_target = 4L, non_targeting_gRNAs = 10L, control_group = "complement", multiple_testing_alpha = 0.05, side = "left", prop_non_null = 0.1, min_power_threshold = 0.01, max_power_threshold = 0.8, cell_lower_bound = 100.0, cell_upper_bound = 1e7) {
     .Call(`_perturbplan_identify_cell_range_cpp`, min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null, min_power_threshold, max_power_threshold, cell_lower_bound, cell_upper_bound)
@@ -180,7 +134,7 @@ identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_e
 #' \deqn{effective\_UMI = UMI\_per\_cell \times (1 - exp(-reads\_per\_cell / UMI\_per\_cell) \times (1 + variation \times reads\_per\_cell^2 / (2 \times UMI\_per\_cell^2)))}
 #'
 #' @seealso \code{\link{fit_read_UMI_curve}} for R version
-#' @keywords internal
+#' @export
 fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
     .Call(`_perturbplan_fit_read_UMI_curve_cpp`, reads_per_cell, UMI_per_cell, variation)
 }
@@ -205,7 +159,7 @@ fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
 #' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 #'
 #' @seealso \code{\link{identify_library_size_range}} for R version
-#' @keywords internal
+#' @export
 identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell, variation) {
     .Call(`_perturbplan_identify_library_size_range_cpp`, experimental_platform, UMI_per_cell, variation)
 }
@@ -223,7 +177,7 @@ identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell,
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
 #'
-#' @keywords internal
+#' @export
 generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variation, grid_size = 10L) {
     .Call(`_perturbplan_generate_reads_grid_cpp`, experimental_platform, UMI_per_cell, variation, grid_size)
 }
@@ -246,21 +200,6 @@ generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variati
 #' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell)
 #' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 #'
-#' @examples
-#' # Get library parameters from pilot data
-#' pilot_data <- get_pilot_data_from_package("K562")
-#' library_params <- pilot_data$library_parameters
-#' 
-#' # Find optimal reads per cell range for power analysis
-#' reads_range <- identify_reads_range_cpp(
-#'   UMI_per_cell = library_params$UMI_per_cell,
-#'   variation = library_params$variation
-#' )
-#' 
-#' # View the range
-#' print(reads_range)
-#' print(paste("Range:", reads_range$min_reads_per_cell, "to", reads_range$max_reads_per_cell))
-#' 
 #' @export
 identify_reads_range_cpp <- function(UMI_per_cell, variation) {
     .Call(`_perturbplan_identify_reads_range_cpp`, UMI_per_cell, variation)
@@ -278,64 +217,19 @@ identify_reads_range_cpp <- function(UMI_per_cell, variation) {
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
 #'
-#' @keywords internal
+#' @export
 generate_reads_grid_streamlined_cpp <- function(UMI_per_cell, variation, grid_size = 10L) {
     .Call(`_perturbplan_generate_reads_grid_streamlined_cpp`, UMI_per_cell, variation, grid_size)
 }
 
 #' Compute Monte Carlo test statistics for power analysis with random effect sizes
+#' 
+#' @param fc_expression_df Data frame with fold change and expression information
+#' @param library_size Library size parameter
+#' @param num_trt_cells Number of treatment cells
+#' @param num_cntrl_cells Number of control cells
+#' @return List with Monte Carlo mean and standard deviation vectors
 #'
-#' @description
-#' This C++ function efficiently computes test statistic distributions using Monte Carlo
-#' integration for power analysis with random gRNA effect sizes. It processes multiple
-#' gene-perturbation pairs simultaneously for improved performance.
-#'
-#' @param fc_expression_df Data frame with fold change and expression information including:
-#'   avg_fold_change, avg_fold_change_sq, relative_expression, expression_size
-#' @param library_size Numeric. Effective library size (UMIs per cell)
-#' @param num_trt_cells Integer. Number of treatment cells
-#' @param num_cntrl_cells Integer. Number of control cells
-#'
-#' @return List with elements:
-#' \describe{
-#'   \item{means}{Numeric vector of mean test statistics for each gene}
-#'   \item{sds}{Numeric vector of standard deviations of test statistics for each gene}
-#' }
-#'
-#' @details
-#' This function performs Monte Carlo integration to compute test statistic distributions
-#' when gRNA effect sizes are random variables. It handles the random effect size framework
-#' where each gene-perturbation pair has a distribution of potential effects.
-#'
-#' @examples
-#' # Prepare fold change and expression data
-#' fc_expr_data <- extract_fc_expression_info(
-#'   minimum_fold_change = 0.8,
-#'   gRNA_variability = 0.13,
-#'   biological_system = "K562",
-#'   B = 50
-#' )$fc_expression_df
-#'
-#' # Calculate effective library size
-#' pilot_data <- get_pilot_data_from_package("K562")
-#' library_size <- fit_read_UMI_curve(
-#'   reads_per_cell = 25000,
-#'   UMI_per_cell = pilot_data$library_parameters$UMI_per_cell,
-#'   variation = pilot_data$library_parameters$variation
-#' )
-#'
-#' # Compute test statistic distributions
-#' mc_result <- compute_monte_carlo_teststat_cpp(
-#'   fc_expression_df = fc_expr_data,
-#'   library_size = library_size,
-#'   num_trt_cells = 400,
-#'   num_cntrl_cells = 600
-#' )
-#'
-#' # Examine results
-#' head(data.frame(means = mc_result$means, sds = mc_result$sds))
-#'
-#' @seealso \code{\link{compute_distribution_teststat_random_es_cpp}} for single gene calculations
 #' @export
 compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells) {
     .Call(`_perturbplan_compute_monte_carlo_teststat_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells)
@@ -378,7 +272,7 @@ compute_monte_carlo_teststat_cpp <- function(fc_expression_df, library_size, num
 #' significant performance improvements by eliminating R function call overhead.
 #'
 #' @seealso \code{\link{compute_power_plan_overall}} for R version
-#' @keywords internal
+#' @export
 compute_power_plan_overall_cpp <- function(fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha = 0.05, multiple_testing_method = "BH", side = "left", prop_non_null = 0.1, return_full_results = FALSE) {
     .Call(`_perturbplan_compute_power_plan_overall_cpp`, fc_expression_df, library_size, num_trt_cells, num_cntrl_cells, multiple_testing_alpha, multiple_testing_method, side, prop_non_null, return_full_results)
 }
@@ -414,35 +308,8 @@ compute_power_plan_overall_cpp <- function(fc_expression_df, library_size, num_t
 #'   \item Computing overall power using compute_power_plan_overall_cpp
 #' }
 #' 
-#' The function is designed for use in binary search algorithms that determine
+#' The function is designed for use in binary search algorithms that determine 
 #' optimal cell count ranges based on power thresholds.
-#'
-#' @examples
-#' # Extract fold change and expression information
-#' fc_expr_data <- extract_fc_expression_info(
-#'   minimum_fold_change = 0.8,
-#'   gRNA_variability = 0.13,
-#'   biological_system = "K562",
-#'   B = 100
-#' )$fc_expression_df
-#'
-#' # Get library parameters
-#' pilot_data <- get_pilot_data_from_package("K562")
-#' library_params <- pilot_data$library_parameters
-#'
-#' # Calculate power for specific experimental conditions
-#' power_result <- compute_single_power_cpp(
-#'   num_cells = 5000,
-#'   reads_per_cell = 25000,
-#'   fc_expression_df = fc_expr_data,
-#'   UMI_per_cell = library_params$UMI_per_cell,
-#'   variation = library_params$variation,
-#'   MOI = 10,
-#'   num_targets = 100,
-#'   side = "left"
-#' )
-#'
-#' print(paste("Power:", round(power_result, 3)))
 #'
 #' @seealso \code{\link{compute_power_plan_overall_cpp}} for full power analysis
 #' @export

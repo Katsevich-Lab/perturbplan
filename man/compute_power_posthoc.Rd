@@ -53,3 +53,43 @@ A list with two elements: \code{individual_power} (a data frame with columns \co
 \description{
 Compute power for each perturbation-gene pair
 }
+\examples{
+# Create example discovery pairs
+discovery_pairs <- data.frame(
+  grna_target = c("Gene1", "Gene1", "Gene2", "Gene2"),
+  response_id = c("ENSG00000141510", "ENSG00000157764",
+                  "ENSG00000141510", "ENSG00000175899")
+)
+
+# Create example cells per gRNA data
+cells_per_grna <- data.frame(
+  grna_id = c("gRNA1", "gRNA2", "gRNA3", "gRNA4", "NT1", "NT2"),
+  grna_target = c("Gene1", "Gene1", "Gene2", "Gene2",
+                  "nt_cells", "nt_cells"),
+  num_cells = c(150, 180, 160, 170, 200, 190)
+)
+
+# Create example baseline expression data
+baseline_expression_stats <- data.frame(
+  response_id = c("ENSG00000141510", "ENSG00000157764", "ENSG00000175899"),
+  expression_mean = c(12.5, 8.3, 15.7),
+  expression_size = c(2.1, 1.8, 2.5)
+)
+
+# Compute post-hoc power
+power_results <- compute_power_posthoc(
+  discovery_pairs = discovery_pairs,
+  cells_per_grna = cells_per_grna,
+  baseline_expression_stats = baseline_expression_stats,
+  control_group = "nt_cells",
+  fold_change_mean = 0.8,
+  fold_change_sd = 0.15,
+  multiple_testing_alpha = 0.1,
+  side = "left"
+)
+
+# View results
+print(power_results$individual_power)
+print(paste("Expected discoveries:", round(power_results$expected_num_discoveries, 2)))
+
+}

@@ -63,4 +63,3 @@ significant performance improvements by eliminating R function call overhead.
 \seealso{
 \code{\link{compute_power_plan_overall}} for R version
 }
-\keyword{internal}

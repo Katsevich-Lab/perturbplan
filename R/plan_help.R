@@ -15,6 +15,8 @@
 #' }
 #'
 #'@examples
+#'# read pilot data for K562
+#'get_pilot_data_from_package("K562")
 #' @importFrom utils data
 #' @export
 get_pilot_data_from_package <- function(biological_system) {

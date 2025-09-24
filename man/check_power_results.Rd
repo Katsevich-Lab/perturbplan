@@ -20,12 +20,12 @@ check_power_results(
 Set to \code{NULL} to disable cost filtering.}
 
 \item{cost_precision}{Numeric. Cost utilization factor.
-Filters designs with total cost ≤ cost_precision × cost_constraint.}
+Filters designs with total cost \\le cost_precision × cost_constraint.}
 
 \item{power_target}{Numeric. Target statistical power.}
 
 \item{power_precision}{Numeric. Acceptable precision around power target.
-Filters designs with power ≥ power_target - power_precision.}
+Filters designs with power \\ge power_target - power_precision.}
 }
 \value{
 Data frame. The original unfiltered power analysis results (if validation passes).
@@ -37,10 +37,10 @@ cost and power filters. Returns the original unfiltered data if validation passe
 \details{
 This function validates filtering viability without actually filtering:
 \enumerate{
-\item Cost check: Verifies that \code{total_cost ≤ cost_precision × cost_constraint}
+\item Cost check: Verifies that \code{total_cost \\le cost_precision × cost_constraint}
     would leave at least one row (only when cost_constraint is not NULL)
-\item Power check: Verifies that \code{overall_power ≥ power_target - power_precision}
-    would leave at least one row
+\item Power check: Verifies that \code{overall_power \\ge power_target - power_precision}
+would leave at least one row
 }
 
 Throws informative errors when validation checks fail, otherwise returns the original data.

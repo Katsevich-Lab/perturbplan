@@ -267,14 +267,14 @@ score_test <- function(X, Y, expression_size){
 #'   fold_change_sd = 0.15    # SD of fold change effect
 #' )
 #'
-#' print(paste("Test statistic mean:", round(test_stat_dist$mean, 3)))
-#' print(paste("Test statistic SD:", round(test_stat_dist$sd, 3)))
+#' print(paste("Test statistic mean:", round(test_stat_dist[[1]]["mean"], 3)))
+#' print(paste("Test statistic SD:", round(test_stat_dist[[1]]["sd"], 3)))
 #'
 #' # Use in power calculation
 #' cutoff <- 0.05
 #' power <- rejection_computation(
-#'   mean_list = test_stat_dist$mean,
-#'   sd_list = test_stat_dist$sd,
+#'   mean_list = test_stat_dist[[1]]["mean"],
+#'   sd_list = test_stat_dist[[1]]["sd"],
 #'   side = "left",
 #'   cutoff = cutoff
 #' )

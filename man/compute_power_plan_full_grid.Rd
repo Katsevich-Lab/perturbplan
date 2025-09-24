@@ -102,7 +102,6 @@ full_results <- compute_power_plan_full_grid(
   reads_per_cell = reads_per_cell,
   baseline_expression_stats = pilot_data$baseline_expression_stats,
   library_parameters = pilot_data$library_parameters,
-  biological_system = "K562",
   MOI = 10,
   num_targets = 100,
   side = "left"

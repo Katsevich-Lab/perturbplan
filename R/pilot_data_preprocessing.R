@@ -154,7 +154,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'       \item \code{UMI_per_cell}: Estimated UMI/cell count.
 #'       \item \code{variation}: Estimated variation parameter for PCR bias.
 #'     }}
-#'     \item{mapping_efficiency}{Numeric value representing mapping efficiency.
+#'     \item{mapping_efficiency}{Numeric value representing mapping efficiency.}
 #' }
 #'
 #' @details

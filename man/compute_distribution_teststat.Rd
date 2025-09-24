@@ -54,6 +54,32 @@ statistic under the negative binomial model. The calculations account for:
 The score test statistic follows an asymptotically normal distribution
 under both null and alternative hypotheses.
 }
+\examples{
+# Compute test statistic distribution for a specific gene
+test_stat_dist <- compute_distribution_teststat(
+  num_trt_cells = 400,
+  num_cntrl_cells = 600,
+  num_trt_cells_sq = 400^2,
+  expression_mean = 12.5,  # UMIs per cell for this gene
+  expression_size = 2.1,   # Dispersion parameter
+  fold_change_mean = 0.8,  # Mean fold change effect
+  fold_change_sd = 0.15    # SD of fold change effect
+)
+
+print(paste("Test statistic mean:", round(test_stat_dist[[1]]["mean"], 3)))
+print(paste("Test statistic SD:", round(test_stat_dist[[1]]["sd"], 3)))
+
+# Use in power calculation
+cutoff <- 0.05
+power <- rejection_computation(
+  mean_list = test_stat_dist[[1]]["mean"],
+  sd_list = test_stat_dist[[1]]["sd"],
+  side = "left",
+  cutoff = cutoff
+)
+print(paste("Individual power:", round(power, 3)))
+
+}
 \seealso{
 \code{\link{var_nb}} for negative binomial variance calculation
 \code{\link{rejection_computation}} for computing power from these distributions

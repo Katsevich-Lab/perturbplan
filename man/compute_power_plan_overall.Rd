@@ -54,7 +54,7 @@ The function delegates to the optimized C++ implementation for performance.
 }
 \examples{
 # Extract fold change and expression information
-fc_expr_data <- extract_fc_expression_info(
+fc_expr_info <- extract_fc_expression_info(
   minimum_fold_change = 0.8,
   gRNA_variability = 0.13,
   biological_system = "K562",
@@ -74,7 +74,7 @@ library_size <- fit_read_UMI_curve(
 
 # Calculate power for a specific experimental design
 power_result <- compute_power_plan_overall(
-  fc_expression_df = fc_expr_data,
+  fc_expression_df = fc_expr_info$fc_expression_df,
   library_size = library_size,
   num_trt_cells = 400,
   num_cntrl_cells = 600,

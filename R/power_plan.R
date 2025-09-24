@@ -34,27 +34,27 @@ utils::globalVariables(c("total_cost", "library_cost", "sequencing_cost", ".data
 #'
 #' @examples
 #' # Extract fold change and expression information
-#' fc_expr_data <- extract_fc_expression_info(
+#' fc_expr_info <- extract_fc_expression_info(
 #'   minimum_fold_change = 0.8,
 #'   gRNA_variability = 0.13,
 #'   biological_system = "K562",
 #'   B = 200
 #' )
-#' 
+#'
 #' # Get library parameters
 #' pilot_data <- get_pilot_data_from_package("K562")
 #' library_params <- pilot_data$library_parameters
-#' 
+#'
 #' # Calculate effective library size for 25000 reads per cell
 #' library_size <- fit_read_UMI_curve(
 #'   reads_per_cell = 25000,
 #'   UMI_per_cell = library_params$UMI_per_cell,
 #'   variation = library_params$variation
 #' )
-#' 
+#'
 #' # Calculate power for a specific experimental design
 #' power_result <- compute_power_plan_overall(
-#'   fc_expression_df = fc_expr_data,
+#'   fc_expression_df = fc_expr_info$fc_expression_df,
 #'   library_size = library_size,
 #'   num_trt_cells = 400,
 #'   num_cntrl_cells = 600,
@@ -137,26 +137,26 @@ compute_power_plan_overall <- function(
 #'
 #' @examples
 #' # Extract fold change and expression information
-#' fc_expr_data <- extract_fc_expression_info(
+#' fc_expr_info <- extract_fc_expression_info(
 #'   minimum_fold_change = 0.8,
 #'   gRNA_variability = 0.13,
 #'   biological_system = "K562",
 #'   B = 200
 #' )
-#' 
-#' # Get library parameters 
+#'
+#' # Get library parameters
 #' pilot_data <- get_pilot_data_from_package("K562")
 #' library_params <- pilot_data$library_parameters
-#' 
+#'
 #' # Define experimental design grids
 #' cells_per_target <- c(50, 100, 200)
 #' reads_per_cell <- c(10000, 25000, 50000)
-#' 
+#'
 #' # Compute power across the grid
 #' power_grid <- compute_power_plan_per_grid(
 #'   cells_per_target = cells_per_target,
 #'   reads_per_cell = reads_per_cell,
-#'   fc_expression_df = fc_expr_data,
+#'   fc_expression_df = fc_expr_info$fc_expression_df,
 #'   library_parameters = library_params,
 #'   MOI = 10,
 #'   num_targets = 100,
@@ -372,7 +372,6 @@ compute_power_plan_per_grid <- function(
 #'   reads_per_cell = reads_per_cell,
 #'   baseline_expression_stats = pilot_data$baseline_expression_stats,
 #'   library_parameters = pilot_data$library_parameters,
-#'   biological_system = "K562",
 #'   MOI = 10,
 #'   num_targets = 100,
 #'   side = "left"
@@ -560,7 +559,7 @@ compute_power_plan_full_grid <- function(
 #'   \item Applies dual filtering:
 #'     \itemize{
 #'       \item Power filter: \code{power_target ± power_precision}
-#'       \item Cost filter: \code{total_cost ≤ budget_precision × cost_constraint}
+#'       \item Cost filter: \code{total_cost \\le budget_precision × cost_constraint}
 #'     }
 #'   \item Identifies minimum parameter value meeting both constraints
 #' }
@@ -639,7 +638,7 @@ compute_power_plan_full_grid <- function(
 #' @param min_power Numeric. Minimum power threshold for grid search (default: 0.05).
 #' @param max_power Numeric. Maximum power threshold for grid search (default: 0.95).
 #' @param cost_precision Numeric. Cost utilization factor (default: 0.9).
-#'   Filters designs with total cost ≤ cost_precision × cost_constraint.
+#'   Filters designs with total cost \\le cost_precision × cost_constraint.
 #' @param cost_per_captured_cell Numeric. Cost per captured cell in dollars (default: 0.086).
 #' @param cost_per_million_reads Numeric. Cost per million sequencing reads in dollars (default: 0.374).
 #' @param cost_constraint Numeric. Maximum budget constraint in dollars (default: NULL).
@@ -836,19 +835,19 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
 #' @param cost_constraint Numeric. Maximum budget constraint in dollars.
 #'   Set to \code{NULL} to disable cost filtering.
 #' @param cost_precision Numeric. Cost utilization factor.
-#'   Filters designs with total cost ≤ cost_precision × cost_constraint.
+#'   Filters designs with total cost \\le cost_precision × cost_constraint.
 #' @param power_target Numeric. Target statistical power.
 #' @param power_precision Numeric. Acceptable precision around power target.
-#'   Filters designs with power ≥ power_target - power_precision.
+#'   Filters designs with power \\ge power_target - power_precision.
 #'
 #' @return Data frame. The original unfiltered power analysis results (if validation passes).
 #'
 #' @details
 #' This function validates filtering viability without actually filtering:
 #' \enumerate{
-#'   \item Cost check: Verifies that \code{total_cost ≤ cost_precision × cost_constraint}
+#'   \item Cost check: Verifies that \code{total_cost \\le cost_precision × cost_constraint}
 #'     would leave at least one row (only when cost_constraint is not NULL)
-#'   \item Power check: Verifies that \code{overall_power ≥ power_target - power_precision}
+#'   \item Power check: Verifies that \code{overall_power \\ge power_target - power_precision}
 #'     would leave at least one row
 #' }
 #'

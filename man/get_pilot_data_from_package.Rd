@@ -23,5 +23,4 @@ pilot datasets stored in the package data/ directory.
 \examples{
 # read pilot data for K562
 get_pilot_data_from_package("K562")
-
 }

@@ -82,11 +82,6 @@ fc_expr_data <- extract_fc_expression_info(
   TPM_threshold = 10,
   gRNAs_per_target = 4
 )
-
-# Examine the results
-head(fc_expr_data)
-dim(fc_expr_data)
-
 }
 \seealso{
 \code{\link{get_pilot_data_from_package}} for direct pilot data access

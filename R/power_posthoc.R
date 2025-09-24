@@ -30,7 +30,7 @@
 #' cells_per_grna <- data.frame(
 #'   grna_id = c("gRNA1", "gRNA2", "gRNA3", "gRNA4", "NT1", "NT2"),
 #'   grna_target = c("Gene1", "Gene1", "Gene2", "Gene2",
-#'                   "non-targeting", "non-targeting"),
+#'                   "nt_cells", "nt_cells"),
 #'   num_cells = c(150, 180, 160, 170, 200, 190)
 #' )
 #'

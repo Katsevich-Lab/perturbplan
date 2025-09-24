@@ -38,7 +38,7 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
   mat_dir <- file.path(path_to_cellranger_output, "outs", "filtered_feature_bc_matrix")
 
   # Read sparse matrix in Matrix Market format
-  response_matrix <- as(Matrix::readMM(file.path(mat_dir, "matrix.mtx.gz")), "CsparseMatrix")
+  response_matrix <- as(Matrix::readMM(file.path(mat_dir, "matrix.mtx.gz")), "dgCMatrix")
 
   # Read features.tsv.gz: typically contains gene_id (V1), gene_name (V2), and feature_type (V3)
   genes <- data.table::fread(file.path(mat_dir, "features.tsv.gz"), header = FALSE)
@@ -99,8 +99,8 @@ obtain_expression_information <- function(response_matrix,
                                           TPM_thres = 0.1,
                                           rough     = FALSE,
                                           n_threads = NULL) {
-  # ensure response_matrix is CsparseMatrix
-  if (!inherits(response_matrix, "CsparseMatrix")){
+  # ensure response_matrix is CsparseMatrix (specifically dgCMatrix for C++ compatibility)
+  if (!inherits(response_matrix, "dgCMatrix")){
     response_matrix <- as(response_matrix, "dgCMatrix")
   }
   # --- decide #threads ------------------------------------------------------
@@ -136,8 +136,14 @@ obtain_expression_information <- function(response_matrix,
     message("Missing genes: ", length(missing_genes), " (", paste(utils::head(missing_genes, 10), collapse = ", "), "...)")
     stop("Some genes in keep_gene are not present in response_matrix rownames")
   }
+  # Ensure transposed matrix is also dgCMatrix for C++ compatibility
+  t_matrix <- Matrix::t(response_matrix[keep_gene, , drop = FALSE])
+  if (!inherits(t_matrix, "dgCMatrix")) {
+    t_matrix <- as(t_matrix, "dgCMatrix")
+  }
+
   theta_vec <- theta_batch_cpp(
-    Matrix::t(response_matrix[keep_gene, , drop = FALSE]),
+    t_matrix,
     lib_size,
     rel_expr[keep_gene],
     rough      = rough,
