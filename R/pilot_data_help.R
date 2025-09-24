@@ -296,7 +296,7 @@ summary_h5_data <- function(QC_data){
 #'   \item{UMI_per_cell}{Total UMI per cell parameter}
 #'   \item{variation}{Variation parameter characterizing PCR bias}
 #' }
-#' @export
+#' @keywords internal
 
 library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
   library_model <- library_computation(QC_data, downsample_ratio, D2_rough)

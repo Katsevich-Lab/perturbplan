@@ -1,30 +1,27 @@
 Package: perturbplan
-Title: Experimental Design and Power Analysis for Perturb-Seq Experiments
-Version: 0.0.1
-Author: Ziang Niu [aut, cre], Yihui He [aut], Eugene Katsevich [aut]
-Maintainer: Ziang Niu <ziangniu@wharton.upenn.edu>
-Authors@R: 
+Title: Perturbplan: Power and Design Tools for CRISPR Screens
+Version: 0.1.0
+Authors@R:
     c(person("Ziang", "Niu", , "ziangniu@wharton.upenn.edu", role = c("aut", "cre")),
       person("Yihui", "He", , "yihuihe@wharton.upenn.edu", role = c("aut")),
       person("Eugene", "Katsevich", , "ekatsevi@wharton.upenn.edu", role = c("aut"))
     )
-Description: Experimental design and power analysis for perturb-seq experiments.
+Description: Tools for pilot data preprocessing, power calculations, and design optimization for CRISPR perturbation experiments.
 License: MIT + file LICENSE
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
-Imports: 
-    dplyr,
-    stats,
-    rhdf5,
-    minpack.lm,
+URL: https://katsevich-lab.github.io/perturbplan
+Imports:
+    Matrix,
     Rcpp,
     data.table,
+    dplyr,
     methods,
-    utils,
-    Matrix,
-    tidyr
-Suggests: 
+    minpack.lm,
+    parallel,
+    rhdf5,
+    stats,
+    tidyr,
+    utils
+Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
@@ -32,11 +29,14 @@ Suggests:
     ggplot2,
     ggside
 Config/testthat/edition: 3
-LinkingTo: 
-    PoissonBinomial,
+LinkingTo:
+    BH,
     Rcpp,
     RcppEigen,
-    BH
-Depends: 
+    PoissonBinomial
+Depends:
     R (>= 3.5)
 LazyData: true
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
