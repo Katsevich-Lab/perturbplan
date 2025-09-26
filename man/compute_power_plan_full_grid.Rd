@@ -88,7 +88,7 @@ This function provides comprehensive power analysis by:
 # Define parameter ranges for comprehensive analysis
 TPM_threshold <- c(5, 10, 15)
 minimum_fold_change <- c(0.7, 0.8, 0.9)
-cells_per_target <- c(50, 100, 200) 
+cells_per_target <- c(50, 100, 200)
 reads_per_cell <- c(10000, 25000, 50000)
 
 # Get pilot data

@@ -62,7 +62,7 @@ utils::globalVariables(c("total_cost", "library_cost", "sequencing_cost", ".data
 #'   side = "left",
 #'   prop_non_null = 0.1
 #' )
-#' 
+#'
 #' print(paste("Overall power:", round(power_result, 3)))
 #'
 #' @export
@@ -162,7 +162,7 @@ compute_power_plan_overall <- function(
 #'   num_targets = 100,
 #'   side = "left"
 #' )
-#' 
+#'
 #' # View results
 #' head(power_grid)
 #' print(paste("Grid size:", nrow(power_grid)))
@@ -354,16 +354,16 @@ compute_power_plan_per_grid <- function(
 #'   \item Combining results into a flat dataframe for analysis
 #' }
 #'
-#' @examples 
+#' @examples
 #' # Define parameter ranges for comprehensive analysis
 #' TPM_threshold <- c(5, 10, 15)
 #' minimum_fold_change <- c(0.7, 0.8, 0.9)
-#' cells_per_target <- c(50, 100, 200) 
+#' cells_per_target <- c(50, 100, 200)
 #' reads_per_cell <- c(10000, 25000, 50000)
-#' 
+#'
 #' # Get pilot data
 #' pilot_data <- get_pilot_data_from_package("K562")
-#' 
+#'
 #' # Run comprehensive power analysis
 #' full_results <- compute_power_plan_full_grid(
 #'   TPM_threshold = TPM_threshold,
@@ -376,7 +376,7 @@ compute_power_plan_per_grid <- function(
 #'   num_targets = 100,
 #'   side = "left"
 #' )
-#' 
+#'
 #' # Examine results
 #' dim(full_results)
 #' head(full_results)
@@ -876,7 +876,7 @@ check_power_results <- function(power_df,
 
     # Return error message when filtering fails!
     if(nrow(cost_check_df) == 0){
-      stop("The cost optimization failed! Consider increasing cost budget!")
+      stop("The cost optimization failed! Consider adjusting the experimental parameter!")
     }
   }
 
@@ -886,7 +886,7 @@ check_power_results <- function(power_df,
 
   # Return the error if the filtering fails!
   if(nrow(power_check_df) == 0){
-    stop("The power optimization failed! Consider adjusting power target!")
+    stop("The power optimization failed! Consider adjusting experimental parameter!")
   }
 
   # Return the original unfiltered data
