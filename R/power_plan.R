@@ -65,6 +65,7 @@ utils::globalVariables(c("total_cost", "library_cost", "sequencing_cost", ".data
 #'
 #' print(paste("Overall power:", round(power_result, 3)))
 #'
+#' @keywords internal
 #' @export
 compute_power_plan_overall <- function(
     # experimental information
@@ -167,6 +168,7 @@ compute_power_plan_overall <- function(
 #' head(power_grid)
 #' print(paste("Grid size:", nrow(power_grid)))
 #'
+#' @keywords internal
 #' @export
 compute_power_plan_per_grid <- function(
   cells_per_target,
@@ -337,11 +339,14 @@ compute_power_plan_per_grid <- function(
 #' @param multiple_testing_alpha Numeric. FDR level (default: 0.05).
 #' @param prop_non_null Numeric. Proportion of non-null hypotheses (default: 0.1).
 #' @param baseline_expression_stats Data frame. Baseline expression statistics.
+#'   See \code{\link{reference_data_processing}} for data format requirements.
 #' @param library_parameters List. Library parameters with UMI_per_cell and variation.
+#'   See \code{\link{reference_data_processing}} for parameter specifications.
 #' @param grid_size Integer. Grid size for each dimension (default: 10).
 #' @param min_power_threshold Numeric. Minimum power threshold (default: 0.01).
 #' @param max_power_threshold Numeric. Maximum power threshold (default: 0.8).
 #' @param mapping_efficiency Numeric. Mapping efficiency for raw reads to usable reads (default: 0.72).
+#'   See \code{\link{reference_data_processing}} for typical values.
 #'
 #' @return Data frame with comprehensive power analysis results across parameter combinations.
 #'
@@ -380,7 +385,7 @@ compute_power_plan_per_grid <- function(
 #' # Examine results
 #' dim(full_results)
 #' head(full_results)
-#' summary(full_results$power)
+#' summary(full_results$overall_power)
 #'
 #' @importFrom stats quantile
 #' @export
@@ -590,6 +595,12 @@ compute_power_plan_full_grid <- function(
 #'   cost_precision = 0.9
 #' )
 #'
+#' print("TPM threshold optimization results:")
+#' print(paste("Number of designs analyzed:", nrow(result1)))
+#' print(paste("TPM threshold range:", round(min(result1$TPM_threshold)), "-", round(max(result1$TPM_threshold))))
+#' print(paste("Power range:", round(min(result1$overall_power), 3), "-", round(max(result1$overall_power), 3)))
+#' print(paste("Cost range: $", round(min(result1$total_cost)), "-", "$", round(max(result1$total_cost)), sep=""))
+#'
 #' # Optimize fold change with fixed TPM threshold
 #' result2 <- cost_power_computation(
 #'   minimizing_variable = "minimum_fold_change",
@@ -599,6 +610,12 @@ compute_power_plan_full_grid <- function(
 #'   power_target = 0.9,
 #'   cost_constraint = NULL  # No cost constraint
 #' )
+#'
+#' print("\nFold change optimization results:")
+#' print(paste("Number of designs analyzed:", nrow(result2)))
+#' print(paste("Fold change range:", round(min(result2$minimum_fold_change), 2), "-", round(max(result2$minimum_fold_change), 2)))
+#' print(paste("Power range:", round(min(result2$overall_power), 3), "-", round(max(result2$overall_power), 3)))
+#' head(result2[c("minimum_fold_change", "cells_per_target", "overall_power")])
 #'
 #' @seealso
 #' \code{\link{compute_power_plan_full_grid}} for the underlying power analysis
@@ -662,6 +679,16 @@ compute_power_plan_full_grid <- function(
 #'   \item Applying validation checks via \code{check_power_results()}
 #' }
 #'
+#' **Cost Model:**
+#'
+#' Total cost is calculated as the sum of library preparation and sequencing costs:
+#'
+#' \code{Total Cost = Library Cost + Sequencing Cost}
+#'
+#' Where:
+#' - \code{Library Cost = cost_per_captured_cell * num_captured_cells}
+#' - \code{Sequencing Cost = cost_per_million_reads * (raw_reads_per_cell * num_captured_cells) / 1,000,000}
+#'
 #' Parameter grid generation:
 #' \itemize{
 #'   \item \code{TPM_threshold}: Uses quantiles of baseline expression (10th to 99th percentile)
@@ -669,7 +696,6 @@ compute_power_plan_full_grid <- function(
 #' }
 #'
 #' @examples
-#' \dontrun{
 #' # Load pilot data
 #' pilot_data <- get_pilot_data_from_package("K562")
 #'
@@ -683,6 +709,10 @@ compute_power_plan_full_grid <- function(
 #'   cost_constraint = 15000
 #' )
 #'
+#' print("TPM threshold analysis:")
+#' print(paste("Analyzed", nrow(result1), "experimental designs"))
+#' print(summary(result1$overall_power))
+#'
 #' # Compute power across fold change range
 #' result2 <- cost_power_computation(
 #'   minimizing_variable = "minimum_fold_change",
@@ -692,6 +722,9 @@ compute_power_plan_full_grid <- function(
 #'   power_target = 0.8,
 #'   cost_constraint = NULL
 #' )
+#'
+#' print("Fold change analysis:")
+#' print(paste("Fold change effects from", round(min(result2$minimum_fold_change), 2), "to", round(max(result2$minimum_fold_change), 2)))
 #'
 #' # Optimize cost across all experimental designs
 #' result3 <- cost_power_computation(
@@ -703,6 +736,10 @@ compute_power_plan_full_grid <- function(
 #'   cost_constraint = NULL
 #' )
 #'
+#' print("Cost optimization results:")
+#' print(paste("Min cost: $", round(min(result3$total_cost)), ", Max cost: $", round(max(result3$total_cost)), sep=""))
+#' print(paste("Optimal design achieves", round(max(result3$overall_power), 3), "power"))
+#'
 #' # Optimize cells per target with fixed detection parameters
 #' result4 <- cost_power_computation(
 #'   minimizing_variable = "cells_per_target",
@@ -712,7 +749,10 @@ compute_power_plan_full_grid <- function(
 #'   power_target = 0.8,
 #'   cost_constraint = 10000
 #' )
-#' }
+#'
+#' print("Cell optimization results:")
+#' print(paste("Cell range:", round(min(result4$cells_per_target)), "to", round(max(result4$cells_per_target)), "per target"))
+#' print(paste("All designs under budget of $10,000 with power ~", round(result4$overall_power[1], 3)))
 #'
 #' @export
 cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_variable = list(minimum_fold_change = 0.8),
@@ -964,11 +1004,16 @@ check_power_results <- function(power_df,
 #'   \item Applies sampling to reduce redundant designs while preserving diversity
 #' }
 #'
-#' \strong{Cost Model:}
-#' \deqn{Total Cost = Library Cost + Sequencing Cost}
-#' \deqn{Library Cost = cost\_per\_captured\_cell \times num\_captured\_cells}
-#' \deqn{Sequencing Cost = cost\_per\_million\_reads \times reads\_per\_cell \times num\_captured\_cells / 10^6}
-#' \deqn{num\_captured\_cells = \frac{(gRNAs\_per\_target \times num\_targets + non\_targeting\_gRNAs) \times cells\_per\_target}{gRNAs\_per\_target \times MOI}}
+#' **Cost Model:**
+#'
+#' Total cost calculation:
+#'
+#' \code{Total Cost = Library Cost + Sequencing Cost}
+#'
+#' Where:
+#' - \code{Library Cost = cost_per_captured_cell * num_captured_cells}
+#' - \code{Sequencing Cost = cost_per_million_reads * (reads_per_cell * num_captured_cells) / 1,000,000}
+#' - \code{num_captured_cells = ((gRNAs_per_target * num_targets + non_targeting_gRNAs) * cells_per_target) / (gRNAs_per_target * MOI)}
 #'
 #' The function is designed to work with output from \code{cost_power_computation()}
 #' and provides fine-grained cost optimization for experimental design selection.
@@ -998,10 +1043,10 @@ check_power_results <- function(power_df,
 #' )
 #'
 #' # Examine optimal designs
-#' head(optimal_designs$optimal_cost_power_df)
+#' print(head(optimal_designs$optimal_cost_power_df),width = Inf)
 #'
-#' # Examine detailed cost grids
-#' optimal_designs$optimal_cost_grid$cost_grid[[1]]
+#' # Examine the first row of the cost grid
+#' print(head(optimal_designs$optimal_cost_grid),width = Inf)
 #'
 #' # Find globally optimal cost design across all parameters
 #' cost_optimal <- find_optimal_cost_design(
@@ -1011,6 +1056,9 @@ check_power_results <- function(power_df,
 #'   power_precision = 0.02,
 #'   cost_grid_size = 50
 #' )
+#'
+#'print(head(cost_optimal$optimal_cost_power_df),width = Inf)
+#'print(head(cost_optimal$optimal_cost_grid),width = Inf)
 #'
 #' @seealso
 #' \code{\link{cost_power_computation}} for the underlying cost-power analysis
@@ -1161,13 +1209,19 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
 #' }
 #'
 #' @details
-#' The function uses a cost model where total cost = cell preparation cost + sequencing cost:
-#' \itemize{
-#'   \item Cell preparation cost = \code{cost_per_captured_cell * num_captured_cells}
-#'   \item Sequencing cost = \code{cost_per_million_reads * total_reads / 1e6}
-#'   \item \code{num_captured_cells = ((gRNAs_per_target * num_targets + non_targeting_gRNAs) * cells_per_target / gRNAs_per_target) / MOI}
-#'   \item \code{total_reads = num_captured_cells * reads_per_cell / mapping_efficiency}
-#' }
+#' The function uses a cost model with the following components:
+#'
+#' **Cost Model:**
+#'
+#' Total experimental cost calculation:
+#'
+#' \code{Total Cost = Library Cost + Sequencing Cost}
+#'
+#' **Component Formulas:**
+#' - \code{Library Cost = cost_per_captured_cell * num_captured_cells}
+#' - \code{Sequencing Cost = cost_per_million_reads * (total_reads / 1,000,000)}
+#' - \code{num_captured_cells = ((gRNAs_per_target * num_targets + non_targeting_gRNAs) * cells_per_target) / (gRNAs_per_target * MOI)}
+#' - \code{total_reads = (num_captured_cells * reads_per_cell) / mapping_efficiency}
 #'
 #' **Optimization Logic:**
 #'
@@ -1205,7 +1259,7 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
 #' @seealso
 #' \code{\link{cost_power_computation}} for cost-constrained power analysis that uses this function
 #'
-#' @export
+#' @keywords internal
 obtain_fixed_variable_constraining_cost <- function(
     cost_per_captured_cell = 0.086, cost_per_million_reads = 0.374, cost_constraint,
     MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4,

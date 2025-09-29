@@ -86,3 +86,4 @@ power_result <- compute_power_plan_overall(
 print(paste("Overall power:", round(power_result, 3)))
 
 }
+\keyword{internal}

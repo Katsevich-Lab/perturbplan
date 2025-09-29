@@ -14,10 +14,30 @@
 #'   \item{library_parameters}{List with UMI_per_cell and variation parameters}
 #' }
 #'
-#'@examples
-#'# read pilot data for K562
-#'get_pilot_data_from_package("K562")
+#' @examples
+#' # Load pilot data for K562 cells
+#' k562_data <- get_pilot_data_from_package("K562")
+#'
+#' # View the structure
+#' str(k562_data)
+#'
+#' # Access baseline expression data
+#' head(k562_data$baseline_expression_stats)
+#'
+#' # Access library parameters including mapping efficiency
+#' k562_data$library_parameters
+#' cat("Mapping efficiency:", k562_data$mapping_efficiency)
+#'
+#' # The mapping efficiency affects power calculations by determining
+#' # what fraction of sequencing reads contribute to gene expression
+#' # Higher mapping efficiency means more effective sequencing depth
+#'
+#' # Compare mapping efficiency across cell types
+#' a549_data <- get_pilot_data_from_package("A549")
+#' cat("K562 mapping efficiency:", k562_data$mapping_efficiency)
+#' cat("A549 mapping efficiency:", a549_data$mapping_efficiency)
 #' @importFrom utils data
+#' @keywords internal
 #' @export
 get_pilot_data_from_package <- function(biological_system) {
   # Map biological system names to data file names
@@ -70,8 +90,10 @@ get_pilot_data_from_package <- function(biological_system) {
 #'   levels below TPM_threshold/1e6 are filtered out before power calculation.
 #' @param custom_pilot_data List. Optional custom pilot data. If provided,
 #'   this data is used instead of the default biological_system data. Must contain
-#'   baseline_expression_stats (data frame with gene expression data)
-#'   and library_parameters (with UMI_per_cell and variation).
+#'   baseline_expression_stats (data frame with relative_expression and expression_size columns)
+#'   and library_parameters (with UMI_per_cell and variation). See
+#'   \code{\link{reference_data_preprocessing_10x}} for processing 10x Cell Ranger output and
+#'   \code{\link{reference_data_processing}} for further pilot data processing.
 #' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
 #'   Each target will have gRNAs_per_target individual gRNA effect sizes drawn from the
 #'   specified fold change distribution. avg_fold_change and avg_fold_change_sq are
@@ -111,6 +133,7 @@ get_pilot_data_from_package <- function(biological_system) {
 #'   gRNAs_per_target = 4
 #' )
 #' @seealso \code{\link{get_pilot_data_from_package}} for direct pilot data access
+#' @keywords internal
 #' @export
 extract_fc_expression_info <- function(minimum_fold_change, gRNA_variability, biological_system =  "K562", B = 200, gene_list = NULL, TPM_threshold = 10, custom_pilot_data = NULL, gRNAs_per_target = 4){
 
@@ -672,6 +695,7 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
 #' @description
 #' This function validates the structure of a combined pilot data RDS file that contains
 #' both baseline expression data and library parameters in a single list.
+#' Also, it checks whether the value of parameters makes sense.
 #'
 #' @param data A list object loaded from an RDS file, expected to contain:
 #'   \itemize{
@@ -709,6 +733,8 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
 #' }
 #'
 #' @examples
+#' # set seed for reproducibility
+#' set.seed(123)
 #' # First create pilot data using the preprocessing pipeline
 #' extdata_path <- system.file("extdata", package = "perturbplan")
 #' # Get raw data from 10x output
@@ -718,13 +744,31 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
 #'   h5_rough = TRUE
 #' )
 #' # Process into final pilot data format
-#' pilot_data <- reference_data_preprocessing(
+#' pilot_data <- reference_data_processing(
 #'   response_matrix = raw_data$response_matrix,
 #'   read_umi_table = raw_data$read_umi_table,
 #'   mapping_efficiency = raw_data$mapping_efficiency,
 #'   TPM_thres = 0.1,
 #'   h5_only = FALSE
 #' )
+#'
+#' # Validate the processed pilot data
+#' validation_result <- validate_combined_pilot_data(pilot_data)
+#' if (validation_result$valid) {
+#'   cat("Validation passed:", validation_result$summary)
+#' } else {
+#'   cat("Validation failed:", validation_result$errors)
+#' }
+#'
+#' pilot_data_corrected <- pilot_data
+#' pilot_data_corrected$library_parameters$variation <- 0.3
+#' validation_result2 <- validate_combined_pilot_data(pilot_data_corrected)
+#' if (validation_result2$valid) {
+#'   cat("Validation passed:", validation_result2$summary)
+#' } else {
+#'   cat("Validation failed:", validation_result2$errors)
+#' }
+#'
 #' @seealso
 #' \code{\link{validate_custom_baseline_rds}} for baseline expression validation
 #' \code{\link{validate_custom_library_rds}} for library parameter validation
@@ -863,25 +907,26 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
 #' # Get library parameters from pilot data
 #' pilot_data <- get_pilot_data_from_package("K562")
 #' library_params <- pilot_data$library_parameters
-#' 
+#'
 #' # Define read depths to test
 #' read_depths <- c(10000, 25000, 50000, 100000)
-#' 
+#'
 #' # Calculate effective library sizes
 #' effective_umis <- fit_read_UMI_curve(
 #'   reads_per_cell = read_depths,
 #'   UMI_per_cell = library_params$UMI_per_cell,
 #'   variation = library_params$variation
 #' )
-#' 
+#'
 #' # View the results
 #' data.frame(
 #'   reads_per_cell = read_depths,
 #'   effective_UMI = effective_umis,
 #'   saturation_pct = round(100 * effective_umis / library_params$UMI_per_cell, 1)
 #' )
-#' 
+#'
 #' @seealso \code{\link{get_pilot_data_from_package}} for obtaining curve parameters
+#' @keywords internal
 #' @export
 fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
 
@@ -1008,7 +1053,7 @@ identify_library_size_range <- function(experimental_platform, library_parameter
 #' # Check expression levels
 #' summary(custom_expr$expression_df$relative_expression)
 #'
-#' @export
+#' @keywords internal
 extract_expression_info <- function(biological_system = "K562", B = 200, gene_list = NULL, TPM_threshold = 10, custom_pilot_data = NULL) {
 
   # set the random seed for reproducibility
@@ -1170,7 +1215,7 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
 #'   num_captured_cells = 10000,
 #'   raw_reads_per_cell = 50000
 #' )
-#' @export
+#' @keywords internal
 cost_computation <- function(experimental_platform = "10x Chromium v3",
                              sequencing_platform = "NovaSeq X 25B",
                              num_captured_cells, raw_reads_per_cell){

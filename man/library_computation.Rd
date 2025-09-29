@@ -59,3 +59,4 @@ print(lib_params)
 \code{\link{obtain_qc_read_umi_table}} for input data preparation
 \code{\link{fit_read_UMI_curve}} for using the fitted parameters
 }
+\keyword{internal}

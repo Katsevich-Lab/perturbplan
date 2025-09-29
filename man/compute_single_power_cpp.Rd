@@ -69,3 +69,4 @@ optimal cell count ranges based on power thresholds.
 \seealso{
 \code{\link{compute_power_plan_overall_cpp}} for full power analysis
 }
+\keyword{internal}

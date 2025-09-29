@@ -30,7 +30,7 @@
 #' cells_per_grna <- data.frame(
 #'   grna_id = c("gRNA1", "gRNA2", "gRNA3", "gRNA4", "NT1", "NT2"),
 #'   grna_target = c("Gene1", "Gene1", "Gene2", "Gene2",
-#'                   "nt_cells", "nt_cells"),
+#'                   "non-targeting", "non-targeting"),
 #'   num_cells = c(150, 180, 160, 170, 200, 190)
 #' )
 #'
@@ -54,8 +54,14 @@
 #' )
 #'
 #' # View results
+#' print("Individual power results:")
 #' print(power_results$individual_power)
 #' print(paste("Expected discoveries:", round(power_results$expected_num_discoveries, 2)))
+#'
+#' # Show summary statistics
+#' power_values <- power_results$individual_power$power
+#' print(paste("Power range:", round(min(power_values), 3), "-", round(max(power_values), 3)))
+#' print(paste("Average power:", round(mean(power_values), 3)))
 #'
 #' @export
 compute_power_posthoc <- function(
@@ -307,8 +313,15 @@ compute_power_posthoc <- function(
 #' )
 #'
 #' # View results
+#' print("Power function results:")
 #' print(power_results$individual_power)
 #' print(paste("Expected discoveries:", round(power_results$expected_num_discoveries, 2)))
+#'
+#' # Show experimental design summary
+#' total_cells <- sum(cells_per_grna$num_cells)
+#' print(paste("Total cells:", total_cells))
+#' print(paste("Treatment cells:", sum(cells_per_grna$num_cells[cells_per_grna$grna_target != "non-targeting"])))
+#' print(paste("Control cells:", sum(cells_per_grna$num_cells[cells_per_grna$grna_target == "non-targeting"])))
 #'
 #' @export
 power_function <- function(

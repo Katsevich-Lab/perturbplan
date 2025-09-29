@@ -102,53 +102,29 @@ navbar:
 # Tip: keep high-frequency user APIs at the top; advanced/internal last.
 # ----------------
 reference:
-  - title: "Core functions for experimental design"
-    desc: "These functions can help users understand the basic pipeline of our experimental design."
+  - title: "Power functions"
+    desc: "These functions help users calculate power given other parameters in experimental design."
     contents:
-      - compute_power_plan_overall
-      - extract_fc_expression_info
-      - fit_read_UMI_curve
-      - cost_computation
-      - find_optimal_cost_design
-      - obtain_fixed_variable_constraining_cost
-      - cost_power_computation
-      - identify_reads_range_cpp
-      - identify_cell_range_cpp
-
-  - title: "Functions for pilot data preprocessing"
-    desc: "These functions can help users create custom pilot data."
-    contents:
-      - reference_data_preprocessing_10x
-      - reference_data_preprocessing
-      - obtain_qc_response_data
-      - obtain_expression_information
-      - obtain_qc_read_umi_table
-      - summary_h5_data
-      - library_computation
-      - obtain_mapping_efficiency
-      - validate_combined_pilot_data
-
-  - title: "Important functions in the library"
-    desc: "These functions can help users investigate or modify some intermediate results of our experimental design."
-    contents:
-      - compute_power_plan_per_grid
       - compute_power_plan_full_grid
-      - extract_expression_info
-      - compute_distribution_teststat_random_es_cpp
-      - compute_monte_carlo_teststat_cpp
-      - compute_single_power_cpp
-
-  - title: "Key functions for posthoc power analysis"
-    desc: "These functions can help users do retrospective power analysis."
-    contents:
       - compute_power_posthoc
       - power_function
-      - adjusted_cutoff
-      - compute_distribution_teststat    
+
+  - title: "Optimization functions"
+    desc: "These functions help users find the optimal experimental settings given power or cost."
+    contents:
+      - cost_power_computation
+      - find_optimal_cost_design
+
+  - title: "Pilot data preprocessing functions"
+    desc: "These functions help users create custom pilot data."
+    contents:
+      - reference_data_preprocessing_10x
+      - reference_data_processing
+      - validate_combined_pilot_data
 
   # Example datasets exposed to users
   - title: "Example data"
-    desc: "Datasets used by default in the app."
+    desc: "Pilot datasets used by default in the app."
     contents:
       - A549_10x
       - T_CD8_10x
@@ -156,7 +132,6 @@ reference:
       - THP_1_10x
       - iPSC_10x
       - iPSC_neuron_10x
-      - reference_expression_datasets
 
 # ----------------
 # Authors block (home sidebar)

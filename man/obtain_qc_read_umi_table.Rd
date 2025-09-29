@@ -26,3 +26,4 @@ dim(qc_table)
 summary(qc_table)
 
 }
+\keyword{internal}

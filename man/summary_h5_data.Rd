@@ -37,3 +37,4 @@ qc_data <- obtain_qc_read_umi_table(cellranger_path)
 \seealso{
 \code{\link{obtain_qc_read_umi_table}} for generating the input data
 }
+\keyword{internal}

@@ -22,3 +22,4 @@ Mapping efficiency of a Cell Ranger run
 cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 qc_data <- obtain_qc_read_umi_table(cellranger_path)
 }
+\keyword{internal}

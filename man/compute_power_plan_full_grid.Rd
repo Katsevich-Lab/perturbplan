@@ -56,9 +56,11 @@ compute_power_plan_full_grid(
 
 \item{prop_non_null}{Numeric. Proportion of non-null hypotheses (default: 0.1).}
 
-\item{baseline_expression_stats}{Data frame. Baseline expression statistics.}
+\item{baseline_expression_stats}{Data frame. Baseline expression statistics.
+See \code{\link{reference_data_processing}} for data format requirements.}
 
-\item{library_parameters}{List. Library parameters with UMI_per_cell and variation.}
+\item{library_parameters}{List. Library parameters with UMI_per_cell and variation.
+See \code{\link{reference_data_processing}} for parameter specifications.}
 
 \item{grid_size}{Integer. Grid size for each dimension (default: 10).}
 
@@ -66,7 +68,8 @@ compute_power_plan_full_grid(
 
 \item{max_power_threshold}{Numeric. Maximum power threshold (default: 0.8).}
 
-\item{mapping_efficiency}{Numeric. Mapping efficiency for raw reads to usable reads (default: 0.72).}
+\item{mapping_efficiency}{Numeric. Mapping efficiency for raw reads to usable reads (default: 0.72).
+See \code{\link{reference_data_processing}} for typical values.}
 }
 \value{
 Data frame with comprehensive power analysis results across parameter combinations.
@@ -110,6 +113,6 @@ full_results <- compute_power_plan_full_grid(
 # Examine results
 dim(full_results)
 head(full_results)
-summary(full_results$power)
+summary(full_results$overall_power)
 
 }

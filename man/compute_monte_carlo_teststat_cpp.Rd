@@ -26,3 +26,4 @@ List with Monte Carlo mean and standard deviation vectors
 \description{
 Compute Monte Carlo test statistics for power analysis with random effect sizes
 }
+\keyword{internal}

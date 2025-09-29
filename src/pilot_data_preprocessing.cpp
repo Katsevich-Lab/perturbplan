@@ -211,8 +211,6 @@ Rcpp::NumericVector theta_batch_cpp(
   Rcpp::Rcout << "[theta_batch_cpp] Starting computation" << std::endl;
   Rcpp::Rcout << " - G (genes) = " << G << std::endl;
   Rcpp::Rcout << " - C (cells) = " << C << std::endl;
-  Rcpp::Rcout << " - rel_expr size = " << rel_expr.size() << std::endl;
-  Rcpp::Rcout << " - library_size size = " << library_size.size() << std::endl;
 
   Rcpp::NumericVector theta(G);
   const VectorXd lib_vec = Eigen::Map<const VectorXd>(library_size.begin(), C);

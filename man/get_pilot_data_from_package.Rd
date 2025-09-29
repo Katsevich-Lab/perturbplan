@@ -21,6 +21,26 @@ Internal function to load baseline expression and library parameters from the
 pilot datasets stored in the package data/ directory.
 }
 \examples{
-# read pilot data for K562
-get_pilot_data_from_package("K562")
+# Load pilot data for K562 cells
+k562_data <- get_pilot_data_from_package("K562")
+
+# View the structure
+str(k562_data)
+
+# Access baseline expression data
+head(k562_data$baseline_expression_stats)
+
+# Access library parameters including mapping efficiency
+k562_data$library_parameters
+cat("Mapping efficiency:", k562_data$mapping_efficiency)
+
+# The mapping efficiency affects power calculations by determining
+# what fraction of sequencing reads contribute to gene expression
+# Higher mapping efficiency means more effective sequencing depth
+
+# Compare mapping efficiency across cell types
+a549_data <- get_pilot_data_from_package("A549")
+cat("K562 mapping efficiency:", k562_data$mapping_efficiency)
+cat("A549 mapping efficiency:", a549_data$mapping_efficiency)
 }
+\keyword{internal}

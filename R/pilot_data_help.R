@@ -32,13 +32,25 @@ NULL
 #' # Load example Cell Ranger output
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' @return A \code{dgCMatrix} (genes × cells) with cleaned, unique row names and column names.
+#' @keywords internal
 #' @export
 obtain_qc_response_data <- function(path_to_cellranger_output) {
   # Construct path to filtered matrix directory
   mat_dir <- file.path(path_to_cellranger_output, "outs", "filtered_feature_bc_matrix")
 
   # Read sparse matrix in Matrix Market format
-  response_matrix <- as(Matrix::readMM(file.path(mat_dir, "matrix.mtx.gz")), "dgCMatrix")
+  m <- Matrix::readMM(file.path(mat_dir, "matrix.mtx.gz"))
+
+  # If the matrix is in pattern triplet format (ngTMatrix),
+  # convert it to numeric triplet (dgTMatrix), then to column-compressed (dgCMatrix)
+  if (inherits(m, "ngTMatrix")) {
+    m <- methods::as(m, "dgTMatrix")
+  }
+  if (!inherits(m, "dgCMatrix")) {
+    m <- methods::as(m, "dgCMatrix")
+  }
+
+  response_matrix <- m
 
   # Read features.tsv.gz: typically contains gene_id (V1), gene_name (V2), and feature_type (V3)
   genes <- data.table::fread(file.path(mat_dir, "features.tsv.gz"), header = FALSE)
@@ -94,6 +106,7 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
 #'   \item{expression_size}{Estimated dispersion \eqn{\theta}}
 #' }
 #'
+#' @keywords internal
 #' @export
 obtain_expression_information <- function(response_matrix,
                                           TPM_thres = 0.1,
@@ -178,6 +191,7 @@ obtain_expression_information <- function(response_matrix,
 #'
 #' @return Data frame with columns \code{num_reads}, \code{UMI_id},
 #'   \code{cell_id}, \code{response_id}.
+#' @keywords internal
 #' @export
 obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
   raw_path <- file.path(path_to_cellranger_output, "outs", "molecule_info.h5")
@@ -211,6 +225,7 @@ obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' qc_data <- obtain_qc_read_umi_table(cellranger_path)
 #' @return Numeric proportion: mapped / total reads.
+#' @keywords internal
 #' @export
 obtain_mapping_efficiency <- function(QC_data, path_to_cellranger_output) {
   if (!"num_reads" %in% names(QC_data))
@@ -255,6 +270,7 @@ obtain_mapping_efficiency <- function(QC_data, path_to_cellranger_output) {
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' qc_data <- obtain_qc_read_umi_table(cellranger_path)
 #' @seealso \code{\link{obtain_qc_read_umi_table}} for generating the input data
+#' @keywords internal
 #' @export
 summary_h5_data <- function(QC_data){
 
@@ -343,6 +359,7 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 #' @seealso
 #' \code{\link{obtain_qc_read_umi_table}} for input data preparation
 #' \code{\link{fit_read_UMI_curve}} for using the fitted parameters
+#' @keywords internal
 #' @export
 library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3){
 

@@ -35,6 +35,29 @@ utils::globalVariables(c("Perturb_tpm", "Tap_tpm", "in_band", "expression_status
 #'   \item Optionally reads h5 QC data from one or all SRRs.
 #' }
 #'
+#' \strong{Library Saturation (S-M) Model:}
+#'
+#' The function extracts QC data that is subsequently used to fit a saturation-magnitude (S-M)
+#' curve model that relates mapped reads per cell to observed UMIs per cell. This model is
+#' essential for library size estimation in single-cell RNA sequencing power analysis.
+#'
+#' The S-M curve model follows the nonlinear saturation formula:
+#' \deqn{UMI = total\_UMIs \times \left(1 - \exp\left(-\frac{reads}{total\_UMIs}\right) \times \left(1 + variation \times \frac{reads^2}{2 \times total\_UMIs^2}\right)\right)}
+#'
+#' Where:
+#' \itemize{
+#'   \item \code{total_UMIs}: Maximum UMI per cell parameter (saturation level)
+#'   \item \code{variation}: Variation parameter characterizing PCR amplification bias
+#'   \item \code{reads}: Number of mapped reads per cell
+#'   \item \code{UMI}: Number of observed UMIs per cell
+#' }
+#'
+#' The model accounts for both UMI saturation effects at high read depths and
+#' PCR amplification variability, enabling accurate power calculations across
+#' different sequencing scenarios.
+#'
+#' @seealso \code{\link{library_computation}} for S-M curve fitting details
+#'
 #' @importFrom stats median
 #' @importFrom dplyr mutate between
 #' @examples
@@ -46,6 +69,13 @@ utils::globalVariables(c("Perturb_tpm", "Tap_tpm", "in_band", "expression_status
 #'   path_to_run_level_output = "cellranger_tiny",
 #'   h5_rough = TRUE
 #' )
+#'
+#' # Inspect structure
+#' str(result)
+#'
+#' # Access components
+#' result$response_matrix
+#'
 #' @seealso \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}
 #' @export
 reference_data_preprocessing_10x <- function(path_to_top_level_output,
@@ -103,7 +133,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
       read_umi_table[[i]] <- current
     }
     read_umi_table <- dplyr::bind_rows(read_umi_table)
-  
+
     if(length(mapping_efficiency)>1){
       message("Multiple SRR runs detected. Using median mapping efficiency across runs: ",
               paste(round(mapping_efficiency,3), collapse = ", "))
@@ -140,10 +170,6 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #' @param h5_only Logical. If TRUE, skips baseline expression estimation step (only processes read_umi_table). Default: FALSE.
 #' @param mapping_efficiency Numeric. Estimated mapping efficiency from
 #'   \code{obtain_mapping_efficiency}.
-#' @param TAP Logical. If TRUE, applies Targeted Analysis Pipeline (TAP).
-#' @param primer_threshold Numeric. Threshold for primer efficiency banding in TAP. Default: 0.2.
-#' @param TAP_target_list Character vector. List of target genes for TAP filtering. If NULL, no filtering is applied.
-#' @param TAP_origin_reference List. Reference data containing baseline expression statistics for TAP.  
 #'
 #' @return A list containing:
 #' \describe{
@@ -168,6 +194,8 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #' @importFrom stats median
 #' @importFrom dplyr mutate between
 #' @examples
+#' # set seed for reproducibility
+#' set.seed(123)
 #' # First get raw data using reference_data_preprocessing_10x
 #' extdata_path <- system.file("extdata", package = "perturbplan")
 #' # Get raw data from 10x output
@@ -177,7 +205,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   h5_rough = TRUE
 #' )
 #' # Process into final pilot data format
-#' pilot_data <- reference_data_preprocessing(
+#' pilot_data <- reference_data_processing(
 #'   response_matrix = raw_data$response_matrix,
 #'   read_umi_table = raw_data$read_umi_table,
 #'   mapping_efficiency = raw_data$mapping_efficiency,
@@ -190,10 +218,9 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #' \code{\link{library_estimation}}
 #'
 #' @export
-reference_data_preprocessing <- function(response_matrix = NULL, read_umi_table, mapping_efficiency = NULL,
-                                         n_threads = NULL, 
-                                         TPM_thres = 0.1, downsample_ratio = 0.7, D2_rough = 0.3, h5_only = FALSE,
-                                         TAP = FALSE, primer_threshold = 0.2, TAP_target_list = NULL, TAP_origin_reference = NULL
+reference_data_processing <- function(response_matrix = NULL, read_umi_table, mapping_efficiency = NULL,
+                                         n_threads = NULL,
+                                         TPM_thres = 0.1, downsample_ratio = 0.7, D2_rough = 0.3, h5_only = FALSE
                                         ) {
 
   message("Starting pilot data preprocessing @ ", Sys.time())
@@ -215,72 +242,6 @@ reference_data_preprocessing <- function(response_matrix = NULL, read_umi_table,
     downsample_ratio = downsample_ratio,
     D2_rough = D2_rough
   )
-  
-  if (TAP) {
-    # Correct for primer efficiency and target gene representation in baseline_expression_df
-    if (is.null(TAP_target_list)) {
-      warning("TAP_target_list must be provided to filter for target genes.")
-    } else {
-      baseline_expression_df <- baseline_expression_df |>
-        dplyr::filter(response_id %in% TAP_target_list)
-    }
-    if (is.null(TAP_origin_reference)) {
-      warning("TAP_origin_reference must be provided to correct for primer efficiency.")
-    } else {
-      representation_target_genes <- TAP_origin_reference$baseline_expression_stats |> 
-                                            dplyr::filter(!is.na(relative_expression)) |>
-                                            dplyr::filter(response_id %in% unique(baseline_expression_df$response_id)) |> 
-                                            dplyr::summarise(
-                                              representation = sum(relative_expression)
-                                            ) |> 
-                                            dplyr::pull()
-      
-      relative_expression_df <- baseline_expression_df |> 
-        dplyr::distinct() |> 
-        dplyr::left_join(
-          TAP_origin_reference$baseline_expression_stats |> 
-            dplyr::mutate(Perturb_tpm = relative_expression * 1e6) |>
-            dplyr::select(Perturb_tpm, response_id) |>
-            dplyr::distinct(), 
-          by = "response_id"
-        ) |>
-        dplyr::mutate(Tap_tpm = relative_expression * representation_target_genes * 1e6) 
-      
-      # extract the final discovery pairs
-      baseline_expression_df <- relative_expression_df |>
-        mutate(in_band = between(Tap_tpm, Perturb_tpm * primer_threshold, Perturb_tpm / primer_threshold))
-       
-      # if any genes are out of the band, print a warning
-      if (sum(!baseline_expression_df$in_band)>0){
-        message("The following genes are out of the primer efficiency band:")
-        cat(baseline_expression_df |> 
-                dplyr::filter(!in_band) |>
-                dplyr::mutate(expression_status = ifelse(Tap_tpm > Perturb_tpm, "too high", "too low")) |>
-                dplyr::select(response_id, Tap_tpm, Perturb_tpm, expression_status))
-      }
-      # filter the genes that are in the band
-      baseline_expression_df <- baseline_expression_df |>  
-        dplyr::filter(in_band) |>
-        dplyr::select(response_id, relative_expression, expression_size)
-    }
-    # Normalize relative expression to sum to 1
-    baseline_expression_df <- baseline_expression_df |>
-      dplyr::mutate(relative_expression = relative_expression / sum(relative_expression)) |>
-      dplyr::distinct()
-    
-    # Correct library parameters
-    final_representation_target_genes <- TAP_origin_reference$baseline_expression_stats |> 
-      dplyr::filter(!is.na(relative_expression)) |>
-      dplyr::filter(response_id %in% unique(baseline_expression_df$response_id)) |> 
-      dplyr::summarise(
-          representation = sum(relative_expression)
-        ) |> 
-      dplyr::pull()
-    library_params$UMI_per_cell <- library_params$UMI_per_cell * final_representation_target_genes
-    
-    # Correct mapping efficiency
-    mapping_efficiency <- mapping_efficiency * sum(baseline_expression_df$relative_expression)
-  }
 
   # Construct the final output structure with simplified baseline expression
   result <- list(

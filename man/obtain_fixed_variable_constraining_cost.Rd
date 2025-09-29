@@ -63,12 +63,20 @@ achievable given a fixed \code{reads_per_cell} within the cost constraint
 }
 }
 \details{
-The function uses a cost model where total cost = cell preparation cost + sequencing cost:
+The function uses a cost model with the following components:
+
+\strong{Cost Model:}
+
+Total experimental cost calculation:
+
+\code{Total Cost = Library Cost + Sequencing Cost}
+
+\strong{Component Formulas:}
 \itemize{
-\item Cell preparation cost = \code{cost_per_captured_cell * num_captured_cells}
-\item Sequencing cost = \code{cost_per_million_reads * total_reads / 1e6}
-\item \code{num_captured_cells = ((gRNAs_per_target * num_targets + non_targeting_gRNAs) * cells_per_target / gRNAs_per_target) / MOI}
-\item \code{total_reads = num_captured_cells * reads_per_cell / mapping_efficiency}
+\item \code{Library Cost = cost_per_captured_cell * num_captured_cells}
+\item \code{Sequencing Cost = cost_per_million_reads * (total_reads / 1,000,000)}
+\item \code{num_captured_cells = ((gRNAs_per_target * num_targets + non_targeting_gRNAs) * cells_per_target) / (gRNAs_per_target * MOI)}
+\item \code{total_reads = (num_captured_cells * reads_per_cell) / mapping_efficiency}
 }
 
 \strong{Optimization Logic:}
@@ -110,3 +118,4 @@ result2 <- obtain_fixed_variable_constraining_cost(
 \seealso{
 \code{\link{cost_power_computation}} for cost-constrained power analysis that uses this function
 }
+\keyword{internal}

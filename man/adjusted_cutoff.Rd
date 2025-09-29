@@ -43,37 +43,8 @@ controls the false discovery rate at the specified level
 tests (accounting for QC failures)
 }
 }
-\examples{
-# Example test statistic distributions (means and SDs)
-mean_list <- c(-2.1, -1.5, -0.8, 1.2, 2.3)
-sd_list <- c(1.0, 1.1, 0.9, 1.2, 1.0)
-QC_prob <- c(0.05, 0.03, 0.08, 0.04, 0.06)
-
-# Calculate adjusted cutoff using BH correction
-cutoff_BH <- adjusted_cutoff(
-  mean_list = mean_list,
-  sd_list = sd_list,
-  multiple_testing_alpha = 0.1,
-  multiple_testing_method = "BH",
-  side = "left",
-  QC_prob = QC_prob
-)
-
-# Calculate adjusted cutoff using Bonferroni correction
-cutoff_bonf <- adjusted_cutoff(
-  mean_list = mean_list,
-  sd_list = sd_list,
-  multiple_testing_alpha = 0.1,
-  multiple_testing_method = "bonferroni",
-  side = "left",
-  QC_prob = QC_prob
-)
-
-print(paste("BH cutoff:", round(cutoff_BH, 4)))
-print(paste("Bonferroni cutoff:", round(cutoff_bonf, 4)))
-
-}
 \seealso{
 \code{\link{BH_cutoff_bisection}} for the BH-specific implementation
 \code{\link{compute_power_posthoc}} for the main power analysis function
 }
+\keyword{internal}

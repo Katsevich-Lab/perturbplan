@@ -142,7 +142,14 @@ power_results <- power_function(
 )
 
 # View results
+print("Power function results:")
 print(power_results$individual_power)
 print(paste("Expected discoveries:", round(power_results$expected_num_discoveries, 2)))
+
+# Show experimental design summary
+total_cells <- sum(cells_per_grna$num_cells)
+print(paste("Total cells:", total_cells))
+print(paste("Treatment cells:", sum(cells_per_grna$num_cells[cells_per_grna$grna_target != "non-targeting"])))
+print(paste("Control cells:", sum(cells_per_grna$num_cells[cells_per_grna$grna_target == "non-targeting"])))
 
 }

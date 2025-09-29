@@ -45,12 +45,9 @@ print(head(baseline_expr))
 lib_params <- iPSC_neuron_10x$library_parameters
 print(lib_params)
 
-# Use with power analysis functions
-fc_info <- extract_fc_expression_info(
-  minimum_fold_change = 0.8,
-  gRNA_variability = 0.1,
-  biological_system = "iPSC_neuron"
-)
+# Check mapping efficiency
+mapping_eff <- iPSC_neuron_10x$mapping_efficiency
+print(mapping_eff)
 }
 \seealso{
 \code{\link{get_pilot_data_from_package}} for accessing this data programmatically

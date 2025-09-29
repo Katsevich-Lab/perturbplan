@@ -100,10 +100,17 @@ This function implements a three-stage cost optimization process:
 }
 
 \strong{Cost Model:}
-\deqn{Total Cost = Library Cost + Sequencing Cost}
-\deqn{Library Cost = cost\_per\_captured\_cell \times num\_captured\_cells}
-\deqn{Sequencing Cost = cost\_per\_million\_reads \times reads\_per\_cell \times num\_captured\_cells / 10^6}
-\deqn{num\_captured\_cells = \frac{(gRNAs\_per\_target \times num\_targets + non\_targeting\_gRNAs) \times cells\_per\_target}{gRNAs\_per\_target \times MOI}}
+
+Total cost calculation:
+
+\code{Total Cost = Library Cost + Sequencing Cost}
+
+Where:
+\itemize{
+\item \code{Library Cost = cost_per_captured_cell * num_captured_cells}
+\item \code{Sequencing Cost = cost_per_million_reads * (reads_per_cell * num_captured_cells) / 1,000,000}
+\item \code{num_captured_cells = ((gRNAs_per_target * num_targets + non_targeting_gRNAs) * cells_per_target) / (gRNAs_per_target * MOI)}
+}
 
 The function is designed to work with output from \code{cost_power_computation()}
 and provides fine-grained cost optimization for experimental design selection.
@@ -133,10 +140,10 @@ optimal_designs <- find_optimal_cost_design(
 )
 
 # Examine optimal designs
-head(optimal_designs$optimal_cost_power_df)
+print(head(optimal_designs$optimal_cost_power_df),width = Inf)
 
-# Examine detailed cost grids
-optimal_designs$optimal_cost_grid$cost_grid[[1]]
+# Examine the first row of the cost grid
+print(head(optimal_designs$optimal_cost_grid),width = Inf)
 
 # Find globally optimal cost design across all parameters
 cost_optimal <- find_optimal_cost_design(
@@ -146,6 +153,9 @@ cost_optimal <- find_optimal_cost_design(
   power_precision = 0.02,
   cost_grid_size = 50
 )
+
+print(head(cost_optimal$optimal_cost_power_df),width = Inf)
+print(head(cost_optimal$optimal_cost_grid),width = Inf)
 
 }
 \seealso{

@@ -83,3 +83,4 @@ custom_expr <- extract_expression_info(
 summary(custom_expr$expression_df$relative_expression)
 
 }
+\keyword{internal}

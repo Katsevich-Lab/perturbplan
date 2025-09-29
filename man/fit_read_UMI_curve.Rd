@@ -76,3 +76,4 @@ data.frame(
 \seealso{
 \code{\link{get_pilot_data_from_package}} for obtaining curve parameters
 }
+\keyword{internal}

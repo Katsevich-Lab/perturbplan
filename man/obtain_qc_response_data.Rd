@@ -27,3 +27,4 @@ located in the sub-directory \code{outs/filtered_feature_bc_matrix/}.
 # Load example Cell Ranger output
 cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 }
+\keyword{internal}

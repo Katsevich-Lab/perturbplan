@@ -49,4 +49,4 @@ print(available_systems)
 \seealso{
 \code{\link{get_pilot_data_from_package}} for using this metadata to access pilot data
 }
-\keyword{datasets}
+\keyword{internal}

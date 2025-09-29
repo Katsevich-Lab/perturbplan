@@ -118,3 +118,4 @@ head(power_grid)
 print(paste("Grid size:", nrow(power_grid)))
 
 }
+\keyword{internal}

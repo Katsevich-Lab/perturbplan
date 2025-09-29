@@ -150,6 +150,18 @@ This function performs comprehensive power analysis by:
 \item Applying validation checks via \code{check_power_results()}
 }
 
+\strong{Cost Model:}
+
+Total cost is calculated as the sum of library preparation and sequencing costs:
+
+\code{Total Cost = Library Cost + Sequencing Cost}
+
+Where:
+\itemize{
+\item \code{Library Cost = cost_per_captured_cell * num_captured_cells}
+\item \code{Sequencing Cost = cost_per_million_reads * (raw_reads_per_cell * num_captured_cells) / 1,000,000}
+}
+
 Parameter grid generation:
 \itemize{
 \item \code{TPM_threshold}: Uses quantiles of baseline expression (10th to 99th percentile)
@@ -171,6 +183,12 @@ result1 <- cost_power_computation(
   cost_precision = 0.9
 )
 
+print("TPM threshold optimization results:")
+print(paste("Number of designs analyzed:", nrow(result1)))
+print(paste("TPM threshold range:", round(min(result1$TPM_threshold)), "-", round(max(result1$TPM_threshold))))
+print(paste("Power range:", round(min(result1$overall_power), 3), "-", round(max(result1$overall_power), 3)))
+print(paste("Cost range: $", round(min(result1$total_cost)), "-", "$", round(max(result1$total_cost)), sep=""))
+
 # Optimize fold change with fixed TPM threshold
 result2 <- cost_power_computation(
   minimizing_variable = "minimum_fold_change",
@@ -181,7 +199,12 @@ result2 <- cost_power_computation(
   cost_constraint = NULL  # No cost constraint
 )
 
-\dontrun{
+print("\nFold change optimization results:")
+print(paste("Number of designs analyzed:", nrow(result2)))
+print(paste("Fold change range:", round(min(result2$minimum_fold_change), 2), "-", round(max(result2$minimum_fold_change), 2)))
+print(paste("Power range:", round(min(result2$overall_power), 3), "-", round(max(result2$overall_power), 3)))
+head(result2[c("minimum_fold_change", "cells_per_target", "overall_power")])
+
 # Load pilot data
 pilot_data <- get_pilot_data_from_package("K562")
 
@@ -195,6 +218,10 @@ result1 <- cost_power_computation(
   cost_constraint = 15000
 )
 
+print("TPM threshold analysis:")
+print(paste("Analyzed", nrow(result1), "experimental designs"))
+print(summary(result1$overall_power))
+
 # Compute power across fold change range
 result2 <- cost_power_computation(
   minimizing_variable = "minimum_fold_change",
@@ -204,6 +231,9 @@ result2 <- cost_power_computation(
   power_target = 0.8,
   cost_constraint = NULL
 )
+
+print("Fold change analysis:")
+print(paste("Fold change effects from", round(min(result2$minimum_fold_change), 2), "to", round(max(result2$minimum_fold_change), 2)))
 
 # Optimize cost across all experimental designs
 result3 <- cost_power_computation(
@@ -215,6 +245,10 @@ result3 <- cost_power_computation(
   cost_constraint = NULL
 )
 
+print("Cost optimization results:")
+print(paste("Min cost: $", round(min(result3$total_cost)), ", Max cost: $", round(max(result3$total_cost)), sep=""))
+print(paste("Optimal design achieves", round(max(result3$overall_power), 3), "power"))
+
 # Optimize cells per target with fixed detection parameters
 result4 <- cost_power_computation(
   minimizing_variable = "cells_per_target",
@@ -224,7 +258,10 @@ result4 <- cost_power_computation(
   power_target = 0.8,
   cost_constraint = 10000
 )
-}
+
+print("Cell optimization results:")
+print(paste("Cell range:", round(min(result4$cells_per_target)), "to", round(max(result4$cells_per_target)), "per target"))
+print(paste("All designs under budget of $10,000 with power ~", round(result4$overall_power[1], 3)))
 
 }
 \seealso{

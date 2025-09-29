@@ -55,3 +55,4 @@ cost_result <- cost_computation(
   raw_reads_per_cell = 50000
 )
 }
+\keyword{internal}

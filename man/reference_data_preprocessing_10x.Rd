@@ -45,6 +45,27 @@ The function performs the following steps:
 \item Reads response matrices and retains only shared genes across SRRs.
 \item Optionally reads h5 QC data from one or all SRRs.
 }
+
+\strong{Library Saturation (S-M) Model:}
+
+The function extracts QC data that is subsequently used to fit a saturation-magnitude (S-M)
+curve model that relates mapped reads per cell to observed UMIs per cell. This model is
+essential for library size estimation in single-cell RNA sequencing power analysis.
+
+The S-M curve model follows the nonlinear saturation formula:
+\deqn{UMI = total\_UMIs \times \left(1 - \exp\left(-\frac{reads}{total\_UMIs}\right) \times \left(1 + variation \times \frac{reads^2}{2 \times total\_UMIs^2}\right)\right)}
+
+Where:
+\itemize{
+\item \code{total_UMIs}: Maximum UMI per cell parameter (saturation level)
+\item \code{variation}: Variation parameter characterizing PCR amplification bias
+\item \code{reads}: Number of mapped reads per cell
+\item \code{UMI}: Number of observed UMIs per cell
+}
+
+The model accounts for both UMI saturation effects at high read depths and
+PCR amplification variability, enabling accurate power calculations across
+different sequencing scenarios.
 }
 \examples{
 # Process tiny example dataset
@@ -55,7 +76,16 @@ result <- reference_data_preprocessing_10x(
   path_to_run_level_output = "cellranger_tiny",
   h5_rough = TRUE
 )
+
+# Inspect structure
+str(result)
+
+# Access components
+result$response_matrix
+
 }
 \seealso{
+\code{\link{library_computation}} for S-M curve fitting details
+
 \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}
 }

@@ -1,9 +1,9 @@
 #' A549 10x Chromium reference data for CRISPR power analysis
 #'
 #' @description
-#' Pre-computed pilot data from A549 lung adenocarcinoma cells generated using 
-#' 10x Chromium technology. Contains baseline gene expression parameters and 
-#' library size information for power analysis of CRISPR-based perturbation 
+#' Pre-computed pilot data from A549 lung adenocarcinoma cells generated using
+#' 10x Chromium technology. Contains baseline gene expression parameters and
+#' library size information for power analysis of CRISPR-based perturbation
 #' experiments.
 #'
 #' @format A list with 2 elements:
@@ -24,8 +24,8 @@
 #' }
 #'
 #' @details
-#' This dataset was generated from A549 lung adenocarcinoma cells using single-cell 
-#' RNA sequencing with 10x Chromium technology. The data has been processed to 
+#' This dataset was generated from A549 lung adenocarcinoma cells using single-cell
+#' RNA sequencing with 10x Chromium technology. The data has been processed to
 #' extract key statistical parameters needed for power analysis calculations:
 #'
 #' \itemize{
@@ -44,32 +44,26 @@
 #' @examples
 #' # Load A549 data
 #' data(A549_10x)
-#' 
-#' # Examine structure
-#' str(A549_10x, max.level = 2)
-#' 
-#' # Access baseline expression data
-#' baseline <- A549_10x$baseline_expression_stats
-#' head(baseline)
-#' 
-#' # Access library parameters
+#'
+#' # Examine baseline expression data
+#' baseline_expr <- A549_10x$baseline_expression_stats
+#' print(head(baseline_expr))
+#'
+#' # Check library parameters
 #' lib_params <- A549_10x$library_parameters
 #' print(lib_params)
-#' 
-#' # Use with power analysis functions
-#' fc_info <- extract_fc_expression_info(
-#'   minimum_fold_change = 0.8,
-#'   gRNA_variability = 0.1,
-#'   biological_system = "A549"
-#' )
+#'
+#' # Check mapping efficiency
+#' mapping_eff <- A549_10x$mapping_efficiency
+#' print(mapping_eff)
 "A549_10x"
 
 #' K562 10x Chromium reference data for CRISPR power analysis
 #'
 #' @description
-#' Pre-computed pilot data from K562 chronic myelogenous leukemia cells generated 
-#' using 10x Chromium technology. Contains baseline gene expression parameters and 
-#' library size information for power analysis of CRISPR-based perturbation 
+#' Pre-computed pilot data from K562 chronic myelogenous leukemia cells generated
+#' using 10x Chromium technology. Contains baseline gene expression parameters and
+#' library size information for power analysis of CRISPR-based perturbation
 #' experiments.
 #'
 #' @format A list with 2 elements:
@@ -90,8 +84,8 @@
 #' }
 #'
 #' @details
-#' This dataset was generated from K562 chronic myelogenous leukemia cells using 
-#' single-cell RNA sequencing with 10x Chromium technology. K562 is a widely used 
+#' This dataset was generated from K562 chronic myelogenous leukemia cells using
+#' single-cell RNA sequencing with 10x Chromium technology. K562 is a widely used
 #' cell line in CRISPR screening experiments.
 #'
 #' @source
@@ -104,21 +98,26 @@
 #' @examples
 #' # Load K562 data
 #' data(K562_10x)
-#' 
-#' # Use with power analysis functions
-#' fc_info <- extract_fc_expression_info(
-#'   minimum_fold_change = 0.8,
-#'   gRNA_variability = 0.1,
-#'   biological_system = "K562"
-#' )
+#'
+#' # Examine baseline expression data
+#' baseline_expr <- K562_10x$baseline_expression_stats
+#' print(head(baseline_expr))
+#'
+#' # Check library parameters
+#' lib_params <- K562_10x$library_parameters
+#' print(lib_params)
+#'
+#' # Check mapping efficiency
+#' mapping_eff <- K562_10x$mapping_efficiency
+#' print(mapping_eff)
 "K562_10x"
 
 #' THP-1 10x Chromium reference data for CRISPR power analysis
 #'
 #' @description
-#' Pre-computed pilot data from THP-1 monocytic leukemia cells generated using 
-#' 10x Chromium technology. Contains baseline gene expression parameters and 
-#' library size information for power analysis of CRISPR-based perturbation 
+#' Pre-computed pilot data from THP-1 monocytic leukemia cells generated using
+#' 10x Chromium technology. Contains baseline gene expression parameters and
+#' library size information for power analysis of CRISPR-based perturbation
 #' experiments.
 #'
 #' @format A list with 2 elements:
@@ -139,8 +138,8 @@
 #' }
 #'
 #' @details
-#' This dataset was generated from THP-1 monocytic leukemia cells using single-cell 
-#' RNA sequencing with 10x Chromium technology. THP-1 cells are commonly used to 
+#' This dataset was generated from THP-1 monocytic leukemia cells using single-cell
+#' RNA sequencing with 10x Chromium technology. THP-1 cells are commonly used to
 #' study monocyte and macrophage biology.
 #'
 #' @source
@@ -153,20 +152,25 @@
 #' @examples
 #' # Load THP-1 data
 #' data(THP_1_10x)
-#' 
-#' # Use with power analysis functions
-#' fc_info <- extract_fc_expression_info(
-#'   minimum_fold_change = 0.8,
-#'   gRNA_variability = 0.1,
-#'   biological_system = "THP-1"
-#' )
+#'
+#' # Examine baseline expression data
+#' baseline_expr <- THP_1_10x$baseline_expression_stats
+#' print(head(baseline_expr))
+#'
+#' # Check library parameters
+#' lib_params <- THP_1_10x$library_parameters
+#' print(lib_params)
+#'
+#' # Check mapping efficiency
+#' mapping_eff <- THP_1_10x$mapping_efficiency
+#' print(mapping_eff)
 "THP_1_10x"
 
 #' T_CD8 10x Chromium reference data for CRISPR power analysis
 #'
 #' @description
-#' Pre-computed pilot data from primary CD8+ T cells generated using 10x Chromium 
-#' technology. Contains baseline gene expression parameters and library size 
+#' Pre-computed pilot data from primary CD8+ T cells generated using 10x Chromium
+#' technology. Contains baseline gene expression parameters and library size
 #' information for power analysis of CRISPR-based perturbation experiments.
 #'
 #' @format A list with 2 elements:
@@ -187,8 +191,8 @@
 #' }
 #'
 #' @details
-#' This dataset was generated from primary CD8+ T cells using single-cell RNA 
-#' sequencing with 10x Chromium technology. CD8+ T cells are important effector 
+#' This dataset was generated from primary CD8+ T cells using single-cell RNA
+#' sequencing with 10x Chromium technology. CD8+ T cells are important effector
 #' cells in adaptive immunity and cancer immunotherapy.
 #'
 #' @source
@@ -201,21 +205,26 @@
 #' @examples
 #' # Load T_CD8 data
 #' data(T_CD8_10x)
-#' 
-#' # Use with power analysis functions
-#' fc_info <- extract_fc_expression_info(
-#'   minimum_fold_change = 0.8,
-#'   gRNA_variability = 0.1,
-#'   biological_system = "T_CD8"
-#' )
+#'
+#' # Examine baseline expression data
+#' baseline_expr <- T_CD8_10x$baseline_expression_stats
+#' print(head(baseline_expr))
+#'
+#' # Check library parameters
+#' lib_params <- T_CD8_10x$library_parameters
+#' print(lib_params)
+#'
+#' # Check mapping efficiency
+#' mapping_eff <- T_CD8_10x$mapping_efficiency
+#' print(mapping_eff)
 "T_CD8_10x"
 
 #' iPSC 10x Chromium reference data for CRISPR power analysis
 #'
 #' @description
-#' Pre-computed pilot data from induced pluripotent stem cells (iPSCs) generated 
-#' using 10x Chromium technology. Contains baseline gene expression parameters and 
-#' library size information for power analysis of CRISPR-based perturbation 
+#' Pre-computed pilot data from induced pluripotent stem cells (iPSCs) generated
+#' using 10x Chromium technology. Contains baseline gene expression parameters and
+#' library size information for power analysis of CRISPR-based perturbation
 #' experiments.
 #'
 #' @format A list with 2 elements:
@@ -236,8 +245,8 @@
 #' }
 #'
 #' @details
-#' This dataset was generated from induced pluripotent stem cells (iPSCs) using 
-#' single-cell RNA sequencing with 10x Chromium technology. iPSCs are valuable 
+#' This dataset was generated from induced pluripotent stem cells (iPSCs) using
+#' single-cell RNA sequencing with 10x Chromium technology. iPSCs are valuable
 #' for studying development and disease modeling.
 #'
 #' @source
@@ -250,20 +259,25 @@
 #' @examples
 #' # Load iPSC data
 #' data(iPSC_10x)
-#' 
-#' # Use with power analysis functions
-#' fc_info <- extract_fc_expression_info(
-#'   minimum_fold_change = 0.8,
-#'   gRNA_variability = 0.1,
-#'   biological_system = "iPSC"
-#' )
+#'
+#' # Examine baseline expression data
+#' baseline_expr <- iPSC_10x$baseline_expression_stats
+#' print(head(baseline_expr))
+#'
+#' # Check library parameters
+#' lib_params <- iPSC_10x$library_parameters
+#' print(lib_params)
+#'
+#' # Check mapping efficiency
+#' mapping_eff <- iPSC_10x$mapping_efficiency
+#' print(mapping_eff)
 "iPSC_10x"
 
 #' iPSC-derived neuron 10x Chromium reference data for CRISPR power analysis
 #'
 #' @description
-#' Pre-computed pilot data from iPSC-derived neurons generated using 10x Chromium 
-#' technology. Contains baseline gene expression parameters and library size 
+#' Pre-computed pilot data from iPSC-derived neurons generated using 10x Chromium
+#' technology. Contains baseline gene expression parameters and library size
 #' information for power analysis of CRISPR-based perturbation experiments.
 #'
 #' @format A list with 2 elements:
@@ -293,28 +307,25 @@
 #' @examples
 #' # Load iPSC-derived neuron data
 #' data(iPSC_neuron_10x)
-#' 
+#'
 #' # Examine baseline expression data
 #' baseline_expr <- iPSC_neuron_10x$baseline_expression_stats
 #' print(head(baseline_expr))
-#' 
+#'
 #' # Check library parameters
 #' lib_params <- iPSC_neuron_10x$library_parameters
 #' print(lib_params)
-#' 
-#' # Use with power analysis functions
-#' fc_info <- extract_fc_expression_info(
-#'   minimum_fold_change = 0.8,
-#'   gRNA_variability = 0.1,
-#'   biological_system = "iPSC_neuron"
-#' )
+#'
+#' # Check mapping efficiency
+#' mapping_eff <- iPSC_neuron_10x$mapping_efficiency
+#' print(mapping_eff)
 "iPSC_neuron_10x"
 
 #' Reference expression datasets metadata
 #'
 #' @description
-#' Metadata table describing the available reference expression datasets in the 
-#' perturbplan package. This table maps biological systems to their corresponding 
+#' Metadata table describing the available reference expression datasets in the
+#' perturbplan package. This table maps biological systems to their corresponding
 #' data processing configurations and functions.
 #'
 #' @format A data frame with 6 rows and 4 columns:
@@ -326,13 +337,13 @@
 #' }
 #'
 #' @details
-#' This metadata table is used internally by \code{\link{get_pilot_data_from_package}} 
-#' to map biological system names to their corresponding data objects and processing 
+#' This metadata table is used internally by \code{\link{get_pilot_data_from_package}}
+#' to map biological system names to their corresponding data objects and processing
 #' functions. Each row represents one supported biological system:
 #'
 #' \itemize{
 #'   \item \strong{K562}: Chronic myelogenous leukemia cells
-#'   \item \strong{THP-1}: Monocytic leukemia cells  
+#'   \item \strong{THP-1}: Monocytic leukemia cells
 #'   \item \strong{T_CD8}: Primary CD8+ T cells
 #'   \item \strong{A549}: Lung adenocarcinoma cells
 #'   \item \strong{iPSC}: Induced pluripotent stem cells
@@ -348,8 +359,9 @@
 #' # Load metadata
 #' data(reference_expression_datasets)
 #' print(reference_expression_datasets)
-#' 
+#'
 #' # View available biological systems
 #' available_systems <- reference_expression_datasets$cell_type
 #' print(available_systems)
+#' @keywords internal
 "reference_expression_datasets"

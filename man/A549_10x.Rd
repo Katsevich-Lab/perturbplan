@@ -49,23 +49,17 @@ extract key statistical parameters needed for power analysis calculations:
 # Load A549 data
 data(A549_10x)
 
-# Examine structure
-str(A549_10x, max.level = 2)
+# Examine baseline expression data
+baseline_expr <- A549_10x$baseline_expression_stats
+print(head(baseline_expr))
 
-# Access baseline expression data
-baseline <- A549_10x$baseline_expression_stats
-head(baseline)
-
-# Access library parameters
+# Check library parameters
 lib_params <- A549_10x$library_parameters
 print(lib_params)
 
-# Use with power analysis functions
-fc_info <- extract_fc_expression_info(
-  minimum_fold_change = 0.8,
-  gRNA_variability = 0.1,
-  biological_system = "A549"
-)
+# Check mapping efficiency
+mapping_eff <- A549_10x$mapping_efficiency
+print(mapping_eff)
 }
 \seealso{
 \code{\link{get_pilot_data_from_package}} for accessing this data programmatically

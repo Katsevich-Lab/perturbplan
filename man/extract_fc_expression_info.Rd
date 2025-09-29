@@ -35,8 +35,10 @@ levels below TPM_threshold/1e6 are filtered out before power calculation.}
 
 \item{custom_pilot_data}{List. Optional custom pilot data. If provided,
 this data is used instead of the default biological_system data. Must contain
-baseline_expression_stats (data frame with gene expression data)
-and library_parameters (with UMI_per_cell and variation).}
+baseline_expression_stats (data frame with relative_expression and expression_size columns)
+and library_parameters (with UMI_per_cell and variation). See
+\code{\link{reference_data_preprocessing_10x}} for processing 10x Cell Ranger output and
+\code{\link{reference_data_processing}} for further pilot data processing.}
 
 \item{gRNAs_per_target}{Integer. Number of gRNAs per target (default: 4).
 Each target will have gRNAs_per_target individual gRNA effect sizes drawn from the
@@ -86,3 +88,4 @@ fc_expr_data <- extract_fc_expression_info(
 \seealso{
 \code{\link{get_pilot_data_from_package}} for direct pilot data access
 }
+\keyword{internal}
