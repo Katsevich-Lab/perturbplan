@@ -18,116 +18,11 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/Katsevich-Lab/perturbplan/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Katsevich-Lab/perturbplan?branch=main)
 
 <!-- badges: end -->
 
 The goal of PerturbPlan is to facilitate experimental design and power analysis for perturb-seq experiments. 
 ```{r}
 library(perturbplan)
-```
-
-In the example below, we will demonstrate how to use `compute_power_posthoc()` to compute power after an experiment is conducted (as opposed to prospectively).
-
-```{r, echo = FALSE}
-set.seed(1)
-
-num_enhancers <- 3
-grnas_per_enhancer <- 2
-num_genes <- 4
-
-enhancers <- c(paste0("enh", 1:num_enhancers), "nt")
-grnas <- paste0("grna", 1:grnas_per_enhancer)
-genes <- paste0("gene", 1:num_genes)
-cells_per_grna <- expand.grid(enhancer = enhancers, grna = grnas) |>
-  dplyr::mutate(grna_id = paste0(enhancer, "_", grna)) |>
-  dplyr::rename(grna_target = enhancer) |> 
-  dplyr::select(grna_id, grna_target) |>
-  dplyr::mutate(num_cells = rpois(dplyr::n(), lambda = 100),
-                grna_target = dplyr::if_else(grna_target == "nt", "non-targeting", grna_target))
-  
-discovery_pairs <- expand.grid(grna_target = enhancers, response_id = genes)
-
-baseline_expression_stats <- data.frame(
-  response_id = genes,
-  expression_mean = exp(rnorm(num_genes, mean = 1, sd = 1)),
-  expression_size = exp(rnorm(num_genes, mean = 1, sd = 1))
-)
-```
-
-## PerturbPlan inputs
-
-### 1. Dataset summaries
-
-Let us consider a toy perturb-seq dataset with 3 enhancers, each targeted by 2 gRNAs, 2 non-targeting gRNAs, and 4 genes. Suppose there are 1000 total cells in the experiment:
-```{r}
-num_total_cells <- 1000
-```
-Based on our data, suppose we have information on the number of cells that received each gRNA:
-```{r}
-cells_per_grna
-```
-Furthermore, we have computed the mean and size parameters for the baseline expression of each gene:
-```{r}
-baseline_expression_stats
-```
-
-### Analysis choices
-
-Suppose we tested the effects of all elements on all genes. We can encode this in a `discovery_pairs` data frame, the same as in `sceptre`:
-```{r}
-discovery_pairs
-```
-We have analyzed the data using the complement control group, left-sided tests, and default values for the pairwise QC parameters:
-```{r}
-control_group <- "complement"
-side <- "both"
-n_nonzero_trt_thresh <- 7
-n_nonzero_cntrl_thresh <- 7
-```
-
-### 3. Power analysis parameters
-
-We want to compute the power for enhancer-gene pair assuming that gRNAs targeting that enhancer have fold changes on the gene with mean and standard deviations of 0.85 and 0.13, respectively:
-```{r}
-fold_change_mean <- 0.85
-fold_change_sd <- 0.13
-```
-We want to deem perturbation-gene pairs as significant in our power analysis if they pass a threshold of 0.005:
-```{r}
-cutoff <- 0.005
-```
-This number may be obtained as the $p$-value cutoff from the original analysis. 
-
-## Running PerturbPlan
-
-We can now compute the power for each enhancer-gene pair using the `compute_power_posthoc()` function:
-```{r}
-power_results <- compute_power_posthoc(
-  num_total_cells = num_total_cells,
-  cells_per_grna = cells_per_grna,
-  baseline_expression_stats = baseline_expression_stats,
-  discovery_pairs = discovery_pairs,
-  control_group = control_group,
-  side = side,
-  n_nonzero_trt_thresh = n_nonzero_trt_thresh,
-  n_nonzero_cntrl_thresh = n_nonzero_cntrl_thresh,
-  fold_change_mean = fold_change_mean,
-  fold_change_sd = fold_change_sd,
-  cutoff = cutoff
-)
-```
-
-## PerturbPlan outputs
-
-The result is a list with fields `expected_num_discoveries` and `individual_power`:
-```{r}
-names(power_results)
-```
-The field `expected_num_discoveries` contains the expected number of discoveries across all enhancer-gene pairs:
-```{r}
-power_results$expected_num_discoveries
-```
-The field `individual_power` is a data frame containing the power for each enhancer-gene pair:
-```{r}
-power_results$individual_power
 ```

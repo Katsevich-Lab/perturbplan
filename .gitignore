@@ -8,3 +8,5 @@ inst/doc
 *.Rcheck/
 *.tar.gz
 docs
+lib/
+AGENTS.md

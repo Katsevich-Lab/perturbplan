@@ -24,10 +24,12 @@ Imports:
 Suggests:
     knitr,
     rmarkdown,
+    pkgdown,
     testthat (>= 3.0.0),
     openxlsx,
     ggplot2,
     ggside
+VignetteBuilder: knitr
 Config/testthat/edition: 3
 LinkingTo:
     BH,
