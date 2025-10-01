@@ -19,49 +19,66 @@
 #' @return A list with two elements: `individual_power` (a data frame with columns `grna_target`, `response_id`, and `power`) and `expected_num_discoveries` (a numeric value)
 #'
 #' @examples
-#' # Create example discovery pairs
-#' discovery_pairs <- data.frame(
-#'   grna_target = c("Gene1", "Gene1", "Gene2", "Gene2"),
-#'   response_id = c("ENSG00000141510", "ENSG00000157764",
-#'                   "ENSG00000141510", "ENSG00000175899")
-#' )
+#' ## --- Toy perturb-seq dataset setup ---
+#' # Total number of cells in the experiment
+#' num_total_cells <- 1000L
 #'
-#' # Create example cells per gRNA data
+#' # Number of cells receiving each gRNA
+#' # (3 enhancers × 2 gRNAs each + 2 non-targeting gRNAs)
 #' cells_per_grna <- data.frame(
-#'   grna_id = c("gRNA1", "gRNA2", "gRNA3", "gRNA4", "NT1", "NT2"),
-#'   grna_target = c("Gene1", "Gene1", "Gene2", "Gene2",
-#'                   "non-targeting", "non-targeting"),
-#'   num_cells = c(150, 180, 160, 170, 200, 190)
+#'   grna_id      = c("enh1_grna1","enh2_grna1","enh3_grna1","nt_grna1",
+#'                    "enh1_grna2","enh2_grna2","enh3_grna2","nt_grna2"),
+#'   grna_target  = c("enh1","enh2","enh3","non-targeting",
+#'                    "enh1","enh2","enh3","non-targeting"),
+#'   num_cells    = c(93L,113L,112L,104L,84L,104L,107L,105L),
+#'   stringsAsFactors = FALSE
 #' )
 #'
-#' # Create example baseline expression data
+#' # Baseline expression statistics (negative binomial mean and size per gene)
 #' baseline_expression_stats <- data.frame(
-#'   response_id = c("ENSG00000141510", "ENSG00000157764", "ENSG00000175899"),
-#'   expression_mean = c(12.5, 8.3, 15.7),
-#'   expression_size = c(2.1, 1.8, 2.5)
+#'   response_id       = paste0("gene", 1:4),
+#'   expression_mean   = c(2.002931, 12.326867, 4.014221, 1.460472),
+#'   expression_size   = c(0.2967991, 8.3723191, 2.5988431, 2.6746265),
+#'   stringsAsFactors = FALSE
 #' )
 #'
-#' # Compute post-hoc power
+#' # Discovery pairs: test 3 enhancers against 4 genes
+#' discovery_pairs <- within(expand.grid(
+#'   grna_target = c("enh1","enh2","enh3"),
+#'   response_id = paste0("gene", 1:4),
+#'   KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE
+#' ), { grna_target <- as.character(grna_target); response_id <- as.character(response_id) })
+#'
+#' ## --- Analysis choices ---
+#' control_group <- "complement"          # use complement control group
+#' side <- "left"                         # left-sided test
+#' n_nonzero_trt_thresh   <- 7L            # min. nonzero counts in treatment
+#' n_nonzero_cntrl_thresh <- 7L            # min. nonzero counts in control
+#'
+#' ## --- Power analysis parameters ---
+#' fold_change_mean <- 0.85                # expected mean fold change
+#' fold_change_sd   <- 0.13                # expected SD of fold change
+#' cutoff <- 0.005                         # significance threshold (p-value cutoff)
+#'
+#' ## --- Run PerturbPlan posthoc power analysis ---
 #' power_results <- compute_power_posthoc(
-#'   discovery_pairs = discovery_pairs,
+#'   num_total_cells = num_total_cells,
 #'   cells_per_grna = cells_per_grna,
 #'   baseline_expression_stats = baseline_expression_stats,
-#'   control_group = "nt_cells",
-#'   fold_change_mean = 0.8,
-#'   fold_change_sd = 0.15,
-#'   multiple_testing_alpha = 0.1,
-#'   side = "left"
+#'   discovery_pairs = discovery_pairs,
+#'   control_group = control_group,
+#'   side = side,
+#'   n_nonzero_trt_thresh = n_nonzero_trt_thresh,
+#'   n_nonzero_cntrl_thresh = n_nonzero_cntrl_thresh,
+#'   fold_change_mean = fold_change_mean,
+#'   fold_change_sd = fold_change_sd,
+#'   cutoff = cutoff
 #' )
 #'
-#' # View results
-#' print("Individual power results:")
-#' print(power_results$individual_power)
-#' print(paste("Expected discoveries:", round(power_results$expected_num_discoveries, 2)))
-#'
-#' # Show summary statistics
-#' power_values <- power_results$individual_power$power
-#' print(paste("Power range:", round(min(power_values), 3), "-", round(max(power_values), 3)))
-#' print(paste("Average power:", round(mean(power_values), 3)))
+#' # Inspect outputs
+#' names(power_results)                    # available fields
+#' power_results$expected_num_discoveries  # expected number of discoveries
+#' head(power_results$individual_power)    # power per enhancer-gene pair
 #'
 #' @export
 compute_power_posthoc <- function(
@@ -273,57 +290,7 @@ compute_power_posthoc <- function(
 #'         number of discoveries.
 #' }
 #'
-#' @examples
-#' # Create example discovery pairs
-#' discovery_pairs <- data.frame(
-#'   grna_target = c("Gene1", "Gene2"),
-#'   response_id = c("ENSG00000141510", "ENSG00000157764")
-#' )
-#'
-#' # Create example cells per gRNA data
-#' cells_per_grna <- data.frame(
-#'   grna_id = c("gRNA1", "gRNA2", "NT1"),
-#'   grna_target = c("Gene1", "Gene2", "non-targeting"),
-#'   num_cells = c(200, 180, 300)
-#' )
-#'
-#' # Create example baseline relative expression data
-#' baseline_relative_expression_stats <- data.frame(
-#'   response_id = c("ENSG00000141510", "ENSG00000157764"),
-#'   relative_expression = c(15.5e-6, 8.3e-6),
-#'   expression_size = c(2.1, 1.8)
-#' )
-#'
-#' # Calculate power using pilot experimental parameters
-#' power_results <- power_function(
-#'   recovery_rate = 0.7,
-#'   num_total_reads = 150e6,
-#'   mapping_efficiency = 0.72,
-#'   cells_per_grna = cells_per_grna,
-#'   baseline_relative_expression_stats = baseline_relative_expression_stats,
-#'   fold_change_mean = 0.8,
-#'   fold_change_sd = 0.15,
-#'   num_planned_cells = 1000,
-#'   control_group = "nt_cells",
-#'   UMI_per_cell = 18000,
-#'   variation = 0.25,
-#'   discovery_pairs = discovery_pairs,
-#'   side = "left",
-#'   multiple_testing_alpha = 0.1
-#' )
-#'
-#' # View results
-#' print("Power function results:")
-#' print(power_results$individual_power)
-#' print(paste("Expected discoveries:", round(power_results$expected_num_discoveries, 2)))
-#'
-#' # Show experimental design summary
-#' total_cells <- sum(cells_per_grna$num_cells)
-#' print(paste("Total cells:", total_cells))
-#' print(paste("Treatment cells:", sum(cells_per_grna$num_cells[cells_per_grna$grna_target != "non-targeting"])))
-#' print(paste("Control cells:", sum(cells_per_grna$num_cells[cells_per_grna$grna_target == "non-targeting"])))
-#'
-#' @export
+#' @keywords internal
 power_function <- function(
 
     ###################### specify experimental design parameters ##############

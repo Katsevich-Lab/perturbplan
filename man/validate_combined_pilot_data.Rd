@@ -49,45 +49,8 @@ list(
 )
 }
 }
-\examples{
-# set seed for reproducibility
-set.seed(123)
-# First create pilot data using the preprocessing pipeline
-extdata_path <- system.file("extdata", package = "perturbplan")
-# Get raw data from 10x output
-raw_data <- reference_data_preprocessing_10x(
-  path_to_top_level_output = extdata_path,
-  path_to_run_level_output = "cellranger_tiny",
-  h5_rough = TRUE
-)
-# Process into final pilot data format
-pilot_data <- reference_data_processing(
-  response_matrix = raw_data$response_matrix,
-  read_umi_table = raw_data$read_umi_table,
-  mapping_efficiency = raw_data$mapping_efficiency,
-  TPM_thres = 0.1,
-  h5_only = FALSE
-)
-
-# Validate the processed pilot data
-validation_result <- validate_combined_pilot_data(pilot_data)
-if (validation_result$valid) {
-  cat("Validation passed:", validation_result$summary)
-} else {
-  cat("Validation failed:", validation_result$errors)
-}
-
-pilot_data_corrected <- pilot_data
-pilot_data_corrected$library_parameters$variation <- 0.3
-validation_result2 <- validate_combined_pilot_data(pilot_data_corrected)
-if (validation_result2$valid) {
-  cat("Validation passed:", validation_result2$summary)
-} else {
-  cat("Validation failed:", validation_result2$errors)
-}
-
-}
 \seealso{
 \code{\link{validate_custom_baseline_rds}} for baseline expression validation
 \code{\link{validate_custom_library_rds}} for library parameter validation
 }
+\keyword{internal}

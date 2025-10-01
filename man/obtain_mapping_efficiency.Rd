@@ -21,5 +21,6 @@ Mapping efficiency of a Cell Ranger run
 # Get mapping efficiency from Cell Ranger output
 cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 qc_data <- obtain_qc_read_umi_table(cellranger_path)
+mapping_eff <- obtain_mapping_efficiency(qc_data, cellranger_path)
 }
 \keyword{internal}

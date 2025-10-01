@@ -18,6 +18,7 @@
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_distribution_teststat.html</loc></url>
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_distribution_teststat_random_es_cpp.html</loc></url>
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_monte_carlo_teststat_cpp.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan.html</loc></url>
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan_full_grid.html</loc></url>
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan_overall.html</loc></url>
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan_overall_cpp.html</loc></url>
@@ -42,6 +43,7 @@
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/identify_library_size_range_cpp.html</loc></url>
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/identify_reads_range_cpp.html</loc></url>
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/index.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_compute_power_plan.html</loc></url>
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_compute_power_plan_full_grid.html</loc></url>
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_cost_power_computation.html</loc></url>
 <url><loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_find_optimal_cost_design.html</loc></url>

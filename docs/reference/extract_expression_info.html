@@ -127,37 +127,6 @@ and library_parameters (with UMI_per_cell and variation).</p></dd>
 <li><p>Return baseline expression data ready for fold change augmentation</p></li>
 </ol></div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Extract expression info from K562 system</span></span></span>
-<span class="r-in"><span><span class="va">expr_info</span> <span class="op">&lt;-</span> <span class="fu">extract_expression_info</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  biological_system <span class="op">=</span> <span class="st">"K562"</span>,</span></span>
-<span class="r-in"><span>  B <span class="op">=</span> <span class="fl">100</span>,</span></span>
-<span class="r-in"><span>  TPM_threshold <span class="op">=</span> <span class="fl">5</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in extract_expression_info(biological_system = "K562", B = 100,     TPM_threshold = 5):</span> could not find function "extract_expression_info"</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Examine the results</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">expr_info</span><span class="op">$</span><span class="va">expression_df</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'expr_info' not found</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Extracted"</span>, <span class="va">expr_info</span><span class="op">$</span><span class="va">n_genes</span>, <span class="st">"genes"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'expr_info' not found</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Use with custom gene list</span></span></span>
-<span class="r-in"><span><span class="va">gene_list</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ENSG00000141510"</span>, <span class="st">"ENSG00000157764"</span>, <span class="st">"ENSG00000175899"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">custom_expr</span> <span class="op">&lt;-</span> <span class="fu">extract_expression_info</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  biological_system <span class="op">=</span> <span class="st">"K562"</span>,</span></span>
-<span class="r-in"><span>  gene_list <span class="op">=</span> <span class="va">gene_list</span>,</span></span>
-<span class="r-in"><span>  TPM_threshold <span class="op">=</span> <span class="fl">1</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in extract_expression_info(biological_system = "K562", gene_list = gene_list,     TPM_threshold = 1):</span> could not find function "extract_expression_info"</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Check expression levels</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">custom_expr</span><span class="op">$</span><span class="va">expression_df</span><span class="op">$</span><span class="va">relative_expression</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'custom_expr' not found</span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

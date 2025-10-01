@@ -183,26 +183,6 @@ the total cost per captured cell (including both preparation and sequencing cost
     <div class="dont-index"><p><code><a href="cost_power_computation.html">cost_power_computation</a></code> for cost-constrained power analysis that uses this function</p></div>
     </div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Optimize reads per cell given fixed cells per target</span></span></span>
-<span class="r-in"><span><span class="va">result1</span> <span class="op">&lt;-</span> <span class="fu">obtain_fixed_variable_constraining_cost</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  cost_constraint <span class="op">=</span> <span class="fl">1000</span>,</span></span>
-<span class="r-in"><span>  cells_per_target <span class="op">=</span> <span class="fl">100</span>,</span></span>
-<span class="r-in"><span>  reads_per_cell <span class="op">=</span> <span class="cn">NULL</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in obtain_fixed_variable_constraining_cost(cost_constraint = 1000,     cells_per_target = 100, reads_per_cell = NULL):</span> could not find function "obtain_fixed_variable_constraining_cost"</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Optimize cells per target given fixed reads per cell</span></span></span>
-<span class="r-in"><span><span class="va">result2</span> <span class="op">&lt;-</span> <span class="fu">obtain_fixed_variable_constraining_cost</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  cost_constraint <span class="op">=</span> <span class="fl">1000</span>,</span></span>
-<span class="r-in"><span>  cells_per_target <span class="op">=</span> <span class="cn">NULL</span>,</span></span>
-<span class="r-in"><span>  reads_per_cell <span class="op">=</span> <span class="fl">5000</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in obtain_fixed_variable_constraining_cost(cost_constraint = 1000,     cells_per_target = NULL, reads_per_cell = 5000):</span> could not find function "obtain_fixed_variable_constraining_cost"</span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

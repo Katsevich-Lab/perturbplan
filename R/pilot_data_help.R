@@ -31,6 +31,7 @@ NULL
 #' @examples
 #' # Load example Cell Ranger output
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+#' response_matrix <- obtain_qc_response_data(cellranger_path)
 #' @return A \code{dgCMatrix} (genes × cells) with cleaned, unique row names and column names.
 #' @keywords internal
 #' @export
@@ -184,6 +185,7 @@ obtain_expression_information <- function(response_matrix,
 #' @examples
 #' # Extract read/UMI information from Cell Ranger output
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+#' qc_table <- obtain_qc_read_umi_table(cellranger_path)
 #' # Examine the data
 #' head(qc_table)
 #' dim(qc_table)
@@ -224,6 +226,7 @@ obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
 #' # Get mapping efficiency from Cell Ranger output
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' qc_data <- obtain_qc_read_umi_table(cellranger_path)
+#' mapping_eff <- obtain_mapping_efficiency(qc_data, cellranger_path)
 #' @return Numeric proportion: mapped / total reads.
 #' @keywords internal
 #' @export
@@ -269,6 +272,7 @@ obtain_mapping_efficiency <- function(QC_data, path_to_cellranger_output) {
 #' # Get QC data and summarize
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' qc_data <- obtain_qc_read_umi_table(cellranger_path)
+#' summary_stats <- summary_h5_data(qc_data)
 #' @seealso \code{\link{obtain_qc_read_umi_table}} for generating the input data
 #' @keywords internal
 #' @export

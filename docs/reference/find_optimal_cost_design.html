@@ -209,7 +209,7 @@ and provides fine-grained cost optimization for experimental design selection.</
 <span class="r-in"><span>  cost_grid_size <span class="op">=</span> <span class="fl">100</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Examine optimal designs</span></span></span>
+<span class="r-in"><span><span class="co"># print equi-cost designs</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">optimal_designs</span><span class="op">$</span><span class="va">optimal_cost_power_df</span><span class="op">)</span>,width <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 16</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   minimum_fold_change TPM_threshold cells_per_target num_captured_cells</span>
@@ -237,7 +237,7 @@ and provides fine-grained cost optimization for experimental design selection.</
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span>     <span style="text-decoration: underline;">26</span>857.       <span style="text-decoration: underline;">10</span>601.     <span style="text-decoration: underline;">8</span>847.   <span style="text-decoration: underline;">186</span>661.     <span style="text-decoration: underline;">6</span>638.    <span style="text-decoration: underline;">50</span>777.           106.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span>     <span style="text-decoration: underline;">20</span>321.       <span style="text-decoration: underline;">10</span>601.     <span style="text-decoration: underline;">8</span>847.   <span style="text-decoration: underline;">186</span>661.     <span style="text-decoration: underline;">6</span>638.    <span style="text-decoration: underline;">50</span>777.           106.</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Examine the first row of the cost grid</span></span></span>
+<span class="r-in"><span><span class="co"># print equi-power cost grid</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">optimal_designs</span><span class="op">$</span><span class="va">optimal_cost_grid</span><span class="op">)</span>,width <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 14</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   TPM_threshold minimum_cost min_reads max_reads min_cells max_cells</span>
@@ -274,6 +274,7 @@ and provides fine-grained cost optimization for experimental design selection.</
 <span class="r-in"><span>  cost_grid_size <span class="op">=</span> <span class="fl">50</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># print equi-cost designs</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cost_optimal</span><span class="op">$</span><span class="va">optimal_cost_power_df</span><span class="op">)</span>,width <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 16</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   minimum_fold_change TPM_threshold cells_per_target num_captured_cells</span>
@@ -300,6 +301,8 @@ and provides fine-grained cost optimization for experimental design selection.</
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>     <span style="text-decoration: underline;">11</span>750.         161.     <span style="text-decoration: underline;">8</span>847.   <span style="text-decoration: underline;">186</span>661.      157.    <span style="text-decoration: underline;">50</span>777.           1.61</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span>     <span style="text-decoration: underline;">12</span>433.         161.     <span style="text-decoration: underline;">8</span>847.   <span style="text-decoration: underline;">186</span>661.      157.    <span style="text-decoration: underline;">50</span>777.           1.61</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span>     <span style="text-decoration: underline;">13</span>235.         161.     <span style="text-decoration: underline;">8</span>847.   <span style="text-decoration: underline;">186</span>661.      157.    <span style="text-decoration: underline;">50</span>777.           1.61</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># print the equi-power cost grid</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">cost_optimal</span><span class="op">$</span><span class="va">optimal_cost_grid</span><span class="op">)</span>,width <span class="op">=</span> <span class="cn">Inf</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 13</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   minimum_cost min_reads max_reads min_cells max_cells cost_precision</span>

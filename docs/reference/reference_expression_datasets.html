@@ -102,28 +102,6 @@ functions. Each row represents one supported biological system:</p>
     <div class="dont-index"><p><code><a href="get_pilot_data_from_package.html">get_pilot_data_from_package</a></code> for using this metadata to access pilot data</p></div>
     </div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load metadata</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">reference_expression_datasets</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">reference_expression_datasets</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   cell_type   platform config_name                             process_function </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> K562        10x      LOCAL_GASPERINI_2019_SRA_DATA_DIR       process_k562_10x </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> THP-1       10x      LOCAL_YAO_2023_DATA_DIR                 process_thp1_10x </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> T_CD8       10x      LOCAL_SHIFRUT_2018_DATA_DIR             process_t_cd8_10x</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> A549        10x      LOCAL_SAKELLAROPOULOS_2024_RAW_DATA_DIR process_a549_10x </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> iPSC        10x      LOCAL_TIAN_2019_RAW_DATA_DIR_1          process_ipsc_10x </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> iPSC_neuron 10x      LOCAL_TIAN_2019_RAW_DATA_DIR_2          process_ipsc_neu…</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># View available biological systems</span></span></span>
-<span class="r-in"><span><span class="va">available_systems</span> <span class="op">&lt;-</span> <span class="va">reference_expression_datasets</span><span class="op">$</span><span class="va">cell_type</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">available_systems</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "K562"        "THP-1"       "T_CD8"       "A549"        "iPSC"       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [6] "iPSC_neuron"</span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

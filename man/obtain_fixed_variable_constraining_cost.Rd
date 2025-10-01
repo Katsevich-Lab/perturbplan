@@ -99,22 +99,6 @@ The function validates that the cost constraint is sufficient for meaningful exp
 }
 }
 
-\examples{
-# Optimize reads per cell given fixed cells per target
-result1 <- obtain_fixed_variable_constraining_cost(
-  cost_constraint = 1000,
-  cells_per_target = 100,
-  reads_per_cell = NULL
-)
-
-# Optimize cells per target given fixed reads per cell
-result2 <- obtain_fixed_variable_constraining_cost(
-  cost_constraint = 1000,
-  cells_per_target = NULL,
-  reads_per_cell = 5000
-)
-
-}
 \seealso{
 \code{\link{cost_power_computation}} for cost-constrained power analysis that uses this function
 }

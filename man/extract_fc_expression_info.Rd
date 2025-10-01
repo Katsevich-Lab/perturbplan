@@ -74,17 +74,6 @@ In both modes:
 \item Returns combined data for Monte Carlo integration with random effect sizes
 }
 }
-\examples{
-# Extract fold change and expression information
-fc_expr_data <- extract_fc_expression_info(
-  minimum_fold_change = 0.8,
-  gRNA_variability = 0.13,
-  biological_system = "K562",
-  B = 200,
-  TPM_threshold = 10,
-  gRNAs_per_target = 4
-)
-}
 \seealso{
 \code{\link{get_pilot_data_from_package}} for direct pilot data access
 }

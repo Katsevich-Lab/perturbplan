@@ -122,16 +122,6 @@ get_pilot_data_from_package <- function(biological_system) {
 #'   \item Returns combined data for Monte Carlo integration with random effect sizes
 #' }
 #'
-#' @examples
-#' # Extract fold change and expression information
-#' fc_expr_data <- extract_fc_expression_info(
-#'   minimum_fold_change = 0.8,
-#'   gRNA_variability = 0.13,
-#'   biological_system = "K562",
-#'   B = 200,
-#'   TPM_threshold = 10,
-#'   gRNAs_per_target = 4
-#' )
 #' @seealso \code{\link{get_pilot_data_from_package}} for direct pilot data access
 #' @keywords internal
 #' @export
@@ -732,47 +722,10 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
 #' )
 #' }
 #'
-#' @examples
-#' # set seed for reproducibility
-#' set.seed(123)
-#' # First create pilot data using the preprocessing pipeline
-#' extdata_path <- system.file("extdata", package = "perturbplan")
-#' # Get raw data from 10x output
-#' raw_data <- reference_data_preprocessing_10x(
-#'   path_to_top_level_output = extdata_path,
-#'   path_to_run_level_output = "cellranger_tiny",
-#'   h5_rough = TRUE
-#' )
-#' # Process into final pilot data format
-#' pilot_data <- reference_data_processing(
-#'   response_matrix = raw_data$response_matrix,
-#'   read_umi_table = raw_data$read_umi_table,
-#'   mapping_efficiency = raw_data$mapping_efficiency,
-#'   TPM_thres = 0.1,
-#'   h5_only = FALSE
-#' )
-#'
-#' # Validate the processed pilot data
-#' validation_result <- validate_combined_pilot_data(pilot_data)
-#' if (validation_result$valid) {
-#'   cat("Validation passed:", validation_result$summary)
-#' } else {
-#'   cat("Validation failed:", validation_result$errors)
-#' }
-#'
-#' pilot_data_corrected <- pilot_data
-#' pilot_data_corrected$library_parameters$variation <- 0.3
-#' validation_result2 <- validate_combined_pilot_data(pilot_data_corrected)
-#' if (validation_result2$valid) {
-#'   cat("Validation passed:", validation_result2$summary)
-#' } else {
-#'   cat("Validation failed:", validation_result2$errors)
-#' }
-#'
 #' @seealso
 #' \code{\link{validate_custom_baseline_rds}} for baseline expression validation
 #' \code{\link{validate_custom_library_rds}} for library parameter validation
-#' @export
+#' @keywords internal
 validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
 
   errors <- character(0)
@@ -1030,29 +983,6 @@ identify_library_size_range <- function(experimental_platform, library_parameter
 #'   \item Return baseline expression data ready for fold change augmentation
 #' }
 #'
-#' @examples
-#' # Extract expression info from K562 system
-#' expr_info <- extract_expression_info(
-#'   biological_system = "K562",
-#'   B = 100,
-#'   TPM_threshold = 5
-#' )
-#'
-#' # Examine the results
-#' head(expr_info$expression_df)
-#' print(paste("Extracted", expr_info$n_genes, "genes"))
-#'
-#' # Use with custom gene list
-#' gene_list <- c("ENSG00000141510", "ENSG00000157764", "ENSG00000175899")
-#' custom_expr <- extract_expression_info(
-#'   biological_system = "K562",
-#'   gene_list = gene_list,
-#'   TPM_threshold = 1
-#' )
-#'
-#' # Check expression levels
-#' summary(custom_expr$expression_df$relative_expression)
-#'
 #' @keywords internal
 extract_expression_info <- function(biological_system = "K562", B = 200, gene_list = NULL, TPM_threshold = 10, custom_pilot_data = NULL) {
 
@@ -1207,14 +1137,6 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
 #' Total cost = (cost_per_captured_cell × num_captured_cells) +
 #'              (cost_per_million_reads × raw_reads_per_cell × num_captured_cells / 1e6)
 #'
-#' @examples
-#' # Calculate cost for a typical experiment
-#' cost_result <- cost_computation(
-#'   experimental_platform = "10x Chromium v3",
-#'   sequencing_platform = "NovaSeq X 25B",
-#'   num_captured_cells = 10000,
-#'   raw_reads_per_cell = 50000
-#' )
 #' @keywords internal
 cost_computation <- function(experimental_platform = "10x Chromium v3",
                              sequencing_platform = "NovaSeq X 25B",

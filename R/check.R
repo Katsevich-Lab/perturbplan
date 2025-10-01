@@ -372,13 +372,13 @@ input_check_library_computation <- function(
   invisible(NULL)
 }
 
-#' Input checking function for compute_power_plan_full_grid
+#' Input checking function for compute_power_plan
 #'
-#' @inheritParams compute_power_plan_full_grid
+#' @inheritParams compute_power_plan
 #'
 #' @return NULL
 #' @keywords internal
-input_check_compute_power_plan_full_grid <- function(
+input_check_compute_power_plan <- function(
     TPM_threshold, minimum_fold_change, cells_per_target, reads_per_cell,
     MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
     control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,

@@ -318,8 +318,8 @@ test_that("cost_power_computation matches compute_power_plan_overall", {
   # We need to reverse-engineer it from the cost computation grid
   
   # Run cost_power_computation again to get the exact same fc_expression_df it used
-  set.seed(12345)  # Reset seed 
-  temp_result <- compute_power_plan_full_grid(
+  set.seed(12345)  # Reset seed
+  temp_result <- compute_power_plan(
     TPM_threshold = test_row$TPM_threshold,
     minimum_fold_change = test_row$minimum_fold_change, 
     cells_per_target = test_row$cells_per_target,

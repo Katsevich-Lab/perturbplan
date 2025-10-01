@@ -24,12 +24,12 @@ setup_validation_test_data <- function() {
   )
 }
 
-test_that("input_check_compute_power_plan_full_grid validates TPM_threshold parameter", {
+test_that("input_check_compute_power_planvalidates TPM_threshold parameter", {
   test_data <- setup_validation_test_data()
 
   # Test invalid TPM_threshold type
   expect_error(
-    input_check_compute_power_plan_full_grid(
+    input_check_compute_power_plan(
       TPM_threshold = "invalid",
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
@@ -43,7 +43,7 @@ test_that("input_check_compute_power_plan_full_grid validates TPM_threshold para
 
   # Test negative tmp_threshold
   expect_error(
-    input_check_compute_power_plan_full_grid(
+    input_check_compute_power_plan(
       TPM_threshold = -5,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
@@ -57,7 +57,7 @@ test_that("input_check_compute_power_plan_full_grid validates TPM_threshold para
 
   # Test valid inputs - should not throw error
   expect_silent(
-    input_check_compute_power_plan_full_grid(
+    input_check_compute_power_plan(
       TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
@@ -69,12 +69,12 @@ test_that("input_check_compute_power_plan_full_grid validates TPM_threshold para
   )
 })
 
-test_that("input_check_compute_power_plan_full_grid validates minimum_fold_change parameter", {
+test_that("input_check_compute_power_planvalidates minimum_fold_change parameter", {
   test_data <- setup_validation_test_data()
 
   # Test invalid minimum_fold_change type
   expect_error(
-    input_check_compute_power_plan_full_grid(
+    input_check_compute_power_plan(
       TPM_threshold = 10,
       minimum_fold_change = "invalid",
       cells_per_target = 1000,
@@ -88,7 +88,7 @@ test_that("input_check_compute_power_plan_full_grid validates minimum_fold_chang
 
   # Test negative minimum_fold_change
   expect_error(
-    input_check_compute_power_plan_full_grid(
+    input_check_compute_power_plan(
       TPM_threshold = 10,
       minimum_fold_change = -0.5,
       cells_per_target = 1000,
@@ -101,12 +101,12 @@ test_that("input_check_compute_power_plan_full_grid validates minimum_fold_chang
   )
 })
 
-test_that("input_check_compute_power_plan_full_grid validates baseline expression data", {
+test_that("input_check_compute_power_planvalidates baseline expression data", {
   test_data <- setup_validation_test_data()
 
   # Test missing baseline_expression_stats
   expect_error(
-    input_check_compute_power_plan_full_grid(
+    input_check_compute_power_plan(
       TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
@@ -120,7 +120,7 @@ test_that("input_check_compute_power_plan_full_grid validates baseline expressio
 
   # Test invalid baseline_expression_stats structure
   expect_error(
-    input_check_compute_power_plan_full_grid(
+    input_check_compute_power_plan(
       TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
@@ -133,12 +133,12 @@ test_that("input_check_compute_power_plan_full_grid validates baseline expressio
   )
 })
 
-test_that("input_check_compute_power_plan_full_grid validates library parameters", {
+test_that("input_check_compute_power_planvalidates library parameters", {
   test_data <- setup_validation_test_data()
 
   # Test missing library_parameters
   expect_error(
-    input_check_compute_power_plan_full_grid(
+    input_check_compute_power_plan(
       TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
@@ -152,7 +152,7 @@ test_that("input_check_compute_power_plan_full_grid validates library parameters
 
   # Test invalid library_parameters structure
   expect_error(
-    input_check_compute_power_plan_full_grid(
+    input_check_compute_power_plan(
       TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
@@ -310,7 +310,7 @@ test_that("input validation functions work with varying parameters", {
 
   # Test with "varying" parameters - should not throw error
   expect_silent(
-    input_check_compute_power_plan_full_grid(
+    input_check_compute_power_plan(
       TPM_threshold = "varying",
       minimum_fold_change = "varying",
       cells_per_target = "varying",
@@ -323,7 +323,7 @@ test_that("input validation functions work with varying parameters", {
 
   # Test with mixed numeric and varying parameters - should not throw error
   expect_silent(
-    input_check_compute_power_plan_full_grid(
+    input_check_compute_power_plan(
       TPM_threshold = c(5, 10, 15),
       minimum_fold_change = "varying",
       cells_per_target = 1000,

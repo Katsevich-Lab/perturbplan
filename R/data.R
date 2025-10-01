@@ -355,13 +355,5 @@
 #' @seealso
 #' \code{\link{get_pilot_data_from_package}} for using this metadata to access pilot data
 #'
-#' @examples
-#' # Load metadata
-#' data(reference_expression_datasets)
-#' print(reference_expression_datasets)
-#'
-#' # View available biological systems
-#' available_systems <- reference_expression_datasets$cell_type
-#' print(available_systems)
 #' @keywords internal
 "reference_expression_datasets"

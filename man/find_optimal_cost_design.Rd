@@ -139,10 +139,10 @@ optimal_designs <- find_optimal_cost_design(
   cost_grid_size = 100
 )
 
-# Examine optimal designs
+# print equi-cost designs
 print(head(optimal_designs$optimal_cost_power_df),width = Inf)
 
-# Examine the first row of the cost grid
+# print equi-power cost grid
 print(head(optimal_designs$optimal_cost_grid),width = Inf)
 
 # Find globally optimal cost design across all parameters
@@ -154,10 +154,14 @@ cost_optimal <- find_optimal_cost_design(
   cost_grid_size = 50
 )
 
+# print equi-cost designs
 print(head(cost_optimal$optimal_cost_power_df),width = Inf)
+
+# print the equi-power cost grid
 print(head(cost_optimal$optimal_cost_grid),width = Inf)
 
 }
 \seealso{
 \code{\link{cost_power_computation}} for the underlying cost-power analysis
 }
+\keyword{internal}

@@ -199,66 +199,6 @@ of the same name; defaults to 7.</p></dd>
 number of discoveries.</p></li>
 </ul></div>
 
-    <div class="section level2">
-    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create example discovery pairs</span></span></span>
-<span class="r-in"><span><span class="va">discovery_pairs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  grna_target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Gene1"</span>, <span class="st">"Gene2"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  response_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ENSG00000141510"</span>, <span class="st">"ENSG00000157764"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Create example cells per gRNA data</span></span></span>
-<span class="r-in"><span><span class="va">cells_per_grna</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  grna_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gRNA1"</span>, <span class="st">"gRNA2"</span>, <span class="st">"NT1"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  grna_target <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Gene1"</span>, <span class="st">"Gene2"</span>, <span class="st">"non-targeting"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  num_cells <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">200</span>, <span class="fl">180</span>, <span class="fl">300</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Create example baseline relative expression data</span></span></span>
-<span class="r-in"><span><span class="va">baseline_relative_expression_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  response_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ENSG00000141510"</span>, <span class="st">"ENSG00000157764"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  relative_expression <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">15.5e-6</span>, <span class="fl">8.3e-6</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  expression_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.1</span>, <span class="fl">1.8</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Calculate power using pilot experimental parameters</span></span></span>
-<span class="r-in"><span><span class="va">power_results</span> <span class="op">&lt;-</span> <span class="fu">power_function</span><span class="op">(</span></span></span>
-<span class="r-in"><span>  recovery_rate <span class="op">=</span> <span class="fl">0.7</span>,</span></span>
-<span class="r-in"><span>  num_total_reads <span class="op">=</span> <span class="fl">150e6</span>,</span></span>
-<span class="r-in"><span>  mapping_efficiency <span class="op">=</span> <span class="fl">0.72</span>,</span></span>
-<span class="r-in"><span>  cells_per_grna <span class="op">=</span> <span class="va">cells_per_grna</span>,</span></span>
-<span class="r-in"><span>  baseline_relative_expression_stats <span class="op">=</span> <span class="va">baseline_relative_expression_stats</span>,</span></span>
-<span class="r-in"><span>  fold_change_mean <span class="op">=</span> <span class="fl">0.8</span>,</span></span>
-<span class="r-in"><span>  fold_change_sd <span class="op">=</span> <span class="fl">0.15</span>,</span></span>
-<span class="r-in"><span>  num_planned_cells <span class="op">=</span> <span class="fl">1000</span>,</span></span>
-<span class="r-in"><span>  control_group <span class="op">=</span> <span class="st">"nt_cells"</span>,</span></span>
-<span class="r-in"><span>  UMI_per_cell <span class="op">=</span> <span class="fl">18000</span>,</span></span>
-<span class="r-in"><span>  variation <span class="op">=</span> <span class="fl">0.25</span>,</span></span>
-<span class="r-in"><span>  discovery_pairs <span class="op">=</span> <span class="va">discovery_pairs</span>,</span></span>
-<span class="r-in"><span>  side <span class="op">=</span> <span class="st">"left"</span>,</span></span>
-<span class="r-in"><span>  multiple_testing_alpha <span class="op">=</span> <span class="fl">0.1</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in input_check_posthoc(discovery_pairs = discovery_pairs, cells_per_grna = cells_per_grna,     baseline_expression_stats = baseline_expression_stats, control_group = control_group,     fold_change_mean = fold_change_mean, fold_change_sd = fold_change_sd,     num_total_cells = num_total_cells, cutoff = cutoff, n_nonzero_trt_thresh = n_nonzero_trt_thresh,     n_nonzero_cntrl_thresh = n_nonzero_cntrl_thresh, side = side,     multiple_testing_method = multiple_testing_method, multiple_testing_alpha = multiple_testing_alpha):</span> Non-targeting cells should appear in the grna_target of `cells_per_grna`!</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># View results</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="st">"Power function results:"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Power function results:"</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">power_results</span><span class="op">$</span><span class="va">individual_power</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'power_results' not found</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Expected discoveries:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">power_results</span><span class="op">$</span><span class="va">expected_num_discoveries</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'power_results' not found</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Show experimental design summary</span></span></span>
-<span class="r-in"><span><span class="va">total_cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cells_per_grna</span><span class="op">$</span><span class="va">num_cells</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Total cells:"</span>, <span class="va">total_cells</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Total cells: 680"</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Treatment cells:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cells_per_grna</span><span class="op">$</span><span class="va">num_cells</span><span class="op">[</span><span class="va">cells_per_grna</span><span class="op">$</span><span class="va">grna_target</span> <span class="op">!=</span> <span class="st">"non-targeting"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Treatment cells: 380"</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Control cells:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cells_per_grna</span><span class="op">$</span><span class="va">num_cells</span><span class="op">[</span><span class="va">cells_per_grna</span><span class="op">$</span><span class="va">grna_target</span> <span class="op">==</span> <span class="st">"non-targeting"</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Control cells: 300"</span>
-<span class="r-in"><span></span></span>
-</code></pre></div>
-    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

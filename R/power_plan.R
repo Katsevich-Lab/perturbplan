@@ -370,7 +370,7 @@ compute_power_plan_per_grid <- function(
 #' pilot_data <- get_pilot_data_from_package("K562")
 #'
 #' # Run comprehensive power analysis
-#' full_results <- compute_power_plan_full_grid(
+#' full_results <- compute_power_plan(
 #'   TPM_threshold = TPM_threshold,
 #'   minimum_fold_change = minimum_fold_change,
 #'   cells_per_target = cells_per_target,
@@ -389,7 +389,7 @@ compute_power_plan_per_grid <- function(
 #'
 #' @importFrom stats quantile
 #' @export
-compute_power_plan_full_grid <- function(
+compute_power_plan <- function(
     # power-determining parameters
     TPM_threshold, minimum_fold_change, cells_per_target, reads_per_cell,
     # experimental parameters
@@ -405,7 +405,7 @@ compute_power_plan_full_grid <- function(
 ){
 
   ####################### Input validation ####################################
-  input_check_compute_power_plan_full_grid(
+  input_check_compute_power_plan(
     TPM_threshold = TPM_threshold, minimum_fold_change = minimum_fold_change,
     cells_per_target = cells_per_target, reads_per_cell = reads_per_cell,
     MOI = MOI, num_targets = num_targets, non_targeting_gRNAs = non_targeting_gRNAs,
@@ -595,11 +595,6 @@ compute_power_plan_full_grid <- function(
 #'   cost_precision = 0.9
 #' )
 #'
-#' print("TPM threshold optimization results:")
-#' print(paste("Number of designs analyzed:", nrow(result1)))
-#' print(paste("TPM threshold range:", round(min(result1$TPM_threshold)), "-", round(max(result1$TPM_threshold))))
-#' print(paste("Power range:", round(min(result1$overall_power), 3), "-", round(max(result1$overall_power), 3)))
-#' print(paste("Cost range: $", round(min(result1$total_cost)), "-", "$", round(max(result1$total_cost)), sep=""))
 #'
 #' # Optimize fold change with fixed TPM threshold
 #' result2 <- cost_power_computation(
@@ -611,14 +606,9 @@ compute_power_plan_full_grid <- function(
 #'   cost_constraint = NULL  # No cost constraint
 #' )
 #'
-#' print("\nFold change optimization results:")
-#' print(paste("Number of designs analyzed:", nrow(result2)))
-#' print(paste("Fold change range:", round(min(result2$minimum_fold_change), 2), "-", round(max(result2$minimum_fold_change), 2)))
-#' print(paste("Power range:", round(min(result2$overall_power), 3), "-", round(max(result2$overall_power), 3)))
-#' head(result2[c("minimum_fold_change", "cells_per_target", "overall_power")])
 #'
 #' @seealso
-#' \code{\link{compute_power_plan_full_grid}} for the underlying power analysis
+#' \code{\link{compute_power_plan}} for the underlying power analysis
 #' \code{\link{find_optimal_cost_design}} for cost optimization
 
 #' Cost-Constrained Power Analysis for Perturb-seq Experiments
@@ -709,9 +699,6 @@ compute_power_plan_full_grid <- function(
 #'   cost_constraint = 15000
 #' )
 #'
-#' print("TPM threshold analysis:")
-#' print(paste("Analyzed", nrow(result1), "experimental designs"))
-#' print(summary(result1$overall_power))
 #'
 #' # Compute power across fold change range
 #' result2 <- cost_power_computation(
@@ -723,8 +710,6 @@ compute_power_plan_full_grid <- function(
 #'   cost_constraint = NULL
 #' )
 #'
-#' print("Fold change analysis:")
-#' print(paste("Fold change effects from", round(min(result2$minimum_fold_change), 2), "to", round(max(result2$minimum_fold_change), 2)))
 #'
 #' # Optimize cost across all experimental designs
 #' result3 <- cost_power_computation(
@@ -736,9 +721,6 @@ compute_power_plan_full_grid <- function(
 #'   cost_constraint = NULL
 #' )
 #'
-#' print("Cost optimization results:")
-#' print(paste("Min cost: $", round(min(result3$total_cost)), ", Max cost: $", round(max(result3$total_cost)), sep=""))
-#' print(paste("Optimal design achieves", round(max(result3$overall_power), 3), "power"))
 #'
 #' # Optimize cells per target with fixed detection parameters
 #' result4 <- cost_power_computation(
@@ -750,9 +732,6 @@ compute_power_plan_full_grid <- function(
 #'   cost_constraint = 10000
 #' )
 #'
-#' print("Cell optimization results:")
-#' print(paste("Cell range:", round(min(result4$cells_per_target)), "to", round(max(result4$cells_per_target)), "per target"))
-#' print(paste("All designs under budget of $10,000 with power ~", round(result4$overall_power[1], 3)))
 #'
 #' @export
 cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_variable = list(minimum_fold_change = 0.8),
@@ -835,7 +814,7 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
 
   ########################## Perform grid power search #########################
   # perform power calculation
-  cost_power_df <- compute_power_plan_full_grid(
+  cost_power_df <- compute_power_plan(
     # power-determining parameters
     TPM_threshold = TPM_threshold, minimum_fold_change = minimum_fold_change, cells_per_target = cells_per_target, reads_per_cell = reads_per_cell,
     # experimental parameters
@@ -892,18 +871,6 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
 #' }
 #'
 #' Throws informative errors when validation checks fail, otherwise returns the original data.
-#'
-#' @examples
-#' \dontrun{
-#' # Validate filtering viability and return original data
-#' validated_results <- check_power_results(
-#'   power_df = power_analysis_results,
-#'   cost_constraint = 15000,
-#'   cost_precision = 0.9,
-#'   power_target = 0.8,
-#'   power_precision = 0.01
-#' )
-#' }
 #'
 #' @keywords internal
 check_power_results <- function(power_df,
@@ -1042,10 +1009,10 @@ check_power_results <- function(power_df,
 #'   cost_grid_size = 100
 #' )
 #'
-#' # Examine optimal designs
+#' # print equi-cost designs
 #' print(head(optimal_designs$optimal_cost_power_df),width = Inf)
 #'
-#' # Examine the first row of the cost grid
+#' # print equi-power cost grid
 #' print(head(optimal_designs$optimal_cost_grid),width = Inf)
 #'
 #' # Find globally optimal cost design across all parameters
@@ -1057,13 +1024,17 @@ check_power_results <- function(power_df,
 #'   cost_grid_size = 50
 #' )
 #'
+#'# print equi-cost designs
 #'print(head(cost_optimal$optimal_cost_power_df),width = Inf)
+#'
+#'# print the equi-power cost grid
 #'print(head(cost_optimal$optimal_cost_grid),width = Inf)
 #'
 #' @seealso
 #' \code{\link{cost_power_computation}} for the underlying cost-power analysis
 #'
 #' @export
+#' @keywords internal
 find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
                                      power_target, power_precision,
                                      MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4,
@@ -1240,21 +1211,6 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
 #'   \item Ensures at least 10 captured cells can be achieved
 #'   \item Provides clear error messages when constraints are too tight
 #' }
-#'
-#' @examples
-#' # Optimize reads per cell given fixed cells per target
-#' result1 <- obtain_fixed_variable_constraining_cost(
-#'   cost_constraint = 1000,
-#'   cells_per_target = 100,
-#'   reads_per_cell = NULL
-#' )
-#'
-#' # Optimize cells per target given fixed reads per cell
-#' result2 <- obtain_fixed_variable_constraining_cost(
-#'   cost_constraint = 1000,
-#'   cells_per_target = NULL,
-#'   reads_per_cell = 5000
-#' )
 #'
 #' @seealso
 #' \code{\link{cost_power_computation}} for cost-constrained power analysis that uses this function

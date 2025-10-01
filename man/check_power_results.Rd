@@ -45,17 +45,4 @@ would leave at least one row
 
 Throws informative errors when validation checks fail, otherwise returns the original data.
 }
-\examples{
-\dontrun{
-# Validate filtering viability and return original data
-validated_results <- check_power_results(
-  power_df = power_analysis_results,
-  cost_constraint = 15000,
-  cost_precision = 0.9,
-  power_target = 0.8,
-  power_precision = 0.01
-)
-}
-
-}
 \keyword{internal}

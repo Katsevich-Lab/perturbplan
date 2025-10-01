@@ -105,22 +105,19 @@ reference:
   - title: "Power functions"
     desc: "These functions help users calculate power given other parameters in experimental design."
     contents:
-      - compute_power_plan_full_grid
+      - compute_power_plan
       - compute_power_posthoc
-      - power_function
 
   - title: "Optimization functions"
     desc: "These functions help users find the optimal experimental settings given power or cost."
     contents:
       - cost_power_computation
-      - find_optimal_cost_design
 
   - title: "Pilot data preprocessing functions"
     desc: "These functions help users create custom pilot data."
     contents:
       - reference_data_preprocessing_10x
       - reference_data_processing
-      - validate_combined_pilot_data
 
   # Example datasets exposed to users
   - title: "Example data"

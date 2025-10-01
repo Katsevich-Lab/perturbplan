@@ -1,4 +1,4 @@
-# Test for compute_power_plan_full_grid function
+# Test for compute_power_plan function
 # Validates comprehensive power analysis across parameter combinations
 
 library(testthat)
@@ -24,10 +24,10 @@ setup_grid_test_data <- function() {
   )
 }
 
-test_that("compute_power_plan_full_grid basic functionality with single values", {
+test_that("compute_power_plan basic functionality with single values", {
   test_data <- setup_grid_test_data()
 
-  result <- compute_power_plan_full_grid(
+  result <- compute_power_plan(
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
@@ -53,10 +53,10 @@ test_that("compute_power_plan_full_grid basic functionality with single values",
   expect_true(result$overall_power >= 0 && result$overall_power <= 1)
 })
 
-test_that("compute_power_plan_full_grid with numeric vectors", {
+test_that("compute_power_plan with numeric vectors", {
   test_data <- setup_grid_test_data()
 
-  result <- compute_power_plan_full_grid(
+  result <- compute_power_plan(
     TPM_threshold = c(5, 10, 15),
     minimum_fold_change = c(0.7, 0.8),
     cells_per_target = 1000,
@@ -75,10 +75,10 @@ test_that("compute_power_plan_full_grid with numeric vectors", {
   expect_true(all(result$cells_per_target == 1000))
 })
 
-test_that("compute_power_plan_full_grid with varying parameters", {
+test_that("compute_power_planwith varying parameters", {
   test_data <- setup_grid_test_data()
 
-  result <- compute_power_plan_full_grid(
+  result <- compute_power_plan(
     TPM_threshold = "varying",
     minimum_fold_change = 0.8,
     cells_per_target = "varying",
@@ -99,11 +99,11 @@ test_that("compute_power_plan_full_grid with varying parameters", {
   expect_true(all(result$minimum_fold_change == 0.8))  # Fixed value
 })
 
-test_that("compute_power_plan_full_grid varying parameter ranges", {
+test_that("compute_power_planvarying parameter ranges", {
   test_data <- setup_grid_test_data()
 
   # Test TPM_threshold varying creates reasonable range
-  result <- compute_power_plan_full_grid(
+  result <- compute_power_plan(
     TPM_threshold = "varying",
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
@@ -122,11 +122,11 @@ test_that("compute_power_plan_full_grid varying parameter ranges", {
   expect_true(all(TPM_thresholds < 1000))  # Reasonable upper bound
 })
 
-test_that("compute_power_plan_full_grid minimum_fold_change varying by test side", {
+test_that("compute_power_planminimum_fold_change varying by test side", {
   test_data <- setup_grid_test_data()
 
   # Test left side (knockdown)
-  result_left <- compute_power_plan_full_grid(
+  result_left <- compute_power_plan(
     TPM_threshold = 10,
     minimum_fold_change = "varying",
     cells_per_target = 1000,
@@ -138,7 +138,7 @@ test_that("compute_power_plan_full_grid minimum_fold_change varying by test side
   )
 
   # Test right side (overexpression)
-  result_right <- compute_power_plan_full_grid(
+  result_right <- compute_power_plan(
     TPM_threshold = 10,
     minimum_fold_change = "varying",
     cells_per_target = 1000,
@@ -150,7 +150,7 @@ test_that("compute_power_plan_full_grid minimum_fold_change varying by test side
   )
 
   # Test both sides
-  result_both <- compute_power_plan_full_grid(
+  result_both <- compute_power_plan(
     TPM_threshold = 10,
     minimum_fold_change = "varying",
     cells_per_target = 1000,
@@ -171,11 +171,11 @@ test_that("compute_power_plan_full_grid minimum_fold_change varying by test side
   expect_equal(nrow(result_both), 10)  # 5 + 5 values for both sides
 })
 
-test_that("compute_power_plan_full_grid different control groups", {
+test_that("compute_power_plandifferent control groups", {
   test_data <- setup_grid_test_data()
 
   # Test complement control
-  result_complement <- compute_power_plan_full_grid(
+  result_complement <- compute_power_plan(
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
@@ -187,7 +187,7 @@ test_that("compute_power_plan_full_grid different control groups", {
   )
 
   # Test non-targeting control
-  result_nt <- compute_power_plan_full_grid(
+  result_nt <- compute_power_plan(
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
@@ -205,11 +205,11 @@ test_that("compute_power_plan_full_grid different control groups", {
   expect_equal(nrow(result_nt), 1)
 })
 
-test_that("compute_power_plan_full_grid expression filtering by TPM_threshold", {
+test_that("compute_power_planexpression filtering by TPM_threshold", {
   test_data <- setup_grid_test_data()
 
   # Test with high TPM_threshold (should filter out low-expression genes)
-  result_high <- compute_power_plan_full_grid(
+  result_high <- compute_power_plan(
     TPM_threshold = 20,  # High threshold
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
@@ -220,7 +220,7 @@ test_that("compute_power_plan_full_grid expression filtering by TPM_threshold", 
   )
 
   # Test with low TPM_threshold (should include more genes)
-  result_low <- compute_power_plan_full_grid(
+  result_low <- compute_power_plan(
     TPM_threshold = 1,  # Low threshold
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
@@ -239,10 +239,10 @@ test_that("compute_power_plan_full_grid expression filtering by TPM_threshold", 
   expect_true(result_low$overall_power >= 0 && result_low$overall_power <= 1)
 })
 
-test_that("compute_power_plan_full_grid library size calculation", {
+test_that("compute_power_planlibrary size calculation", {
   test_data <- setup_grid_test_data()
 
-  result <- compute_power_plan_full_grid(
+  result <- compute_power_plan(
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
@@ -263,11 +263,11 @@ test_that("compute_power_plan_full_grid library size calculation", {
   expect_equal(result$raw_reads_per_cell, expected_raw_reads, tolerance = 1e-6)
 })
 
-test_that("compute_power_plan_full_grid experimental parameter validation", {
+test_that("compute_power_planexperimental parameter validation", {
   test_data <- setup_grid_test_data()
 
   # Test with different experimental parameters
-  result <- compute_power_plan_full_grid(
+  result <- compute_power_plan(
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
@@ -286,11 +286,11 @@ test_that("compute_power_plan_full_grid experimental parameter validation", {
   expect_true(result$overall_power >= 0 && result$overall_power <= 1)
 })
 
-test_that("compute_power_plan_full_grid gRNA variability effects", {
+test_that("compute_power_plangRNA variability effects", {
   test_data <- setup_grid_test_data()
 
   # Test with low variability
-  result_low_var <- compute_power_plan_full_grid(
+  result_low_var <- compute_power_plan(
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
@@ -302,7 +302,7 @@ test_that("compute_power_plan_full_grid gRNA variability effects", {
   )
 
   # Test with high variability
-  result_high_var <- compute_power_plan_full_grid(
+  result_high_var <- compute_power_plan(
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
@@ -323,10 +323,10 @@ test_that("compute_power_plan_full_grid gRNA variability effects", {
   expect_true(result_high_var$overall_power >= 0 && result_high_var$overall_power <= 1)
 })
 
-test_that("compute_power_plan_full_grid output completeness", {
+test_that("compute_power_planoutput completeness", {
   test_data <- setup_grid_test_data()
 
-  result <- compute_power_plan_full_grid(
+  result <- compute_power_plan(
     TPM_threshold = c(5, 15),
     minimum_fold_change = c(0.7, 0.9),
     cells_per_target = c(500, 1500),
@@ -355,7 +355,7 @@ test_that("compute_power_plan_full_grid output completeness", {
   expect_true(nrow(dplyr::anti_join(param_combinations, result_rounded, by = names(param_combinations))) == 0)
 })
 
-test_that("compute_power_plan_full_grid matches compute_power_plan_overall", {
+test_that("compute_power_planmatches compute_power_plan_overall", {
   # Set up consistent test data and parameters
   test_data <- setup_grid_test_data()
   set.seed(12345)  # Set seed for reproducible fold change generation
@@ -405,9 +405,9 @@ test_that("compute_power_plan_full_grid matches compute_power_plan_overall", {
     dplyr::ungroup() |>
     dplyr::select(-grna_effects_vec)
 
-  # Test 1: Get result from compute_power_plan_full_grid
+  # Test 1: Get result from compute_power_plan
   set.seed(12345)  # Reset seed
-  result_full_grid <- compute_power_plan_full_grid(
+  result_full_grid <- compute_power_plan(
     TPM_threshold = TPM_threshold_val,
     minimum_fold_change = minimum_fold_change_val,
     cells_per_target = cells_per_target_val,

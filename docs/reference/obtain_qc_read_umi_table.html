@@ -79,13 +79,26 @@
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Extract read/UMI information from Cell Ranger output</span></span></span>
 <span class="r-in"><span><span class="va">cellranger_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/cellranger_tiny"</span>, package <span class="op">=</span> <span class="st">"perturbplan"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">qc_table</span> <span class="op">&lt;-</span> <span class="fu">obtain_qc_read_umi_table</span><span class="op">(</span><span class="va">cellranger_path</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># Examine the data</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">qc_table</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'qc_table' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   num_reads UMI_id            cell_id     response_id</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1         2 139105 AAACCTGGTATATGAG-1 ENSG00000241860</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2         1 723247 AAACGGGTCAGCTCGG-1 ENSG00000238009</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3         1 998389 AAAGTAGCATCCCACT-1 ENSG00000239945</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4         1 622094 AAAGTAGTCCAAATGC-1 ENSG00000286448</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5         1 584568 AGCAGCCGTCCAAGTT-1 ENSG00000243485</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6         1 956290 AGCGGTCCATTCCTGC-1 ENSG00000238009</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">qc_table</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'qc_table' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 11  4</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">qc_table</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'qc_table' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    num_reads         UMI_id          cell_id          response_id       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Min.   :1.000   Min.   : 139105   Length:11          Length:11         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  1st Qu.:1.000   1st Qu.: 603331   Class :character   Class :character  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Median :1.000   Median : 723247   Mode  :character   Mode  :character  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Mean   :1.091   Mean   : 716680                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  3rd Qu.:1.000   3rd Qu.: 932801                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Max.   :2.000   Max.   :1034530                                        </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
