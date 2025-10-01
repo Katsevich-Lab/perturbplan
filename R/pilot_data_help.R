@@ -9,6 +9,7 @@ NULL
 #' @importFrom Matrix readMM rowSums colSums
 #' @importClassesFrom Matrix CsparseMatrix dgCMatrix
 #' @importFrom data.table fread
+#' @importFrom R.utils gunzip
 #' @importFrom dplyr filter bind_rows arrange
 #' @importFrom minpack.lm nlsLM
 NULL
