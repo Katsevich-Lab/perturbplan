@@ -42,7 +42,8 @@ cells_per_grna <- expand.grid(enhancer = enhancers, grna = grnas) |>
   dplyr::mutate(num_cells = rpois(dplyr::n(), lambda = 100),
                 grna_target = dplyr::if_else(grna_target == "nt", "non-targeting", grna_target))
   
-discovery_pairs <- expand.grid(grna_target = enhancers, response_id = genes)
+discovery_pairs <- expand.grid(grna_target = enhancers, response_id = genes) |>
+  dplyr::mutate(grna_target = dplyr::if_else(grna_target == "nt", "non-targeting", grna_target))
 
 baseline_expression_stats <- data.frame(
   response_id = genes,

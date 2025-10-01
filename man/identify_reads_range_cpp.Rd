@@ -27,4 +27,3 @@ Uses efficient binary search to find the reads per cell range for power analysis
 \item Maximum reads: 80\% UMI saturation (diminishing returns beyond this point)
 }
 }
-\keyword{internal}
