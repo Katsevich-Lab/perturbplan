@@ -2,47 +2,47 @@ library(data.table)
 library(rhdf5)
 # get_nt_only_barcodes <- function(run_dir) {
 #   h5_file <- file.path(run_dir, "molecule_info.h5")
-# 
+#
 #   feature_idx  <- h5read(h5_file, "feature_idx")
 #   barcode_idx  <- h5read(h5_file, "barcode_idx")
 #   barcodes     <- h5read(h5_file, "barcodes")
 #   features     <- h5read(h5_file, "features/id")
 #   feature_type <- h5read(h5_file, "features/feature_type")
-# 
+#
 #   # Identify rows corresponding to CRISPR guides
 #   is_guide <- grepl("CRISPR Guide", feature_type)
-# 
+#
 #   # Identify non-targeting guide names (e.g., containing "non" or "NTC")
 #   nontargeting_features <- grep("non|NTC", features, ignore.case = TRUE, value = TRUE)
-# 
+#
 #   # Subset rows where features are guides
 #   guide_rows <- which(is_guide[feature_idx + 1])
-# 
+#
 #   # Create a mapping of barcode to guide
 #   df <- data.frame(
 #     barcode = barcodes[barcode_idx[guide_rows] + 1],
 #     guide   = features[feature_idx[guide_rows] + 1],
 #     stringsAsFactors = FALSE
 #   )
-# 
+#
 #   # Select barcodes that are only associated with non-targeting guides
 #   nt_only_barcodes <- df %>%
 #     group_by(barcode) %>%
 #     summarise(all_nt = all(guide %in% nontargeting_features), .groups = "drop") %>%
 #     dplyr::filter(all_nt) %>%
 #     pull(barcode)
-# 
+#
 #   return(nt_only_barcodes)
 # }
 
-process_k562_10x <- function(path_to_dataset) {
-  message("Start processing K562_10x")
+process_k562_gasperini <- function(path_to_dataset) {
+  message("Start processing K562_Gasperini")
   path_to_run1 <- file.path(path_to_dataset, "processed", "at_scale" , "run1")
   path_to_run2 <- file.path(path_to_dataset, "processed", "at_scale", "run2")
   k562_data_1 <- perturbplan::reference_data_preprocessing_10x(path_to_run1)
   response_matrix_1 <- k562_data_1[[1]]
   read_umi_table <- k562_data_1[[2]]
-  mapping_efficiency <- k562_data_1$mapping_efficiency 
+  mapping_efficiency <- k562_data_1$mapping_efficiency
   k562_data_2 <- perturbplan::reference_data_preprocessing_10x(path_to_run2)
   response_matrix_2 <- k562_data_2[[1]]
   response_matrix <- cbind(response_matrix_1, response_matrix_2)
@@ -52,8 +52,21 @@ process_k562_10x <- function(path_to_dataset) {
                                                    mapping_efficiency = mapping_efficiency))
 }
 
+process_k562_10x <- function(path_to_dataset) {
+  message("Start processing K562_10x")
+  path_to_runs <- path_to_dataset
+  k562_data <- perturbplan::reference_data_preprocessing_10x(path_to_runs)
+  response_matrix <- k562_data[[1]]
+  read_umi_table <- k562_data[[2]]
+  mapping_efficiency <- k562_data$mapping_efficiency
+
+  return(perturbplan::reference_data_preprocessing(response_matrix=response_matrix,
+                                                   read_umi_table=read_umi_table,
+                                                   mapping_efficiency = mapping_efficiency))
+}
+
 process_thp1_10x <- function(path_to_dataset) {
-  message("Start processing THP1_10x")
+  message("Start processing THP1_Yao")
   path_to_runs <- file.path(path_to_dataset, "processed")
   dir_srrs <- list.dirs(path_to_runs, recursive = FALSE, full.names = TRUE)
   # Load the Seurat object from the specified path
@@ -107,35 +120,14 @@ process_thp1_10x <- function(path_to_dataset) {
                                                    mapping_efficiency = mapping_efficiency))
 }
 
-# process_t_cd4_10x <- function(path_to_dataset){
-#   message("Start processing T_CD4_10x")
-#   path_to_runs <- file.path(path_to_dataset, "processed")
-#   t_cd4_data <- perturbplan::reference_data_preprocessing_10x(path_to_runs)
-#   response_matrix <- t_cd4_data[[1]]
-#   read_umi_table <- t_cd4_data[[2]]
-#   mapping_efficiency <- t_cd4_data$mapping_efficiency
-#   nt_only_barcodes <- get_nt_only_barcodes(path_to_runs)
-#   response_matrix <- response_matrix[, colnames(response_matrix) %in% nt_only_barcodes]
-#   read_umi_table <- read_umi_table[read_umi_table$barcode %in% nt_only_barcodes, ]
-# 
-#   return(perturbplan::reference_data_preprocessing(response_matrix=response_matrix,
-#                                                    read_umi_table=read_umi_table))
-# 
-# 
-# }
-
 process_t_cd8_10x <- function(path_to_dataset) {
-  message("Start processing T_CD8_10x")
+  message("Start processing T_CD8_Shifrut")
   path_to_runs <- file.path(path_to_dataset, "processed")
   t_cd8_data <- perturbplan::reference_data_preprocessing_10x(path_to_runs)
 
   response_matrix <- t_cd8_data[[1]]
   read_umi_table <- t_cd8_data[[2]]
   mapping_efficiency <- t_cd8_data$mapping_efficiency
-  # nt_only_barcodes <- get_nt_only_barcodes(file.path(path_to_dataset, "processed", "SRR7788629", "outs", "molecule_info.h5"))
-  # response_matrix <- response_matrix[, colnames(response_matrix) %in% nt_only_barcodes]
-  # read_umi_table <- read_umi_table|>
-  #   dplyr::filter(barcode %in% nt_only_barcodes)
   return(perturbplan::reference_data_preprocessing(response_matrix=response_matrix,
                                                    read_umi_table=read_umi_table,
                                                    mapping_efficiency = mapping_efficiency))
