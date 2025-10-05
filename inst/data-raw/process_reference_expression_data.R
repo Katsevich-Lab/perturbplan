@@ -4,7 +4,7 @@ library(purrr)    # pwalk()
 library(usethis)  # use_data()
 
 overwrite <- FALSE   # set TRUE to rebuild even if .rda exists
-source("data-raw/cellwise_reference_processing.R")
+source("inst/data-raw/cellwise_reference_processing.R")
 # 1. Define and save your spec ------------------------------------------
 reference_expression_datasets <- tribble(
   ~ dataset_name, ~cell_type,                       ~platform, ~config_name, ~process_function,
@@ -43,7 +43,7 @@ pwalk(
     obj <- get(process_function)(path)
 
     # Save object
-    assign(package_name, obj, envir = .GlobalEnv)
+    assign(dataset_name, obj, envir = .GlobalEnv)
     save(list = dataset_name,
          file = file.path("data", paste0(dataset_name, ".rda")),
          envir = .GlobalEnv, compress = "xz")
