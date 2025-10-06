@@ -123,12 +123,13 @@ reference:
   - title: "Example data"
     desc: "Pilot datasets used by default in the app."
     contents:
-      - A549_10x
-      - T_CD8_10x
+      - K562_Gasperini
       - K562_10x
-      - THP_1_10x
-      - iPSC_10x
-      - iPSC_neuron_10x
+      - A549_Sakellaropoulos
+      - THP1_Yao
+      - T_CD8_Shifrut
+      - iPSC_Tian
+      - iPSC_neuron_Tian
 
 # ----------------
 # Authors block (home sidebar)

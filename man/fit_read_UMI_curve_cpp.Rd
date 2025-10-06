@@ -29,3 +29,4 @@ for large-scale power analysis computations. The S-M curve formula:
 \seealso{
 \code{\link{fit_read_UMI_curve}} for R version
 }
+\keyword{internal}

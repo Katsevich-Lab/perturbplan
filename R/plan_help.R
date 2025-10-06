@@ -42,12 +42,12 @@
 get_pilot_data_from_package <- function(biological_system) {
   # Map biological system names to data file names
   data_mapping <- list(
-    "K562" = "K562_10x",
-    "A549" = "A549_10x",
-    "THP-1" = "THP_1_10x",
-    "T_CD8" = "T_CD8_10x",
-    "iPSC" = "iPSC_10x",
-    "iPSC_neuron" = "iPSC_neuron_10x"
+    "K562" = "K562_Gasperini",
+    "A549" = "A549_Sakellaropoulos",
+    "THP-1" = "THP1_Yao",
+    "T_CD8" = "T_CD8_Shifrut",
+    "iPSC" = "iPSC_Tian",
+    "iPSC_neuron" = "iPSC_neuron_Tian"
   )
 
   # Check if biological system is supported

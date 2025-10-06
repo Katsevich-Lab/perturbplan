@@ -7,7 +7,7 @@
 \format{
 A data frame with 6 rows and 4 columns:
 \describe{
-\item{cell_type}{Character. The biological system name (K562, THP-1, T_CD8, A549, iPSC, iPSC_neuron)}
+\item{cell_type}{Character. The biological system name}
 \item{platform}{Character. The experimental platform used (all "10x" for 10x Chromium)}
 \item{config_name}{Character. Configuration variable name for data source paths}
 \item{process_function}{Character. Name of the processing function for each dataset}
@@ -27,15 +27,7 @@ data processing configurations and functions.
 \details{
 This metadata table is used internally by \code{\link{get_pilot_data_from_package}}
 to map biological system names to their corresponding data objects and processing
-functions. Each row represents one supported biological system:
-
-\itemize{
-\item \strong{K562}: Chronic myelogenous leukemia cells
-\item \strong{THP-1}: Monocytic leukemia cells
-\item \strong{T_CD8}: Primary CD8+ T cells
-\item \strong{A549}: Lung adenocarcinoma cells
-\item \strong{iPSC}: Induced pluripotent stem cells
-}
+functions.
 }
 \seealso{
 \code{\link{get_pilot_data_from_package}} for using this metadata to access pilot data

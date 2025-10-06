@@ -81,127 +81,6 @@
 <p>The goal of PerturbPlan is to facilitate experimental design and power analysis for perturb-seq experiments.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://katsevich-lab.github.io/perturbplan">perturbplan</a></span><span class="op">)</span></span></code></pre></div>
-<p>In the example below, we will demonstrate how to use <code><a href="reference/compute_power_posthoc.html">compute_power_posthoc()</a></code> to compute power after an experiment is conducted (as opposed to prospectively).</p>
-<div class="section level2">
-<h2 id="perturbplan-inputs">PerturbPlan inputs<a class="anchor" aria-label="anchor" href="#perturbplan-inputs"></a>
-</h2>
-<div class="section level3">
-<h3 id="id_1-dataset-summaries">1. Dataset summaries<a class="anchor" aria-label="anchor" href="#id_1-dataset-summaries"></a>
-</h3>
-<p>Let us consider a toy perturb-seq dataset with 3 enhancers, each targeted by 2 gRNAs, 2 non-targeting gRNAs, and 4 genes. Suppose there are 1000 total cells in the experiment:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">num_total_cells</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span></code></pre></div>
-<p>Based on our data, suppose we have information on the number of cells that received each gRNA:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cells_per_grna</span></span>
-<span><span class="co">#&gt;      grna_id   grna_target num_cells</span></span>
-<span><span class="co">#&gt; 1 enh1_grna1          enh1        93</span></span>
-<span><span class="co">#&gt; 2 enh2_grna1          enh2       113</span></span>
-<span><span class="co">#&gt; 3 enh3_grna1          enh3       112</span></span>
-<span><span class="co">#&gt; 4   nt_grna1 non-targeting       104</span></span>
-<span><span class="co">#&gt; 5 enh1_grna2          enh1        84</span></span>
-<span><span class="co">#&gt; 6 enh2_grna2          enh2       104</span></span>
-<span><span class="co">#&gt; 7 enh3_grna2          enh3       107</span></span>
-<span><span class="co">#&gt; 8   nt_grna2 non-targeting       105</span></span></code></pre></div>
-<p>Furthermore, we have computed the mean and size parameters for the baseline expression of each gene:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">baseline_expression_stats</span></span>
-<span><span class="co">#&gt;   response_id expression_mean expression_size</span></span>
-<span><span class="co">#&gt; 1       gene1        2.002931       0.2967991</span></span>
-<span><span class="co">#&gt; 2       gene2       12.326867       8.3723191</span></span>
-<span><span class="co">#&gt; 3       gene3        4.014221       2.5988431</span></span>
-<span><span class="co">#&gt; 4       gene4        1.460472       2.6746265</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="analysis-choices">Analysis choices<a class="anchor" aria-label="anchor" href="#analysis-choices"></a>
-</h3>
-<p>Suppose we tested the effects of all elements on all genes. We can encode this in a <code>discovery_pairs</code> data frame, the same as in <code>sceptre</code>:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">discovery_pairs</span></span>
-<span><span class="co">#&gt;    grna_target response_id</span></span>
-<span><span class="co">#&gt; 1         enh1       gene1</span></span>
-<span><span class="co">#&gt; 2         enh2       gene1</span></span>
-<span><span class="co">#&gt; 3         enh3       gene1</span></span>
-<span><span class="co">#&gt; 4           nt       gene1</span></span>
-<span><span class="co">#&gt; 5         enh1       gene2</span></span>
-<span><span class="co">#&gt; 6         enh2       gene2</span></span>
-<span><span class="co">#&gt; 7         enh3       gene2</span></span>
-<span><span class="co">#&gt; 8           nt       gene2</span></span>
-<span><span class="co">#&gt; 9         enh1       gene3</span></span>
-<span><span class="co">#&gt; 10        enh2       gene3</span></span>
-<span><span class="co">#&gt; 11        enh3       gene3</span></span>
-<span><span class="co">#&gt; 12          nt       gene3</span></span>
-<span><span class="co">#&gt; 13        enh1       gene4</span></span>
-<span><span class="co">#&gt; 14        enh2       gene4</span></span>
-<span><span class="co">#&gt; 15        enh3       gene4</span></span>
-<span><span class="co">#&gt; 16          nt       gene4</span></span></code></pre></div>
-<p>We have analyzed the data using the complement control group, left-sided tests, and default values for the pairwise QC parameters:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">control_group</span> <span class="op">&lt;-</span> <span class="st">"complement"</span></span>
-<span><span class="va">side</span> <span class="op">&lt;-</span> <span class="st">"both"</span></span>
-<span><span class="va">n_nonzero_trt_thresh</span> <span class="op">&lt;-</span> <span class="fl">7</span></span>
-<span><span class="va">n_nonzero_cntrl_thresh</span> <span class="op">&lt;-</span> <span class="fl">7</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="id_3-power-analysis-parameters">3. Power analysis parameters<a class="anchor" aria-label="anchor" href="#id_3-power-analysis-parameters"></a>
-</h3>
-<p>We want to compute the power for enhancer-gene pair assuming that gRNAs targeting that enhancer have fold changes on the gene with mean and standard deviations of 0.85 and 0.13, respectively:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fold_change_mean</span> <span class="op">&lt;-</span> <span class="fl">0.85</span></span>
-<span><span class="va">fold_change_sd</span> <span class="op">&lt;-</span> <span class="fl">0.13</span></span></code></pre></div>
-<p>We want to deem perturbation-gene pairs as significant in our power analysis if they pass a threshold of 0.005:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cutoff</span> <span class="op">&lt;-</span> <span class="fl">0.005</span></span></code></pre></div>
-<p>This number may be obtained as the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>-value cutoff from the original analysis.</p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="running-perturbplan">Running PerturbPlan<a class="anchor" aria-label="anchor" href="#running-perturbplan"></a>
-</h2>
-<p>We can now compute the power for each enhancer-gene pair using the <code><a href="reference/compute_power_posthoc.html">compute_power_posthoc()</a></code> function:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">power_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compute_power_posthoc.html">compute_power_posthoc</a></span><span class="op">(</span></span>
-<span>  num_total_cells <span class="op">=</span> <span class="va">num_total_cells</span>,</span>
-<span>  cells_per_grna <span class="op">=</span> <span class="va">cells_per_grna</span>,</span>
-<span>  baseline_expression_stats <span class="op">=</span> <span class="va">baseline_expression_stats</span>,</span>
-<span>  discovery_pairs <span class="op">=</span> <span class="va">discovery_pairs</span>,</span>
-<span>  control_group <span class="op">=</span> <span class="va">control_group</span>,</span>
-<span>  side <span class="op">=</span> <span class="va">side</span>,</span>
-<span>  n_nonzero_trt_thresh <span class="op">=</span> <span class="va">n_nonzero_trt_thresh</span>,</span>
-<span>  n_nonzero_cntrl_thresh <span class="op">=</span> <span class="va">n_nonzero_cntrl_thresh</span>,</span>
-<span>  fold_change_mean <span class="op">=</span> <span class="va">fold_change_mean</span>,</span>
-<span>  fold_change_sd <span class="op">=</span> <span class="va">fold_change_sd</span>,</span>
-<span>  cutoff <span class="op">=</span> <span class="va">cutoff</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="perturbplan-outputs">PerturbPlan outputs<a class="anchor" aria-label="anchor" href="#perturbplan-outputs"></a>
-</h2>
-<p>The result is a list with fields <code>expected_num_discoveries</code> and <code>individual_power</code>:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">power_results</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "individual_power"         "expected_num_discoveries"</span></span></code></pre></div>
-<p>The field <code>expected_num_discoveries</code> contains the expected number of discoveries across all enhancer-gene pairs:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">power_results</span><span class="op">$</span><span class="va">expected_num_discoveries</span></span>
-<span><span class="co">#&gt; [1] 4.343107</span></span></code></pre></div>
-<p>The field <code>individual_power</code> is a data frame containing the power for each enhancer-gene pair:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">power_results</span><span class="op">$</span><span class="va">individual_power</span></span>
-<span><span class="co">#&gt;    grna_target response_id      power</span></span>
-<span><span class="co">#&gt; 1         enh1       gene1 0.03647046</span></span>
-<span><span class="co">#&gt; 2         enh2       gene1 0.04782216</span></span>
-<span><span class="co">#&gt; 3         enh3       gene1 0.04836715</span></span>
-<span><span class="co">#&gt; 4         enh1       gene2 0.71527741</span></span>
-<span><span class="co">#&gt; 5         enh2       gene2 0.74907166</span></span>
-<span><span class="co">#&gt; 6         enh3       gene2 0.75054229</span></span>
-<span><span class="co">#&gt; 7         enh1       gene3 0.37592084</span></span>
-<span><span class="co">#&gt; 8         enh2       gene3 0.43029065</span></span>
-<span><span class="co">#&gt; 9         enh3       gene3 0.43262595</span></span>
-<span><span class="co">#&gt; 10        enh1       gene4 0.22152068</span></span>
-<span><span class="co">#&gt; 11        enh2       gene4 0.26660485</span></span>
-<span><span class="co">#&gt; 12        enh3       gene4 0.26859268</span></span></code></pre></div>
-</div>
 </div>
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
@@ -249,6 +128,7 @@
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://app.codecov.io/gh/Katsevich-Lab/perturbplan?branch=main" class="external-link"><img src="https://codecov.io/gh/Katsevich-Lab/perturbplan/branch/main/graph/badge.svg" alt="Codecov test coverage"></a></li>
 </ul>
 </div>
 

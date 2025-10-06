@@ -1,4 +1,4 @@
-#' A549 10x Chromium reference data for CRISPR power analysis
+#' A549 Sakellaropoulos Chromium reference data for CRISPR power analysis
 #'
 #' @description
 #' Pre-computed pilot data from A549 lung adenocarcinoma cells generated using
@@ -6,9 +6,9 @@
 #' library size information for power analysis of CRISPR-based perturbation
 #' experiments.
 #'
-#' @format A list with 2 elements:
+#' @format A list with 3 elements:
 #' \describe{
-#'   \item{baseline_expression_stats}{Data frame with gene expression data (14,179 genes × 3 columns):
+#'   \item{baseline_expression_stats}{Data frame with gene expression data (20,406 genes × 3 columns):
 #'     \itemize{
 #'       \item \code{response_id}: Character vector of Ensembl gene IDs
 #'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
@@ -17,48 +17,43 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (42,374)
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (42,377)
 #'       \item \code{variation}: Variation parameter for PCR bias (0.376)
 #'     }
 #'   }
+#'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.794)}
 #' }
 #'
 #' @details
 #' This dataset was generated from A549 lung adenocarcinoma cells using single-cell
-#' RNA sequencing with 10x Chromium technology. The data has been processed to
-#' extract key statistical parameters needed for power analysis calculations:
+#' RNA sequencing with 10x Chromium technology.
 #'
-#' \itemize{
-#'   \item Gene expression levels filtered for genes with TPM >= 1
-#'   \item Dispersion parameters estimated using negative binomial models
-#'   \item Library size parameters fitted using saturation-magnitude curves
-#' }
+#' \strong{Cells Used in Relative Expression Estimate:} All cells in high-moi condition
+#'
+#' The data has been processed to extract key statistical parameters needed for
+#' power analysis calculations.
 #'
 #' @source
-#' Processed from single-cell RNA-seq data of A549 cells using 10x Chromium technology.
+#' \strong{Paper:} MethNet: a robust approach to identify regulatory hubs and their distal targets
+#' from cancer methylomes
+#'
+#' \strong{Author and Year:} Sakellaropoulos et al., 2024
+#'
+#' \strong{Journal:} Nature Communications
+#'
+#' \strong{Accession:} GSE236304
+#'
+#' \strong{PMID:} 37577603
 #'
 #' @seealso
 #' \code{\link{get_pilot_data_from_package}} for accessing this data programmatically
-#' \code{\link{extract_fc_expression_info}} for using this data in power analysis
 #'
 #' @examples
-#' # Load A549 data
-#' data(A549_10x)
-#'
-#' # Examine baseline expression data
-#' baseline_expr <- A549_10x$baseline_expression_stats
-#' print(head(baseline_expr))
-#'
-#' # Check library parameters
-#' lib_params <- A549_10x$library_parameters
-#' print(lib_params)
-#'
-#' # Check mapping efficiency
-#' mapping_eff <- A549_10x$mapping_efficiency
-#' print(mapping_eff)
-"A549_10x"
+#' data(A549_Sakellaropoulos)
+#' str(A549_Sakellaropoulos)
+"A549_Sakellaropoulos"
 
-#' K562 10x Chromium reference data for CRISPR power analysis
+#' K562 Gasperini reference data for CRISPR power analysis
 #'
 #' @description
 #' Pre-computed pilot data from K562 chronic myelogenous leukemia cells generated
@@ -66,9 +61,9 @@
 #' library size information for power analysis of CRISPR-based perturbation
 #' experiments.
 #'
-#' @format A list with 2 elements:
+#' @format A list with 3 elements:
 #' \describe{
-#'   \item{baseline_expression_stats}{Data frame with gene expression data:
+#'   \item{baseline_expression_stats}{Data frame with gene expression data (19,942 genes × 3 columns):
 #'     \itemize{
 #'       \item \code{response_id}: Character vector of Ensembl gene IDs
 #'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
@@ -77,42 +72,84 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter
-#'       \item \code{variation}: Variation parameter for PCR bias
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (59,163)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.397)
 #'     }
 #'   }
+#'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.711)}
 #' }
 #'
 #' @details
 #' This dataset was generated from K562 chronic myelogenous leukemia cells using
-#' single-cell RNA sequencing with 10x Chromium technology. K562 is a widely used
-#' cell line in CRISPR screening experiments.
+#' single-cell RNA sequencing with 10x Chromium technology.
+#'
+#' \strong{Cells Used in Relative Expression Estimate:} All cells in high-moi condition
 #'
 #' @source
-#' Processed from single-cell RNA-seq data of K562 cells using 10x Chromium technology.
+#' \strong{Paper:} A Genome-wide Framework for Mapping Gene Regulation via Cellular Genetic Screens
+#'
+#' \strong{Author and Year:} Gasperini et al., 2019
+#'
+#' \strong{Journal:} Cell
+#'
+#' \strong{Accession:} GSE120861
+#'
+#' \strong{PMID:} 30612741
 #'
 #' @seealso
 #' \code{\link{get_pilot_data_from_package}} for accessing this data programmatically
-#' \code{\link{extract_fc_expression_info}} for using this data in power analysis
 #'
 #' @examples
-#' # Load K562 data
+#' data(K562_Gasperini)
+#' str(K562_Gasperini)
+"K562_Gasperini"
+
+#' K562 10x Genomics reference data for CRISPR power analysis
+#'
+#' @description
+#' Pre-computed pilot data from K562 chronic myelogenous leukemia cells generated
+#' using 10x Chromium technology. This is a reference dataset from 10x Genomics.
+#' Contains baseline gene expression parameters and library size information for
+#' power analysis of CRISPR-based perturbation experiments.
+#'
+#' @format A list with 3 elements:
+#' \describe{
+#'   \item{baseline_expression_stats}{Data frame with gene expression data (16,395 genes × 3 columns):
+#'     \itemize{
+#'       \item \code{response_id}: Character vector of Ensembl gene IDs
+#'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
+#'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
+#'     }
+#'   }
+#'   \item{library_parameters}{List containing:
+#'     \itemize{
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (61,081)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.421)
+#'     }
+#'   }
+#'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.801)}
+#' }
+#'
+#' @details
+#' This dataset was generated from K562 chronic myelogenous leukemia cells using
+#' single-cell RNA sequencing with 10x Chromium technology.
+#'
+#' \strong{Cells Used in Relative Expression Estimate:} All cells in high-moi condition
+#'
+#' @source
+#' \strong{Paper:} 10X Genomics dataset: 10k K562 cells
+#'
+#' \strong{Author and Year:} 10x Genomics (example data for K562), 2018
+#'
+#' @seealso
+#' \code{\link{get_pilot_data_from_package}} for accessing this data programmatically
+#'
+#' @examples
 #' data(K562_10x)
-#'
-#' # Examine baseline expression data
-#' baseline_expr <- K562_10x$baseline_expression_stats
-#' print(head(baseline_expr))
-#'
-#' # Check library parameters
-#' lib_params <- K562_10x$library_parameters
-#' print(lib_params)
-#'
-#' # Check mapping efficiency
-#' mapping_eff <- K562_10x$mapping_efficiency
-#' print(mapping_eff)
+#' str(K562_10x)
 "K562_10x"
 
-#' THP-1 10x Chromium reference data for CRISPR power analysis
+#' THP-1 Yao reference data for CRISPR power analysis
 #'
 #' @description
 #' Pre-computed pilot data from THP-1 monocytic leukemia cells generated using
@@ -120,9 +157,9 @@
 #' library size information for power analysis of CRISPR-based perturbation
 #' experiments.
 #'
-#' @format A list with 2 elements:
+#' @format A list with 3 elements:
 #' \describe{
-#'   \item{baseline_expression_stats}{Data frame with gene expression data:
+#'   \item{baseline_expression_stats}{Data frame with gene expression data (16,373 genes × 3 columns):
 #'     \itemize{
 #'       \item \code{response_id}: Character vector of Ensembl gene IDs
 #'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
@@ -131,51 +168,49 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter
-#'       \item \code{variation}: Variation parameter for PCR bias
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (77,799)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.354)
 #'     }
 #'   }
+#'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.677)}
 #' }
 #'
 #' @details
 #' This dataset was generated from THP-1 monocytic leukemia cells using single-cell
-#' RNA sequencing with 10x Chromium technology. THP-1 cells are commonly used to
-#' study monocyte and macrophage biology.
+#' RNA sequencing with 10x Chromium technology.
+#'
+#' \strong{Cells Used in Relative Expression Estimate:} NT (non-targeting) cells in low-moi condition
 #'
 #' @source
-#' Processed from single-cell RNA-seq data of THP-1 cells using 10x Chromium technology.
+#' \strong{Paper:} Scalable genetic screening for regulatory circuits using compressed
+#' Perturb-seq
+#'
+#' \strong{Author and Year:} Yao et al., 2023
+#'
+#' \strong{Journal:} Nature Biotechnology
+#'
+#' \strong{Accession:} GSE221321
+#'
+#' \strong{PMID:} 36747806
 #'
 #' @seealso
 #' \code{\link{get_pilot_data_from_package}} for accessing this data programmatically
-#' \code{\link{extract_fc_expression_info}} for using this data in power analysis
 #'
 #' @examples
-#' # Load THP-1 data
-#' data(THP_1_10x)
-#'
-#' # Examine baseline expression data
-#' baseline_expr <- THP_1_10x$baseline_expression_stats
-#' print(head(baseline_expr))
-#'
-#' # Check library parameters
-#' lib_params <- THP_1_10x$library_parameters
-#' print(lib_params)
-#'
-#' # Check mapping efficiency
-#' mapping_eff <- THP_1_10x$mapping_efficiency
-#' print(mapping_eff)
-"THP_1_10x"
+#' data(THP1_Yao)
+#' str(THP1_Yao)
+"THP1_Yao"
 
-#' T_CD8 10x Chromium reference data for CRISPR power analysis
+#' T_CD8 Shifrut reference data for CRISPR power analysis
 #'
 #' @description
 #' Pre-computed pilot data from primary CD8+ T cells generated using 10x Chromium
 #' technology. Contains baseline gene expression parameters and library size
 #' information for power analysis of CRISPR-based perturbation experiments.
 #'
-#' @format A list with 2 elements:
+#' @format A list with 3 elements:
 #' \describe{
-#'   \item{baseline_expression_stats}{Data frame with gene expression data:
+#'   \item{baseline_expression_stats}{Data frame with gene expression data (20,935 genes × 3 columns):
 #'     \itemize{
 #'       \item \code{response_id}: Character vector of Ensembl gene IDs
 #'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
@@ -184,42 +219,40 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter
-#'       \item \code{variation}: Variation parameter for PCR bias
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (8,801)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.297)
 #'     }
 #'   }
+#'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.679)}
 #' }
 #'
 #' @details
 #' This dataset was generated from primary CD8+ T cells using single-cell RNA
-#' sequencing with 10x Chromium technology. CD8+ T cells are important effector
-#' cells in adaptive immunity and cancer immunotherapy.
+#' sequencing with 10x Chromium technology.
+#'
+#' \strong{Cells Used in Relative Expression Estimate:} All cells in high-moi condition
 #'
 #' @source
-#' Processed from single-cell RNA-seq data of primary CD8+ T cells using 10x Chromium technology.
+#' \strong{Paper:} Genome-wide CRISPR Screens in Primary Human T Cells Reveal Key
+#' Regulators of Immune Function
+#'
+#' \strong{Author and Year:} Shifrut et al., 2018
+#'
+#' \strong{Journal:} Cell
+#'
+#' \strong{Accession:} GSE119450
+#'
+#' \strong{PMID:} 30449619
 #'
 #' @seealso
 #' \code{\link{get_pilot_data_from_package}} for accessing this data programmatically
-#' \code{\link{extract_fc_expression_info}} for using this data in power analysis
 #'
 #' @examples
-#' # Load T_CD8 data
-#' data(T_CD8_10x)
-#'
-#' # Examine baseline expression data
-#' baseline_expr <- T_CD8_10x$baseline_expression_stats
-#' print(head(baseline_expr))
-#'
-#' # Check library parameters
-#' lib_params <- T_CD8_10x$library_parameters
-#' print(lib_params)
-#'
-#' # Check mapping efficiency
-#' mapping_eff <- T_CD8_10x$mapping_efficiency
-#' print(mapping_eff)
-"T_CD8_10x"
+#' data(T_CD8_Shifrut)
+#' str(T_CD8_Shifrut)
+"T_CD8_Shifrut"
 
-#' iPSC 10x Chromium reference data for CRISPR power analysis
+#' iPSC Tian reference data for CRISPR power analysis
 #'
 #' @description
 #' Pre-computed pilot data from induced pluripotent stem cells (iPSCs) generated
@@ -227,9 +260,9 @@
 #' library size information for power analysis of CRISPR-based perturbation
 #' experiments.
 #'
-#' @format A list with 2 elements:
+#' @format A list with 3 elements:
 #' \describe{
-#'   \item{baseline_expression_stats}{Data frame with gene expression data:
+#'   \item{baseline_expression_stats}{Data frame with gene expression data (21,207 genes × 3 columns):
 #'     \itemize{
 #'       \item \code{response_id}: Character vector of Ensembl gene IDs
 #'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
@@ -238,51 +271,49 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter
-#'       \item \code{variation}: Variation parameter for PCR bias
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (39,079)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.405)
 #'     }
 #'   }
+#'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.704)}
 #' }
 #'
 #' @details
 #' This dataset was generated from induced pluripotent stem cells (iPSCs) using
-#' single-cell RNA sequencing with 10x Chromium technology. iPSCs are valuable
-#' for studying development and disease modeling.
+#' single-cell RNA sequencing with 10x Chromium technology.
+#'
+#' \strong{Cells Used in Relative Expression Estimate:} All cells in high-moi condition
 #'
 #' @source
-#' Processed from single-cell RNA-seq data of iPSCs using 10x Chromium technology.
+#' \strong{Paper:} CRISPR Interference-Based Platform for Multimodal Genetic Screens
+#' in Human iPSC-Derived Neurons
+#'
+#' \strong{Author and Year:} Tian et al., 2019
+#'
+#' \strong{Journal:} Neuron
+#'
+#' \strong{Accession:} GSE124703
+#'
+#' \strong{PMID:} 31422865
 #'
 #' @seealso
 #' \code{\link{get_pilot_data_from_package}} for accessing this data programmatically
-#' \code{\link{extract_fc_expression_info}} for using this data in power analysis
 #'
 #' @examples
-#' # Load iPSC data
-#' data(iPSC_10x)
-#'
-#' # Examine baseline expression data
-#' baseline_expr <- iPSC_10x$baseline_expression_stats
-#' print(head(baseline_expr))
-#'
-#' # Check library parameters
-#' lib_params <- iPSC_10x$library_parameters
-#' print(lib_params)
-#'
-#' # Check mapping efficiency
-#' mapping_eff <- iPSC_10x$mapping_efficiency
-#' print(mapping_eff)
-"iPSC_10x"
+#' data(iPSC_Tian)
+#' str(iPSC_Tian)
+"iPSC_Tian"
 
-#' iPSC-derived neuron 10x Chromium reference data for CRISPR power analysis
+#' iPSC-derived neuron Tian reference data for CRISPR power analysis
 #'
 #' @description
 #' Pre-computed pilot data from iPSC-derived neurons generated using 10x Chromium
 #' technology. Contains baseline gene expression parameters and library size
 #' information for power analysis of CRISPR-based perturbation experiments.
 #'
-#' @format A list with 2 elements:
+#' @format A list with 3 elements:
 #' \describe{
-#'   \item{baseline_expression_stats}{Data frame with gene expression data:
+#'   \item{baseline_expression_stats}{Data frame with gene expression data (23,882 genes × 3 columns):
 #'     \itemize{
 #'       \item \code{response_id}: Character vector of Ensembl gene IDs
 #'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
@@ -291,35 +322,38 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter from S-M curve
-#'       \item \code{variation}: Variation parameter characterizing PCR amplification bias
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (32,285)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.443)
 #'     }
 #'   }
+#'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.614)}
 #' }
 #'
+#' @details
+#' This dataset was generated from iPSC-derived neurons using single-cell RNA
+#' sequencing with 10x Chromium technology.
+#'
+#' \strong{Cells Used in Relative Expression Estimate:} All cells in high-moi condition
+#'
 #' @source
-#' Processed from single-cell RNA-seq data of iPSC-derived neurons using 10x Chromium technology.
+#' \strong{Paper:} CRISPR Interference-Based Platform for Multimodal Genetic Screens
+#' in Human iPSC-Derived Neurons
+#'
+#' \strong{Author and Year:} Tian et al., 2019
+#'
+#' \strong{Journal:} Neuron
+#'
+#' \strong{Accession:} GSE124703
+#'
+#' \strong{PMID:} 31422865
 #'
 #' @seealso
 #' \code{\link{get_pilot_data_from_package}} for accessing this data programmatically
-#' \code{\link{extract_fc_expression_info}} for using this data in power analysis
 #'
 #' @examples
-#' # Load iPSC-derived neuron data
-#' data(iPSC_neuron_10x)
-#'
-#' # Examine baseline expression data
-#' baseline_expr <- iPSC_neuron_10x$baseline_expression_stats
-#' print(head(baseline_expr))
-#'
-#' # Check library parameters
-#' lib_params <- iPSC_neuron_10x$library_parameters
-#' print(lib_params)
-#'
-#' # Check mapping efficiency
-#' mapping_eff <- iPSC_neuron_10x$mapping_efficiency
-#' print(mapping_eff)
-"iPSC_neuron_10x"
+#' data(iPSC_neuron_Tian)
+#' str(iPSC_neuron_Tian)
+"iPSC_neuron_Tian"
 
 #' Reference expression datasets metadata
 #'
@@ -330,7 +364,7 @@
 #'
 #' @format A data frame with 6 rows and 4 columns:
 #' \describe{
-#'   \item{cell_type}{Character. The biological system name (K562, THP-1, T_CD8, A549, iPSC, iPSC_neuron)}
+#'   \item{cell_type}{Character. The biological system name}
 #'   \item{platform}{Character. The experimental platform used (all "10x" for 10x Chromium)}
 #'   \item{config_name}{Character. Configuration variable name for data source paths}
 #'   \item{process_function}{Character. Name of the processing function for each dataset}
@@ -339,15 +373,7 @@
 #' @details
 #' This metadata table is used internally by \code{\link{get_pilot_data_from_package}}
 #' to map biological system names to their corresponding data objects and processing
-#' functions. Each row represents one supported biological system:
-#'
-#' \itemize{
-#'   \item \strong{K562}: Chronic myelogenous leukemia cells
-#'   \item \strong{THP-1}: Monocytic leukemia cells
-#'   \item \strong{T_CD8}: Primary CD8+ T cells
-#'   \item \strong{A549}: Lung adenocarcinoma cells
-#'   \item \strong{iPSC}: Induced pluripotent stem cells
-#' }
+#' functions.
 #'
 #' @source
 #' Internal metadata for perturbplan package data management.
