@@ -318,11 +318,15 @@ compute_power_plan_per_grid <- function(
   return(design_grid)
 }
 
-#' Compute power analysis for full parameter grid
+#' Compute power analysis for experimental planning (underspecified design)
 #'
 #' @description
-#' This function integrates compute_power_plan_per_grid() to create a comprehensive
-#' power analysis across multiple parameter combinations (TPM thresholds, fold changes).
+#' This function performs power analysis during the experimental planning phase using
+#' underspecified information. It accepts aggregate experimental parameters (cells per
+#' target, reads per cell) without requiring specific cell count assignments to individual
+#' gRNAs or perturbation-gene pairs. This is useful for designing experiments before data
+#' collection, allowing you to explore how different experimental designs (cell numbers,
+#' sequencing depth) affect overall statistical power.
 #'
 #' @param TPM_threshold Numeric, numeric vector, or character. TPM threshold value, custom sequence, or "varying" for auto-selection.
 #' @param minimum_fold_change Numeric, numeric vector, or character. Minimum fold change value, custom sequence, or "varying" for auto-selection.

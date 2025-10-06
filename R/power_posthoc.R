@@ -1,6 +1,14 @@
 # This is a Rscript computing the power function using score test
 
-#' Compute power for each perturbation-gene pair
+#' Compute post-hoc power analysis for individual perturbation-gene pairs
+#'
+#' @description
+#' This function performs post-hoc power analysis using detailed experimental information.
+#' Unlike \code{\link{compute_power_plan}}, this function accepts specific cell count
+#' assignments per gRNA (via \code{cells_per_grna}) and calculates power for individual
+#' perturbation-gene pairs. This is useful for analyzing completed experiments or evaluating
+#' specific experimental designs with known cell distributions, providing individual power
+#' estimates for each perturbation-gene pair as well as expected total discoveries.
 #'
 #' @param discovery_pairs A data frame specifying which element-gene pairs to consider, with columns `grna_target` and `response_id`
 #' @param cells_per_grna A data frame specifying how many cells contain each gRNA, with columns `grna_id`, `grna_target`, and `num_cells`

@@ -2,7 +2,7 @@
 % Please edit documentation in R/power_posthoc.R
 \name{compute_power_posthoc}
 \alias{compute_power_posthoc}
-\title{Compute power for each perturbation-gene pair}
+\title{Compute post-hoc power analysis for individual perturbation-gene pairs}
 \usage{
 compute_power_posthoc(
   discovery_pairs,
@@ -51,7 +51,12 @@ compute_power_posthoc(
 A list with two elements: \code{individual_power} (a data frame with columns \code{grna_target}, \code{response_id}, and \code{power}) and \code{expected_num_discoveries} (a numeric value)
 }
 \description{
-Compute power for each perturbation-gene pair
+This function performs post-hoc power analysis using detailed experimental information.
+Unlike \code{\link{compute_power_plan}}, this function accepts specific cell count
+assignments per gRNA (via \code{cells_per_grna}) and calculates power for individual
+perturbation-gene pairs. This is useful for analyzing completed experiments or evaluating
+specific experimental designs with known cell distributions, providing individual power
+estimates for each perturbation-gene pair as well as expected total discoveries.
 }
 \examples{
 ## --- Toy perturb-seq dataset setup ---

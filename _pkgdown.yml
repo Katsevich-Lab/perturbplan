@@ -71,7 +71,9 @@ navbar:
 # ----------------
 reference:
   - title: "Power functions"
-    desc: "These functions help users calculate power given other parameters in experimental design."
+    desc: >
+      Power analysis functions for experimental planning (underspecified parameters) and
+      post-hoc analysis (detailed cell count assignments per gRNA and pair).
     contents:
       - compute_power_plan
       - compute_power_posthoc

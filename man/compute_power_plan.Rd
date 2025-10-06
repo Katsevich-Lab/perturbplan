@@ -2,7 +2,7 @@
 % Please edit documentation in R/power_plan.R
 \name{compute_power_plan}
 \alias{compute_power_plan}
-\title{Compute power analysis for full parameter grid}
+\title{Compute power analysis for experimental planning (underspecified design)}
 \usage{
 compute_power_plan(
   TPM_threshold,
@@ -75,8 +75,12 @@ See \code{\link{reference_data_processing}} for typical values.}
 Data frame with comprehensive power analysis results across parameter combinations.
 }
 \description{
-This function integrates compute_power_plan_per_grid() to create a comprehensive
-power analysis across multiple parameter combinations (TPM thresholds, fold changes).
+This function performs power analysis during the experimental planning phase using
+underspecified information. It accepts aggregate experimental parameters (cells per
+target, reads per cell) without requiring specific cell count assignments to individual
+gRNAs or perturbation-gene pairs. This is useful for designing experiments before data
+collection, allowing you to explore how different experimental designs (cell numbers,
+sequencing depth) affect overall statistical power.
 }
 \details{
 This function provides comprehensive power analysis by:
