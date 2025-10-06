@@ -1,0 +1,25 @@
+---
+title: "Preprocess Reference Expression data for Web App"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Preprocess Reference Expression data for Web App}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "vignettes/figures/preprocess-reference-",
+  out.width = "100%"
+)
+```
+
+# Preprocess Reference Expression data for Web App
+
+Content coming soon.
+
+```{r}
+library(perturbplan)
+```

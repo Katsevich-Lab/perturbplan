@@ -1,19 +1,36 @@
+---
+output: github_document
+---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
+
 
 # PerturbPlan
 
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Katsevich-Lab/perturbplan/actions/workflows/R-CMD-check.yaml)
-[![Codecov test
-coverage](https://codecov.io/gh/Katsevich-Lab/perturbplan/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Katsevich-Lab/perturbplan?branch=main)
+[![Codecov test coverage](https://codecov.io/gh/Katsevich-Lab/perturbplan/branch/main/graph/badge.svg)](https://app.codecov.io/gh/Katsevich-Lab/perturbplan?branch=main)
 
 <!-- badges: end -->
 
-The goal of PerturbPlan is to facilitate experimental design and power
-analysis for perturb-seq experiments.
+**PerturbPlan** is an R package for power analysis in perturb-seq and TAP-seq experiments. It complements the [PerturbPlan web app](https://katsevich-lab-perturbplan.share.connect.posit.cloud/), which provides an interactive interface for experimental design. 
+
+# Use Cases
+
+The PerturbPlan package supports three use cases:
+
+1. **[Prepare Reference Data for Web App](articles/preprocess-reference.html)** - Shiny app users wishing to provide custom reference data to the app should use the package to prepare their data before upload.
+2. **[Advanced Prospective Power Analysis](articles/prospective-power.html)** - While the app helps users address 11 of the most commonly encountered experimental design questions, the package supports more sophisticated analyses.
+3. **[Retrospective Power Analysis](articles/posthoc.html)** - In addition to experimental design---based on prospective power analysis---the package also supports retrospective  power analysis.
+
+## Installation
+
+You can install PerturbPlan from GitHub:
+
 
 ``` r
-library(perturbplan)
+# install.packages("devtools")
+devtools::install_github("Katsevich-Lab/perturbplan")
 ```

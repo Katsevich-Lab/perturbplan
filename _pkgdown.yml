@@ -8,33 +8,20 @@ url: https://katsevich-lab.github.io/perturbplan   # Public site URL (adjust if 
 
 template:
   bootstrap: 5
-  bslib:
-    # Height of the fixed navbar in pixels
-    pkgdown-nav-height: 56
 
 # ----------------
 # Home page
 # ----------------
 home:
-  title: "YourPackage"
+  title: "PerturbPlan"
   description: >
-    One-line package elevator pitch: tell library users what they can do
-    and tell app integrators what they can plug into.
+    Experimental design and power analysis for perturb-seq experiments.
   links:
     - text: Report a bug
-      href: https://github.com/Katsevich-Lab/sceptre/issues
+      href: https://github.com/Katsevich-Lab/perturbplan/issues
   sidebar:
     # Order of sidebar blocks on the home page
-    structure: [links, license, citation, authors, custom, dev]
-    components:
-      custom:
-        title: Funders
-        text: |
-          [Analytics at Wharton](https://analytics.wharton.upenn.edu/)
-
-          [National Science Foundation](https://www.nsf.gov/)
-
-          [National Institutes of Health](https://www.nih.gov)
+    structure: [links, license, citation, authors, dev]
 
 # ----------------
 # Navbar
@@ -42,60 +29,41 @@ home:
 navbar:
   # High-level layout of the navbar
   structure:
-    left:  [intro, library, app, reference, articles, news]
+    left:  [reference, articles, news, webapp]
     right: [search, github]
   components:
-    # Site overview / landing
-    intro:
-      text: "Overview"
-      href: index.html
-
-    # Documentation for library users (analysis/modeling/data processing)
-    library:
-      text: "For Library Users"
-      menu:
-        - text: "Get started in 5 minutes"
-          href: articles/getting-started-library.html
-        - text: "Typical workflows"
-          href: articles/workflows-library.html
-
-    # Documentation for app integrators (hooks, adapters, extension points)
-    app:
-      text: "For App Integrators"
-      menu:
-        - text: "Integration guide"
-          href: articles/integration-app.html
-        - text: "Extension points & hooks"
-          href: articles/extensibility-hooks.html
-
     # Reference index
     reference:
       text: "Functions"
       href: reference/index.html
 
-    # Tutorials / long-form docs
+    # Articles
     articles:
-      text: "More tutorials"
+      text: "Articles"
       menu:
-        - text: "Get started (article)"
-          href: articles/sceptre.html
-        - text: "Manual (external)"
-          href: https://timothy-barry.github.io/sceptre-book/
-        - text: "FAQ (external)"
-          href: https://timothy-barry.github.io/sceptre-book/faq.html
-        - text: "Community (GitHub Discussions)"
-          href: https://github.com/Katsevich-Lab/sceptre/discussions
+        - text: "Prepare Data For Web App"
+          href: articles/preprocess-reference.html
+        - text: "Prospective Power Analysis"
+          href: articles/prospective-power.html
+        - text: "Retrospective Power Analysis"
+          href: articles/posthoc.html
 
     # News/changelog
     news:
       text: "Changelog"
       href: news/index.html
 
+    # Web App (external link)
+    webapp:
+      text: "Web App"
+      icon: fa-external-link-alt
+      href: https://katsevich-lab-perturbplan.share.connect.posit.cloud/
+
     # Right side: search comes from pkgdown; add your GitHub repo here
     github:
       icon: fa-github
       aria-label: "GitHub repository"
-      href: https://github.com/Katsevich-Lab/sceptre
+      href: https://github.com/Katsevich-Lab/perturbplan
 
 # ----------------
 # Reference organization
