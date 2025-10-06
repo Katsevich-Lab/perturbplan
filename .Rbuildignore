@@ -8,6 +8,7 @@
 ^codecov\.yml$
 ^\.claude$
 ^CLAUDE\.md$
+^AGENTS\.md$
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
