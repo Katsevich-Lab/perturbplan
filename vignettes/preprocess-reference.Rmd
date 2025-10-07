@@ -16,10 +16,545 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Preprocess Reference Expression data for Web App
+# Preprocess Reference Expression Data for Web App
 
-Content coming soon.
+This vignette demonstrates how to preprocess your own perturb-seq pilot data for use with the PerturbPlan web application and power analysis functions.
 
-```{r}
+```{r setup}
 library(perturbplan)
 ```
+
+## Overview
+
+PerturbPlan requires two types of preprocessed pilot data for power analysis:
+
+1. **Baseline Expression Statistics**: Gene-level expression parameters (mean and dispersion) fitted from a negative binomial model
+2. **Library Parameters**: Read-to-UMI saturation curve parameters (UMI_per_cell and variation) that characterize sequencing depth and PCR amplification bias
+
+This preprocessing workflow consists of two main steps:
+
+1. **`reference_data_preprocessing_10x()`**: Aggregates raw Cell Ranger outputs from multiple SRR runs
+2. **`reference_data_processing()`**: Fits statistical models to extract parameters needed for power analysis
+
+## Step 1: Aggregate Cell Ranger Outputs
+
+The `reference_data_preprocessing_10x()` function aggregates gene expression matrices and molecule-level QC data from multiple SRR-level Cell Ranger output directories.
+
+### Input Requirements
+
+Your data should be organized with Cell Ranger output directories under a top-level folder:
+
+```
+path_to_top_level_output/
+├── SRR_run_1/
+│   ├── filtered_feature_bc_matrix/
+│   │   ├── barcodes.tsv.gz
+│   │   ├── features.tsv.gz
+│   │   └── matrix.mtx.gz
+│   ├── molecule_info.h5
+│   └── metrics_summary.csv
+├── SRR_run_2/
+│   └── ...
+└── SRR_run_3/
+    └── ...
+```
+
+### Function Usage
+
+```{r eval=FALSE}
+# Point to directory containing Cell Ranger outputs
+extdata_path <- system.file("extdata", package = "perturbplan")
+
+# Aggregate data from all SRR runs
+raw_data <- reference_data_preprocessing_10x(
+  path_to_top_level_output = extdata_path,
+  path_to_run_level_output = "cellranger_tiny",  # Optional: subset of runs
+  h5_rough = TRUE  # Use first SRR for QC data (faster)
+)
+```
+
+### Function Details
+
+**Parameters:**
+
+- `path_to_top_level_output`: Path to directory containing Cell Ranger run-level subdirectories
+- `path_to_run_level_output`: Optional character vector specifying subset of run directories to process
+- `h5_rough`: If `TRUE` (default), extracts QC data from first SRR only for speed. If `FALSE`, combines QC data from all SRRs
+
+**Returns:**
+
+A list with three elements:
+
+- `response_matrix`: Gene-by-cell expression matrix (common genes only), combined across SRRs
+- `read_umi_table`: Data frame of molecule-level QC data with SRR labels
+- `mapping_efficiency`: Numeric value representing naive mapping efficiency (proportion of reads mapped to transcriptome)
+
+**Key Operations:**
+
+1. Lists all SRR directories and optionally filters to specified subset
+2. Reads response matrices and retains only genes shared across all SRRs
+3. Warns if some genes are missing from some matrices
+4. Extracts QC data from molecule_info.h5 files
+5. Calculates mapping efficiency from metrics_summary.csv
+
+### Example with Tiny Dataset
+
+```{r eval=FALSE}
+# Process minimal example dataset
+extdata_path <- system.file("extdata", package = "perturbplan")
+
+result <- reference_data_preprocessing_10x(
+  path_to_top_level_output = extdata_path,
+  path_to_run_level_output = "cellranger_tiny",
+  h5_rough = TRUE
+)
+
+# Inspect structure
+str(result)
+
+# View dimensions
+dim(result$response_matrix)
+head(result$read_umi_table)
+result$mapping_efficiency
+```
+
+## Step 2: Extract Statistical Parameters
+
+The `reference_data_processing()` function fits statistical models to extract gene-level expression parameters and library parameters required by PerturbPlan.
+
+### Statistical Models
+
+#### Gene Expression Model (Negative Binomial)
+
+For each gene, the function fits a negative binomial (NB) model to characterize the distribution of gene expression levels across cells:
+
+$$\text{gene\_expression} \sim \text{NB}(\text{mean} = \text{library\_size} \times \text{relative\_expression}, \text{size} = \text{expression\_size})$$
+
+where:
+
+- **gene_expression**: Number of observed UMIs for the gene in each cell
+- **library_size**: Total UMI count per cell
+- **relative_expression**: Relative expression level of the gene (fitted parameter)
+- **expression_size**: Dispersion parameter (small values indicate high biological variability)
+
+This model enables realistic simulation of gene expression profiles for power analysis.
+
+#### Library Saturation Model (S-M Curve)
+
+The function fits a saturation-magnitude (S-M) curve that relates mapped reads per cell to observed UMIs per cell:
+
+$$\text{UMI} = \text{total\_UMIs} \times \left(1 - \exp\left(-\frac{\text{reads}}{\text{total\_UMIs}}\right) \times \left(1 + \text{variation} \times \frac{\text{reads}^2}{2 \times \text{total\_UMIs}^2}\right)\right)$$
+
+where:
+
+- **total_UMIs** (UMI_per_cell): Maximum UMI per cell parameter (saturation level)
+- **variation**: Variation parameter characterizing PCR amplification bias (between 0 and 1)
+- **reads**: Number of mapped reads per cell
+- **UMI**: Number of observed UMIs per cell
+
+This model accounts for both UMI saturation at high read depths and PCR amplification variability.
+
+### Function Usage
+
+```{r eval=FALSE}
+# Set seed for reproducibility
+set.seed(123)
+
+# Process into final pilot data format
+pilot_data <- reference_data_processing(
+  response_matrix = raw_data$response_matrix,
+  read_umi_table = raw_data$read_umi_table,
+  mapping_efficiency = raw_data$mapping_efficiency,
+  TPM_thres = 0.1,      # Expression threshold for filtering
+  downsample_ratio = 0.7,  # Downsampling for library estimation
+  D2_rough = 0.3,       # Prior for variation parameter
+  h5_only = FALSE,      # Set TRUE to skip expression fitting
+  n_threads = NULL      # Parallel processing threads
+)
+```
+
+### Function Details
+
+**Parameters:**
+
+- `response_matrix`: Gene-by-cell expression matrix from Step 1 (or NULL if `h5_only = TRUE`)
+- `read_umi_table`: QC data frame from Step 1
+- `mapping_efficiency`: Mapping efficiency from Step 1
+- `gene_list`: Optional character vector to restrict analysis to specific genes
+- `TPM_thres`: Threshold for filtering low-expression genes (default: 0.1)
+- `downsample_ratio`: Proportion of downsampling for library size estimation (default: 0.7)
+- `D2_rough`: Prior value for variation parameter (default: 0.3)
+- `h5_only`: If `TRUE`, skips baseline expression step (default: FALSE)
+- `n_threads`: Number of parallel processing threads (default: NULL for single-threaded)
+
+**Returns:**
+
+A list with three elements:
+
+- `baseline_expression_stats`: Data frame with columns:
+  - `response_id`: Gene identifiers
+  - `relative_expression`: Fitted relative expression levels (TPM/1e6 scale)
+  - `expression_size`: Fitted dispersion parameters
+- `library_parameters`: List with:
+  - `UMI_per_cell`: Estimated maximum UMI count per cell
+  - `variation`: Estimated PCR amplification variation parameter
+- `mapping_efficiency`: Updated mapping efficiency accounting for gene filtering
+
+**Processing Steps:**
+
+1. Filters genes by expression threshold and optionally by gene_list
+2. Fits negative binomial model to estimate gene-level expression parameters
+3. Fits read-UMI saturation model to estimate library parameters
+4. Updates mapping efficiency if gene list restriction is applied
+5. Outputs simplified structure compatible with power analysis functions
+
+### Example Output
+
+```{r eval=FALSE}
+# View baseline expression stats
+head(pilot_data$baseline_expression_stats)
+#   response_id relative_expression expression_size
+# 1 ENSG00000141510        1.23e-05            0.45
+# 2 ENSG00000157764        4.56e-06            1.23
+
+# View library parameters
+pilot_data$library_parameters
+# $UMI_per_cell
+# [1] 15000
+#
+# $variation
+# [1] 0.25
+
+# View mapping efficiency
+pilot_data$mapping_efficiency
+# [1] 0.78
+```
+
+## Creating Combined Pilot Data Files
+
+To use your preprocessed data with the Shiny web application, save it as a combined RDS file:
+
+```{r eval=FALSE}
+# Create combined pilot data structure
+combined_pilot_data <- list(
+  baseline_expression_stats = pilot_data$baseline_expression_stats,
+  library_parameters = pilot_data$library_parameters
+)
+
+# Save as RDS file
+saveRDS(combined_pilot_data, "my_combined_pilot_data.rds")
+```
+
+This RDS file can then be uploaded through the Shiny app's "Custom" pilot data option.
+
+## Gene List Restriction
+
+You can restrict preprocessing to a specific set of genes:
+
+```{r eval=FALSE}
+# Define genes of interest
+gene_list <- c("ENSG00000141510", "ENSG00000157764", "ENSG00000012048")
+
+# Process only these genes
+pilot_data <- reference_data_processing(
+  response_matrix = raw_data$response_matrix,
+  read_umi_table = raw_data$read_umi_table,
+  mapping_efficiency = raw_data$mapping_efficiency,
+  gene_list = gene_list,
+  TPM_thres = 0.1,
+  h5_only = FALSE
+)
+```
+
+The mapping efficiency will be automatically adjusted to reflect the proportion of reads mapping to the specified gene list.
+
+## Processing TAP-seq Pilot Data
+
+TAP-seq (Targeted Perturb-seq) uses targeted sequencing panels to focus on a specific subset of genes, achieving higher sequencing depth and mapping efficiency for those genes compared to whole-transcriptome perturb-seq. This section demonstrates how to process pilot data for TAP-seq experiments.
+
+### TAP-seq vs Standard Perturb-seq
+
+Key differences in TAP-seq pilot data processing:
+
+1. **Gene Panel Restriction**: Only genes in the TAP-seq panel are analyzed
+2. **Higher Mapping Efficiency**: Targeted amplification results in 60-80% mapping efficiency (vs 20-40% for whole transcriptome)
+3. **Library Parameters**: Uses the same read-to-UMI saturation curve parameters, but the effective sequencing depth per gene is higher
+
+### Example: Processing TAP-seq Pilot Data
+
+Here's a complete workflow for processing TAP-seq pilot data with a custom gene panel:
+
+```{r eval=FALSE}
+# First, aggregate raw Cell Ranger outputs
+extdata_path <- system.file("extdata", package = "perturbplan")
+
+raw_data <- reference_data_preprocessing_10x(
+  path_to_top_level_output = extdata_path,
+  path_to_run_level_output = "cellranger_tiny",
+  h5_rough = TRUE
+)
+
+# Define TAP-seq gene panel
+# This would typically be your custom TAP-seq panel design
+tapseq_gene_panel <- c(
+  "ENSG00000241860",  # Important gene for your study
+  "ENSG00000141510",  # TP53
+  "ENSG00000157764",  # BRAF
+  "ENSG00000012048",  # BRCA1
+  "ENSG00000139618",  # BRCA2
+  "ENSG00000133703",  # KRAS
+  "ENSG00000171862",  # PTEN
+  "ENSG00000134086",  # VHL
+  "ENSG00000155657"   # TTN
+  # Add more genes from your TAP-seq panel...
+)
+
+# Process TAP-seq pilot data with gene list restriction
+tapseq_pilot_data <- reference_data_processing(
+  response_matrix = raw_data$response_matrix,
+  read_umi_table = raw_data$read_umi_table,
+  mapping_efficiency = raw_data$mapping_efficiency,
+  gene_list = tapseq_gene_panel,  # Restrict to TAP-seq panel
+  TPM_thres = 0.1,
+  h5_only = FALSE
+)
+
+# View the processed data
+cat("Genes in TAP-seq panel:", nrow(tapseq_pilot_data$baseline_expression_stats), "\n")
+cat("Mapping efficiency (adjusted for gene panel):",
+    round(tapseq_pilot_data$mapping_efficiency, 3), "\n")
+cat("Library parameters:\n")
+cat("  UMI_per_cell:", round(tapseq_pilot_data$library_parameters$UMI_per_cell), "\n")
+cat("  Variation:", signif(tapseq_pilot_data$library_parameters$variation, 3), "\n")
+```
+
+### Understanding TAP-seq Mapping Efficiency
+
+When you use `gene_list` in `reference_data_processing()`, two important adjustments happen:
+
+1. **Expression data filtering**: Only genes in the gene panel are retained in `baseline_expression_stats`
+2. **QC data filtering**: The `read_umi_table` is filtered to only include UMIs mapping to genes in the panel
+3. **Mapping efficiency adjustment**: The function calculates:
+   ```
+   adjusted_mapping_efficiency = original_efficiency × sum(relative_expression_in_panel)
+   ```
+   This reflects the proportion of total cellular transcripts represented by the TAP-seq panel.
+
+### Simulating TAP-seq from Whole-Transcriptome Data
+
+If you have whole-transcriptome perturb-seq pilot data and want to simulate TAP-seq parameters:
+
+```{r eval=FALSE}
+# Start with standard perturb-seq pilot data
+perturbseq_pilot <- get_pilot_data_from_package("K562")
+
+# Select top expressed genes for TAP-seq panel (realistic scenario)
+top_genes <- perturbseq_pilot$baseline_expression_stats %>%
+  arrange(desc(relative_expression)) %>%
+  head(500) %>%
+  pull(response_id)
+
+# Ensure your genes of interest are included
+genes_of_interest <- c("ENSG00000241860", "ENSG00000141510", "ENSG00000157764")
+tapseq_panel <- unique(c(top_genes, genes_of_interest))
+
+# Calculate what fraction of transcriptome is captured
+panel_fraction <- perturbseq_pilot$baseline_expression_stats %>%
+  filter(response_id %in% tapseq_panel) %>%
+  summarize(fraction = sum(relative_expression)) %>%
+  pull(fraction)
+
+cat("TAP-seq panel captures", round(panel_fraction * 100, 1),
+    "% of cellular transcripts\n")
+
+# Create TAP-seq pilot data
+tapseq_pilot <- list(
+  baseline_expression_stats = perturbseq_pilot$baseline_expression_stats %>%
+    filter(response_id %in% tapseq_panel) %>%
+    # Boost expression to reflect higher mapping efficiency
+    mutate(relative_expression = relative_expression * (0.70 / 0.30)),
+  library_parameters = perturbseq_pilot$library_parameters
+)
+
+# Save for later use
+saveRDS(tapseq_pilot, "tapseq_pilot_data.rds")
+```
+
+### Using TAP-seq Pilot Data in Power Analysis
+
+Once you have processed TAP-seq pilot data, use it for prospective power analysis:
+
+```{r eval=FALSE}
+# Load your TAP-seq pilot data
+tapseq_pilot <- readRDS("tapseq_pilot_data.rds")
+
+# Extract fold change and expression info for power analysis
+fc_expr_tapseq <- extract_fc_expression_info(
+  minimum_fold_change = 0.8,
+  gRNA_variability = 0.13,
+  custom_pilot_data = tapseq_pilot,
+  TPM_threshold = 0.1
+)
+
+# Calculate power for TAP-seq design
+power_grid_tapseq <- compute_power_plan_per_grid(
+  cells_per_target = c(50, 100, 200),
+  reads_per_cell = c(5000, 10000, 20000),
+  fc_expression_df = fc_expr_tapseq$fc_expression_df,
+  library_parameters = tapseq_pilot$library_parameters,
+  control_group = "complement",
+  side = "left",
+  num_targets = 100
+)
+
+# View results
+head(power_grid_tapseq)
+```
+
+### Practical Considerations for TAP-seq
+
+When designing TAP-seq experiments and processing pilot data:
+
+1. **Panel Size**:
+   - Small panels (100-500 genes): Very high mapping efficiency, but limited scope
+   - Medium panels (500-1500 genes): Balanced efficiency and coverage
+   - Large panels (1500-3000 genes): Broader coverage, approaching perturb-seq efficiency
+
+2. **Gene Selection**:
+   - Include key genes of interest (e.g., "ENSG00000241860")
+   - Add highly expressed housekeeping genes for normalization
+   - Consider including genes across expression range for robust power estimates
+
+3. **Mapping Efficiency**:
+   - Typical TAP-seq: 60-80% for well-designed panels
+   - Standard perturb-seq: 20-40% (cell-type dependent)
+   - Efficiency directly impacts cost-effectiveness
+
+4. **When to Use TAP-seq Pilot Data**:
+   - You have a well-defined gene panel from previous studies
+   - Hypothesis-driven experiments with specific targets
+   - Cost-constrained projects requiring maximum power per target gene
+   - Follow-up validation of whole-transcriptome screening hits
+
+### Comparing Perturb-seq and TAP-seq
+
+You can directly compare power between technologies using matched pilot data:
+
+```{r eval=FALSE}
+# Standard perturb-seq
+perturbseq_power <- compute_power_plan_per_grid(
+  cells_per_target = 100,
+  reads_per_cell = 10000,
+  fc_expression_df = fc_expr_perturbseq$fc_expression_df,
+  library_parameters = perturbseq_pilot$library_parameters,
+  side = "left"
+)
+
+# TAP-seq with same design
+tapseq_power <- compute_power_plan_per_grid(
+  cells_per_target = 100,
+  reads_per_cell = 10000,
+  fc_expression_df = fc_expr_tapseq$fc_expression_df,
+  library_parameters = tapseq_pilot$library_parameters,
+  side = "left"
+)
+
+# Compare
+cat("Perturb-seq power:", round(perturbseq_power$overall_power, 3), "\n")
+cat("TAP-seq power:", round(tapseq_power$overall_power, 3), "\n")
+cat("TAP-seq advantage:",
+    round(tapseq_power$overall_power / perturbseq_power$overall_power, 2), "x\n")
+```
+
+## Advanced Options
+
+### Processing Only Library Parameters
+
+If you already have baseline expression statistics and only need to update library parameters:
+
+```{r eval=FALSE}
+# Skip expression fitting, only process QC data
+library_only <- reference_data_processing(
+  response_matrix = NULL,
+  read_umi_table = raw_data$read_umi_table,
+  mapping_efficiency = raw_data$mapping_efficiency,
+  h5_only = TRUE
+)
+
+# Only library_parameters will be populated
+library_only$library_parameters
+```
+
+### Parallel Processing
+
+For large datasets, enable parallel processing:
+
+```{r eval=FALSE}
+# Use 4 threads for expression parameter fitting
+pilot_data <- reference_data_processing(
+  response_matrix = raw_data$response_matrix,
+  read_umi_table = raw_data$read_umi_table,
+  mapping_efficiency = raw_data$mapping_efficiency,
+  n_threads = 4
+)
+```
+
+### Custom Library Estimation Parameters
+
+Adjust downsampling ratio and variation prior:
+
+```{r eval=FALSE}
+# More aggressive downsampling and different prior
+pilot_data <- reference_data_processing(
+  response_matrix = raw_data$response_matrix,
+  read_umi_table = raw_data$read_umi_table,
+  mapping_efficiency = raw_data$mapping_efficiency,
+  downsample_ratio = 0.5,  # More downsampling
+  D2_rough = 0.4           # Different prior
+)
+```
+
+## Validation and Quality Control
+
+After preprocessing, validate your pilot data:
+
+```{r eval=FALSE}
+# Check for missing values
+any(is.na(pilot_data$baseline_expression_stats))
+
+# Check expression parameter ranges
+summary(pilot_data$baseline_expression_stats$relative_expression)
+summary(pilot_data$baseline_expression_stats$expression_size)
+
+# Check library parameters are positive
+pilot_data$library_parameters$UMI_per_cell > 0
+pilot_data$library_parameters$variation > 0
+
+# Check mapping efficiency is reasonable
+pilot_data$mapping_efficiency >= 0 & pilot_data$mapping_efficiency <= 1
+```
+
+## Integration with Power Analysis
+
+Use your preprocessed data directly with PerturbPlan power analysis functions:
+
+```{r eval=FALSE}
+# Example: Calculate power for a specific design
+power_result <- compute_power_posthoc(
+  baseline_expression = pilot_data$baseline_expression_stats,
+  library_parameters = pilot_data$library_parameters,
+  cells_per_grna = 100,
+  reads_per_cell = 10000,
+  fold_change = 2.0,
+  effect_size = 0.5,
+  FDR_target = 0.1
+)
+```
+
+## See Also
+
+- `?reference_data_preprocessing_10x`: Detailed function documentation
+- `?reference_data_processing`: Detailed function documentation
+- `?library_estimation`: Library parameter estimation details
+- `?obtain_expression_information`: Expression parameter fitting details
+- Vignette "Getting Started with PerturbPlan": Overview of power analysis workflow

@@ -29,7 +29,8 @@ Suggests:
     testthat (>= 3.0.0),
     openxlsx,
     ggplot2,
-    ggside
+    ggside,
+    scales
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 LinkingTo:

@@ -12,14 +12,616 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
   fig.path = "vignettes/figures/prospective-power-",
-  out.width = "100%"
+  out.width = "100%",
+  fig.width = 7,
+  fig.height = 5
 )
 ```
 
 # Prospective Power Analysis Beyond the Web App
 
-Content coming soon.
+This vignette demonstrates advanced prospective power analysis workflows that go beyond the web application's built-in functionality. We'll explore:
 
-```{r}
+1. **Comparing perturb-seq and TAP-seq technologies** for the same biological question
+2. **Comparing pre-existing experimental designs** instead of designing from scratch
+3. **Visualizing expression distributions and saturation curves** to understand the underlying models
+
+```{r setup}
 library(perturbplan)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
 ```
+
+## Load Pilot Data
+
+First, let's load the default K562 pilot data that comes with the package:
+
+```{r load-data}
+# Load K562 pilot data
+pilot_data <- get_pilot_data_from_package("K562")
+
+# Extract components
+baseline_expression <- pilot_data$baseline_expression_stats
+library_params <- pilot_data$library_parameters
+
+# View data structure
+str(baseline_expression)
+str(library_params)
+```
+
+## 1. Comparing Perturb-seq and TAP-seq Technologies
+
+One common question is whether to use standard perturb-seq (whole transcriptome) or TAP-seq (targeted amplification and sequencing) for a specific experiment. TAP-seq allows deeper sequencing of a smaller set of genes, potentially improving power for targeted studies.
+
+### Simulating TAP-seq Data
+
+TAP-seq has two key differences from standard perturb-seq:
+
+1. **Higher mapping efficiency** to the target gene panel (typically 60-80% vs 20-40%)
+2. **Focused on a smaller gene set** (e.g., 500-2000 genes vs whole transcriptome)
+
+Let's create TAP-seq parameters by modifying the perturb-seq baseline:
+
+```{r tapseq-params}
+# Select a subset of genes for TAP-seq panel (e.g., top 1000 by expression)
+tapseq_genes <- baseline_expression %>%
+  arrange(desc(relative_expression)) %>%
+  head(1000) %>%
+  pull(response_id)
+
+# Create TAP-seq pilot data (subset of genes with higher mapping efficiency)
+tapseq_pilot_data <- list(
+  baseline_expression_stats = baseline_expression %>%
+    filter(response_id %in% tapseq_genes) %>%
+    mutate(relative_expression = relative_expression * (0.70 / 0.30)),  # Efficiency boost
+  library_parameters = library_params
+)
+
+cat("Perturb-seq genes:", nrow(baseline_expression), "\n")
+cat("TAP-seq genes:", nrow(tapseq_pilot_data$baseline_expression_stats), "\n")
+cat("Efficiency boost factor: 0.70 / 0.30 =", 0.70 / 0.30, "\n")
+```
+
+### Power Comparison: Single Design Point
+
+Let's compare power for a specific experimental design using prospective power analysis:
+
+```{r compare-single-design}
+# Define experimental parameters
+cells_per_target <- 100
+reads_per_cell <- 10000
+minimum_fold_change <- 0.8  # Expected effect size
+gRNA_variability <- 0.13    # Variability between gRNAs
+
+# Extract fold change and expression info for perturb-seq
+fc_expr_perturbseq <- extract_fc_expression_info(
+  minimum_fold_change = minimum_fold_change,
+  gRNA_variability = gRNA_variability,
+  biological_system = "K562",
+  gene_list = tapseq_genes,  # Compare same genes
+  TPM_threshold = 0.1
+)
+
+# Extract fold change and expression info for TAP-seq
+fc_expr_tapseq <- extract_fc_expression_info(
+  minimum_fold_change = minimum_fold_change,
+  gRNA_variability = gRNA_variability,
+  custom_pilot_data = tapseq_pilot_data,
+  gene_list = tapseq_genes,
+  TPM_threshold = 0.1
+)
+
+# Calculate power for perturb-seq
+power_grid_ps <- compute_power_plan_per_grid(
+  cells_per_target = cells_per_target,
+  reads_per_cell = reads_per_cell,
+  fc_expression_df = fc_expr_perturbseq$fc_expression_df,
+  library_parameters = library_params,
+  control_group = "complement",
+  side = "left",
+  multiple_testing_alpha = 0.1,
+  num_targets = 100
+)
+
+# Calculate power for TAP-seq
+power_grid_ts <- compute_power_plan_per_grid(
+  cells_per_target = cells_per_target,
+  reads_per_cell = reads_per_cell,
+  fc_expression_df = fc_expr_tapseq$fc_expression_df,
+  library_parameters = tapseq_pilot_data$library_parameters,
+  control_group = "complement",
+  side = "left",
+  multiple_testing_alpha = 0.1,
+  num_targets = 100
+)
+
+# Compare results
+comparison_df <- data.frame(
+  Technology = c("Perturb-seq", "TAP-seq"),
+  Genes_Analyzed = c(
+    nrow(fc_expr_perturbseq$fc_expression_df),
+    nrow(fc_expr_tapseq$fc_expression_df)
+  ),
+  Overall_Power = c(
+    power_grid_ps$overall_power,
+    power_grid_ts$overall_power
+  ),
+  Cells_per_Target = c(
+    power_grid_ps$cells_per_target,
+    power_grid_ts$cells_per_target
+  )
+)
+
+print(comparison_df)
+```
+
+### Power Comparison Across Read Depths
+
+Now let's compare how power scales with sequencing depth for both technologies:
+
+```{r compare-read-depths, fig.width=8, fig.height=5}
+# Define read depth range
+read_depths <- c(5000, 10000, 15000, 20000, 30000, 40000)
+comparison_results <- list()
+
+for (i in seq_along(read_depths)) {
+  reads <- read_depths[i]
+
+  # Perturb-seq power
+  power_ps <- compute_power_plan_per_grid(
+    cells_per_target = cells_per_target,
+    reads_per_cell = reads,
+    fc_expression_df = fc_expr_perturbseq$fc_expression_df,
+    library_parameters = library_params,
+    control_group = "complement",
+    side = "left",
+    multiple_testing_alpha = 0.1,
+    num_targets = 100
+  )
+
+  # TAP-seq power
+  power_ts <- compute_power_plan_per_grid(
+    cells_per_target = cells_per_target,
+    reads_per_cell = reads,
+    fc_expression_df = fc_expr_tapseq$fc_expression_df,
+    library_parameters = tapseq_pilot_data$library_parameters,
+    control_group = "complement",
+    side = "left",
+    multiple_testing_alpha = 0.1,
+    num_targets = 100
+  )
+
+  comparison_results[[i]] <- data.frame(
+    Reads_per_Cell = reads,
+    Technology = c("Perturb-seq", "TAP-seq"),
+    Overall_Power = c(power_ps$overall_power, power_ts$overall_power)
+  )
+}
+
+comparison_df <- bind_rows(comparison_results)
+
+# Plot overall power
+ggplot(comparison_df, aes(x = Reads_per_Cell, y = Overall_Power,
+                          color = Technology, linetype = Technology)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 3) +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Technology Comparison: Power vs Sequencing Depth",
+    subtitle = sprintf("%d cells per target, FC = %.2f, FDR = 10%%",
+                      cells_per_target, minimum_fold_change),
+    x = "Reads per Cell",
+    y = "Overall Power",
+    color = "Technology",
+    linetype = "Technology"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+```
+
+### Cost-Benefit Analysis
+
+Let's calculate the cost-benefit ratio assuming TAP-seq requires panel design costs:
+
+```{r cost-benefit}
+# Assume costs (adjust to your facility's pricing)
+cost_per_million_reads <- 50  # dollars
+tapseq_panel_design_cost <- 5000  # one-time cost
+
+# Experimental parameters
+num_targets <- 100
+gRNAs_per_target <- 4
+total_gRNAs <- num_targets * gRNAs_per_target
+
+# Calculate total costs for different designs
+cost_comparison <- comparison_df %>%
+  mutate(
+    # Total cells needed for experiment
+    Total_Cells = Reads_per_Cell * cells_per_target * total_gRNAs / 10,  # MOI = 10
+    # Total sequencing reads
+    Total_Reads = Total_Cells * Reads_per_Cell,
+    # Sequencing cost
+    Sequencing_Cost = (Total_Reads / 1e6) * cost_per_million_reads,
+    # Total cost (add panel design for TAP-seq)
+    Total_Cost = ifelse(Technology == "TAP-seq",
+                        Sequencing_Cost + tapseq_panel_design_cost,
+                        Sequencing_Cost),
+    # Cost per unit power
+    Cost_per_Power = Total_Cost / Overall_Power
+  )
+
+# View cost comparison at 10K reads/cell
+cost_comparison %>%
+  filter(Reads_per_Cell == 10000) %>%
+  select(Technology, Sequencing_Cost, Total_Cost, Overall_Power, Cost_per_Power) %>%
+  print()
+```
+
+### Interpretation
+
+The comparison shows:
+
+- **TAP-seq advantages**: Higher power per gene due to increased sequencing depth on target genes; more efficient use of sequencing budget for focused studies
+- **Perturb-seq advantages**: No panel design cost; flexibility to analyze any gene post-hoc; better for exploratory studies
+- **Trade-offs**: TAP-seq is cost-effective when you have well-defined target genes and want maximum power; perturb-seq is better when target genes are uncertain or for discovery-based experiments
+
+## 2. Comparing Pre-existing Experimental Designs
+
+Sometimes you want to compare power between experiments that have already been performed or are constrained by available resources. Let's compare three realistic experimental designs:
+
+### Define Competing Designs
+
+```{r define-designs}
+# Three competing designs with similar total sequencing budget
+designs <- data.frame(
+  Design = c("Deep", "Balanced", "Wide"),
+  Cells_per_gRNA = c(50, 100, 200),
+  Reads_per_Cell = c(20000, 10000, 5000),
+  Description = c(
+    "Fewer cells, deeper sequencing",
+    "Balanced cells and depth",
+    "More cells, shallow sequencing"
+  )
+)
+
+# All designs have similar total reads per gRNA
+designs$Total_Reads_per_gRNA <- designs$Cells_per_gRNA * designs$Reads_per_Cell
+
+print(designs)
+```
+
+### Calculate Power for Each Design
+
+```{r compare-designs}
+design_power_results <- list()
+
+for (i in 1:nrow(designs)) {
+  set.seed(123)
+  power_result <- compute_power_plan(
+    baseline_expression_stats = baseline_expression,
+    library_parameters = library_params,
+    cells_per_target = designs$Cells_per_gRNA[i],
+    reads_per_cell = designs$Reads_per_Cell[i],
+    control_group = "complement",
+    side = "left",
+    multiple_testing_alpha = 0.1,
+    TPM_threshold = 0.1,
+    minimum_fold_change = 0.8
+  )
+
+  design_power_results[[i]] <- data.frame(
+    Design = designs$Design[i],
+    Cells_per_gRNA = designs$Cells_per_gRNA[i],
+    Reads_per_Cell = designs$Reads_per_Cell[i],
+    Overall_Power = power_result$overall_power
+  )
+}
+
+design_comparison <- bind_rows(design_power_results)
+print(design_comparison)
+```
+
+### Visualize Power Comparison
+
+Let's visualize how overall power compares across the three designs:
+
+```{r power-comparison, fig.width=8, fig.height=5}
+# Bar plot of overall power
+ggplot(design_comparison, aes(x = Design, y = Overall_Power, fill = Design)) +
+  geom_col() +
+  geom_text(aes(label = sprintf("%.1f%%", Overall_Power * 100)),
+            vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, max(design_comparison$Overall_Power) * 1.1)) +
+  labs(
+    title = "Overall Power Comparison Across Experimental Designs",
+    subtitle = sprintf("Same total reads per gRNA (~%.0fK), FC = 0.8, FDR = 10%%",
+                      designs$Total_Reads_per_gRNA[1] / 1000),
+    x = "Experimental Design",
+    y = "Overall Statistical Power",
+    fill = "Design"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold"),
+    panel.grid.major.x = element_blank()
+  )
+```
+
+### Interpretation
+
+The comparison reveals how cell count and sequencing depth trade-offs affect overall power:
+
+- **Deep design** (50 cells, 20K reads): Higher sequencing depth per cell but fewer total cells
+- **Balanced design** (100 cells, 10K reads): Middle ground between cells and depth
+- **Wide design** (200 cells, 5K reads): More cells but shallower sequencing per cell
+
+The results show which design strategy maximizes power given a fixed sequencing budget, helping inform experimental planning decisions.
+
+## 3. Visualizing Expression Distributions and Saturation Curves
+
+Understanding the underlying statistical models helps interpret power analysis results.
+
+### Gene Expression Distribution
+
+Let's visualize the distribution of gene expression levels in the pilot data:
+
+```{r expression-distribution, fig.width=8, fig.height=6}
+# Prepare expression data
+expression_df <- baseline_expression %>%
+  mutate(
+    TPM = relative_expression * 1e6,
+    Log10_TPM = log10(TPM + 0.1)  # Add pseudocount for log
+  )
+
+# Histogram of TPM values
+ggplot(expression_df, aes(x = TPM)) +
+  geom_histogram(bins = 50, fill = "steelblue", alpha = 0.7) +
+  scale_x_log10(labels = scales::comma) +
+  labs(
+    title = "Distribution of Gene Expression Levels",
+    subtitle = sprintf("%d genes in baseline data", nrow(expression_df)),
+    x = "Expression Level (TPM)",
+    y = "Number of Genes"
+  ) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+
+# Expression vs dispersion relationship
+ggplot(expression_df, aes(x = TPM, y = expression_size)) +
+  geom_point(alpha = 0.3, size = 1) +
+  geom_smooth(method = "loess", color = "red", linewidth = 1) +
+  scale_x_log10(labels = scales::comma) +
+  scale_y_log10() +
+  labs(
+    title = "Gene Expression vs Dispersion Parameter",
+    subtitle = "Lower dispersion = higher biological variability",
+    x = "Expression Level (TPM)",
+    y = "Dispersion Size Parameter"
+  ) +
+  theme_minimal()
+```
+
+### Saturation Curve Visualization
+
+The saturation curve relates reads per cell to UMIs per cell. Let's visualize this relationship:
+
+```{r saturation-curve, fig.width=8, fig.height=6}
+# Extract library parameters
+UMI_max <- library_params$UMI_per_cell
+variation <- library_params$variation
+
+# Generate saturation curve
+reads_range <- seq(1000, 100000, length.out = 200)
+umis_predicted <- UMI_max * (1 - exp(-reads_range / UMI_max) *
+                               (1 + variation * reads_range^2 / (2 * UMI_max^2)))
+
+saturation_df <- data.frame(
+  Reads_per_Cell = reads_range,
+  UMIs_per_Cell = umis_predicted,
+  Saturation_Pct = (umis_predicted / UMI_max) * 100
+)
+
+# Plot saturation curve
+ggplot(saturation_df, aes(x = Reads_per_Cell, y = UMIs_per_Cell)) +
+  geom_line(linewidth = 1, color = "steelblue") +
+  geom_hline(yintercept = UMI_max, linetype = "dashed", color = "red") +
+  annotate("text", x = 80000, y = UMI_max * 1.05,
+           label = sprintf("Max UMI = %d", round(UMI_max)),
+           color = "red", hjust = 1) +
+  # Add example design points
+  geom_point(data = data.frame(
+    Reads_per_Cell = c(5000, 10000, 20000),
+    Design = c("Wide", "Balanced", "Deep")
+  ), aes(x = Reads_per_Cell, y = UMI_max * (1 - exp(-Reads_per_Cell / UMI_max) *
+                                              (1 + variation * Reads_per_Cell^2 / (2 * UMI_max^2)))),
+  size = 3, color = "darkgreen") +
+  geom_text(data = data.frame(
+    Reads_per_Cell = c(5000, 10000, 20000),
+    Design = c("Wide", "Balanced", "Deep"),
+    UMI = UMI_max * (1 - exp(-c(5000, 10000, 20000) / UMI_max) *
+                       (1 + variation * c(5000, 10000, 20000)^2 / (2 * UMI_max^2)))
+  ), aes(x = Reads_per_Cell, y = UMI, label = Design),
+  vjust = -1, color = "darkgreen") +
+  scale_x_continuous(labels = scales::comma) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Read-to-UMI Saturation Curve",
+    subtitle = sprintf("UMI_per_cell = %d, variation = %.3f",
+                      round(UMI_max), variation),
+    x = "Reads per Cell",
+    y = "UMIs per Cell",
+    caption = "Green points show example experimental designs"
+  ) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+
+# Saturation percentage vs reads
+ggplot(saturation_df, aes(x = Reads_per_Cell, y = Saturation_Pct)) +
+  geom_line(linewidth = 1, color = "steelblue") +
+  geom_hline(yintercept = 80, linetype = "dashed", color = "orange", alpha = 0.5) +
+  geom_hline(yintercept = 90, linetype = "dashed", color = "red", alpha = 0.5) +
+  annotate("text", x = 90000, y = 82, label = "80% saturation",
+           color = "orange", hjust = 1) +
+  annotate("text", x = 90000, y = 92, label = "90% saturation",
+           color = "red", hjust = 1) +
+  scale_x_continuous(labels = scales::comma) +
+  labs(
+    title = "Sequencing Saturation vs Read Depth",
+    x = "Reads per Cell",
+    y = "Saturation (%)"
+  ) +
+  theme_minimal()
+```
+
+### Marginal Utility of Additional Reads
+
+As sequencing depth increases, the marginal benefit decreases due to saturation. Let's visualize this:
+
+```{r marginal-utility, fig.width=8, fig.height=5}
+# Calculate marginal UMIs per additional 1000 reads
+saturation_df <- saturation_df %>%
+  mutate(
+    Marginal_UMI = c(NA, diff(UMIs_per_Cell) / (diff(Reads_per_Cell) / 1000))
+  )
+
+ggplot(saturation_df, aes(x = Reads_per_Cell, y = Marginal_UMI)) +
+  geom_line(linewidth = 1, color = "steelblue") +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red", alpha = 0.5) +
+  annotate("text", x = 80000, y = 0.55,
+           label = "< 0.5 UMI per 1000 reads: diminishing returns",
+           color = "red", hjust = 1) +
+  scale_x_continuous(labels = scales::comma) +
+  labs(
+    title = "Marginal Utility of Additional Sequencing",
+    subtitle = "Additional UMIs gained per 1000 extra reads",
+    x = "Reads per Cell",
+    y = "Marginal UMIs per 1000 Reads"
+  ) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank())
+```
+
+### Simulating Expression for Individual Cells
+
+Let's simulate what gene expression looks like for individual cells at different sequencing depths:
+
+```{r simulate-cells, fig.width=8, fig.height=6}
+# Select a few example genes across expression range
+example_genes <- baseline_expression %>%
+  arrange(relative_expression) %>%
+  slice(c(100, 500, 1000, 2000)) %>%
+  mutate(Gene_Label = paste0("Gene ", row_number(),
+                            " (", round(relative_expression * 1e6, 1), " TPM)"))
+
+# Simulate cells at different read depths
+simulate_expression <- function(gene_data, n_cells, reads_per_cell, library_params) {
+  # Calculate UMIs per cell from reads
+  UMI_max <- library_params$UMI_per_cell
+  variation <- library_params$variation
+  umi_per_cell <- UMI_max * (1 - exp(-reads_per_cell / UMI_max) *
+                               (1 + variation * reads_per_cell^2 / (2 * UMI_max^2)))
+
+  # Simulate gene expression using negative binomial
+  # mean = library_size * relative_expression
+  # size = expression_size
+  gene_expression <- rnbinom(
+    n = n_cells,
+    mu = umi_per_cell * gene_data$relative_expression,
+    size = gene_data$expression_size
+  )
+
+  return(gene_expression)
+}
+
+# Simulate for different read depths
+set.seed(123)
+simulation_results <- list()
+
+for (i in 1:nrow(example_genes)) {
+  for (reads in c(5000, 10000, 20000)) {
+    gene_counts <- simulate_expression(
+      example_genes[i, ],
+      n_cells = 500,
+      reads_per_cell = reads,
+      library_params = library_params
+    )
+
+    simulation_results[[length(simulation_results) + 1]] <- data.frame(
+      Gene = example_genes$Gene_Label[i],
+      Reads_per_Cell = reads,
+      Expression = gene_counts
+    )
+  }
+}
+
+simulation_df <- bind_rows(simulation_results)
+
+# Plot distributions
+ggplot(simulation_df, aes(x = Expression, fill = factor(Reads_per_Cell))) +
+  geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
+  facet_wrap(~Gene, scales = "free", ncol = 2) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Simulated Cell-to-Cell Expression Distributions",
+    subtitle = "500 cells per condition",
+    x = "UMI Counts",
+    y = "Number of Cells",
+    fill = "Reads/Cell"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+### Interpretation
+
+The visualizations show:
+
+- **Expression distribution**: Most genes have low-to-medium expression, with a heavy right tail
+- **Saturation curve**: Returns diminish significantly above ~20,000 reads per cell for this dataset
+- **Marginal utility**: Each additional read provides less benefit at higher depths
+- **Cell-level variation**: Lower expression genes show higher relative variability, affecting power
+
+## Practical Recommendations
+
+Based on these analyses:
+
+1. **Technology choice**:
+   - Use TAP-seq when you have a well-defined gene panel and want maximum power per gene
+   - Use perturb-seq for exploratory studies or when target genes are uncertain
+
+2. **Design optimization**:
+   - Balance cells vs depth based on your expression range of interest
+   - Consider saturation curves when deciding sequencing depth
+   - Low-expression genes benefit more from deeper sequencing
+   - High-expression genes benefit more from additional cells
+
+3. **Cost considerations**:
+   - Calculate cost per expected discovery, not just total cost
+   - Account for fixed costs (panel design) vs variable costs (sequencing)
+   - Consider pilot experiments to refine parameters before large studies
+
+4. **Model validation**:
+   - Visualize your pilot data's expression distribution and saturation curve
+   - Check that model assumptions (NB distribution, saturation curve) fit your data
+   - If fit is poor, consider collecting additional pilot data
+
+## Session Information
+
+```{r session-info}
+sessionInfo()
+```
+
+## See Also
+
+- `?compute_power_plan`: Prospective power analysis for experimental planning
+- `?compute_power_plan_per_grid`: Grid-based power analysis
+- `?library_estimation`: Library parameter estimation from QC data
+- Vignette "Preprocess Reference Expression Data": Creating custom pilot data
+- Vignette "Getting Started with PerturbPlan": Basic power analysis workflow

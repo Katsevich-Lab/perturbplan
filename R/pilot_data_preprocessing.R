@@ -252,6 +252,15 @@ reference_data_processing <- function(response_matrix = NULL, read_umi_table, ma
   if (!h5_only){
   message("Step 1: Computing gene expression information...")
   if (!is.null(gene_list)) {
+    # check what proportion of reads are mapped to the gene list with respect to the response_matrix
+    if (is.null(response_matrix)) {
+      stop("response_matrix cannot be NULL when gene_list is provided and h5_only is FALSE.")
+    }
+    # Adjust mapping efficiency based on gene list
+    expression_genes <- rowSums(response_matrix)
+    mapping_efficiency <- mapping_efficiency * sum(expression_genes[names(expression_genes) %in% gene_list]) / sum(expression_genes)
+
+    # Filter response_matrix to only include genes in gene_list
     response_matrix <- response_matrix[rownames(response_matrix) %in% gene_list, , drop = FALSE]
     if (nrow(response_matrix) == 0) {
       stop("No genes from gene_list found in response_matrix.")
@@ -262,18 +271,28 @@ reference_data_processing <- function(response_matrix = NULL, read_umi_table, ma
     TPM_thres = TPM_thres,  # No filtering during preprocessing
     n_threads = n_threads
   )
-  mapping_efficiency <- mapping_efficiency*sum(baseline_expression_df$relative_expression)
   } else {
     message("Skipping Step 1 as h5_only is TRUE")
     baseline_expression_df <- NULL
+    if (!is.null(gene_list)) {
+      # Adjust mapping efficiency based on gene list
+      lst <- read_umi_table$response_id %in% gene_list
+      mapping_efficiency <- mean(lst)* mapping_efficiency
+    }
   }
 
   message("Step 2: Estimating library parameters...")
+  if (!is.null(gene_list)){
+  # Filter read_umi_table to only include molecules from the gene list
+  read_umi_table <- read_umi_table |>
+    dplyr::filter(response_id %in% gene_list)
+  }
   library_params <- library_estimation(
     QC_data = read_umi_table,
     downsample_ratio = downsample_ratio,
     D2_rough = D2_rough
   )
+
 
   # Construct the final output structure with simplified baseline expression
   result <- list(

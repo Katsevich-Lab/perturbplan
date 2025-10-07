@@ -1,5 +1,5 @@
 ---
-title: "Posthoc Power Analysis with compute_power_posthoc()"
+title: "Posthoc Power Analysis"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Posthoc Power Analysis}
