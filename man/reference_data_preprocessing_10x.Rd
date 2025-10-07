@@ -22,13 +22,13 @@ inside \code{path_to_top_level_output}. Unmatched entries will trigger a warning
 the first SRR folder. If FALSE, data from all SRRs will be combined.}
 }
 \value{
-A list with two elements:
+A list with three elements:
 \describe{
 \item{response_matrix}{A matrix of gene expression values (common genes only),
 combined across SRR directories.}
 \item{read_umi_table}{A data frame of molecule-level QC data from one or more SRRs,
 including the SRR label.}
-\item{mapping_efficiency}{A numeric value representing the mapping efficiency}
+\item{mapping_efficiency}{A numeric value representing the naive mapping efficiency (proportion of reads mapped to transcriptome)}
 }
 }
 \description{
@@ -44,28 +44,8 @@ The function performs the following steps:
 \item Optionally filters to a subset of run-level names.
 \item Reads response matrices and retains only shared genes across SRRs.
 \item Optionally reads h5 QC data from one or all SRRs.
+\item Calculates mapping efficiency from the h5 QC data and the metrics summary file.
 }
-
-\strong{Library Saturation (S-M) Model:}
-
-The function extracts QC data that is subsequently used to fit a saturation-magnitude (S-M)
-curve model that relates mapped reads per cell to observed UMIs per cell. This model is
-essential for library size estimation in single-cell RNA sequencing power analysis.
-
-The S-M curve model follows the nonlinear saturation formula:
-\deqn{UMI = total\_UMIs \times \left(1 - \exp\left(-\frac{reads}{total\_UMIs}\right) \times \left(1 + variation \times \frac{reads^2}{2 \times total\_UMIs^2}\right)\right)}
-
-Where:
-\itemize{
-\item \code{total_UMIs}: Maximum UMI per cell parameter (saturation level)
-\item \code{variation}: Variation parameter characterizing PCR amplification bias
-\item \code{reads}: Number of mapped reads per cell
-\item \code{UMI}: Number of observed UMIs per cell
-}
-
-The model accounts for both UMI saturation effects at high read depths and
-PCR amplification variability, enabling accurate power calculations across
-different sequencing scenarios.
 }
 \examples{
 # Process tiny example dataset
@@ -85,7 +65,5 @@ result$response_matrix
 
 }
 \seealso{
-\code{\link{library_computation}} for S-M curve fitting details
-
 \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}
 }

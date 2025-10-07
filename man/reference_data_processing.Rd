@@ -8,11 +8,12 @@ reference_data_processing(
   response_matrix = NULL,
   read_umi_table,
   mapping_efficiency = NULL,
-  n_threads = NULL,
+  gene_list = NULL,
   TPM_thres = 0.1,
   downsample_ratio = 0.7,
   D2_rough = 0.3,
-  h5_only = FALSE
+  h5_only = FALSE,
+  n_threads = NULL
 )
 }
 \arguments{
@@ -23,10 +24,10 @@ this can be NULL.}
 \item{read_umi_table}{Data frame. QC information from molecule_info.h5 or filtered_feature_bc_matrix.h5,
 as obtained via \code{\link{obtain_qc_read_umi_table}}.}
 
-\item{mapping_efficiency}{Numeric. Estimated mapping efficiency from
+\item{mapping_efficiency}{Numeric. Estimated naive mapping efficiency from
 \code{obtain_mapping_efficiency}.}
 
-\item{n_threads}{Integer. Number of threads used for parallel processing. Default: NULL (single-threaded).}
+\item{gene_list}{Optional character vector of gene IDs to restrict analysis to a specific subset.}
 
 \item{TPM_thres}{Numeric. Threshold for filtering low-expression genes during preprocessing.}
 
@@ -35,6 +36,8 @@ as obtained via \code{\link{obtain_qc_read_umi_table}}.}
 \item{D2_rough}{Numeric. Rough prior value for library variation parameter. Default: 0.3.}
 
 \item{h5_only}{Logical. If TRUE, skips baseline expression estimation step (only processes read_umi_table). Default: FALSE.}
+
+\item{n_threads}{Integer. Number of threads used for parallel processing. Default: NULL (single-threaded).}
 }
 \value{
 A list containing:
@@ -44,23 +47,63 @@ response_id, relative_expression, and expression_size columns.}
 \item{library_parameters}{List with:
 \itemize{
 \item \code{UMI_per_cell}: Estimated UMI/cell count.
-\item \code{variation}: Estimated variation parameter for PCR bias.
+\item \code{variation}: Estimated variation parameter for PCR amplification bias.
 }}
-\item{mapping_efficiency}{Numeric value representing mapping efficiency.}
+\item{mapping_efficiency}{Numeric value representing mapping efficiency (proportion of reads mapped to the gene list).}
 }
 }
 \description{
-Further process sequencing data to extract gene-level expression and library
-statistics required by the PerturbPlan simulation framework. Outputs are
-compatible with built-in pilot examples.
+Further process sequencing data to extract gene-level expression parameters, library
+parameters, and mapping efficiency with regard to a given gene list required by the PerturbPlan framework.
+Outputs are compatible with built-in pilot examples.
 }
 \details{
 This function executes the core steps in the pilot data setup for PerturbPlan:
 \enumerate{
-\item Computes gene expression means and variances from response matrix.
-\item Extracts library-level statistics from HDF5 molecule info.
+\item Fit negative binomial model to estimate gene-level expression parameters.
+\item Fit read-UMI saturation model to estimate library parameters.
+\item Calculate mapping efficiency if there's a gene list restriction.
 \item Outputs a simplified list structure for power analysis.
 }
+\strong{Gene Expression Model:}
+
+The function first uses gene expression data to fit a negative binomial (NB) model
+that characterizes the distribution of gene expression levels across cells. This model is
+essential for simulating realistic gene expression profiles in power analysis.
+
+For each gene, the NB model for its cellwise expression is defined as:
+
+\code{gene_expression ~ NB(mean = library_size * relative_expression, expression_size = expression_size)}
+
+where:
+\itemize{
+\item \code{gene_expression}: Number of observed UMIs for the given gene in the cell
+\item \code{library_size}: Number of observed UMIs of the cell
+\item \code{relative_expression}: Relative expression level of the gene across all cells
+\item \code{expression_size}: Dispersion size parameter of the gene in NB model, it's small when biological variability is large
+}
+
+\strong{Library Saturation (S-M) Model:}
+
+The function then uses QC data to fit a saturation-magnitude (S-M)
+curve model that relates mapped reads per cell to observed UMIs per cell. This model is
+essential for library size estimation in single-cell RNA sequencing power analysis.
+
+The S-M model is defined as:
+
+\code{UMI = total_UMIs * (1 - exp(-reads/total_UMIs) * (1 + variation * reads^2/(2*total_UMIs^2)))}
+
+where:
+\itemize{
+\item \code{total_UMIs}: Maximum UMI per cell parameter (saturation level)
+\item \code{variation}: Variation parameter characterizing PCR amplification bias, and is between 0 and 1.
+\item \code{reads}: Number of mapped reads per cell
+\item \code{UMI}: Number of observed UMIs per cell
+}
+
+The model accounts for both UMI saturation effects at high read depths and
+PCR amplification variability, enabling accurate power calculations across
+different sequencing scenarios.
 }
 \examples{
 # set seed for reproducibility
@@ -83,6 +126,8 @@ pilot_data <- reference_data_processing(
 )
 }
 \seealso{
+\code{\link{library_computation}} for S-M curve fitting details
+
 \code{\link{obtain_expression_information}},
 \code{\link{obtain_qc_read_umi_table}},
 \code{\link{library_estimation}}

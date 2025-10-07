@@ -54,7 +54,8 @@ A list with two elements: \code{individual_power} (a data frame with columns \co
 This function performs post-hoc power analysis using detailed experimental information.
 Unlike \code{\link{compute_power_plan}}, this function accepts specific cell count
 assignments per gRNA (via \code{cells_per_grna}) and calculates power for individual
-perturbation-gene pairs. This is useful for analyzing completed experiments or evaluating
+perturbation-gene pairs. Also, we don't allow specifying multiple experimental designs.
+This is useful for analyzing completed experiments or evaluating
 specific experimental designs with known cell distributions, providing individual power
 estimates for each perturbation-gene pair as well as expected total discoveries.
 }

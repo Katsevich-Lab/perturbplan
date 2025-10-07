@@ -8,6 +8,23 @@ url: https://katsevich-lab.github.io/perturbplan   # Public site URL (adjust if 
 
 template:
   bootstrap: 5
+  # includes:
+  #   in_header: |
+  #     <script>
+  #       window.MathJax = {
+  #         tex: {
+  #           inlineMath: [['\\(', '\\)']],
+  #           displayMath: [['\\[','\\]']]
+  #         },
+  #         options: {
+  #           processHtmlClass: 'math',
+  #           ignoreHtmlClass: 'tex2jax_ignore'
+  #         }
+  #       };
+  #     </script>
+  #     <script id="MathJax-script" async
+  #       src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  
 
 # ----------------
 # Home page

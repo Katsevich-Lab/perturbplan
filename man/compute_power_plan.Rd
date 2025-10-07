@@ -78,7 +78,8 @@ Data frame with comprehensive power analysis results across parameter combinatio
 This function performs power analysis during the experimental planning phase using
 underspecified information. It accepts aggregate experimental parameters (cells per
 target, reads per cell) without requiring specific cell count assignments to individual
-gRNAs or perturbation-gene pairs. This is useful for designing experiments before data
+gRNAs or perturbation-gene pairs. It also allows specifying a list of experimental parameters to compare across.
+This is useful for designing experiments before data
 collection, allowing you to explore how different experimental designs (cell numbers,
 sequencing depth) affect overall statistical power.
 }
