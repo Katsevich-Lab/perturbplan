@@ -426,10 +426,7 @@ for demonstration:</p>
 <span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">path_to_run_level_output =</span> <span class="st">&quot;cellranger_tiny&quot;</span>,  <span class="co"># Only read subfolder cellranger_tiny </span></span>
 <span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">h5_rough =</span> <span class="cn">TRUE</span>,  <span class="co"># Use first SRR for QC data (faster)</span></span>
 <span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">skip_mapping_efficiency =</span> <span class="cn">FALSE</span>  <span class="co"># Estimate mapping efficiency</span></span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>)</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; &#39;as(&lt;ngTMatrix&gt;, &quot;dgTMatrix&quot;)&#39; is deprecated.</span></span>
-<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; Use &#39;as(., &quot;dMatrix&quot;)&#39; instead.</span></span>
-<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; See help(&quot;Deprecated&quot;) and help(&quot;Matrix-deprecated&quot;).</span></span></code></pre></div>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>)</span></code></pre></div>
 <p><strong>Arguments:</strong></p>
 <ul>
 <li><code>path_to_top_level_output</code>: Path to directory containing
@@ -562,12 +559,12 @@ for TAP-seq experimental design using a targeted gene list.</p>
 <span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">h5_only =</span> <span class="cn">FALSE</span>,      <span class="co"># Set TRUE to skip expression model fitting</span></span>
 <span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">n_threads =</span> <span class="cn">NULL</span>      <span class="co"># No parallel processing</span></span>
 <span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>)</span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-08 12:19:37.076525</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-08 12:49:02.99637</span></span>
 <span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; Step 1: Computing gene expression information...</span></span>
-<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; Start relative expression calculation @ 2025-10-08 12:19:37.087798</span></span>
-<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; Finish relative expression calculation @ 2025-10-08 12:19:37.088462</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; Start relative expression calculation @ 2025-10-08 12:49:03.007466</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; Finish relative expression calculation @ 2025-10-08 12:49:03.008286</span></span>
 <span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; Number of genes passing TPM threshold: 5</span></span>
-<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; Start dispersion estimation (12 thread(s)) @ 2025-10-08 12:19:37.088663</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; Start dispersion estimation (12 thread(s)) @ 2025-10-08 12:49:03.008575</span></span>
 <span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; [theta_batch_cpp] Starting computation</span></span>
 <span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt;  - G (genes) = 5</span></span>
 <span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#&gt;  - C (cells) = 8</span></span>
@@ -587,29 +584,29 @@ for TAP-seq experimental design using a targeted gene list.</p>
 <span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a><span class="co">#&gt; [gene 4] t_0 = 0.272921</span></span>
 <span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a><span class="co">#&gt; [gene 4] theta_mle_row result = 468.498</span></span>
 <span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a><span class="co">#&gt; [theta_batch_cpp] Done.</span></span>
-<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a><span class="co">#&gt; Finish dispersion estimation @ 2025-10-08 12:19:37.090124</span></span>
+<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a><span class="co">#&gt; Finish dispersion estimation @ 2025-10-08 12:49:03.009741</span></span>
 <span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a><span class="co">#&gt; Step 2: Estimating library parameters...</span></span>
-<span id="cb5-43"><a href="#cb5-43" tabindex="-1"></a><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-08 12:19:37.094997</span></span>
+<span id="cb5-43"><a href="#cb5-43" tabindex="-1"></a><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-08 12:49:03.015238</span></span>
 <span id="cb5-44"><a href="#cb5-44" tabindex="-1"></a><span class="co">#&gt; Processed 5 genes</span></span>
 <span id="cb5-45"><a href="#cb5-45" tabindex="-1"></a><span class="co">#&gt; Library parameters: UMI_per_cell = 5, variation = 0.382</span></span>
 <span id="cb5-46"><a href="#cb5-46" tabindex="-1"></a><span class="co">#&gt; Mapping efficiency = 1</span></span>
 <span id="cb5-47"><a href="#cb5-47" tabindex="-1"></a></span>
-<span id="cb5-48"><a href="#cb5-48" tabindex="-1"></a><span class="co"># Process into pilot data format with targetd genes only, suitable for TAP-seq experimental design</span></span>
-<span id="cb5-49"><a href="#cb5-49" tabindex="-1"></a>gene_list <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;ENSG00000241860&quot;</span>, <span class="st">&quot;ENSG00000238009&quot;</span>, <span class="st">&quot;ENSG00000239945&quot;</span>)</span>
-<span id="cb5-50"><a href="#cb5-50" tabindex="-1"></a>pilot_data_tapseq <span class="ot">&lt;-</span> <span class="fu">reference_data_processing</span>(</span>
-<span id="cb5-51"><a href="#cb5-51" tabindex="-1"></a>  <span class="at">response_matrix =</span> raw_data<span class="sc">$</span>response_matrix,</span>
-<span id="cb5-52"><a href="#cb5-52" tabindex="-1"></a>  <span class="at">read_umi_table =</span> raw_data<span class="sc">$</span>read_umi_table,</span>
-<span id="cb5-53"><a href="#cb5-53" tabindex="-1"></a>  <span class="at">mapping_efficiency =</span> raw_data<span class="sc">$</span>mapping_efficiency,</span>
-<span id="cb5-54"><a href="#cb5-54" tabindex="-1"></a>  <span class="at">gene_list =</span> gene_list, <span class="co"># Restrict to specific genes</span></span>
-<span id="cb5-55"><a href="#cb5-55" tabindex="-1"></a>  <span class="at">D2_rough =</span> <span class="fl">0.4</span>,       <span class="co"># The prior should be set higher in TAP-seq, but we keep it same here for toy example</span></span>
-<span id="cb5-56"><a href="#cb5-56" tabindex="-1"></a>  <span class="at">TPM_thres =</span> <span class="fl">0.</span>         <span class="co"># No expression threshold for filtering</span></span>
+<span id="cb5-48"><a href="#cb5-48" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb5-49"><a href="#cb5-49" tabindex="-1"></a><span class="co"># Process into pilot data format with targetd genes only, suitable for TAP-seq experimental design</span></span>
+<span id="cb5-50"><a href="#cb5-50" tabindex="-1"></a>gene_list <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;ENSG00000241860&quot;</span>, <span class="st">&quot;ENSG00000238009&quot;</span>, <span class="st">&quot;ENSG00000239945&quot;</span>)</span>
+<span id="cb5-51"><a href="#cb5-51" tabindex="-1"></a>pilot_data_tapseq <span class="ot">&lt;-</span> <span class="fu">reference_data_processing</span>(</span>
+<span id="cb5-52"><a href="#cb5-52" tabindex="-1"></a>  <span class="at">response_matrix =</span> raw_data<span class="sc">$</span>response_matrix,</span>
+<span id="cb5-53"><a href="#cb5-53" tabindex="-1"></a>  <span class="at">read_umi_table =</span> raw_data<span class="sc">$</span>read_umi_table,</span>
+<span id="cb5-54"><a href="#cb5-54" tabindex="-1"></a>  <span class="at">mapping_efficiency =</span> raw_data<span class="sc">$</span>mapping_efficiency,</span>
+<span id="cb5-55"><a href="#cb5-55" tabindex="-1"></a>  <span class="at">gene_list =</span> gene_list, <span class="co"># Restrict to specific genes</span></span>
+<span id="cb5-56"><a href="#cb5-56" tabindex="-1"></a>  <span class="at">TPM_thres =</span> <span class="dv">0</span>          <span class="co"># No expression threshold for filtering</span></span>
 <span id="cb5-57"><a href="#cb5-57" tabindex="-1"></a>)</span>
-<span id="cb5-58"><a href="#cb5-58" tabindex="-1"></a><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-08 12:19:37.095726</span></span>
+<span id="cb5-58"><a href="#cb5-58" tabindex="-1"></a><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-08 12:49:03.016247</span></span>
 <span id="cb5-59"><a href="#cb5-59" tabindex="-1"></a><span class="co">#&gt; Step 1: Computing gene expression information...</span></span>
-<span id="cb5-60"><a href="#cb5-60" tabindex="-1"></a><span class="co">#&gt; Start relative expression calculation @ 2025-10-08 12:19:37.099993</span></span>
-<span id="cb5-61"><a href="#cb5-61" tabindex="-1"></a><span class="co">#&gt; Finish relative expression calculation @ 2025-10-08 12:19:37.100142</span></span>
+<span id="cb5-60"><a href="#cb5-60" tabindex="-1"></a><span class="co">#&gt; Start relative expression calculation @ 2025-10-08 12:49:03.021719</span></span>
+<span id="cb5-61"><a href="#cb5-61" tabindex="-1"></a><span class="co">#&gt; Finish relative expression calculation @ 2025-10-08 12:49:03.021926</span></span>
 <span id="cb5-62"><a href="#cb5-62" tabindex="-1"></a><span class="co">#&gt; Number of genes passing TPM threshold: 3</span></span>
-<span id="cb5-63"><a href="#cb5-63" tabindex="-1"></a><span class="co">#&gt; Start dispersion estimation (12 thread(s)) @ 2025-10-08 12:19:37.100326</span></span>
+<span id="cb5-63"><a href="#cb5-63" tabindex="-1"></a><span class="co">#&gt; Start dispersion estimation (12 thread(s)) @ 2025-10-08 12:49:03.022109</span></span>
 <span id="cb5-64"><a href="#cb5-64" tabindex="-1"></a><span class="co">#&gt; [theta_batch_cpp] Starting computation</span></span>
 <span id="cb5-65"><a href="#cb5-65" tabindex="-1"></a><span class="co">#&gt;  - G (genes) = 3</span></span>
 <span id="cb5-66"><a href="#cb5-66" tabindex="-1"></a><span class="co">#&gt;  - C (cells) = 8</span></span>
@@ -623,11 +620,11 @@ for TAP-seq experimental design using a targeted gene list.</p>
 <span id="cb5-74"><a href="#cb5-74" tabindex="-1"></a><span class="co">#&gt; [gene 2] t_0 = 0.5</span></span>
 <span id="cb5-75"><a href="#cb5-75" tabindex="-1"></a><span class="co">#&gt; [gene 2] theta_mle_row result = 475.754</span></span>
 <span id="cb5-76"><a href="#cb5-76" tabindex="-1"></a><span class="co">#&gt; [theta_batch_cpp] Done.</span></span>
-<span id="cb5-77"><a href="#cb5-77" tabindex="-1"></a><span class="co">#&gt; Finish dispersion estimation @ 2025-10-08 12:19:37.100794</span></span>
+<span id="cb5-77"><a href="#cb5-77" tabindex="-1"></a><span class="co">#&gt; Finish dispersion estimation @ 2025-10-08 12:49:03.022608</span></span>
 <span id="cb5-78"><a href="#cb5-78" tabindex="-1"></a><span class="co">#&gt; Step 2: Estimating library parameters...</span></span>
-<span id="cb5-79"><a href="#cb5-79" tabindex="-1"></a><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-08 12:19:37.103356</span></span>
+<span id="cb5-79"><a href="#cb5-79" tabindex="-1"></a><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-08 12:49:03.025648</span></span>
 <span id="cb5-80"><a href="#cb5-80" tabindex="-1"></a><span class="co">#&gt; Processed 3 genes</span></span>
-<span id="cb5-81"><a href="#cb5-81" tabindex="-1"></a><span class="co">#&gt; Library parameters: UMI_per_cell = 15, variation = 1</span></span>
+<span id="cb5-81"><a href="#cb5-81" tabindex="-1"></a><span class="co">#&gt; Library parameters: UMI_per_cell = 8, variation = 0</span></span>
 <span id="cb5-82"><a href="#cb5-82" tabindex="-1"></a><span class="co">#&gt; Mapping efficiency = 0.727</span></span></code></pre></div>
 <p><strong>Arguments:</strong></p>
 <ul>
@@ -680,8 +677,8 @@ than that in perturb-seq (around 0.3).</p>
 <span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt;   ..$ relative_expression: num [1:3] 0.5 0.25 0.25</span></span>
 <span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt;   ..$ expression_size    : num [1:3] 487 476 476</span></span>
 <span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt;  $ library_parameters       :List of 2</span></span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt;   ..$ UMI_per_cell: num 15.3</span></span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt;   ..$ variation   : num 1</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt;   ..$ UMI_per_cell: num 7.64</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt;   ..$ variation   : num 0</span></span>
 <span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt;  $ mapping_efficiency       : num 0.727</span></span></code></pre></div>
 <p><strong>Format of each output:</strong></p>
 <ul>

@@ -181,8 +181,7 @@ pilot_data_tapseq <- reference_data_processing(
   read_umi_table = raw_data$read_umi_table,
   mapping_efficiency = raw_data$mapping_efficiency,
   gene_list = gene_list, # Restrict to specific genes
-  D2_rough = 0.4,       # The prior should be set higher in TAP-seq, but we keep it same here for toy example
-  TPM_thres = 0.         # No expression threshold for filtering
+  TPM_thres = 0          # No expression threshold for filtering
 )
 ```
 

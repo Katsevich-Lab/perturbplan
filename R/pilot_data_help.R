@@ -7,7 +7,7 @@ NULL
 #' @importFrom stats setNames coef predict
 #' @importFrom utils read.csv
 #' @importFrom Matrix readMM rowSums colSums
-#' @importClassesFrom Matrix CsparseMatrix dgCMatrix
+#' @importClassesFrom Matrix CsparseMatrix CsparseMatrix
 #' @importFrom data.table fread
 #' @importFrom R.utils gunzip
 #' @importFrom dplyr filter bind_rows arrange
@@ -35,7 +35,7 @@ NULL
 #' # Load example Cell Ranger output
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' response_matrix <- obtain_qc_response_data(cellranger_path)
-#' @return A \code{dgCMatrix} (genes × cells) with cleaned, unique row names and column names.
+#' @return A \code{CsparseMatrix} (genes × cells) with cleaned, unique row names and column names.
 #' @keywords internal
 #' @export
 obtain_qc_response_data <- function(path_to_cellranger_output) {
@@ -46,9 +46,9 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
   m <- Matrix::readMM(file.path(mat_dir, "matrix.mtx.gz"))
 
   # If the matrix is in pattern triplet format (ngTMatrix),
-  # convert it to numeric triplet (dgTMatrix), then to column-compressed (dgCMatrix)
-  if (inherits(m, "dgTMatrix")) {
-    m <- methods::as(m, "dgTMatrix")
+  # convert it to numeric triplet (dgTMatrix), then to column-compressed (CsparseMatrix)
+  if (inherits(m, "nMatrix")) {
+    m <- methods::as(m, "dMatrix")
   }
   if (!inherits(m, "CsparseMatrix")) {
     m <- methods::as(m, "CsparseMatrix")
@@ -116,7 +116,7 @@ obtain_expression_information <- function(response_matrix,
                                           TPM_thres = 0.1,
                                           rough     = FALSE,
                                           n_threads = NULL) {
-  # ensure response_matrix is CsparseMatrix (specifically dgCMatrix for C++ compatibility)
+  # ensure response_matrix is CsparseMatrix (specifically CsparseMatrix for C++ compatibility)
   if (!inherits(response_matrix, "CsparseMatrix")){
     response_matrix <- as(response_matrix, "CsparseMatrix")
   }
@@ -153,7 +153,7 @@ obtain_expression_information <- function(response_matrix,
     message("Missing genes: ", length(missing_genes), " (", paste(utils::head(missing_genes, 10), collapse = ", "), "...)")
     stop("Some genes in keep_gene are not present in response_matrix rownames")
   }
-  # Ensure transposed matrix is also dgCMatrix for C++ compatibility
+  # Ensure transposed matrix is also CsparseMatrix for C++ compatibility
   t_matrix <- Matrix::t(response_matrix[keep_gene, , drop = FALSE])
   if (!inherits(t_matrix, "CsparseMatrix")) {
     t_matrix <- as(t_matrix, "CsparseMatrix")
