@@ -155,7 +155,7 @@ are the fitted parameters.
 
 ### Function Usage
 
-Here, we demonstrate two use cases of `reference_data_processing` with the aggregated data from Step 1, one for perturb-seq experimental design using all genes, and one for TAP-seq experimental design using a targeted gene list.
+Here, we demonstrate two use cases of `reference_data_processing` with the aggregated data from Step 1, one for perturb-seq experimental design using all genes, and one for TAP-seq experimental design using a targeted gene list. The toy examples have too few reads, so the fitted parameters may be sensitive to the random seed and the prior variation parameter. In practice, our function demonstrates robustness to both the choice of random seed and moderate misspecification of the prior for the variation parameter.
 
 ```{r}
 # Set seed for reproducibility
@@ -168,8 +168,8 @@ pilot_data_perturbseq <- reference_data_processing(
   mapping_efficiency = raw_data$mapping_efficiency,
   gene_list = NULL,     # Use all genes
   TPM_thres = 0.1,      # Default expression threshold for filtering
-  downsample_ratio = 0.7,  # Default downsampling for sequencing
-  D2_rough = 0.4,       # Default prior for variation parameter
+  downsample_ratio = 0.6,  # Downsampling for sequencing
+  D2_rough = 0.4,       # prior for variation parameter
   h5_only = FALSE,      # Set TRUE to skip expression model fitting
   n_threads = NULL      # No parallel processing
 )
