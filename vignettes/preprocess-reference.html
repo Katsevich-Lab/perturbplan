@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Preprocess Reference Expression data for Web App</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Preprocess Reference Expression data for
+Web App</h1>
+
+
+
+<p>This vignette demonstrates how to preprocess your own perturb-seq
+pilot data for use with the PerturbPlan web application and power
+analysis functions.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(perturbplan)</span></code></pre></div>
+<div id="overview" class="section level2">
+<h2>Overview</h2>
+<p>PerturbPlan requires three types of information from pilot data for
+power analysis:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Baseline Expression Statistics</strong>: Gene-level
+expression parameters (mean and dispersion) fitted from a negative
+binomial model</li>
+<li><strong>Library Parameters</strong>: Read-to-UMI saturation curve
+parameters (UMI_per_cell and variation) that characterize library
+preparation and PCR amplification bias</li>
+<li><strong>Mapping Efficiency</strong>: Proportion of reads that map to
+the transcriptome we’re interested in</li>
+</ol>
+<p>This preprocessing workflow consists of two main steps:</p>
+<ol style="list-style-type: decimal">
+<li><strong><code>reference_data_preprocessing_10x()</code></strong>:
+Load raw data from multiple SRR runs of raw Cell Ranger outputs and
+aggregate them into a list containing:
+<ul>
+<li>Gene-by-cell expression matrix</li>
+<li>UMI-level molecule information dataframe</li>
+<li>Naive estimate of mapping efficiency (proportion of reads mapped to
+the whole transcriptome among all reads)</li>
+</ul></li>
+<li><strong><code>reference_data_processing()</code></strong>: Fits
+statistical models with the aggregated data from Step 1 to extract
+parameters needed for power analysis</li>
+</ol>
+</div>
+<div id="step-1-aggregate-cell-ranger-outputs" class="section level2">
+<h2>Step 1: Aggregate Cell Ranger Outputs</h2>
+<p>The <code>reference_data_preprocessing_10x</code> function aggregates
+Cell Ranger outputs from multiple sequencing runs (SRRs) into a single
+data structure.</p>
+<div id="input-requirements" class="section level3">
+<h3>Input Requirements</h3>
+<p>Your data should be organized with Cell Ranger output directories
+under a top-level folder:</p>
+<pre><code>path_to_top_level_output/
+├── SRR_run_1/
+│   ├── outs/
+│   │   ├── filtered_feature_bc_matrix/
+│   │   │   ├── barcodes.tsv.gz
+│   │   │   ├── features.tsv.gz
+│   │   │   └── matrix.mtx.gz
+│   │   ├── molecule_info.h5
+│   │   └── metrics_summary.csv
+├── SRR_run_2/
+│   └── ...
+└── SRR_run_3/
+    └── ...</code></pre>
+<p>Your SRR directories should be generated by a recent version of Cell
+Ranger configured for the perturbation (CRISPR or Perturb-seq) workflow.
+In some cases, the subfolder <code>filtered_feature_bc_matrix</code> may
+need to be produced by unzipping the
+<code>filtered_feature_bc_matrix.tar.gz</code> file. In addition, each
+metrics_summary.csv file must include a column named Number of Reads,
+which is required to estimate mapping efficiency. This column may need
+to be added or edited manually when Cell Ranger is run with custom guide
+libraries.</p>
+<p>For more information about input format and required fields, see
+<code>?obtain_qc_response_data</code>,
+<code>?obtain_qc_read_umi_table</code>, and
+<code>?obtain_mapping_efficiency</code>.</p>
+</div>
+<div id="function-usage" class="section level3">
+<h3>Function Usage</h3>
+<p>There’s an example SRR folder called <code>cellranger_tiny</code>
+under thefolder <code>extdata</code> in our package, and we’ll use that
+for demonstration:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co"># Point to directory containing example Cell Ranger outputs</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>extdata_path <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="at">package =</span> <span class="st">&quot;perturbplan&quot;</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># Aggregate data from all SRR runs</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>raw_data <span class="ot">&lt;-</span> <span class="fu">reference_data_preprocessing_10x</span>(</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="at">path_to_top_level_output =</span> extdata_path,</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>  <span class="at">path_to_run_level_output =</span> <span class="st">&quot;cellranger_tiny&quot;</span>,  <span class="co"># Only read subfolder cellranger_tiny </span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>  <span class="at">h5_rough =</span> <span class="cn">TRUE</span>,  <span class="co"># Use first SRR for QC data (faster)</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>  <span class="at">skip_mapping_efficiency =</span> <span class="cn">FALSE</span>  <span class="co"># Estimate mapping efficiency</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>)</span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; &#39;as(&lt;ngTMatrix&gt;, &quot;dgTMatrix&quot;)&#39; is deprecated.</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; Use &#39;as(., &quot;dMatrix&quot;)&#39; instead.</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; See help(&quot;Deprecated&quot;) and help(&quot;Matrix-deprecated&quot;).</span></span></code></pre></div>
+<p><strong>Arguments:</strong></p>
+<ul>
+<li><code>path_to_top_level_output</code>: Path to directory containing
+Cell Ranger run-level subdirectories</li>
+<li><code>path_to_run_level_output</code>: Optional character vector
+specifying subset of run directories to process</li>
+<li><code>h5_rough</code>: If <code>TRUE</code> (default), extracts the
+UMI-level molecule information dataframe from first SRR only for speed.
+If <code>FALSE</code>, combines UMI-level molecule information from all
+SRRs</li>
+<li><code>skip_mapping_efficiency</code>: If <code>TRUE</code>, skips
+estimation of mapping efficiency. If <code>FALSE</code> (default),
+calculates naive mapping efficiency using data from a properly formatted
+<code>metrics_summary.csv</code> file as described above.</li>
+</ul>
+</div>
+<div id="function-output" class="section level3">
+<h3>Function Output</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Inspect structure</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">str</span>(raw_data)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; List of 3</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt;  $ response_matrix   :Formal class &#39;dgCMatrix&#39; [package &quot;Matrix&quot;] with 6 slots</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="co">#&gt;   .. ..@ i       : int [1:11] 0 1 2 3 4 1 2 1 4 1 ...</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co">#&gt;   .. ..@ p       : int [1:9] 0 1 2 3 4 5 7 9 11</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co">#&gt;   .. ..@ Dim     : int [1:2] 5 8</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co">#&gt;   .. ..@ Dimnames:List of 2</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : chr [1:5] &quot;ENSG00000243485&quot; &quot;ENSG00000238009&quot; &quot;ENSG00000239945&quot; &quot;ENSG00000241860&quot; ...</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co">#&gt;   .. .. ..$ : chr [1:8] &quot;AGCAGCCGTCCAAGTT-1&quot; &quot;AAACGGGTCAGCTCGG-1&quot; &quot;AAAGTAGCATCCCACT-1&quot; &quot;AAACCTGGTATATGAG-1&quot; ...</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="co">#&gt;   .. ..@ x       : num [1:11] 1 1 1 1 1 1 1 1 1 1 ...</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co">#&gt;   .. ..@ factors : list()</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="co">#&gt;  $ read_umi_table    :&#39;data.frame&#39;:  11 obs. of  5 variables:</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co">#&gt;   ..$ num_reads  : int [1:11] 2 1 1 2 1 1 1 1 1 1 ...</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt;   ..$ UMI_id     : num [1:11] 139105 723247 998389 622094 584568 ...</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt;   ..$ cell_id    : chr [1:11] &quot;AAACCTGGTATATGAG-1&quot; &quot;AAACGGGTCAGCTCGG-1&quot; &quot;AAAGTAGCATCCCACT-1&quot; &quot;AAAGTAGTCCAAATGC-1&quot; ...</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt;   ..$ response_id: chr [1:11] &quot;ENSG00000241860&quot; &quot;ENSG00000238009&quot; &quot;ENSG00000239945&quot; &quot;ENSG00000286448&quot; ...</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt;   ..$ srr_idx    : chr [1:11] &quot;cellranger_tiny&quot; &quot;cellranger_tiny&quot; &quot;cellranger_tiny&quot; &quot;cellranger_tiny&quot; ...</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="co">#&gt;  $ mapping_efficiency: num 1</span></span></code></pre></div>
+<p><strong>Format of each output:</strong></p>
+<ul>
+<li><code>response_matrix</code>: a sparse gene-by-cell expression
+matrix (genes as rows, cells as columns) with row and column names</li>
+<li><code>read_umi_table</code>: a data frame with UMI-level molecule
+information, including columns:
+<ul>
+<li><code>num_reads</code>: Number of reads supporting this UMI-cell
+combination</li>
+<li><code>UMI_id</code>: UMI index of this UMI-cell combination</li>
+<li><code>cell_id</code>: Cell barcode of this UMI-cell combination</li>
+<li><code>response_id</code>: Gene identifier (e.g., Ensembl ID)</li>
+<li><code>srr_idx</code>: SRR run identifier of the UMI</li>
+</ul></li>
+<li><code>mapping_efficiency</code>: A numeric value between 0 and 1 if
+<code>skip_mapping_efficiency = FALSE</code>, and NULL if
+<code>skip_mapping_efficiency = TRUE</code></li>
+</ul>
+</div>
+</div>
+<div id="step-2-extract-statistical-parameters" class="section level2">
+<h2>Step 2: Extract Statistical Parameters</h2>
+<p>The <code>reference_data_processing</code> function fits statistical
+models to extract gene-level expression parameters, library parameters
+and more sophisticated mapping efficiency required by PerturbPlan.</p>
+<div id="statistical-models" class="section level3">
+<h3>Statistical Models</h3>
+<div id="gene-expression-model-negative-binomial" class="section level4">
+<h4>Gene Expression Model (Negative Binomial)</h4>
+<p>For each gene, the function fits a negative binomial (NB) model to
+characterize the distribution of gene expression levels across
+cells:</p>
+<p><span class="math display">\[\text{gene_expression} \sim
+\text{NB}(\text{mean} = \text{library_size} \times
+\text{relative_expression}, \text{size} =
+\text{expression_size})\]</span></p>
+<p>where</p>
+<ul>
+<li><code>gene_expression</code>: Number of observed UMIs for the gene
+in each cell</li>
+<li><code>library_size</code>: Total UMI count per cell</li>
+</ul>
+<p>are the data to use, and</p>
+<ul>
+<li><code>relative_expression</code>: Relative expression level of the
+gene (fitted parameter)</li>
+<li><code>expression_size</code>: Dispersion parameter (small values
+indicate high biological variability)</li>
+</ul>
+<p>are the fitted parameters.</p>
+</div>
+<div id="sequencing-saturation-model-s-m-curve" class="section level4">
+<h4>Sequencing Saturation Model (S-M Curve)</h4>
+<p>The function fits a saturation (S-M) curve that relates mapped reads
+per cell to observed UMIs per cell:</p>
+<p><span class="math display">\[\text{UMI} = \text{total_UMIs} \times
+\left(1 - \exp\left(-\frac{\text{reads}}{\text{total_UMIs}}\right)
+\times \left(1 + \text{variation} \times \frac{\text{reads}^2}{2 \times
+\text{total_UMIs}^2}\right)\right)\]</span></p>
+<p>where</p>
+<ul>
+<li><code>reads</code>: Number of mapped reads per cell</li>
+<li><code>UMI</code>: Number of observed UMIs per cell</li>
+</ul>
+<p>are the data to use, and</p>
+<ul>
+<li><code>total_UMIs</code> (UMI_per_cell): Maximum UMI per cell
+parameter at sequencing saturation</li>
+<li><code>variation</code>: Variation parameter characterizing PCR
+amplification bias (between 0 and 1)</li>
+</ul>
+<p>are the fitted parameters.</p>
+</div>
+</div>
+<div id="function-usage-1" class="section level3">
+<h3>Function Usage</h3>
+<p>Here, we demonstrate two use cases of
+<code>reference_data_processing</code> with the aggregated data from
+Step 1, one for perturb-seq experimental design using all genes, and one
+for TAP-seq experimental design using a targeted gene list.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Set seed for reproducibility</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># Process into final pilot data format with all genes, suitable for perturb-seq experimental design</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>pilot_data_perturbseq <span class="ot">&lt;-</span> <span class="fu">reference_data_processing</span>(</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">response_matrix =</span> raw_data<span class="sc">$</span>response_matrix,</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>  <span class="at">read_umi_table =</span> raw_data<span class="sc">$</span>read_umi_table,</span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a>  <span class="at">mapping_efficiency =</span> raw_data<span class="sc">$</span>mapping_efficiency,</span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a>  <span class="at">gene_list =</span> <span class="cn">NULL</span>,     <span class="co"># Use all genes</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a>  <span class="at">TPM_thres =</span> <span class="fl">0.1</span>,      <span class="co"># Default expression threshold for filtering</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a>  <span class="at">downsample_ratio =</span> <span class="fl">0.7</span>,  <span class="co"># Default downsampling for sequencing</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a>  <span class="at">D2_rough =</span> <span class="fl">0.4</span>,       <span class="co"># Default prior for variation parameter</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a>  <span class="at">h5_only =</span> <span class="cn">FALSE</span>,      <span class="co"># Set TRUE to skip expression model fitting</span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>  <span class="at">n_threads =</span> <span class="cn">NULL</span>      <span class="co"># No parallel processing</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a>)</span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-08 12:19:37.076525</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; Step 1: Computing gene expression information...</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; Start relative expression calculation @ 2025-10-08 12:19:37.087798</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; Finish relative expression calculation @ 2025-10-08 12:19:37.088462</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; Number of genes passing TPM threshold: 5</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; Start dispersion estimation (12 thread(s)) @ 2025-10-08 12:19:37.088663</span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; [theta_batch_cpp] Starting computation</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt;  - G (genes) = 5</span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#&gt;  - C (cells) = 8</span></span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="co">#&gt; [gene 0] rel_expr = 0.0909091</span></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co">#&gt; [gene 0] t_0 = 0.0747664</span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="co">#&gt; [gene 0] theta_mle_row result = 401.014</span></span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="co">#&gt; [gene 1] rel_expr = 0.363636</span></span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="co">#&gt; [gene 1] t_0 = 1.06889</span></span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="co">#&gt; [gene 1] theta_mle_row result = 484.176</span></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a><span class="co">#&gt; [gene 2] rel_expr = 0.181818</span></span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a><span class="co">#&gt; [gene 2] t_0 = 0.272921</span></span>
+<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a><span class="co">#&gt; [gene 2] theta_mle_row result = 468.498</span></span>
+<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a><span class="co">#&gt; [gene 3] rel_expr = 0.181818</span></span>
+<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a><span class="co">#&gt; [gene 3] t_0 = 0.272921</span></span>
+<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a><span class="co">#&gt; [gene 3] theta_mle_row result = 468.498</span></span>
+<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a><span class="co">#&gt; [gene 4] rel_expr = 0.181818</span></span>
+<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a><span class="co">#&gt; [gene 4] t_0 = 0.272921</span></span>
+<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a><span class="co">#&gt; [gene 4] theta_mle_row result = 468.498</span></span>
+<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a><span class="co">#&gt; [theta_batch_cpp] Done.</span></span>
+<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a><span class="co">#&gt; Finish dispersion estimation @ 2025-10-08 12:19:37.090124</span></span>
+<span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a><span class="co">#&gt; Step 2: Estimating library parameters...</span></span>
+<span id="cb5-43"><a href="#cb5-43" tabindex="-1"></a><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-08 12:19:37.094997</span></span>
+<span id="cb5-44"><a href="#cb5-44" tabindex="-1"></a><span class="co">#&gt; Processed 5 genes</span></span>
+<span id="cb5-45"><a href="#cb5-45" tabindex="-1"></a><span class="co">#&gt; Library parameters: UMI_per_cell = 5, variation = 0.382</span></span>
+<span id="cb5-46"><a href="#cb5-46" tabindex="-1"></a><span class="co">#&gt; Mapping efficiency = 1</span></span>
+<span id="cb5-47"><a href="#cb5-47" tabindex="-1"></a></span>
+<span id="cb5-48"><a href="#cb5-48" tabindex="-1"></a><span class="co"># Process into pilot data format with targetd genes only, suitable for TAP-seq experimental design</span></span>
+<span id="cb5-49"><a href="#cb5-49" tabindex="-1"></a>gene_list <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;ENSG00000241860&quot;</span>, <span class="st">&quot;ENSG00000238009&quot;</span>, <span class="st">&quot;ENSG00000239945&quot;</span>)</span>
+<span id="cb5-50"><a href="#cb5-50" tabindex="-1"></a>pilot_data_tapseq <span class="ot">&lt;-</span> <span class="fu">reference_data_processing</span>(</span>
+<span id="cb5-51"><a href="#cb5-51" tabindex="-1"></a>  <span class="at">response_matrix =</span> raw_data<span class="sc">$</span>response_matrix,</span>
+<span id="cb5-52"><a href="#cb5-52" tabindex="-1"></a>  <span class="at">read_umi_table =</span> raw_data<span class="sc">$</span>read_umi_table,</span>
+<span id="cb5-53"><a href="#cb5-53" tabindex="-1"></a>  <span class="at">mapping_efficiency =</span> raw_data<span class="sc">$</span>mapping_efficiency,</span>
+<span id="cb5-54"><a href="#cb5-54" tabindex="-1"></a>  <span class="at">gene_list =</span> gene_list, <span class="co"># Restrict to specific genes</span></span>
+<span id="cb5-55"><a href="#cb5-55" tabindex="-1"></a>  <span class="at">D2_rough =</span> <span class="fl">0.4</span>,       <span class="co"># The prior should be set higher in TAP-seq, but we keep it same here for toy example</span></span>
+<span id="cb5-56"><a href="#cb5-56" tabindex="-1"></a>  <span class="at">TPM_thres =</span> <span class="fl">0.</span>         <span class="co"># No expression threshold for filtering</span></span>
+<span id="cb5-57"><a href="#cb5-57" tabindex="-1"></a>)</span>
+<span id="cb5-58"><a href="#cb5-58" tabindex="-1"></a><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-08 12:19:37.095726</span></span>
+<span id="cb5-59"><a href="#cb5-59" tabindex="-1"></a><span class="co">#&gt; Step 1: Computing gene expression information...</span></span>
+<span id="cb5-60"><a href="#cb5-60" tabindex="-1"></a><span class="co">#&gt; Start relative expression calculation @ 2025-10-08 12:19:37.099993</span></span>
+<span id="cb5-61"><a href="#cb5-61" tabindex="-1"></a><span class="co">#&gt; Finish relative expression calculation @ 2025-10-08 12:19:37.100142</span></span>
+<span id="cb5-62"><a href="#cb5-62" tabindex="-1"></a><span class="co">#&gt; Number of genes passing TPM threshold: 3</span></span>
+<span id="cb5-63"><a href="#cb5-63" tabindex="-1"></a><span class="co">#&gt; Start dispersion estimation (12 thread(s)) @ 2025-10-08 12:19:37.100326</span></span>
+<span id="cb5-64"><a href="#cb5-64" tabindex="-1"></a><span class="co">#&gt; [theta_batch_cpp] Starting computation</span></span>
+<span id="cb5-65"><a href="#cb5-65" tabindex="-1"></a><span class="co">#&gt;  - G (genes) = 3</span></span>
+<span id="cb5-66"><a href="#cb5-66" tabindex="-1"></a><span class="co">#&gt;  - C (cells) = 8</span></span>
+<span id="cb5-67"><a href="#cb5-67" tabindex="-1"></a><span class="co">#&gt; [gene 0] rel_expr = 0.5</span></span>
+<span id="cb5-68"><a href="#cb5-68" tabindex="-1"></a><span class="co">#&gt; [gene 0] t_0 = 1.33333</span></span>
+<span id="cb5-69"><a href="#cb5-69" tabindex="-1"></a><span class="co">#&gt; [gene 0] theta_mle_row result = 486.513</span></span>
+<span id="cb5-70"><a href="#cb5-70" tabindex="-1"></a><span class="co">#&gt; [gene 1] rel_expr = 0.25</span></span>
+<span id="cb5-71"><a href="#cb5-71" tabindex="-1"></a><span class="co">#&gt; [gene 1] t_0 = 0.5</span></span>
+<span id="cb5-72"><a href="#cb5-72" tabindex="-1"></a><span class="co">#&gt; [gene 1] theta_mle_row result = 475.754</span></span>
+<span id="cb5-73"><a href="#cb5-73" tabindex="-1"></a><span class="co">#&gt; [gene 2] rel_expr = 0.25</span></span>
+<span id="cb5-74"><a href="#cb5-74" tabindex="-1"></a><span class="co">#&gt; [gene 2] t_0 = 0.5</span></span>
+<span id="cb5-75"><a href="#cb5-75" tabindex="-1"></a><span class="co">#&gt; [gene 2] theta_mle_row result = 475.754</span></span>
+<span id="cb5-76"><a href="#cb5-76" tabindex="-1"></a><span class="co">#&gt; [theta_batch_cpp] Done.</span></span>
+<span id="cb5-77"><a href="#cb5-77" tabindex="-1"></a><span class="co">#&gt; Finish dispersion estimation @ 2025-10-08 12:19:37.100794</span></span>
+<span id="cb5-78"><a href="#cb5-78" tabindex="-1"></a><span class="co">#&gt; Step 2: Estimating library parameters...</span></span>
+<span id="cb5-79"><a href="#cb5-79" tabindex="-1"></a><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-08 12:19:37.103356</span></span>
+<span id="cb5-80"><a href="#cb5-80" tabindex="-1"></a><span class="co">#&gt; Processed 3 genes</span></span>
+<span id="cb5-81"><a href="#cb5-81" tabindex="-1"></a><span class="co">#&gt; Library parameters: UMI_per_cell = 15, variation = 1</span></span>
+<span id="cb5-82"><a href="#cb5-82" tabindex="-1"></a><span class="co">#&gt; Mapping efficiency = 0.727</span></span></code></pre></div>
+<p><strong>Arguments:</strong></p>
+<ul>
+<li><code>response_matrix</code>: Gene-by-cell expression matrix from
+Step 1 (or NULL if <code>h5_only = TRUE</code>)</li>
+<li><code>read_umi_table</code>: QC data frame from Step 1</li>
+<li><code>mapping_efficiency</code>: Mapping efficiency from Step 1</li>
+<li><code>gene_list</code>: Optional character vector to restrict
+analysis to specific genes</li>
+<li><code>TPM_thres</code>: Threshold for filtering low-expression genes
+in gene expression model (default: 0.1)</li>
+<li><code>downsample_ratio</code>: Proportion of downsampling in library
+saturation model fitting (default: 0.7)</li>
+<li><code>D2_rough</code>: Rough prior value for library variation
+parameter, it’s typically higher in TAP seq experiment (i.e. 0.8)
+(default for perturbseq experiment: 0.3)</li>
+<li><code>h5_only</code>: If <code>TRUE</code>, skips baseline
+expression step to save time, useful when you’re trying to find sensible
+hyperparameters for library model fitting (default: FALSE)</li>
+<li><code>n_threads</code>: Number of parallel processing threads
+(default: NULL for single-threaded)</li>
+</ul>
+</div>
+<div id="function-output-1" class="section level3">
+<h3>Function Output</h3>
+<p>As for the output of <code>reference_data_processing</code>, the
+relative expression is higher and the mapping efficiency is lower in the
+TAP-seq example due to the change in normalization. The library
+parameters are similar between the two toy examples, but it’s often not
+the case in reality. If we use a real TAP-seq dataset, the variation
+parameter in library_parameters would typically be higher (closer to 1)
+than that in perturb-seq (around 0.3).</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Inspect structure of perturb-seq pilot data</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">str</span>(pilot_data_perturbseq)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt; List of 3</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt;  $ baseline_expression_stats:&#39;data.frame&#39;:   5 obs. of  3 variables:</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;   ..$ response_id        : chr [1:5] &quot;ENSG00000243485&quot; &quot;ENSG00000238009&quot; &quot;ENSG00000239945&quot; &quot;ENSG00000241860&quot; ...</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt;   ..$ relative_expression: num [1:5] 0.0909 0.3636 0.1818 0.1818 0.1818</span></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="co">#&gt;   ..$ expression_size    : num [1:5] 401 484 468 468 468</span></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt;  $ library_parameters       :List of 2</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt;   ..$ UMI_per_cell: num 5.17</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="co">#&gt;   ..$ variation   : num 0.382</span></span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt;  $ mapping_efficiency       : num 1</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="co"># Inspect structure of TAP-seq pilot data</span></span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a><span class="fu">str</span>(pilot_data_tapseq)</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co">#&gt; List of 3</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="co">#&gt;  $ baseline_expression_stats:&#39;data.frame&#39;:   3 obs. of  3 variables:</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="co">#&gt;   ..$ response_id        : chr [1:3] &quot;ENSG00000238009&quot; &quot;ENSG00000239945&quot; &quot;ENSG00000241860&quot;</span></span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="co">#&gt;   ..$ relative_expression: num [1:3] 0.5 0.25 0.25</span></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co">#&gt;   ..$ expression_size    : num [1:3] 487 476 476</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="co">#&gt;  $ library_parameters       :List of 2</span></span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co">#&gt;   ..$ UMI_per_cell: num 15.3</span></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co">#&gt;   ..$ variation   : num 1</span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="co">#&gt;  $ mapping_efficiency       : num 0.727</span></span></code></pre></div>
+<p><strong>Format of each output:</strong></p>
+<ul>
+<li><code>baseline_expression_stats</code>: Data frame with columns:
+<ul>
+<li><code>response_id</code>: Ensembl gene identifier</li>
+<li><code>relative_expression</code>: Estimated relative expression
+proportions for each gene, normalized to sum to 1 across all genes of
+interest</li>
+<li><code>expression_size</code>: Estimated dispersion (size) parameter
+representing gene-specific expression variability</li>
+</ul></li>
+<li><code>library_parameters</code>: List with:
+<ul>
+<li><code>UMI_per_cell</code>: Estimated maximum UMI count per cell</li>
+<li><code>variation</code>: Estimated PCR amplification variation
+parameter</li>
+</ul></li>
+<li><code>mapping_efficiency</code>: Adjusted mapping efficiency,
+accounting for the fraction of reads mapped to the genes of
+interest</li>
+</ul>
+</div>
+</div>
+<div id="see-also" class="section level2">
+<h2>See Also</h2>
+<ul>
+<li><code>?reference_data_preprocessing_10x</code>: Formal documentation
+of <code>reference_data_preprocessing_10x</code></li>
+<li><code>?reference_data_processing</code>: Formal documentation of
+<code>reference_data_processing</code></li>
+<li><code>?obtain_qc_response_data</code>,
+<code>?obtain_qc_read_umi_table</code>, and
+<code>?obtain_mapping_efficiency</code>: Documentation on obtaining each
+component of the output in
+<code>reference_data_preprocessing_10x</code>.</li>
+<li><code>?obtain_expression_information</code>: Documentation on
+fitting the negative binomial model in
+<code>reference_data_processing</code>.</li>
+<li><code>?library_computation</code>: Documentation on fitting the
+sequencing saturation model in
+<code>reference_data_processing</code>.</li>
+<li>Vignette “Getting Started with PerturbPlan”: Overview of power
+analysis workflow</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

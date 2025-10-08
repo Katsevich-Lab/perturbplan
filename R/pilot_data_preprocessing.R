@@ -155,9 +155,9 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   \code{obtain_mapping_efficiency}.
 #' @param gene_list Optional character vector of gene IDs to restrict analysis to a specific subset.
 #' @param TPM_thres Numeric. Threshold for filtering low-expression genes during preprocessing.
-#' @param downsample_ratio Numeric. Proportion of downsampling in library saturation model fitting, 
-#' it can take vector value to make several downsampling. Default: 0.7.
-#' @param D2_rough Numeric. Rough prior value for library variation parameter. Default: 0.3.
+#' @param downsample_ratio Numeric. Proportion of downsampling in library saturation model fitting. Default: 0.7.
+#' @param D2_rough Numeric. Rough prior value for library variation parameter,
+#' it's typically higher in TAP seq experiment (i.e. 0.8) Default (for perturbseq experiment): 0.3.
 #' @param h5_only Logical. If TRUE, skips baseline expression estimation step (only processes read_umi_table). Default: FALSE.
 #' @param n_threads Integer. Number of threads used for parallel processing. Default: NULL (single-threaded).
 #'

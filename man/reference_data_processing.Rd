@@ -31,7 +31,8 @@ as obtained via \code{\link{obtain_qc_read_umi_table}}.}
 
 \item{TPM_thres}{Numeric. Threshold for filtering low-expression genes during preprocessing.}
 
-\item{downsample_ratio}{Numeric. Proportion of downsampling used for library size estimation. Default: 0.7.}
+\item{downsample_ratio}{Numeric. Proportion of downsampling in library saturation model fitting,
+it can take vector value to make several downsampling. Default: 0.7.}
 
 \item{D2_rough}{Numeric. Rough prior value for library variation parameter. Default: 0.3.}
 

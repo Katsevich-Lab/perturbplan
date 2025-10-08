@@ -13,7 +13,9 @@ obtain_qc_response_data(path_to_cellranger_output)
 \item \code{outs/filtered_feature_bc_matrix/matrix.mtx.gz}
 \item \code{outs/filtered_feature_bc_matrix/features.tsv.gz}
 \item \code{outs/filtered_feature_bc_matrix/barcodes.tsv.gz}
-}}
+}
+In some cases, the subfolder \code{filtered_feature_bc_matrix} may need to be produced
+by unzipping the \code{filtered_feature_bc_matrix.tar.gz} file.}
 }
 \value{
 A \code{dgCMatrix} (genes × cells) with cleaned, unique row names and column names.

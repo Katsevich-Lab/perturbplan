@@ -40,7 +40,7 @@ This preprocessing workflow consists of two main steps:
 
 ## Step 1: Aggregate Cell Ranger Outputs
 
-The `reference_data_preprocessing_10x()` function aggregates Cell Ranger outputs from multiple sequencing runs (SRRs) into a single data structure.
+The `reference_data_preprocessing_10x` function aggregates Cell Ranger outputs from multiple sequencing runs (SRRs) into a single data structure.
 
 ### Input Requirements
 
@@ -113,7 +113,7 @@ str(raw_data)
 
 ## Step 2: Extract Statistical Parameters
 
-The `reference_data_processing()` function fits statistical models to extract gene-level expression parameters, library parameters and more sophisticated mapping efficiency required by PerturbPlan.
+The `reference_data_processing` function fits statistical models to extract gene-level expression parameters, library parameters and more sophisticated mapping efficiency required by PerturbPlan.
 
 ### Statistical Models
 
@@ -155,7 +155,7 @@ are the fitted parameters.
 
 ### Function Usage
 
-Here, we demonstrate two use cases of `reference_data_processing()` with the aggregated data from Step 1, one for perturb-seq experimental design using all genes, and one for TAP-seq experimental design using a targeted gene list.
+Here, we demonstrate two use cases of `reference_data_processing` with the aggregated data from Step 1, one for perturb-seq experimental design using all genes, and one for TAP-seq experimental design using a targeted gene list.
 
 ```{r}
 # Set seed for reproducibility
@@ -169,8 +169,8 @@ pilot_data_perturbseq <- reference_data_processing(
   gene_list = NULL,     # Use all genes
   TPM_thres = 0.1,      # Default expression threshold for filtering
   downsample_ratio = 0.7,  # Default downsampling for sequencing
-  D2_rough = 0.3,       # Default prior for variation parameter
-  h5_only = FALSE,      # Set TRUE to skip expression fitting
+  D2_rough = 0.4,       # Default prior for variation parameter
+  h5_only = FALSE,      # Set TRUE to skip expression model fitting
   n_threads = NULL      # No parallel processing
 )
 
@@ -181,6 +181,7 @@ pilot_data_tapseq <- reference_data_processing(
   read_umi_table = raw_data$read_umi_table,
   mapping_efficiency = raw_data$mapping_efficiency,
   gene_list = gene_list, # Restrict to specific genes
+  D2_rough = 0.4,       # The prior should be set higher in TAP-seq, but we keep it same here for toy example
   TPM_thres = 0.         # No expression threshold for filtering
 )
 ```
@@ -192,12 +193,14 @@ pilot_data_tapseq <- reference_data_processing(
 - `mapping_efficiency`: Mapping efficiency from Step 1
 - `gene_list`: Optional character vector to restrict analysis to specific genes
 - `TPM_thres`: Threshold for filtering low-expression genes in gene expression model (default: 0.1)
-- `downsample_ratio`: Proportion of downsampling in library saturation model fitting, it can take vector value to make several downsampling (default: 0.7)
-- `D2_rough`: Prior value for variation parameter in library saturation model (default: 0.3)
+- `downsample_ratio`: Proportion of downsampling in library saturation model fitting (default: 0.7)
+- `D2_rough`:  Rough prior value for library variation parameter, it's typically higher in TAP seq experiment (i.e. 0.8) (default for perturbseq experiment: 0.3)
 - `h5_only`: If `TRUE`, skips baseline expression step to save time, useful when you're trying to find sensible hyperparameters for library model fitting (default: FALSE)
 - `n_threads`: Number of parallel processing threads (default: NULL for single-threaded)
 
 ### Function Output
+
+As for the output of `reference_data_processing`, the relative expression is higher and the mapping efficiency is lower in the TAP-seq example due to the change in normalization. The library parameters are similar between the two toy examples, but it's often not the case in reality. If we use a real TAP-seq dataset, the variation parameter in library_parameters would typically be higher (closer to 1) than that in perturb-seq (around 0.3).
 
 ```{r}
 # Inspect structure of perturb-seq pilot data

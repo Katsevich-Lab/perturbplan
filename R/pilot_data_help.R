@@ -47,11 +47,11 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
 
   # If the matrix is in pattern triplet format (ngTMatrix),
   # convert it to numeric triplet (dgTMatrix), then to column-compressed (dgCMatrix)
-  if (inherits(m, "ngTMatrix")) {
+  if (inherits(m, "dgTMatrix")) {
     m <- methods::as(m, "dgTMatrix")
   }
-  if (!inherits(m, "dgCMatrix")) {
-    m <- methods::as(m, "dgCMatrix")
+  if (!inherits(m, "CsparseMatrix")) {
+    m <- methods::as(m, "CsparseMatrix")
   }
 
   response_matrix <- m
@@ -117,8 +117,8 @@ obtain_expression_information <- function(response_matrix,
                                           rough     = FALSE,
                                           n_threads = NULL) {
   # ensure response_matrix is CsparseMatrix (specifically dgCMatrix for C++ compatibility)
-  if (!inherits(response_matrix, "dgCMatrix")){
-    response_matrix <- as(response_matrix, "dgCMatrix")
+  if (!inherits(response_matrix, "CsparseMatrix")){
+    response_matrix <- as(response_matrix, "CsparseMatrix")
   }
   # --- decide #threads ------------------------------------------------------
   if (is.null(n_threads)) {
@@ -155,8 +155,8 @@ obtain_expression_information <- function(response_matrix,
   }
   # Ensure transposed matrix is also dgCMatrix for C++ compatibility
   t_matrix <- Matrix::t(response_matrix[keep_gene, , drop = FALSE])
-  if (!inherits(t_matrix, "dgCMatrix")) {
-    t_matrix <- as(t_matrix, "dgCMatrix")
+  if (!inherits(t_matrix, "CsparseMatrix")) {
+    t_matrix <- as(t_matrix, "CsparseMatrix")
   }
 
   theta_vec <- theta_batch_cpp(
@@ -320,7 +320,7 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 #' @param QC_data Data frame. The QC'd molecular data from \code{\link{obtain_qc_read_umi_table}}
 #' containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.
 #' @param downsample_ratio Numeric. The ratio for downsampling the dataset (default: 0.7).
-#' Must be between 0 and 1.
+#' Must be between 0 and 1. It can take vector value to make several downsampling but one downsampling is often enough.
 #' @param D2_rough Numeric. Rough estimate of the D2 parameter in the S-M curve model (default: 0.3).
 #' Represents the variation parameter in the saturation curve.
 #'
