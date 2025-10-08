@@ -18,7 +18,7 @@ In some cases, the subfolder \code{filtered_feature_bc_matrix} may need to be pr
 by unzipping the \code{filtered_feature_bc_matrix.tar.gz} file.}
 }
 \value{
-A \code{dgCMatrix} (genes × cells) with cleaned, unique row names and column names.
+A \code{CsparseMatrix} (genes × cells) with cleaned, unique row names and column names.
 }
 \description{
 Reads a sparse gene-by-cell matrix (\code{matrix.mtx.gz}) together with

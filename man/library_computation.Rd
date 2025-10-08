@@ -11,7 +11,7 @@ library_computation(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
 
 \item{downsample_ratio}{Numeric. The ratio for downsampling the dataset (default: 0.7).
-Must be between 0 and 1.}
+Must be between 0 and 1. It can take vector value to make several downsampling but one downsampling is often enough.}
 
 \item{D2_rough}{Numeric. Rough estimate of the D2 parameter in the S-M curve model (default: 0.3).
 Represents the variation parameter in the saturation curve.}

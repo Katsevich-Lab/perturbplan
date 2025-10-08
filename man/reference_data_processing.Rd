@@ -31,10 +31,10 @@ as obtained via \code{\link{obtain_qc_read_umi_table}}.}
 
 \item{TPM_thres}{Numeric. Threshold for filtering low-expression genes during preprocessing.}
 
-\item{downsample_ratio}{Numeric. Proportion of downsampling in library saturation model fitting,
-it can take vector value to make several downsampling. Default: 0.7.}
+\item{downsample_ratio}{Numeric. Proportion of downsampling in library saturation model fitting. Default: 0.7.}
 
-\item{D2_rough}{Numeric. Rough prior value for library variation parameter. Default: 0.3.}
+\item{D2_rough}{Numeric. Rough prior value for library variation parameter,
+it's typically higher in TAP seq experiment (i.e. 0.8) Default (for perturbseq experiment): 0.3.}
 
 \item{h5_only}{Logical. If TRUE, skips baseline expression estimation step (only processes read_umi_table). Default: FALSE.}
 
