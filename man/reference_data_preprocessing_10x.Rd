@@ -69,5 +69,5 @@ result$response_matrix
 
 }
 \seealso{
-\code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}
+\code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}, \code{\link{obtain_mapping_efficiency}} for details on data extraction
 }

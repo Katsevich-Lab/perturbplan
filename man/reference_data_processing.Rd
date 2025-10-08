@@ -124,11 +124,8 @@ pilot_data <- reference_data_processing(
   TPM_thres = 0.1,
   h5_only = FALSE
 )
+
 }
 \seealso{
-\code{\link{library_computation}} for S-M curve fitting details
-
-\code{\link{obtain_expression_information}},
-\code{\link{obtain_qc_read_umi_table}},
-\code{\link{library_estimation}}
+\code{\link{library_computation}} for S-M curve fitting details and \code{\link{obtain_expression_information}} for NB model fitting details.
 }

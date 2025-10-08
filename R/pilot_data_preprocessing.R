@@ -58,7 +58,7 @@ utils::globalVariables(c("Perturb_tpm", "Tap_tpm", "in_band", "expression_status
 #' # Access components
 #' result$response_matrix
 #'
-#' @seealso \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}
+#' @seealso \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}, \code{\link{obtain_mapping_efficiency}} for details on data extraction
 #' @export
 reference_data_preprocessing_10x <- function(path_to_top_level_output,
                                              path_to_run_level_output = NULL,
@@ -221,7 +221,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #' PCR amplification variability, enabling accurate power calculations across
 #' different sequencing scenarios.
 #'
-#' @seealso \code{\link{library_computation}} for S-M curve fitting details
+#' @seealso \code{\link{library_computation}} for S-M curve fitting details and \code{\link{obtain_expression_information}} for NB model fitting details.
 #'
 #'
 #' @importFrom stats median
@@ -245,10 +245,6 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   TPM_thres = 0.1,
 #'   h5_only = FALSE
 #' )
-#' @seealso
-#' \code{\link{obtain_expression_information}},
-#' \code{\link{obtain_qc_read_umi_table}},
-#' \code{\link{library_estimation}}
 #'
 #' @export
 reference_data_processing <- function(response_matrix = NULL, read_umi_table, mapping_efficiency = NULL,

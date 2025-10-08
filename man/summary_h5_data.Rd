@@ -29,12 +29,6 @@ The function calculates:
 \item Average reads per cell (total reads divided by number of cells)
 }
 }
-\examples{
-# Get QC data and summarize
-cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
-qc_data <- obtain_qc_read_umi_table(cellranger_path)
-summary_stats <- summary_h5_data(qc_data)
-}
 \seealso{
 \code{\link{obtain_qc_read_umi_table}} for generating the input data
 }
