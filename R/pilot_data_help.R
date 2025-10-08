@@ -28,6 +28,8 @@ NULL
 #'     \item \code{outs/filtered_feature_bc_matrix/features.tsv.gz}
 #'     \item \code{outs/filtered_feature_bc_matrix/barcodes.tsv.gz}
 #'   }
+#' In some cases, the subfolder `filtered_feature_bc_matrix` may need to be produced
+#' by unzipping the `filtered_feature_bc_matrix.tar.gz` file.
 #'
 #' @examples
 #' # Load example Cell Ranger output
