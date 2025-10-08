@@ -16,6 +16,8 @@ utils::globalVariables(c("Perturb_tpm", "Tap_tpm", "in_band", "expression_status
 #'   inside \code{path_to_top_level_output}. Unmatched entries will trigger a warning.
 #' @param h5_rough Logical. If TRUE (default), h5 data will only be extracted from
 #'   the first SRR folder. If FALSE, data from all SRRs will be combined.
+#' @param skip_mapping_efficiency Logical. If TRUE, skips mapping efficiency calculation. It can be useful when we don't have a
+#' metrics_summary.csv file to calculate the total number of reads. Default: FALSE.
 #'
 #' @return A list with three elements:
 #' \describe{
@@ -60,7 +62,9 @@ utils::globalVariables(c("Perturb_tpm", "Tap_tpm", "in_band", "expression_status
 #' @export
 reference_data_preprocessing_10x <- function(path_to_top_level_output,
                                              path_to_run_level_output = NULL,
-                                             h5_rough = TRUE) {
+                                             h5_rough = TRUE,
+                                             skip_mapping_efficiency = FALSE
+                                             ) {
   run_dirs <- list.dirs(path_to_top_level_output, recursive = FALSE, full.names = TRUE)
   run_dir_names <- basename(run_dirs)
 
@@ -118,7 +122,11 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
       message("Multiple SRR runs detected. Using median mapping efficiency across runs: ",
               paste(round(mapping_efficiency,3), collapse = ", "))
     }
-    mapping_efficiency <- median(mapping_efficiency,na.rm=TRUE)
+    if (!skip_mapping_efficiency){
+      mapping_efficiency <- median(mapping_efficiency,na.rm=TRUE)
+    } else {
+      mapping_efficiency <- NULL
+    }
   }
 
   return(list(
@@ -185,8 +193,8 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #' where:
 #' \itemize{
 #'   \item \code{gene_expression}: Number of observed UMIs for the given gene in the cell
-#'   \item \code{library_size}: Number of observed UMIs of the cell
-#'   \item \code{relative_expression}: Relative expression level of the gene across all cells
+#'   \item \code{library_size}: Number of total observed UMIs of the cell
+#'   \item \code{relative_expression}: Proprotion of the gene's expression relative to total expression, adding up to 1 across all genes selected
 #'   \item \code{expression_size}: Dispersion size parameter of the gene in NB model, it's small when biological variability is large
 #' }
 #'
@@ -257,9 +265,10 @@ reference_data_processing <- function(response_matrix = NULL, read_umi_table, ma
       stop("response_matrix cannot be NULL when gene_list is provided and h5_only is FALSE.")
     }
     # Adjust mapping efficiency based on gene list
-    expression_genes <- rowSums(response_matrix)
-    mapping_efficiency <- mapping_efficiency * sum(expression_genes[names(expression_genes) %in% gene_list]) / sum(expression_genes)
-
+    if (!is.null(mapping_efficiency)) {
+      expression_genes <- rowSums(response_matrix)
+      mapping_efficiency <- mapping_efficiency * sum(expression_genes[names(expression_genes) %in% gene_list]) / sum(expression_genes)
+    }
     # Filter response_matrix to only include genes in gene_list
     response_matrix <- response_matrix[rownames(response_matrix) %in% gene_list, , drop = FALSE]
     if (nrow(response_matrix) == 0) {
@@ -274,7 +283,7 @@ reference_data_processing <- function(response_matrix = NULL, read_umi_table, ma
   } else {
     message("Skipping Step 1 as h5_only is TRUE")
     baseline_expression_df <- NULL
-    if (!is.null(gene_list)) {
+    if (!is.null(gene_list) & !is.null(mapping_efficiency)) {
       # Adjust mapping efficiency based on gene list
       lst <- read_umi_table$response_id %in% gene_list
       mapping_efficiency <- mean(lst)* mapping_efficiency

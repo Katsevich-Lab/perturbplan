@@ -78,8 +78,8 @@ For each gene, the NB model for its cellwise expression is defined as:
 where:
 \itemize{
 \item \code{gene_expression}: Number of observed UMIs for the given gene in the cell
-\item \code{library_size}: Number of observed UMIs of the cell
-\item \code{relative_expression}: Relative expression level of the gene across all cells
+\item \code{library_size}: Number of total observed UMIs of the cell
+\item \code{relative_expression}: Proprotion of the gene's expression relative to total expression, adding up to 1 across all genes selected
 \item \code{expression_size}: Dispersion size parameter of the gene in NB model, it's small when biological variability is large
 }
 

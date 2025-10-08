@@ -7,7 +7,8 @@
 reference_data_preprocessing_10x(
   path_to_top_level_output,
   path_to_run_level_output = NULL,
-  h5_rough = TRUE
+  h5_rough = TRUE,
+  skip_mapping_efficiency = FALSE
 )
 }
 \arguments{
@@ -20,6 +21,9 @@ inside \code{path_to_top_level_output}. Unmatched entries will trigger a warning
 
 \item{h5_rough}{Logical. If TRUE (default), h5 data will only be extracted from
 the first SRR folder. If FALSE, data from all SRRs will be combined.}
+
+\item{skip_mapping_efficiency}{Logical. If TRUE, skips mapping efficiency calculation. It can be useful when we don't have a
+metrics_summary.csv file to calculate the total number of reads. Default: FALSE.}
 }
 \value{
 A list with three elements:

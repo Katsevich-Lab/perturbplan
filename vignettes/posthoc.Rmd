@@ -16,14 +16,12 @@ knitr::opts_chunk$set(
 )
 ```
 
-# PerturbPlan
+In the example below, we will demonstrate how to use `compute_power_posthoc()` to compute power after an experiment is conducted (as opposed to prospectively).
 
-The goal of PerturbPlan is to facilitate experimental design and power analysis for perturb-seq experiments. 
 ```{r}
 library(perturbplan)
 ```
 
-In the example below, we will demonstrate how to use `compute_power_posthoc()` to compute power after an experiment is conducted (as opposed to prospectively).
 
 ```{r, echo = FALSE}
 set.seed(1)
@@ -42,8 +40,11 @@ cells_per_grna <- expand.grid(enhancer = enhancers, grna = grnas) |>
   dplyr::mutate(num_cells = rpois(dplyr::n(), lambda = 100),
                 grna_target = dplyr::if_else(grna_target == "nt", "non-targeting", grna_target))
   
-discovery_pairs <- expand.grid(grna_target = enhancers, response_id = genes) |>
-  dplyr::mutate(grna_target = dplyr::if_else(grna_target == "nt", "non-targeting", grna_target))
+discovery_pairs <- within(expand.grid(
+  grna_target = c("enh1","enh2","enh3"),
+  response_id = paste0("gene", 1:4),
+  KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE
+), { grna_target <- as.character(grna_target); response_id <- as.character(response_id) })
 
 baseline_expression_stats <- data.frame(
   response_id = genes,
@@ -52,7 +53,7 @@ baseline_expression_stats <- data.frame(
 )
 ```
 
-## PerturbPlan inputs
+## Posthoc power inputs
 
 ### 1. Dataset summaries
 
@@ -69,7 +70,7 @@ Furthermore, we have computed the mean and size parameters for the baseline expr
 baseline_expression_stats
 ```
 
-### Analysis choices
+### 2. Analysis choices
 
 Suppose we tested the effects of all elements on all genes. We can encode this in a `discovery_pairs` data frame, the same as in `sceptre`:
 ```{r}
@@ -96,7 +97,7 @@ cutoff <- 0.005
 ```
 This number may be obtained as the $p$-value cutoff from the original analysis. 
 
-## Running PerturbPlan
+## Running PerturbPlan posthoc power analysis
 
 We can now compute the power for each enhancer-gene pair using the `compute_power_posthoc()` function:
 ```{r}
@@ -115,7 +116,7 @@ power_results <- compute_power_posthoc(
 )
 ```
 
-## PerturbPlan outputs
+## PerturbPlan posthoc power outputs
 
 The result is a list with fields `expected_num_discoveries` and `individual_power`:
 ```{r}

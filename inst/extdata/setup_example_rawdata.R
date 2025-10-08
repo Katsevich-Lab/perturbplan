@@ -125,7 +125,7 @@ feat_idx_compact <- as.integer(feat_compact_map[as.character(feat_idx_full_for_r
 stopifnot(all(!is.na(bar_idx_compact)), all(!is.na(feat_idx_compact)))
 
 # Minimal datasets for tiny molecule_info.h5
-count_s       <- as.integer(count[keep_rows])
+count_s       <- c(rep(2,3),rep(1,8))
 umi_s         <- as.integer(umi[keep_rows])
 barcode_idx_s <- bar_idx_compact
 feature_idx_s <- feat_idx_compact
