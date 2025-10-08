@@ -168,8 +168,8 @@ pilot_data_perturbseq <- reference_data_processing(
   mapping_efficiency = raw_data$mapping_efficiency,
   gene_list = NULL,     # Use all genes
   TPM_thres = 0.1,      # Default expression threshold for filtering
-  downsample_ratio = 1:9/10,  # Default downsampling for sequencing
-  D2_rough = 0.4,       # Default prior for variation parameter
+  downsample_ratio = 0.7,  # Default downsampling for sequencing
+  D2_rough = 0.3,       # Default prior for variation parameter
   h5_only = FALSE,      # Set TRUE to skip expression fitting
   n_threads = NULL      # No parallel processing
 )
@@ -192,7 +192,7 @@ pilot_data_tapseq <- reference_data_processing(
 - `mapping_efficiency`: Mapping efficiency from Step 1
 - `gene_list`: Optional character vector to restrict analysis to specific genes
 - `TPM_thres`: Threshold for filtering low-expression genes in gene expression model (default: 0.1)
-- `downsample_ratio`: Proportion of downsampling in library saturation model fitting (default: 0.7)
+- `downsample_ratio`: Proportion of downsampling in library saturation model fitting, it can take vector value to make several downsampling (default: 0.7)
 - `D2_rough`: Prior value for variation parameter in library saturation model (default: 0.3)
 - `h5_only`: If `TRUE`, skips baseline expression step to save time, useful when you're trying to find sensible hyperparameters for library model fitting (default: FALSE)
 - `n_threads`: Number of parallel processing threads (default: NULL for single-threaded)

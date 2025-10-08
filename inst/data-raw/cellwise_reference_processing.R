@@ -138,3 +138,50 @@ process_ipsc_neuron_10x <- function(path_to_dataset) {
                                                 mapping_efficiency = mapping_efficiency,
                                                 downsample_ratio= c(0.1, 0.3, 0.5, 0.7)))
 }
+
+
+process_k562_tap <- function(path_to_dataset) {
+  message("Start processing K562_TAP")
+  path_to_runs <- file.path(path_to_dataset, "processed")
+  k562_tap_data <- perturbplan::reference_data_preprocessing_10x(path_to_runs)
+  response_matrix <- k562_tap_data[[1]]
+  read_umi_table <- k562_tap_data[[2]]
+  mapping_efficiency <- k562_tap_data$mapping_efficiency
+  # read a gene list from file.path(path_to_dataset, "sample1", "outs", "target_panel.csv")
+  # the gene list is in the first column without header (start from 7th row)
+  # only keep unique genes
+  panel_path <- file.path(path_to_runs, "perturbplan-demo", "outs", "target_panel.csv")
+  if (!file.exists(panel_path)) {
+    stop("target_panel.csv not found at: ", panel_path)
+  }
+  
+  # helper: safe trim
+  .trim <- function(x) gsub("^\\s+|\\s+$", "", x)
+  
+  gene_list <- NULL
+  if (requireNamespace("data.table", quietly = TRUE)) {
+    # first column, no header, start from row 7 -> skip first 6 lines
+    dt <- data.table::fread(panel_path, header = FALSE, skip = 6, select = 1L, data.table = FALSE)
+    gene_list <- unique(.trim(dt[[1]]))
+  } else {
+    # base R fallback
+    con <- file(panel_path, open = "r"); on.exit(close(con), add = TRUE)
+    lines <- readLines(con, warn = FALSE)
+    if (length(lines) < 7) stop("target_panel.csv has fewer than 7 lines.")
+    first_col <- vapply(strsplit(lines[-(1:6)], ",", fixed = TRUE), function(z) z[[1]], character(1L))
+    gene_list <- unique(.trim(first_col))
+  }
+  
+  # drop empties / NAs just in case
+  gene_list <- gene_list[!is.na(gene_list) & nzchar(gene_list)]
+  
+  if (length(gene_list) == 0L) {
+    stop("Parsed gene_list is empty from ", panel_path)
+  }
+  
+  return(perturbplan::reference_data_processing(response_matrix=response_matrix,
+                                                read_umi_table=read_umi_table,
+                                                mapping_efficiency = mapping_efficiency,
+                                                gene_list = gene_list,
+                                                downsample_ratio= c(0.1, 0.3, 0.5, 0.7)))
+}

@@ -14,7 +14,8 @@ reference_expression_datasets <- tribble(
   "T_CD8_Shifrut", "T_CD8",                         "10x",      "LOCAL_SHIFRUT_2018_DATA_DIR", "process_t_cd8_10x",
   "A549_Sakellaropoulos", "A549",                           "10x",      "LOCAL_SAKELLAROPOULOS_2024_RAW_DATA_DIR", "process_a549_10x",
   "iPSC_Tian", "iPSC",                           "10x",      "LOCAL_TIAN_2019_RAW_DATA_DIR_1", "process_ipsc_10x",
-  "iPSC_neuron_Tian", "iPSC_neuron",                    "10x",      "LOCAL_TIAN_2019_RAW_DATA_DIR_2", "process_ipsc_neuron_10x"
+  "iPSC_neuron_Tian", "iPSC_neuron",                    "10x",      "LOCAL_TIAN_2019_RAW_DATA_DIR_2", "process_ipsc_neuron_10x",
+  "K562_Ray", "K562",                            "10x", "LOCAL_RAY_2025_RAW_DATA_DIR", "process_k562_tap"
 )
 
 rda_file <- file.path("data", "reference_expression_datasets.rda")
