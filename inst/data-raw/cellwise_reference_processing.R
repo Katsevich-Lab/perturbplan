@@ -183,5 +183,6 @@ process_k562_tap <- function(path_to_dataset) {
                                                 read_umi_table=read_umi_table,
                                                 mapping_efficiency = mapping_efficiency,
                                                 gene_list = gene_list,
+                                                D2_rough = 0.8,
                                                 downsample_ratio= c(0.1, 0.3, 0.5, 0.7)))
 }
