@@ -13,7 +13,7 @@ suppressPackageStartupMessages({
 })
 
 # ========= EDIT THESE PATHS =========
-SRC_DIR       <- "/Volumes/yihuihe/data/external/gasperini-2019-sra/processed/at_scale/run1/SRR7967494/"
+SRC_DIR       <- file.path(.get_config_path("LOCAL_GASPERINI_2019_SRA_DATA_DIR") ,"processed", "at_scale", "run1","SRR7967494")
 DEST_DIR      <- "inst/extdata/cellranger_tiny" # destination tiny dataset root
 TEMPLATE_CSV  <- file.path(SRC_DIR,"outs","metrics_summary.csv")
 # ====================================
@@ -38,18 +38,43 @@ barcodes <- data.table::fread(bar_path, header = FALSE)[[1]]# robust gz read
 
 stopifnot(nrow(X_full) == nrow(features), ncol(X_full) == length(barcodes))
 
-# choose a small, non-empty block (prefer non-zero rows/cols)
-gene_nz <- which(Matrix::rowSums(X_full) > 0)
-cell_nz <- which(Matrix::colSums(X_full) > 0)
-if (length(gene_nz) < 5) gene_nz <- seq_len(min(5, nrow(X_full)))
-if (length(cell_nz) < 8) cell_nz <- seq_len(min(8, ncol(X_full)))
+# set target sizes
+G <- min(5L, nrow(X_full))   # number of rows (genes) to keep
+C <- min(8L, ncol(X_full))   # number of cols (cells) to keep
 
-keep_genes <- gene_nz[seq_len(min(5, length(gene_nz)))]   # 5 genes
-keep_cells <- cell_nz[seq_len(min(8, length(cell_nz)))]   # 8 cells
+# choose rows that have at least one non-zero
+row_has <- Matrix::rowSums(X_full) > 0
+if (!any(row_has)) stop("No non-zero rows in input matrix.")
+keep_genes <- which(row_has)[seq_len(min(G, sum(row_has)))]
 
-X_small          <- X_full[keep_genes, keep_cells, drop = FALSE]
-features_small   <- features[keep_genes, ]
-barcodes_small   <- barcodes[keep_cells]
+# for each kept row, pick ONE non-zero column
+#    - must be unique across rows (no duplicates allowed)
+keep_cols <- integer(0)
+for (r in keep_genes) {
+  nz <- which(X_full[r, ] != 0)
+  # exclude already used columns
+  pick <- setdiff(nz, keep_cols)
+  if (!length(pick)) {
+    stop("Row ", r, " cannot be assigned a unique non-zero column.")
+  }
+  keep_cols <- c(keep_cols, pick[1L])
+}
+
+# if we still have fewer than C columns,
+#    add extra non-zero columns (not used yet, no duplicates)
+if (length(keep_cols) < C) {
+  cand <- setdiff(which(Matrix::colSums(X_full[keep_genes, , drop=FALSE] != 0) > 0), keep_cols)
+  if (length(cand)) {
+    hits <- Matrix::colSums(X_full[keep_genes, cand, drop=FALSE] != 0)
+    add  <- cand[order(-as.numeric(hits))]
+    add  <- head(add, C - length(keep_cols))
+    keep_cols <- c(keep_cols, add)
+  }
+}
+
+X_small        <- X_full[keep_genes, keep_cols, drop = FALSE]
+features_small <- features[keep_genes, , drop = FALSE]
+barcodes_small <- barcodes[keep_cols]
 
 X_small <- Matrix::drop0(X_small)              # drop explicit 0s
 X_small <- methods::as(X_small, "dgCMatrix")   # force into dgCMatrix
@@ -125,7 +150,7 @@ feat_idx_compact <- as.integer(feat_compact_map[as.character(feat_idx_full_for_r
 stopifnot(all(!is.na(bar_idx_compact)), all(!is.na(feat_idx_compact)))
 
 # Minimal datasets for tiny molecule_info.h5
-count_s       <- c(rep(2,3),rep(1,8))
+count_s       <- as.integer(c(rep(2,3),rep(1,length(keep_rows)-3)))
 umi_s         <- as.integer(umi[keep_rows])
 barcode_idx_s <- bar_idx_compact
 feature_idx_s <- feat_idx_compact

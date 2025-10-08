@@ -3,7 +3,7 @@
 #$ -N run_obtain_pilot_parameter
 #$ -cwd
 #$ -pe openmp 4
-#$ -l m_mem_free=20G        # Request 16 GB memory *per core*
+#$ -l m_mem_free=16G        # Request 16 GB memory *per core*
 #$ -j y                     # Join stdout and stderr
 
 set -euo pipefail
@@ -19,4 +19,4 @@ echo "Now in package root: $PROJECT_ROOT"
 
 cd "$PROJECT_ROOT"
 
-Rscript "inst/data-raw/process_reference_expression_data.R"
+Rscript "inst/extdata/setup_example_rawdata.R"
