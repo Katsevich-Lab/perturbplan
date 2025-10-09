@@ -2,7 +2,7 @@
 % Please edit documentation in R/pilot_data_help.R
 \name{obtain_expression_information}
 \alias{obtain_expression_information}
-\title{Estimate gene-level dispersion (theta)}
+\title{Fit Negative Binomial Model to Estimate Gene Expression Parameters}
 \usage{
 obtain_expression_information(
   response_matrix,
@@ -12,29 +12,60 @@ obtain_expression_information(
 )
 }
 \arguments{
-\item{response_matrix}{\code{CsparseMatrix} (genes × cells).}
+\item{response_matrix}{Sparse matrix (genes as rows, cells as columns). Typically a
+\code{CsparseMatrix} from \code{\link{obtain_qc_response_data}}.}
 
-\item{TPM_thres}{Numeric. Filter threshold on TPM. Default \code{1}.}
+\item{TPM_thres}{Numeric. Expression threshold in TPM (Transcripts Per Million) for
+filtering low-expression genes. Genes with TPM below this threshold are excluded.
+Default: 0.1.}
 
-\item{rough}{Logical. If \code{TRUE}, use rough C++ estimator; otherwise use
-refined/MLE. Default \code{FALSE}.}
+\item{rough}{Logical. If TRUE, uses fast C++ estimator for dispersion. If FALSE,
+uses refined maximum likelihood estimation. Default: FALSE.}
 
-\item{n_threads}{Integer controlling parallelism:
+\item{n_threads}{Integer or NULL controlling parallelism:
 \itemize{
-\item \code{NULL} – auto-detect (prefer \env{NSLOTS}, else local cores)
-\item \code{NA}   – force use of \env{NSLOTS}
-\item positive integer – user-supplied core count
+\item \code{NULL} – auto-detect (prefer \env{NSLOTS} environment variable, else
+use \code{parallel::detectCores()})
+\item \code{NA} – force use of \env{NSLOTS} only
+\item positive integer – user-specified thread count
 }}
 }
 \value{
+Data frame with three columns:
 \describe{
-\item{response_id}{Gene symbol passing the TPM filter}
-\item{relative_expression}{Proportion of total counts}
-\item{expression_size}{Estimated dispersion \eqn{\theta}}
+\item{response_id}{Gene identifier (e.g., Ensembl ID) for genes passing TPM threshold}
+\item{relative_expression}{Estimated relative expression proportion (sums to 1
+across all genes)}
+\item{expression_size}{Estimated dispersion parameter \eqn{\theta} from negative
+binomial model. Small values indicate high biological variability.}
 }
 }
 \description{
-Estimate gene-level dispersion (theta)
+Fits a negative binomial model to gene expression data to estimate relative expression
+levels and dispersion parameters for each gene. This function is used internally by
+\code{\link{reference_data_processing}}.
+}
+\details{
+\subsection{Negative Binomial Model}{
+
+For each gene, the model is:
+
+\deqn{\text{gene_expression} \sim \text{NB}(\text{mean} = \text{library_size} \times \text{relative_expression}, \text{size} = \text{expression_size})}
+
+where \code{library_size} is the total UMI count per cell and \code{relative_expression}
+and \code{expression_size} are the fitted parameters.
+}
+
+\subsection{Processing Steps}{
+
+\enumerate{
+\item Calculates library sizes (total UMIs per cell)
+\item Computes relative expression (gene counts / total counts)
+\item Converts to TPM scale and filters genes below threshold
+\item Estimates dispersion parameters using C++ implementation
+\item Returns data frame with fitted parameters
+}
+}
 }
 \examples{
 # Get response matrix from Cell Ranger output
@@ -45,12 +76,18 @@ response_matrix <- obtain_qc_response_data(cellranger_path)
 expr_info <- obtain_expression_information(
   response_matrix = response_matrix,
   TPM_thres = 0.1,
-  rough = TRUE
+  rough = TRUE,
+  n_threads = 1
 )
 
 # Examine results
 head(expr_info)
 dim(expr_info)
+summary(expr_info$expression_size)
 
+}
+\seealso{
+\code{\link{reference_data_processing}} for the complete pilot data
+preprocessing workflow
 }
 \keyword{internal}

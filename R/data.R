@@ -384,21 +384,28 @@
 #' }
 #'
 #' @details
-#' This dataset was generated from K562 chronic myelogenous leukemia cells using
-#' TAP-seq (targeted perturb-seq), which combines CRISPR perturbations with
-#' targeted single-cell RNA sequencing. Unlike genome-wide perturb-seq, TAP-seq
-#' focuses sequencing resources on a pre-defined gene panel, enabling deeper
-#' coverage of targeted genes at lower cost.
+#' This dataset was generated using DC TAP-seq (Direct-Capture Targeted Perturb-seq),
+#' an enhanced version of targeted perturb-seq that integrates CRISPR-based perturbations
+#' with direct-capture single-cell RNA sequencing. By capturing guide RNAs alongside
+#' targeted gene transcripts within the same sequencing reaction, DC TAP-seq enables
+#' high-throughput, unbiased mapping of distal regulatory element–gene interactions
+#' with improved sensitivity and reduced technical noise. This approach allows
+#' simultaneous measurement of perturbation identity and gene expression in thousands
+#' of single cells, facilitating large-scale functional dissection of noncoding regions
+#' at single-cell resolution.
 #'
 #' \strong{Cells Used in Relative Expression Estimate:} All cells in high-moi condition
 #'
 #' @source
-#' \strong{Paper:} TAP-seq: Targeted Perturb-seq for Scalable High-Content
-#' Phenotyping
+#' \strong{Paper:} An unbiased survey of distal element-gene regulatory interactions with direct-capture targeted Perturb-seq
 #'
 #' \strong{Author and Year:} Ray et al., 2025
 #'
 #' \strong{Journal:} (Publication details pending)
+#'
+#' \strong{Accession:} GSE303901
+#'
+#' \strong{PMID:} 41000760
 #'
 #' @seealso
 #' \code{\link{get_pilot_data_from_package}} for accessing this data programmatically

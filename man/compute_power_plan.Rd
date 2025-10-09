@@ -30,7 +30,8 @@ compute_power_plan(
 \arguments{
 \item{TPM_threshold}{Numeric, numeric vector, or character. TPM threshold value, custom sequence, or "varying" for auto-selection.}
 
-\item{minimum_fold_change}{Numeric, numeric vector, or character. Minimum fold change value, custom sequence, or "varying" for auto-selection.}
+\item{minimum_fold_change}{Numeric, numeric vector, or character. Minimum fold change value, custom sequence, or "varying" for auto-selection.
+Pairs with effects at least this large are considered non-null.}
 
 \item{cells_per_target}{Numeric, numeric vector, or character. Number of cells per target, custom sequence, or "varying" for auto-generated grid.}
 
@@ -54,7 +55,9 @@ compute_power_plan(
 
 \item{multiple_testing_alpha}{Numeric. FDR level (default: 0.05).}
 
-\item{prop_non_null}{Numeric. Proportion of non-null hypotheses (default: 0.1).}
+\item{prop_non_null}{Numeric. Proportion of non-null hypotheses,
+i.e., the fraction of tested pairs expected to exhibit an effect
+at least as large as the specified minimum_fold_change (default: 0.1).}
 
 \item{baseline_expression_stats}{Data frame. Baseline expression statistics.
 See \code{\link{reference_data_processing}} for data format requirements.}

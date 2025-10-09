@@ -2,29 +2,58 @@
 % Please edit documentation in R/pilot_data_help.R
 \name{obtain_qc_read_umi_table}
 \alias{obtain_qc_read_umi_table}
-\title{Extract QC-filtered molecule information from Cell Ranger HDF5 files}
+\title{Extract UMI-Level Molecule Information from Cell Ranger HDF5 Files}
 \usage{
 obtain_qc_read_umi_table(path_to_cellranger_output)
 }
 \arguments{
-\item{path_to_cellranger_output}{Character. Folder containing
-\code{outs/molecule_info.h5} and \code{outs/filtered_feature_bc_matrix.h5}.}
+\item{path_to_cellranger_output}{Character. Path to Cell Ranger run folder
+containing:
+\itemize{
+\item \code{outs/molecule_info.h5} – Raw molecule information
+\item \code{outs/filtered_feature_bc_matrix.h5} – QC-filtered cell barcodes
+}}
 }
 \value{
-Data frame with columns \code{num_reads}, \code{UMI_id},
-\code{cell_id}, \code{response_id}.
+Data frame with UMI-level molecule information containing columns:
+\describe{
+\item{num_reads}{Number of reads supporting this UMI-cell combination}
+\item{UMI_id}{UMI index (1-based)}
+\item{cell_id}{Cell barcode with GEM group suffix (e.g., "ACGTACGT-1")}
+\item{response_id}{Gene identifier (e.g., Ensembl ID)}
+}
 }
 \description{
-Extract QC-filtered molecule information from Cell Ranger HDF5 files
+Extracts QC-filtered UMI-level molecule information from Cell Ranger HDF5 files.
+This function is used internally by \code{\link{reference_data_preprocessing_10x}}.
+}
+\details{
+The function:
+\enumerate{
+\item Reads raw molecule information from \code{molecule_info.h5}
+\item Reads QC-filtered cell barcodes from \code{filtered_feature_bc_matrix.h5}
+\item Filters molecule data to retain only QC-passed cells
+\item Constructs cell IDs with GEM group suffixes
+\item Returns data frame with read counts per UMI per cell
+}
+
+This data is used for fitting the library saturation (S-M) curve in
+\code{\link{library_computation}}.
 }
 \examples{
 # Extract read/UMI information from Cell Ranger output
 cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 qc_table <- obtain_qc_read_umi_table(cellranger_path)
+
 # Examine the data
 head(qc_table)
 dim(qc_table)
-summary(qc_table)
+summary(qc_table$num_reads)
 
+}
+\seealso{
+\code{\link{reference_data_preprocessing_10x}} for aggregating data from multiple runs.
+
+\code{\link{library_computation}} for fitting saturation curves using this data.
 }
 \keyword{internal}

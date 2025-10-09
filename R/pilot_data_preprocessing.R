@@ -4,38 +4,88 @@ utils::globalVariables(c("Perturb_tpm", "Tap_tpm", "in_band", "expression_status
 #' Aggregate Expression and QC Data from Multiple SRR-Level Cell Ranger Outputs
 #'
 #' @description
-#' This function aggregates gene expression matrices and h5 molecule-level data
-#' from multiple SRR-level Cell Ranger output directories. It aligns all matrices
-#' to a common set of genes, performs basic consistency checks, and optionally
-#' restricts to a user-defined subset of run-level directories.
+#' Aggregates Cell Ranger outputs from multiple sequencing runs (SRRs) into a single
+#' data structure containing gene expression matrices, UMI-level molecule information,
+#' and naive mapping efficiency estimates. This is Step 1 of the pilot data preprocessing
+#' workflow for PerturbPlan power analysis.
 #'
 #' @param path_to_top_level_output Character. Path to the top-level directory
-#'   containing Cell Ranger run-level subdirectories.
-#' @param path_to_run_level_output Optional character vector. A subset of run-level
-#'   directory names (not full paths). These should match the basename of folders
-#'   inside \code{path_to_top_level_output}. Unmatched entries will trigger a warning.
-#' @param h5_rough Logical. If TRUE (default), h5 data will only be extracted from
-#'   the first SRR folder. If FALSE, data from all SRRs will be combined.
-#' @param skip_mapping_efficiency Logical. If TRUE, skips mapping efficiency calculation. It can be useful when we don't have a
-#' metrics_summary.csv file to calculate the total number of reads. Default: FALSE.
+#'   containing Cell Ranger run-level subdirectories. Each subdirectory should contain
+#'   Cell Ranger output in the standard structure with \code{outs/} folders.
+#' @param path_to_run_level_output Optional character vector. Names of specific run-level
+#'   directories to process (not full paths). Should match the basename of folders
+#'   inside \code{path_to_top_level_output}. If NULL, all subdirectories are processed.
+#'   Unmatched entries will trigger a warning.
+#' @param h5_rough Logical. If TRUE (default), extracts UMI-level molecule information
+#'   from first SRR only for speed. If FALSE, combines UMI-level molecule information
+#'   from all SRRs (slower but more comprehensive).
+#' @param skip_mapping_efficiency Logical. If TRUE, skips estimation of mapping efficiency.
+#'   If FALSE (default), calculates naive mapping efficiency. Set to TRUE when
+#'   \code{metrics_summary.csv} is unavailable or lacks "Number of Reads" column.
 #'
 #' @return A list with three elements:
 #' \describe{
-#'   \item{response_matrix}{A matrix of gene expression values (common genes only),
-#'     combined across SRR directories.}
-#'   \item{read_umi_table}{A data frame of molecule-level QC data from one or more SRRs,
-#'     including the SRR label.}
-#'    \item{mapping_efficiency}{A numeric value representing the naive mapping efficiency (proportion of reads mapped to transcriptome)}
+#'   \item{response_matrix}{Sparse gene-by-cell expression matrix (genes as rows,
+#'     cells as columns) with row and column names. Contains only genes common across
+#'     all processed SRR runs, combined across all runs.}
+#'   \item{read_umi_table}{Data frame with UMI-level molecule information, including columns:
+#'     \itemize{
+#'       \item \code{num_reads}: Number of reads supporting this UMI-cell combination
+#'       \item \code{UMI_id}: UMI index
+#'       \item \code{cell_id}: Cell barcode
+#'       \item \code{response_id}: Gene identifier (e.g., Ensembl ID)
+#'       \item \code{srr_idx}: SRR run identifier
+#'     }}
+#'   \item{mapping_efficiency}{Numeric value between 0 and 1 representing proportion
+#'     of reads mapped to transcriptome if \code{skip_mapping_efficiency = FALSE},
+#'     or NULL if \code{skip_mapping_efficiency = TRUE}.}
 #' }
 #'
 #' @details
-#' The function performs the following steps:
+#' ## Input Requirements
+#'
+#' Your data should be organized with Cell Ranger output directories under a top-level folder:
+#' \preformatted{
+#' path_to_top_level_output/
+#' ├── SRR_run_1/
+#' │   ├── outs/
+#' │   │   ├── filtered_feature_bc_matrix/
+#' │   │   │   ├── barcodes.tsv.gz
+#' │   │   │   ├── features.tsv.gz
+#' │   │   │   └── matrix.mtx.gz
+#' │   │   ├── molecule_info.h5
+#' │   │   ├── filtered_feature_bc_matrix.h5
+#' │   │   └── metrics_summary.csv
+#' ├── SRR_run_2/
+#' │   └── ...
+#' └── SRR_run_3/
+#'     └── ...
+#' }
+#'
+#' ## Processing Steps
+#'
+#' The function performs the following operations:
 #' \enumerate{
-#'   \item Lists all SRR directories under the given top-level folder.
-#'   \item Optionally filters to a subset of run-level names.
-#'   \item Reads response matrices and retains only shared genes across SRRs.
-#'   \item Optionally reads h5 QC data from one or all SRRs.
-#'   \item Calculates mapping efficiency from the h5 QC data and the metrics summary file.
+#'   \item Lists all SRR directories under the given top-level folder
+#'   \item Optionally filters to a subset of run-level names
+#'   \item Reads gene expression matrices using \code{\link{obtain_qc_response_data}}
+#'   \item Identifies and retains only genes shared across all SRRs
+#'   \item Reads UMI-level molecule information using \code{\link{obtain_qc_read_umi_table}}
+#'   \item Calculates naive mapping efficiency using \code{\link{obtain_mapping_efficiency}}
+#' }
+#'
+#' ## Important Notes
+#'
+#' \itemize{
+#'   \item SRR directories should be generated by a recent version of Cell Ranger configured
+#'     for the perturbation (CRISPR or Perturb-seq) workflow
+#'   \item In some cases, \code{filtered_feature_bc_matrix/} may need to be produced by
+#'     unzipping \code{filtered_feature_bc_matrix.tar.gz}
+#'   \item For mapping efficiency calculation, \code{metrics_summary.csv} must include
+#'     a column named "Number of Reads". This column may need to be added or edited
+#'     manually when Cell Ranger is run with multiple libraries or samples.
+#'   \item When \code{h5_rough = FALSE}, multiple mapping efficiencies are computed and
+#'     the median value is returned
 #' }
 #'
 #'
@@ -43,22 +93,32 @@ utils::globalVariables(c("Perturb_tpm", "Tap_tpm", "in_band", "expression_status
 #' @importFrom stats median
 #' @importFrom dplyr mutate between
 #' @examples
-#' # Process tiny example dataset
+#' # Point to directory containing example Cell Ranger outputs
 #' extdata_path <- system.file("extdata", package = "perturbplan")
-#' # Note: This is a minimal example dataset for testing
-#' result <- reference_data_preprocessing_10x(
+#'
+#' # Aggregate data from all SRR runs
+#' raw_data <- reference_data_preprocessing_10x(
 #'   path_to_top_level_output = extdata_path,
-#'   path_to_run_level_output = "cellranger_tiny",
-#'   h5_rough = TRUE
+#'   path_to_run_level_output = "cellranger_tiny",  # Only read subfolder cellranger_tiny
+#'   h5_rough = TRUE,  # Use first SRR for QC data (faster)
+#'   skip_mapping_efficiency = FALSE  # Estimate mapping efficiency
 #' )
 #'
 #' # Inspect structure
-#' str(result)
+#' str(raw_data)
 #'
 #' # Access components
-#' result$response_matrix
+#' head(raw_data$read_umi_table)
+#' dim(raw_data$response_matrix)
 #'
-#' @seealso \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}, \code{\link{obtain_mapping_efficiency}} for details on data extraction
+#' @seealso
+#' \code{\link{reference_data_processing}} for Step 2 of the preprocessing workflow.
+#'
+#' \code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}},
+#' and \code{\link{obtain_mapping_efficiency}} for details on data extraction.
+#'
+#' See the vignette "Preprocess Reference Expression data for Web App" for the
+#' complete preprocessing workflow: \code{vignette("preprocess-reference", package = "perturbplan")}
 #' @export
 reference_data_preprocessing_10x <- function(path_to_top_level_output,
                                              path_to_run_level_output = NULL,
@@ -139,113 +199,166 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 
 
 
-#' Pilot Dataset Preprocessing for Power Analysis
+#' Extract Statistical Parameters from Pilot Data for Power Analysis
 #'
 #' @description
-#' Further process sequencing data to extract gene-level expression parameters, library
-#' parameters, and mapping efficiency with regard to a given gene list required by the PerturbPlan framework.
-#' Outputs are compatible with built-in pilot examples.
+#' Fits statistical models to extract gene-level expression parameters, library saturation
+#' parameters, and adjusted mapping efficiency required by PerturbPlan for power analysis.
+#' This is Step 2 of the pilot data preprocessing workflow. Outputs are compatible with
+#' built-in pilot data examples and the PerturbPlan Shiny application.
 #'
-#' @param response_matrix Matrix or NULL. Gene-by-cell matrix of normalized expression
-#'   responses, typically from \code{\link{reference_data_preprocessing_10x}}. If \code{h5_only = TRUE},
-#'   this can be NULL.
-#' @param read_umi_table Data frame. QC information from molecule_info.h5 or filtered_feature_bc_matrix.h5,
-#'   as obtained via \code{\link{obtain_qc_read_umi_table}}.
-#' @param mapping_efficiency Numeric. Estimated naive mapping efficiency from
-#'   \code{obtain_mapping_efficiency}.
-#' @param gene_list Optional character vector of gene IDs to restrict analysis to a specific subset.
-#' @param TPM_thres Numeric. Threshold for filtering low-expression genes during preprocessing.
-#' @param downsample_ratio Numeric. Proportion of downsampling in library saturation model fitting. Default: 0.7.
-#' @param D2_rough Numeric. Rough prior value for library variation parameter,
-#' it's typically higher in TAP seq experiment (i.e. 0.8) Default (for perturbseq experiment): 0.3.
-#' @param h5_only Logical. If TRUE, skips baseline expression estimation step (only processes read_umi_table). Default: FALSE.
-#' @param n_threads Integer. Number of threads used for parallel processing. Default: NULL (single-threaded).
+#' @param response_matrix Matrix or NULL. Gene-by-cell expression matrix, typically from
+#'   \code{\link{reference_data_preprocessing_10x}}. Required unless \code{h5_only = TRUE}.
+#' @param read_umi_table Data frame. UMI-level molecule information from
+#'   \code{\link{obtain_qc_read_umi_table}}, typically obtained via
+#'   \code{\link{reference_data_preprocessing_10x}}.
+#' @param mapping_efficiency Numeric or NULL. Naive mapping efficiency estimate from
+#'   \code{\link{obtain_mapping_efficiency}}. Will be adjusted based on \code{gene_list}
+#'   if provided.
+#' @param gene_list Optional character vector of gene IDs (e.g., Ensembl IDs) to restrict
+#'   analysis to specific genes. Used for TAP-seq experimental design. If NULL, all genes
+#'   are used (suitable for perturb-seq).
+#' @param TPM_thres Numeric. Threshold (in TPM) for filtering low-expression genes in
+#'   gene expression model. Default: 0.1.
+#' @param downsample_ratio Numeric. Proportion of downsampling in library saturation model
+#'   fitting. Default: 0.7.
+#' @param D2_rough Numeric. Rough prior value for library variation parameter. Typically
+#'   higher in TAP-seq experiments (e.g., 0.8) than perturb-seq experiments (0.3).
+#'   Default: 0.3.
+#' @param h5_only Logical. If TRUE, skips baseline expression step to save time. Useful
+#'   when tuning hyperparameters for library model fitting. Default: FALSE.
+#' @param n_threads Integer or NULL. Number of parallel processing threads. If NULL,
+#'   uses single-threaded execution. Default: NULL.
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{baseline_expression_stats}{Data frame with gene-level expression statistics including
-#'     response_id, relative_expression, and expression_size columns.}
+#'   \item{baseline_expression_stats}{Data frame with columns:
+#'     \itemize{
+#'       \item \code{response_id}: Ensembl gene identifier
+#'       \item \code{relative_expression}: Estimated relative expression proportions,
+#'         normalized to sum to 1 across all genes of interest
+#'       \item \code{expression_size}: Estimated dispersion (size) parameter representing
+#'         gene-specific expression variability
+#'     }}
 #'   \item{library_parameters}{List with:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Estimated UMI/cell count.
-#'       \item \code{variation}: Estimated variation parameter for PCR amplification bias.
+#'       \item \code{UMI_per_cell}: Estimated maximum UMI count per cell at saturation
+#'       \item \code{variation}: Estimated PCR amplification variation parameter (0 to 1)
 #'     }}
-#'     \item{mapping_efficiency}{Numeric value representing mapping efficiency (proportion of reads mapped to the gene list).}
+#'   \item{mapping_efficiency}{Numeric. Adjusted mapping efficiency accounting for
+#'     fraction of reads mapped to genes of interest.}
 #' }
 #'
 #' @details
-#' This function executes the core steps in the pilot data setup for PerturbPlan:
-#' \enumerate{
-#'   \item Fit negative binomial model to estimate gene-level expression parameters.
-#'   \item Fit read-UMI saturation model to estimate library parameters.
-#'   \item Calculate mapping efficiency if there's a gene list restriction.
-#'   \item Outputs a simplified list structure for power analysis.
-#' }
-#' \strong{Gene Expression Model:}
+#' ## Statistical Models
 #'
-#' The function first uses gene expression data to fit a negative binomial (NB) model
-#' that characterizes the distribution of gene expression levels across cells. This model is
-#' essential for simulating realistic gene expression profiles in power analysis.
+#' \strong{Gene Expression Model (Negative Binomial):}
 #'
-#' For each gene, the NB model for its cellwise expression is defined as:
+#' For each gene, the function fits a negative binomial (NB) model to characterize the
+#' distribution of gene expression levels across cells:
 #'
 #' \code{gene_expression ~ NB(mean = library_size * relative_expression, expression_size = expression_size)}
 #'
 #' where:
 #' \itemize{
-#'   \item \code{gene_expression}: Number of observed UMIs for the given gene in the cell
-#'   \item \code{library_size}: Number of total observed UMIs of the cell
-#'   \item \code{relative_expression}: Proprotion of the gene's expression relative to total expression, adding up to 1 across all genes selected
-#'   \item \code{expression_size}: Dispersion size parameter of the gene in NB model, it's small when biological variability is large
+#'   \item \code{gene_expression}: Number of observed UMIs for the gene in each cell (data)
+#'   \item \code{library_size}: Total UMI count per cell (data)
+#'   \item \code{relative_expression}: Relative expression level of the gene (fitted parameter)
+#'   \item \code{expression_size}: Dispersion parameter; small values indicate high biological
+#'     variability (fitted parameter)
 #' }
 #'
+#' \strong{Sequencing Saturation Model (S-M Curve):}
 #'
-#' \strong{Library Saturation (S-M) Model:}
-#'
-#' The function then uses QC data to fit a saturation-magnitude (S-M)
-#' curve model that relates mapped reads per cell to observed UMIs per cell. This model is
-#' essential for library size estimation in single-cell RNA sequencing power analysis.
-#'
-#' The S-M model is defined as:
+#' The function fits a saturation (S-M) curve that relates mapped reads per cell to
+#' observed UMIs per cell:
 #'
 #' \code{UMI = total_UMIs * (1 - exp(-reads/total_UMIs) * (1 + variation * reads^2/(2*total_UMIs^2)))}
 #'
 #' where:
 #' \itemize{
-#'   \item \code{total_UMIs}: Maximum UMI per cell parameter (saturation level)
-#'   \item \code{variation}: Variation parameter characterizing PCR amplification bias, and is between 0 and 1.
-#'   \item \code{reads}: Number of mapped reads per cell
-#'   \item \code{UMI}: Number of observed UMIs per cell
+#'   \item \code{reads}: Number of mapped reads per cell (data)
+#'   \item \code{UMI}: Number of observed UMIs per cell (data)
+#'   \item \code{total_UMIs} (UMI_per_cell): Maximum UMI per cell parameter at saturation
+#'     (fitted parameter)
+#'   \item \code{variation}: Variation parameter characterizing PCR amplification bias,
+#'     between 0 and 1 (fitted parameter)
 #' }
 #'
-#' The model accounts for both UMI saturation effects at high read depths and
-#' PCR amplification variability, enabling accurate power calculations across
-#' different sequencing scenarios.
+#' ## Processing Steps
 #'
-#' @seealso \code{\link{library_computation}} for S-M curve fitting details and \code{\link{obtain_expression_information}} for NB model fitting details.
+#' The function executes these steps:
+#' \enumerate{
+#'   \item If \code{gene_list} provided: adjusts mapping efficiency and filters genes
+#'   \item Fits negative binomial model using \code{\link{obtain_expression_information}}
+#'     to estimate gene-level expression parameters
+#'   \item Fits saturation model using \code{\link{library_computation}} to estimate
+#'     library parameters
+#'   \item Returns structured output compatible with power analysis functions
+#' }
+#'
+#' ## Use Cases
+#'
+#' \itemize{
+#'   \item \strong{Perturb-seq}: Use all genes (\code{gene_list = NULL}), default
+#'     \code{D2_rough = 0.3}
+#'   \item \strong{TAP-seq}: Provide targeted gene list, higher \code{D2_rough}
+#'     (e.g., 0.8), set \code{TPM_thres = 0}
+#' }
+#'
+#' @seealso
+#' \code{\link{reference_data_preprocessing_10x}} for Step 1 of the preprocessing workflow.
+#'
+#' \code{\link{obtain_expression_information}} for NB model fitting details.
+#'
+#' \code{\link{library_computation}} for S-M curve fitting details.
+#'
+#' See the vignette "Preprocess Reference Expression data for Web App" for the
+#' complete preprocessing workflow: \code{vignette("preprocess-reference", package = "perturbplan")}
 #'
 #'
 #' @importFrom stats median
 #' @importFrom dplyr mutate between
 #' @examples
-#' # set seed for reproducibility
+#' # Set seed for reproducibility
 #' set.seed(123)
-#' # First get raw data using reference_data_preprocessing_10x
+#'
+#' # First, get aggregated raw data using reference_data_preprocessing_10x
 #' extdata_path <- system.file("extdata", package = "perturbplan")
-#' # Get raw data from 10x output
 #' raw_data <- reference_data_preprocessing_10x(
 #'   path_to_top_level_output = extdata_path,
 #'   path_to_run_level_output = "cellranger_tiny",
 #'   h5_rough = TRUE
 #' )
-#' # Process into final pilot data format
-#' pilot_data <- reference_data_processing(
+#'
+#' # Example 1: Process for perturb-seq experimental design (all genes)
+#' pilot_data_perturbseq <- reference_data_processing(
 #'   response_matrix = raw_data$response_matrix,
 #'   read_umi_table = raw_data$read_umi_table,
 #'   mapping_efficiency = raw_data$mapping_efficiency,
-#'   TPM_thres = 0.1,
-#'   h5_only = FALSE
+#'   gene_list = NULL,     # Use all genes
+#'   TPM_thres = 0.1,      # Default expression threshold for filtering
+#'   downsample_ratio = 0.6,  # Downsampling for sequencing
+#'   D2_rough = 0.4,       # Prior for variation parameter
+#'   h5_only = FALSE,      # Fit expression model
+#'   n_threads = NULL      # No parallel processing
 #' )
+#'
+#' # Inspect structure
+#' str(pilot_data_perturbseq)
+#'
+#' # Example 2: Process for TAP-seq experimental design (targeted genes only)
+#' gene_list <- c("ENSG00000241860", "ENSG00000238009", "ENSG00000239945")
+#' pilot_data_tapseq <- reference_data_processing(
+#'   response_matrix = raw_data$response_matrix,
+#'   read_umi_table = raw_data$read_umi_table,
+#'   mapping_efficiency = raw_data$mapping_efficiency,
+#'   gene_list = gene_list, # Restrict to specific genes
+#'   TPM_thres = 0          # No expression threshold for filtering
+#' )
+#'
+#' # Inspect structure
+#' str(pilot_data_tapseq)
 #'
 #' @export
 reference_data_processing <- function(response_matrix = NULL, read_umi_table, mapping_efficiency = NULL,

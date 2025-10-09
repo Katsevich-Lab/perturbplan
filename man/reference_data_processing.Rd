@@ -2,7 +2,7 @@
 % Please edit documentation in R/pilot_data_preprocessing.R
 \name{reference_data_processing}
 \alias{reference_data_processing}
-\title{Pilot Dataset Preprocessing for Power Analysis}
+\title{Extract Statistical Parameters from Pilot Data for Power Analysis}
 \usage{
 reference_data_processing(
   response_matrix = NULL,
@@ -17,116 +17,172 @@ reference_data_processing(
 )
 }
 \arguments{
-\item{response_matrix}{Matrix or NULL. Gene-by-cell matrix of normalized expression
-responses, typically from \code{\link{reference_data_preprocessing_10x}}. If \code{h5_only = TRUE},
-this can be NULL.}
+\item{response_matrix}{Matrix or NULL. Gene-by-cell expression matrix, typically from
+\code{\link{reference_data_preprocessing_10x}}. Required unless \code{h5_only = TRUE}.}
 
-\item{read_umi_table}{Data frame. QC information from molecule_info.h5 or filtered_feature_bc_matrix.h5,
-as obtained via \code{\link{obtain_qc_read_umi_table}}.}
+\item{read_umi_table}{Data frame. UMI-level molecule information from
+\code{\link{obtain_qc_read_umi_table}}, typically obtained via
+\code{\link{reference_data_preprocessing_10x}}.}
 
-\item{mapping_efficiency}{Numeric. Estimated naive mapping efficiency from
-\code{obtain_mapping_efficiency}.}
+\item{mapping_efficiency}{Numeric or NULL. Naive mapping efficiency estimate from
+\code{\link{obtain_mapping_efficiency}}. Will be adjusted based on \code{gene_list}
+if provided.}
 
-\item{gene_list}{Optional character vector of gene IDs to restrict analysis to a specific subset.}
+\item{gene_list}{Optional character vector of gene IDs (e.g., Ensembl IDs) to restrict
+analysis to specific genes. Used for TAP-seq experimental design. If NULL, all genes
+are used (suitable for perturb-seq).}
 
-\item{TPM_thres}{Numeric. Threshold for filtering low-expression genes during preprocessing.}
+\item{TPM_thres}{Numeric. Threshold (in TPM) for filtering low-expression genes in
+gene expression model. Default: 0.1.}
 
-\item{downsample_ratio}{Numeric. Proportion of downsampling in library saturation model fitting. Default: 0.7.}
+\item{downsample_ratio}{Numeric. Proportion of downsampling in library saturation model
+fitting. Default: 0.7.}
 
-\item{D2_rough}{Numeric. Rough prior value for library variation parameter,
-it's typically higher in TAP seq experiment (i.e. 0.8) Default (for perturbseq experiment): 0.3.}
+\item{D2_rough}{Numeric. Rough prior value for library variation parameter. Typically
+higher in TAP-seq experiments (e.g., 0.8) than perturb-seq experiments (0.3).
+Default: 0.3.}
 
-\item{h5_only}{Logical. If TRUE, skips baseline expression estimation step (only processes read_umi_table). Default: FALSE.}
+\item{h5_only}{Logical. If TRUE, skips baseline expression step to save time. Useful
+when tuning hyperparameters for library model fitting. Default: FALSE.}
 
-\item{n_threads}{Integer. Number of threads used for parallel processing. Default: NULL (single-threaded).}
+\item{n_threads}{Integer or NULL. Number of parallel processing threads. If NULL,
+uses single-threaded execution. Default: NULL.}
 }
 \value{
 A list containing:
 \describe{
-\item{baseline_expression_stats}{Data frame with gene-level expression statistics including
-response_id, relative_expression, and expression_size columns.}
+\item{baseline_expression_stats}{Data frame with columns:
+\itemize{
+\item \code{response_id}: Ensembl gene identifier
+\item \code{relative_expression}: Estimated relative expression proportions,
+normalized to sum to 1 across all genes of interest
+\item \code{expression_size}: Estimated dispersion (size) parameter representing
+gene-specific expression variability
+}}
 \item{library_parameters}{List with:
 \itemize{
-\item \code{UMI_per_cell}: Estimated UMI/cell count.
-\item \code{variation}: Estimated variation parameter for PCR amplification bias.
+\item \code{UMI_per_cell}: Estimated maximum UMI count per cell at saturation
+\item \code{variation}: Estimated PCR amplification variation parameter (0 to 1)
 }}
-\item{mapping_efficiency}{Numeric value representing mapping efficiency (proportion of reads mapped to the gene list).}
+\item{mapping_efficiency}{Numeric. Adjusted mapping efficiency accounting for
+fraction of reads mapped to genes of interest.}
 }
 }
 \description{
-Further process sequencing data to extract gene-level expression parameters, library
-parameters, and mapping efficiency with regard to a given gene list required by the PerturbPlan framework.
-Outputs are compatible with built-in pilot examples.
+Fits statistical models to extract gene-level expression parameters, library saturation
+parameters, and adjusted mapping efficiency required by PerturbPlan for power analysis.
+This is Step 2 of the pilot data preprocessing workflow. Outputs are compatible with
+built-in pilot data examples and the PerturbPlan Shiny application.
 }
 \details{
-This function executes the core steps in the pilot data setup for PerturbPlan:
-\enumerate{
-\item Fit negative binomial model to estimate gene-level expression parameters.
-\item Fit read-UMI saturation model to estimate library parameters.
-\item Calculate mapping efficiency if there's a gene list restriction.
-\item Outputs a simplified list structure for power analysis.
-}
-\strong{Gene Expression Model:}
+\subsection{Statistical Models}{
 
-The function first uses gene expression data to fit a negative binomial (NB) model
-that characterizes the distribution of gene expression levels across cells. This model is
-essential for simulating realistic gene expression profiles in power analysis.
+\strong{Gene Expression Model (Negative Binomial):}
 
-For each gene, the NB model for its cellwise expression is defined as:
+For each gene, the function fits a negative binomial (NB) model to characterize the
+distribution of gene expression levels across cells:
 
 \code{gene_expression ~ NB(mean = library_size * relative_expression, expression_size = expression_size)}
 
 where:
 \itemize{
-\item \code{gene_expression}: Number of observed UMIs for the given gene in the cell
-\item \code{library_size}: Number of total observed UMIs of the cell
-\item \code{relative_expression}: Proprotion of the gene's expression relative to total expression, adding up to 1 across all genes selected
-\item \code{expression_size}: Dispersion size parameter of the gene in NB model, it's small when biological variability is large
+\item \code{gene_expression}: Number of observed UMIs for the gene in each cell (data)
+\item \code{library_size}: Total UMI count per cell (data)
+\item \code{relative_expression}: Relative expression level of the gene (fitted parameter)
+\item \code{expression_size}: Dispersion parameter; small values indicate high biological
+variability (fitted parameter)
 }
 
-\strong{Library Saturation (S-M) Model:}
+\strong{Sequencing Saturation Model (S-M Curve):}
 
-The function then uses QC data to fit a saturation-magnitude (S-M)
-curve model that relates mapped reads per cell to observed UMIs per cell. This model is
-essential for library size estimation in single-cell RNA sequencing power analysis.
-
-The S-M model is defined as:
+The function fits a saturation (S-M) curve that relates mapped reads per cell to
+observed UMIs per cell:
 
 \code{UMI = total_UMIs * (1 - exp(-reads/total_UMIs) * (1 + variation * reads^2/(2*total_UMIs^2)))}
 
 where:
 \itemize{
-\item \code{total_UMIs}: Maximum UMI per cell parameter (saturation level)
-\item \code{variation}: Variation parameter characterizing PCR amplification bias, and is between 0 and 1.
-\item \code{reads}: Number of mapped reads per cell
-\item \code{UMI}: Number of observed UMIs per cell
+\item \code{reads}: Number of mapped reads per cell (data)
+\item \code{UMI}: Number of observed UMIs per cell (data)
+\item \code{total_UMIs} (UMI_per_cell): Maximum UMI per cell parameter at saturation
+(fitted parameter)
+\item \code{variation}: Variation parameter characterizing PCR amplification bias,
+between 0 and 1 (fitted parameter)
+}
 }
 
-The model accounts for both UMI saturation effects at high read depths and
-PCR amplification variability, enabling accurate power calculations across
-different sequencing scenarios.
+\subsection{Processing Steps}{
+
+The function executes these steps:
+\enumerate{
+\item If \code{gene_list} provided: adjusts mapping efficiency and filters genes
+\item Fits negative binomial model using \code{\link{obtain_expression_information}}
+to estimate gene-level expression parameters
+\item Fits saturation model using \code{\link{library_computation}} to estimate
+library parameters
+\item Returns structured output compatible with power analysis functions
+}
+}
+
+\subsection{Use Cases}{
+
+\itemize{
+\item \strong{Perturb-seq}: Use all genes (\code{gene_list = NULL}), default
+\code{D2_rough = 0.3}
+\item \strong{TAP-seq}: Provide targeted gene list, higher \code{D2_rough}
+(e.g., 0.8), set \code{TPM_thres = 0}
+}
+}
 }
 \examples{
-# set seed for reproducibility
+# Set seed for reproducibility
 set.seed(123)
-# First get raw data using reference_data_preprocessing_10x
+
+# First, get aggregated raw data using reference_data_preprocessing_10x
 extdata_path <- system.file("extdata", package = "perturbplan")
-# Get raw data from 10x output
 raw_data <- reference_data_preprocessing_10x(
   path_to_top_level_output = extdata_path,
   path_to_run_level_output = "cellranger_tiny",
   h5_rough = TRUE
 )
-# Process into final pilot data format
-pilot_data <- reference_data_processing(
+
+# Example 1: Process for perturb-seq experimental design (all genes)
+pilot_data_perturbseq <- reference_data_processing(
   response_matrix = raw_data$response_matrix,
   read_umi_table = raw_data$read_umi_table,
   mapping_efficiency = raw_data$mapping_efficiency,
-  TPM_thres = 0.1,
-  h5_only = FALSE
+  gene_list = NULL,     # Use all genes
+  TPM_thres = 0.1,      # Default expression threshold for filtering
+  downsample_ratio = 0.6,  # Downsampling for sequencing
+  D2_rough = 0.4,       # Prior for variation parameter
+  h5_only = FALSE,      # Fit expression model
+  n_threads = NULL      # No parallel processing
 )
+
+# Inspect structure
+str(pilot_data_perturbseq)
+
+# Example 2: Process for TAP-seq experimental design (targeted genes only)
+gene_list <- c("ENSG00000241860", "ENSG00000238009", "ENSG00000239945")
+pilot_data_tapseq <- reference_data_processing(
+  response_matrix = raw_data$response_matrix,
+  read_umi_table = raw_data$read_umi_table,
+  mapping_efficiency = raw_data$mapping_efficiency,
+  gene_list = gene_list, # Restrict to specific genes
+  TPM_thres = 0          # No expression threshold for filtering
+)
+
+# Inspect structure
+str(pilot_data_tapseq)
 
 }
 \seealso{
-\code{\link{library_computation}} for S-M curve fitting details and \code{\link{obtain_expression_information}} for NB model fitting details.
+\code{\link{reference_data_preprocessing_10x}} for Step 1 of the preprocessing workflow.
+
+\code{\link{obtain_expression_information}} for NB model fitting details.
+
+\code{\link{library_computation}} for S-M curve fitting details.
+
+See the vignette "Preprocess Reference Expression data for Web App" for the
+complete preprocessing workflow: \code{vignette("preprocess-reference", package = "perturbplan")}
 }

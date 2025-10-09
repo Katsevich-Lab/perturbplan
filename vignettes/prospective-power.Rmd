@@ -18,8 +18,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-# Prospective Power Analysis Beyond the Web App
-
 This vignette demonstrates advanced prospective power analysis workflows that go beyond the web application's built-in functionality. We'll explore:
 
 1. **Comparing perturb-seq and TAP-seq technologies** for the same biological question
@@ -251,15 +249,13 @@ cost_comparison <- comparison_df %>%
     # Total cost (add panel design for TAP-seq)
     Total_Cost = ifelse(Technology == "TAP-seq",
                         Sequencing_Cost + tapseq_panel_design_cost,
-                        Sequencing_Cost),
-    # Cost per unit power
-    Cost_per_Power = Total_Cost / Overall_Power
+                        Sequencing_Cost)
   )
 
 # View cost comparison at 10K reads/cell
 cost_comparison %>%
   filter(Reads_per_Cell == 10000) %>%
-  select(Technology, Sequencing_Cost, Total_Cost, Overall_Power, Cost_per_Power) %>%
+  select(Technology, Sequencing_Cost, Total_Cost, Overall_Power) %>%
   print()
 ```
 
@@ -280,18 +276,16 @@ Sometimes you want to compare power between experiments that have already been p
 ```{r define-designs}
 # Three competing designs with similar total sequencing budget
 designs <- data.frame(
-  Design = c("Deep", "Balanced", "Wide"),
-  Cells_per_gRNA = c(50, 100, 200),
-  Reads_per_Cell = c(20000, 10000, 5000),
+  Design = c("Deep", "Balanced", "Wide", "Complete"),
+  Cells_per_gRNA = c(2000, 5000, 10000, 10000),
+  Reads_per_Cell = c(80000, 40000, 20000, 80000),
   Description = c(
     "Fewer cells, deeper sequencing",
     "Balanced cells and depth",
-    "More cells, shallow sequencing"
+    "More cells, shallow sequencing",
+    "More cells, deeper sequencing"
   )
 )
-
-# All designs have similar total reads per gRNA
-designs$Total_Reads_per_gRNA <- designs$Cells_per_gRNA * designs$Reads_per_Cell
 
 print(designs)
 ```
@@ -308,8 +302,11 @@ for (i in 1:nrow(designs)) {
     library_parameters = library_params,
     cells_per_target = designs$Cells_per_gRNA[i],
     reads_per_cell = designs$Reads_per_Cell[i],
+    MOI = 10, 
+    num_targets = 100,
     control_group = "complement",
     side = "left",
+    prop_non_null = 0.1,
     multiple_testing_alpha = 0.1,
     TPM_threshold = 0.1,
     minimum_fold_change = 0.8
@@ -318,8 +315,13 @@ for (i in 1:nrow(designs)) {
   design_power_results[[i]] <- data.frame(
     Design = designs$Design[i],
     Cells_per_gRNA = designs$Cells_per_gRNA[i],
+    Num_captured_Cells = power_result$num_captured_cells,
     Reads_per_Cell = designs$Reads_per_Cell[i],
-    Overall_Power = power_result$overall_power
+    Overall_Power = power_result$overall_power,
+    Overall_Cost = perturbplan:::cost_computation(
+      num_captured_cells = power_result$num_captured_cells,
+      raw_reads_per_cell = power_result$raw_reads_per_cell
+      )
   )
 }
 
@@ -329,40 +331,56 @@ print(design_comparison)
 
 ### Visualize Power Comparison
 
-Let's visualize how overall power compares across the three designs:
+Let's visualize the four designs in the two dimensional space of overall power and cost:
 
 ```{r power-comparison, fig.width=8, fig.height=5}
-# Bar plot of overall power
-ggplot(design_comparison, aes(x = Design, y = Overall_Power, fill = Design)) +
-  geom_col() +
-  geom_text(aes(label = sprintf("%.1f%%", Overall_Power * 100)),
-            vjust = -0.5, size = 4) +
-  scale_y_continuous(labels = scales::percent, limits = c(0, max(design_comparison$Overall_Power) * 1.1)) +
+ggplot(design_comparison, aes(x = Overall_Cost, y = Overall_Power, color = Design)) +
+  geom_point(size = 4) +
   labs(
-    title = "Overall Power Comparison Across Experimental Designs",
-    subtitle = sprintf("Same total reads per gRNA (~%.0fK), FC = 0.8, FDR = 10%%",
-                      designs$Total_Reads_per_gRNA[1] / 1000),
-    x = "Experimental Design",
-    y = "Overall Statistical Power",
-    fill = "Design"
+    title = "Power Comparison of Pre-existing Designs",
+    x = "Total Cost (USD)",
+    y = "Overall Power",
+    color = "Design"
   ) +
   theme_minimal() +
   theme(
-    legend.position = "none",
+    legend.position = "bottom",
     plot.title = element_text(face = "bold"),
-    panel.grid.major.x = element_blank()
+    panel.grid.minor = element_blank()
   )
 ```
 
 ### Interpretation
 
-The comparison reveals how cell count and sequencing depth trade-offs affect overall power:
+The comparison reveals important trade-offs between cell count and sequencing depth:
 
-- **Deep design** (50 cells, 20K reads): Higher sequencing depth per cell but fewer total cells
-- **Balanced design** (100 cells, 10K reads): Middle ground between cells and depth
-- **Wide design** (200 cells, 5K reads): More cells but shallower sequencing per cell
+**Design Characteristics:**
 
-The results show which design strategy maximizes power given a fixed sequencing budget, helping inform experimental planning decisions.
+- **Deep design**: Fewer cells with deeper sequencing provides higher UMI counts per cell, beneficial for detecting changes in low-expression genes but limited by smaller sample sizes
+- **Balanced design**: Moderate cells and sequencing depth offers a compromise, balancing detection sensitivity with statistical power from cell numbers
+- **Wide design**: More cells with shallower sequencing increases statistical power through larger sample sizes but may miss effects on low-expression genes
+- **Complete design**: Maximum cells and depth represents the gold standard but at significantly higher cost
+
+**Key Insights:**
+
+1. **Power vs Cost**: The "Complete" design achieves the highest power but at a substantially higher cost than other designs. The cost increase may not be justified if the "Balanced" or "Wide" design already achieves acceptable power (e.g., >80%).
+
+2. **Diminishing Returns**: Moving from "Wide" to "Complete" shows diminishing returns in power relative to cost increase, suggesting that moderate designs often provide the best value.
+
+3. **Expression-Dependent Effects**:
+   - Low-expression genes benefit more from the "Deep" design due to higher UMI counts reducing sampling noise
+   - High-expression genes benefit more from the "Wide" design since additional cells provide more statistical power than marginal UMI increases
+
+4. **Experimental Constraints**: Real experiments often face constraints (e.g., limited cells from rare cell types, fixed sequencing budget). This comparison helps identify which constraint matters most for your specific application.
+
+**Practical Recommendations:**
+
+- If most target genes are lowly expressed (< 10 TPM): favor deeper sequencing designs
+- If target genes span a wide expression range: favor balanced or wide designs to ensure adequate power across all genes
+- If discovery is the goal: favor wide designs to maximize the number of cells and improve rare cell type detection
+- If validating specific hypotheses: consider deep designs to maximize sensitivity for target genes
+
+The optimal choice depends on your biological question, expression range of target genes, and budget constraints. Use the saturation curves (Section 3) to identify the point of diminishing returns for sequencing depth in your pilot data.
 
 ## 3. Visualizing Expression Distributions and Saturation Curves
 
@@ -437,16 +455,16 @@ ggplot(saturation_df, aes(x = Reads_per_Cell, y = UMIs_per_Cell)) +
            color = "red", hjust = 1) +
   # Add example design points
   geom_point(data = data.frame(
-    Reads_per_Cell = c(5000, 10000, 20000),
+    Reads_per_Cell = c(20000, 40000, 80000),
     Design = c("Wide", "Balanced", "Deep")
   ), aes(x = Reads_per_Cell, y = UMI_max * (1 - exp(-Reads_per_Cell / UMI_max) *
                                               (1 + variation * Reads_per_Cell^2 / (2 * UMI_max^2)))),
   size = 3, color = "darkgreen") +
   geom_text(data = data.frame(
-    Reads_per_Cell = c(5000, 10000, 20000),
+    Reads_per_Cell = c(20000, 40000, 80000),
     Design = c("Wide", "Balanced", "Deep"),
-    UMI = UMI_max * (1 - exp(-c(5000, 10000, 20000) / UMI_max) *
-                       (1 + variation * c(5000, 10000, 20000)^2 / (2 * UMI_max^2)))
+    UMI = UMI_max * (1 - exp(-c(20000, 40000, 80000) / UMI_max) *
+                       (1 + variation * c(20000, 40000, 80000)^2 / (2 * UMI_max^2)))
   ), aes(x = Reads_per_Cell, y = UMI, label = Design),
   vjust = -1, color = "darkgreen") +
   scale_x_continuous(labels = scales::comma) +
@@ -540,12 +558,12 @@ simulate_expression <- function(gene_data, n_cells, reads_per_cell, library_para
   return(gene_expression)
 }
 
-# Simulate for different read depths
+# Simulate for different read depths (matching Section 2 designs)
 set.seed(123)
 simulation_results <- list()
 
 for (i in 1:nrow(example_genes)) {
-  for (reads in c(5000, 10000, 20000)) {
+  for (reads in c(20000, 40000, 80000)) {
     gene_counts <- simulate_expression(
       example_genes[i, ],
       n_cells = 500,
@@ -567,13 +585,14 @@ simulation_df <- bind_rows(simulation_results)
 ggplot(simulation_df, aes(x = Expression, fill = factor(Reads_per_Cell))) +
   geom_histogram(alpha = 0.6, bins = 30, position = "identity") +
   facet_wrap(~Gene, scales = "free", ncol = 2) +
-  scale_fill_brewer(palette = "Set2") +
+  scale_fill_brewer(palette = "Set2",
+                    labels = c("20K (Wide)", "40K (Balanced)", "80K (Deep)")) +
   labs(
     title = "Simulated Cell-to-Cell Expression Distributions",
-    subtitle = "500 cells per condition",
+    subtitle = "500 cells per condition across three experimental designs",
     x = "UMI Counts",
     y = "Number of Cells",
-    fill = "Reads/Cell"
+    fill = "Design"
   ) +
   theme_minimal() +
   theme(legend.position = "bottom")
@@ -581,12 +600,34 @@ ggplot(simulation_df, aes(x = Expression, fill = factor(Reads_per_Cell))) +
 
 ### Interpretation
 
-The visualizations show:
+The visualizations reveal key insights about the underlying statistical models:
 
-- **Expression distribution**: Most genes have low-to-medium expression, with a heavy right tail
-- **Saturation curve**: Returns diminish significantly above ~20,000 reads per cell for this dataset
-- **Marginal utility**: Each additional read provides less benefit at higher depths
-- **Cell-level variation**: Lower expression genes show higher relative variability, affecting power
+**Expression Distribution:**
+- Most genes have low-to-medium expression (< 100 TPM), with a heavy right tail of highly expressed genes
+- The dispersion parameter (expression_size) tends to be lower for lowly expressed genes, indicating higher biological variability
+- This heterogeneity means different genes benefit from different experimental designs
+
+**Saturation Effects:**
+- The saturation curve shows diminishing returns beyond ~40,000 reads per cell for this dataset
+- At 20,000 reads (Wide design): moderate saturation, cost-effective for most applications
+- At 40,000 reads (Balanced design): approaching diminishing returns, suitable for comprehensive studies
+- At 80,000 reads (Deep design): significant saturation, only justified for detecting subtle changes in low-expression genes
+
+**Marginal Utility:**
+- Each additional 1,000 reads provides progressively fewer additional UMIs
+- Beyond 40,000-50,000 reads per cell, marginal utility drops below 0.5 UMIs per 1,000 reads
+- This explains why the "Complete" design in Section 2 shows diminishing returns relative to its cost
+
+**Cell-Level Variation:**
+- The simulated distributions show that:
+  - Low-expression genes (< 10 TPM) have high coefficient of variation, making them harder to detect without deeper sequencing
+  - High-expression genes show more consistent expression across cells, benefiting more from additional cells than additional depth
+  - The three design points (20K, 40K, 80K reads/cell) show how sequencing depth affects detection resolution
+
+**Connection to Section 2 Designs:**
+- **Wide design (20K reads)**: Sits in the steep part of the saturation curve, maximizing cells while maintaining reasonable UMI counts
+- **Balanced design (40K reads)**: Reaches the inflection point where marginal returns start to decline noticeably
+- **Deep design (80K reads)**: Well into the saturation plateau, justified only for specific applications requiring maximum sensitivity for low-expression targets
 
 ## Practical Recommendations
 

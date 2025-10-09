@@ -331,6 +331,7 @@ compute_power_plan_per_grid <- function(
 #'
 #' @param TPM_threshold Numeric, numeric vector, or character. TPM threshold value, custom sequence, or "varying" for auto-selection.
 #' @param minimum_fold_change Numeric, numeric vector, or character. Minimum fold change value, custom sequence, or "varying" for auto-selection.
+#' Pairs with effects at least this large are considered non-null.
 #' @param cells_per_target Numeric, numeric vector, or character. Number of cells per target, custom sequence, or "varying" for auto-generated grid.
 #' @param reads_per_cell Numeric, numeric vector, or character. Reads per cell, custom sequence, or "varying" for auto-generated grid.
 #' @param MOI Numeric. Multiplicity of infection (default: 10).
@@ -342,7 +343,9 @@ compute_power_plan_per_grid <- function(
 #' @param control_group String. Control group type (default: "complement").
 #' @param side String. Test sidedness (default: "left").
 #' @param multiple_testing_alpha Numeric. FDR level (default: 0.05).
-#' @param prop_non_null Numeric. Proportion of non-null hypotheses (default: 0.1).
+#' @param prop_non_null Numeric. Proportion of non-null hypotheses,
+#' i.e., the fraction of tested pairs expected to exhibit an effect
+#' at least as large as the specified minimum_fold_change (default: 0.1).
 #' @param baseline_expression_stats Data frame. Baseline expression statistics.
 #'   See \code{\link{reference_data_processing}} for data format requirements.
 #' @param library_parameters List. Library parameters with UMI_per_cell and variation.

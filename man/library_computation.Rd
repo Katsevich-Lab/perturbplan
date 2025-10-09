@@ -2,41 +2,81 @@
 % Please edit documentation in R/pilot_data_help.R
 \name{library_computation}
 \alias{library_computation}
-\title{Fit saturation-magnitude (S-M) curve between mapped reads and observed UMIs}
+\title{Fit Saturation-Magnitude (S-M) Curve Between Reads and UMIs}
 \usage{
 library_computation(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 }
 \arguments{
-\item{QC_data}{Data frame. The QC'd molecular data from \code{\link{obtain_qc_read_umi_table}}
-containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
+\item{QC_data}{Data frame. UMI-level molecule information from
+\code{\link{obtain_qc_read_umi_table}} containing columns \code{num_reads},
+\code{UMI_id}, \code{cell_id}, and \code{response_id}.}
 
-\item{downsample_ratio}{Numeric. The ratio for downsampling the dataset (default: 0.7).
-Must be between 0 and 1. It can take vector value to make several downsampling but one downsampling is often enough.}
+\item{downsample_ratio}{Numeric or numeric vector. Proportion(s) for downsampling
+the dataset to create additional observation points. Must be between 0 and 1.
+Can be a vector for multiple downsampling levels, but one level is often sufficient.
+Default: 0.7.}
 
-\item{D2_rough}{Numeric. Rough estimate of the D2 parameter in the S-M curve model (default: 0.3).
-Represents the variation parameter in the saturation curve.}
+\item{D2_rough}{Numeric. Rough prior estimate for the variation parameter (D2) in
+the S-M curve model. Represents PCR amplification bias. Typically 0.3 for perturb-seq,
+higher (e.g., 0.8) for TAP-seq. Default: 0.3.}
 }
 \value{
-A fitted S-M curve model object of class \code{nlsLM} from the \code{minpack.lm} package.
-The model parameters include:
+A fitted S-M curve model object of class \code{nlsLM} from the
+\code{minpack.lm} package. The model has two fitted parameters accessible via
+\code{coef()}:
 \describe{
-\item{total_UMIs}{Total number of UMIs per cell}
-\item{variation}{Variation parameter characterizing PCR bias and saturation}
+\item{total_UMIs}{Maximum UMI count per cell at sequencing saturation}
+\item{D2}{Variation parameter characterizing PCR amplification bias (0 to 1)}
 }
 }
 \description{
-This function fits a nonlinear saturation curve model to estimate the relationship
-between the number of mapped reads per cell and the number of observed UMIs per cell.
-The model is essential for library size estimation in single-cell RNA sequencing.
+Fits a nonlinear saturation curve model to estimate the relationship between mapped
+reads per cell and observed UMIs per cell. The model accounts for both UMI saturation
+at high read depths and PCR amplification variability. This function is used internally
+by \code{\link{reference_data_processing}}.
 }
 \details{
-The function:
+\subsection{Saturation Model}{
+
+The S-M curve model is:
+
+\deqn{\text{UMI} = \text{total_UMIs} \times \left(1 - \exp\left(-\frac{\text{reads}}{\text{total_UMIs}}\right) \times \left(1 + D2 \times \frac{\text{reads}^2}{2 \times \text{total_UMIs}^2}\right)\right)}
+
+where:
+\itemize{
+\item \code{reads}: Number of mapped reads per cell (independent variable)
+\item \code{UMI}: Number of observed UMIs per cell (dependent variable)
+\item \code{total_UMIs}: Maximum UMI per cell at saturation (fitted parameter)
+\item \code{D2}: Variation parameter for PCR bias, between 0 and 1 (fitted parameter)
+}
+}
+
+\subsection{Fitting Procedure}{
+
 \enumerate{
-\item Downsamples the read data to create multiple observation points
-\item Computes UMI counts for different read depths
-\item Fits a nonlinear saturation curve: \code{UMI = total_UMIs * (1 - exp(-reads/total_UMIs) * (1 + variation * reads^2/(2*total_UMIs^2)))}
-\item Returns the best-fitting model from multiple initial parameter values
-\item Issues a warning if the relative error of the fitted model exceeds 7\%
+\item Expands read data by replicating UMI indices according to read counts
+\item Downsamples the read data at specified ratio(s) to create multiple observation points
+\item Counts unique UMIs at each downsampled read depth
+\item Fits nonlinear model using two different initial parameter sets:
+\itemize{
+\item "Delicate": Uses prior D2_rough and derives initial total_UMIs
+\item "Rough": Uses observed UMI count as initial total_UMIs
+}
+\item Selects model with lower relative prediction error
+\item Warns if relative error exceeds 5\\%
+}
+}
+
+\subsection{Important Notes}{
+
+\itemize{
+\item The toy example data has very few reads, so fitted parameters may be sensitive
+to random seed and prior specification
+\item In practice with real data, the function demonstrates robustness to both random
+seed choice and moderate prior misspecification
+\item Multiple downsampling ratios can be provided as a vector for more observation
+points, but typically one ratio suffices
+}
 }
 }
 \examples{
@@ -44,19 +84,26 @@ The function:
 cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 qc_data <- obtain_qc_read_umi_table(cellranger_path)
 
-# Compute library size parameters
-lib_params <- library_computation(
+# Fit saturation curve
+lib_model <- library_computation(
   QC_data = qc_data,
   downsample_ratio = 0.7,
   D2_rough = 0.3
 )
 
-# View parameters
-print(lib_params)
+# View fitted parameters
+coef(lib_model)
+
+# Extract specific parameters
+total_umis <- coef(lib_model)["total_UMIs"]
+variation <- coef(lib_model)["D2"]
 
 }
 \seealso{
-\code{\link{obtain_qc_read_umi_table}} for input data preparation
-\code{\link{fit_read_UMI_curve}} for using the fitted parameters
+\code{\link{obtain_qc_read_umi_table}} for input data preparation.
+
+\code{\link{reference_data_processing}} for the complete preprocessing workflow.
+
+\code{\link{library_estimation}} for extracting parameters from the fitted model.
 }
 \keyword{internal}

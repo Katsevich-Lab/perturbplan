@@ -112,6 +112,7 @@ reference:
     contents:
       - K562_Gasperini
       - K562_10x
+      - K562_Ray
       - A549_Sakellaropoulos
       - THP1_Yao
       - T_CD8_Shifrut

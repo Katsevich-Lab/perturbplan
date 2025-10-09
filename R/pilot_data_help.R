@@ -14,28 +14,54 @@ NULL
 #' @importFrom minpack.lm nlsLM
 NULL
 
-#' Load and QC gene expression matrix from Cell Ranger output
+#' Load and QC Gene Expression Matrix from Cell Ranger Output
 #'
 #' @description
-#' Reads a sparse gene-by-cell matrix (\code{matrix.mtx.gz}) together with
-#' feature annotations from a Cell Ranger run folder. The required files are
-#' located in the sub-directory \code{outs/filtered_feature_bc_matrix/}.
+#' Reads a sparse gene-by-cell expression matrix from Cell Ranger output and performs
+#' quality control checks. This function is used internally by
+#' \code{\link{reference_data_preprocessing_10x}}.
 #'
-#' @param path_to_cellranger_output Character. Path to an SRR-named folder
-#'   (e.g. \code{"SRR12345678"}). This folder must contain:
+#' @param path_to_cellranger_output Character. Path to a Cell Ranger run folder
+#'   (e.g., \code{"SRR12345678"}). This folder must contain:
 #'   \itemize{
 #'     \item \code{outs/filtered_feature_bc_matrix/matrix.mtx.gz}
 #'     \item \code{outs/filtered_feature_bc_matrix/features.tsv.gz}
 #'     \item \code{outs/filtered_feature_bc_matrix/barcodes.tsv.gz}
 #'   }
-#' In some cases, the subfolder `filtered_feature_bc_matrix` may need to be produced
-#' by unzipping the `filtered_feature_bc_matrix.tar.gz` file.
+#'
+#' @return A sparse \code{CsparseMatrix} (genes as rows, cells as columns) with:
+#'   \itemize{
+#'     \item Unique, non-empty gene IDs as row names
+#'     \item Unique, non-empty cell barcodes as column names
+#'     \item Duplicate genes and barcodes removed (keeping first occurrence)
+#'   }
+#'
+#' @details
+#' In some cases, the subfolder \code{filtered_feature_bc_matrix/} may need to be
+#' produced by unzipping the \code{filtered_feature_bc_matrix.tar.gz} file from
+#' Cell Ranger output.
+#'
+#' The function:
+#' \enumerate{
+#'   \item Reads the sparse matrix in Matrix Market format
+#'   \item Converts to column-compressed sparse format (CsparseMatrix)
+#'   \item Reads gene annotations from features.tsv.gz
+#'   \item Removes duplicate or empty gene IDs
+#'   \item Reads cell barcodes from barcodes.tsv.gz
+#'   \item Removes duplicate or empty barcodes
+#' }
 #'
 #' @examples
 #' # Load example Cell Ranger output
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' response_matrix <- obtain_qc_response_data(cellranger_path)
-#' @return A \code{CsparseMatrix} (genes × cells) with cleaned, unique row names and column names.
+#'
+#' # Inspect the matrix
+#' dim(response_matrix)
+#' class(response_matrix)
+#'
+#' @seealso \code{\link{reference_data_preprocessing_10x}} for aggregating data from
+#'   multiple Cell Ranger runs
 #' @keywords internal
 #' @export
 obtain_qc_response_data <- function(path_to_cellranger_output) {
@@ -76,18 +102,57 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
   return(response_matrix)
 }
 
-#' Estimate gene-level dispersion (theta)
+#' Fit Negative Binomial Model to Estimate Gene Expression Parameters
 #'
-#' @param response_matrix \code{CsparseMatrix} (genes × cells).
-#' @param TPM_thres Numeric. Filter threshold on TPM. Default \code{1}.
-#' @param rough Logical. If \code{TRUE}, use rough C++ estimator; otherwise use
-#'   refined/MLE. Default \code{FALSE}.
-#' @param n_threads Integer controlling parallelism:
+#' @description
+#' Fits a negative binomial model to gene expression data to estimate relative expression
+#' levels and dispersion parameters for each gene. This function is used internally by
+#' \code{\link{reference_data_processing}}.
+#'
+#' @param response_matrix Sparse matrix (genes as rows, cells as columns). Typically a
+#'   \code{CsparseMatrix} from \code{\link{obtain_qc_response_data}}.
+#' @param TPM_thres Numeric. Expression threshold in TPM (Transcripts Per Million) for
+#'   filtering low-expression genes. Genes with TPM below this threshold are excluded.
+#'   Default: 0.1.
+#' @param rough Logical. If TRUE, uses fast C++ estimator for dispersion. If FALSE,
+#'   uses refined maximum likelihood estimation. Default: FALSE.
+#' @param n_threads Integer or NULL controlling parallelism:
 #'   \itemize{
-#'     \item \code{NULL} – auto-detect (prefer \env{NSLOTS}, else local cores)
-#'     \item \code{NA}   – force use of \env{NSLOTS}
-#'     \item positive integer – user-supplied core count
+#'     \item \code{NULL} – auto-detect (prefer \env{NSLOTS} environment variable, else
+#'       use \code{parallel::detectCores()})
+#'     \item \code{NA} – force use of \env{NSLOTS} only
+#'     \item positive integer – user-specified thread count
 #'   }
+#'
+#' @return Data frame with three columns:
+#' \describe{
+#'   \item{response_id}{Gene identifier (e.g., Ensembl ID) for genes passing TPM threshold}
+#'   \item{relative_expression}{Estimated relative expression proportion (sums to 1
+#'     across all genes)}
+#'   \item{expression_size}{Estimated dispersion parameter \eqn{\theta} from negative
+#'     binomial model. Small values indicate high biological variability.}
+#' }
+#'
+#' @details
+#' ## Negative Binomial Model
+#'
+#' For each gene, the model is:
+#'
+#' \deqn{\text{gene_expression} \sim \text{NB}(\text{mean} = \text{library_size} \times \text{relative_expression}, \text{size} = \text{expression_size})}
+#'
+#' where \code{library_size} is the total UMI count per cell and \code{relative_expression}
+#' and \code{expression_size} are the fitted parameters.
+#'
+#' ## Processing Steps
+#'
+#' \enumerate{
+#'   \item Calculates library sizes (total UMIs per cell)
+#'   \item Computes relative expression (gene counts / total counts)
+#'   \item Converts to TPM scale and filters genes below threshold
+#'   \item Estimates dispersion parameters using C++ implementation
+#'   \item Returns data frame with fitted parameters
+#' }
+#'
 #' @examples
 #' # Get response matrix from Cell Ranger output
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
@@ -97,19 +162,17 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
 #' expr_info <- obtain_expression_information(
 #'   response_matrix = response_matrix,
 #'   TPM_thres = 0.1,
-#'   rough = TRUE
+#'   rough = TRUE,
+#'   n_threads = 1
 #' )
 #'
 #' # Examine results
 #' head(expr_info)
 #' dim(expr_info)
+#' summary(expr_info$expression_size)
 #'
-#' @return \describe{
-#'   \item{response_id}{Gene symbol passing the TPM filter}
-#'   \item{relative_expression}{Proportion of total counts}
-#'   \item{expression_size}{Estimated dispersion \eqn{\theta}}
-#' }
-#'
+#' @seealso \code{\link{reference_data_processing}} for the complete pilot data
+#'   preprocessing workflow
 #' @keywords internal
 #' @export
 obtain_expression_information <- function(response_matrix,
@@ -180,22 +243,54 @@ obtain_expression_information <- function(response_matrix,
 
 
 
-#' Extract QC-filtered molecule information from Cell Ranger HDF5 files
+#' Extract UMI-Level Molecule Information from Cell Ranger HDF5 Files
 #'
-#' @param path_to_cellranger_output Character. Folder containing
-#'   \code{outs/molecule_info.h5} and \code{outs/filtered_feature_bc_matrix.h5}.
+#' @description
+#' Extracts QC-filtered UMI-level molecule information from Cell Ranger HDF5 files.
+#' This function is used internally by \code{\link{reference_data_preprocessing_10x}}.
+#'
+#' @param path_to_cellranger_output Character. Path to Cell Ranger run folder
+#'   containing:
+#'   \itemize{
+#'     \item \code{outs/molecule_info.h5} – Raw molecule information
+#'     \item \code{outs/filtered_feature_bc_matrix.h5} – QC-filtered cell barcodes
+#'   }
+#'
+#' @return Data frame with UMI-level molecule information containing columns:
+#' \describe{
+#'   \item{num_reads}{Number of reads supporting this UMI-cell combination}
+#'   \item{UMI_id}{UMI index (1-based)}
+#'   \item{cell_id}{Cell barcode with GEM group suffix (e.g., "ACGTACGT-1")}
+#'   \item{response_id}{Gene identifier (e.g., Ensembl ID)}
+#' }
+#'
+#' @details
+#' The function:
+#' \enumerate{
+#'   \item Reads raw molecule information from \code{molecule_info.h5}
+#'   \item Reads QC-filtered cell barcodes from \code{filtered_feature_bc_matrix.h5}
+#'   \item Filters molecule data to retain only QC-passed cells
+#'   \item Constructs cell IDs with GEM group suffixes
+#'   \item Returns data frame with read counts per UMI per cell
+#' }
+#'
+#' This data is used for fitting the library saturation (S-M) curve in
+#' \code{\link{library_computation}}.
 #'
 #' @examples
 #' # Extract read/UMI information from Cell Ranger output
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' qc_table <- obtain_qc_read_umi_table(cellranger_path)
+#'
 #' # Examine the data
 #' head(qc_table)
 #' dim(qc_table)
-#' summary(qc_table)
+#' summary(qc_table$num_reads)
 #'
-#' @return Data frame with columns \code{num_reads}, \code{UMI_id},
-#'   \code{cell_id}, \code{response_id}.
+#' @seealso
+#' \code{\link{reference_data_preprocessing_10x}} for aggregating data from multiple runs.
+#'
+#' \code{\link{library_computation}} for fitting saturation curves using this data.
 #' @keywords internal
 #' @export
 obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
@@ -220,17 +315,53 @@ obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
   dplyr::filter(raw_df, cell_id %in% qc_cells)
 }
 
-#' Mapping efficiency of a Cell Ranger run
+#' Calculate Naive Mapping Efficiency from Cell Ranger Metrics
 #'
-#' @param QC_data Output of \code{obtain_qc_read_umi_table()}.
-#' @param path_to_cellranger_output Folder containing `outs/metrics_summary.csv`.
+#' @description
+#' Computes the naive mapping efficiency as the proportion of total reads that map
+#' to the transcriptome. This function is used internally by
+#' \code{\link{reference_data_preprocessing_10x}}.
+#'
+#' @param QC_data Data frame. Output of \code{\link{obtain_qc_read_umi_table}} containing
+#'   a \code{num_reads} column with read counts per UMI.
+#' @param path_to_cellranger_output Character. Path to Cell Ranger run folder containing
+#'   \code{outs/metrics_summary.csv} with a "Number of Reads" column.
+#'
+#' @return Numeric value between 0 and 1 representing the proportion of total reads
+#'   that successfully mapped to the transcriptome.
+#'
+#' @details
+#' The function calculates:
+#'
+#' \deqn{\text{mapping_efficiency} = \frac{\text{mapped_reads}}{\text{total_reads}}}
+#'
+#' where:
+#' \itemize{
+#'   \item \code{mapped_reads} = sum of \code{num_reads} from QC_data
+#'   \item \code{total_reads} = "Number of Reads" from metrics_summary.csv
+#' }
+#'
+#' ## Important Notes
+#'
+#' \itemize{
+#'   \item The \code{metrics_summary.csv} file must contain a column named "Number of Reads"
+#'   \item This column may need to be added or edited manually when Cell Ranger is run
+#'     with multiple libraries or samples
+#'   \item The function removes commas from the "Number of Reads" field before conversion
+#'   \item This gives a "naive" estimate that will be adjusted in
+#'     \code{\link{reference_data_processing}} when a gene list is specified
+#' }
 #'
 #' @examples
 #' # Get mapping efficiency from Cell Ranger output
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' qc_data <- obtain_qc_read_umi_table(cellranger_path)
 #' mapping_eff <- obtain_mapping_efficiency(qc_data, cellranger_path)
-#' @return Numeric proportion: mapped / total reads.
+#'
+#' # View result
+#' print(mapping_eff)
+#'
+#' @seealso \code{\link{reference_data_preprocessing_10x}} for the complete aggregation workflow
 #' @keywords internal
 #' @export
 obtain_mapping_efficiency <- function(QC_data, path_to_cellranger_output) {
@@ -310,35 +441,72 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 }
 
 
-#' Fit saturation-magnitude (S-M) curve between mapped reads and observed UMIs
+#' Fit Saturation-Magnitude (S-M) Curve Between Reads and UMIs
 #'
 #' @description
-#' This function fits a nonlinear saturation curve model to estimate the relationship
-#' between the number of mapped reads per cell and the number of observed UMIs per cell.
-#' The model is essential for library size estimation in single-cell RNA sequencing.
+#' Fits a nonlinear saturation curve model to estimate the relationship between mapped
+#' reads per cell and observed UMIs per cell. The model accounts for both UMI saturation
+#' at high read depths and PCR amplification variability. This function is used internally
+#' by \code{\link{reference_data_processing}}.
 #'
-#' @param QC_data Data frame. The QC'd molecular data from \code{\link{obtain_qc_read_umi_table}}
-#' containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.
-#' @param downsample_ratio Numeric. The ratio for downsampling the dataset (default: 0.7).
-#' Must be between 0 and 1. It can take vector value to make several downsampling but one downsampling is often enough.
-#' @param D2_rough Numeric. Rough estimate of the D2 parameter in the S-M curve model (default: 0.3).
-#' Represents the variation parameter in the saturation curve.
+#' @param QC_data Data frame. UMI-level molecule information from
+#'   \code{\link{obtain_qc_read_umi_table}} containing columns \code{num_reads},
+#'   \code{UMI_id}, \code{cell_id}, and \code{response_id}.
+#' @param downsample_ratio Numeric or numeric vector. Proportion(s) for downsampling
+#'   the dataset to create additional observation points. Must be between 0 and 1.
+#'   Can be a vector for multiple downsampling levels, but one level is often sufficient.
+#'   Default: 0.7.
+#' @param D2_rough Numeric. Rough prior estimate for the variation parameter (D2) in
+#'   the S-M curve model. Represents PCR amplification bias. Typically 0.3 for perturb-seq,
+#'   higher (e.g., 0.8) for TAP-seq. Default: 0.3.
 #'
-#' @return A fitted S-M curve model object of class \code{nlsLM} from the \code{minpack.lm} package.
-#' The model parameters include:
+#' @return A fitted S-M curve model object of class \code{nlsLM} from the
+#'   \code{minpack.lm} package. The model has two fitted parameters accessible via
+#'   \code{coef()}:
 #' \describe{
-#'   \item{total_UMIs}{Total number of UMIs per cell}
-#'   \item{variation}{Variation parameter characterizing PCR bias and saturation}
+#'   \item{total_UMIs}{Maximum UMI count per cell at sequencing saturation}
+#'   \item{D2}{Variation parameter characterizing PCR amplification bias (0 to 1)}
 #' }
 #'
 #' @details
-#' The function:
+#' ## Saturation Model
+#'
+#' The S-M curve model is:
+#'
+#' \deqn{\text{UMI} = \text{total_UMIs} \times \left(1 - \exp\left(-\frac{\text{reads}}{\text{total_UMIs}}\right) \times \left(1 + D2 \times \frac{\text{reads}^2}{2 \times \text{total_UMIs}^2}\right)\right)}
+#'
+#' where:
+#' \itemize{
+#'   \item \code{reads}: Number of mapped reads per cell (independent variable)
+#'   \item \code{UMI}: Number of observed UMIs per cell (dependent variable)
+#'   \item \code{total_UMIs}: Maximum UMI per cell at saturation (fitted parameter)
+#'   \item \code{D2}: Variation parameter for PCR bias, between 0 and 1 (fitted parameter)
+#' }
+#'
+#' ## Fitting Procedure
+#'
 #' \enumerate{
-#'   \item Downsamples the read data to create multiple observation points
-#'   \item Computes UMI counts for different read depths
-#'   \item Fits a nonlinear saturation curve: \code{UMI = total_UMIs * (1 - exp(-reads/total_UMIs) * (1 + variation * reads^2/(2*total_UMIs^2)))}
-#'   \item Returns the best-fitting model from multiple initial parameter values
-#'   \item Issues a warning if the relative error of the fitted model exceeds 7%
+#'   \item Expands read data by replicating UMI indices according to read counts
+#'   \item Downsamples the read data at specified ratio(s) to create multiple observation points
+#'   \item Counts unique UMIs at each downsampled read depth
+#'   \item Fits nonlinear model using two different initial parameter sets:
+#'     \itemize{
+#'       \item "Delicate": Uses prior D2_rough and derives initial total_UMIs
+#'       \item "Rough": Uses observed UMI count as initial total_UMIs
+#'     }
+#'   \item Selects model with lower relative prediction error
+#'   \item Warns if relative error exceeds 5\%
+#' }
+#'
+#' ## Important Notes
+#'
+#' \itemize{
+#'   \item The toy example data has very few reads, so fitted parameters may be sensitive
+#'     to random seed and prior specification
+#'   \item In practice with real data, the function demonstrates robustness to both random
+#'     seed choice and moderate prior misspecification
+#'   \item Multiple downsampling ratios can be provided as a vector for more observation
+#'     points, but typically one ratio suffices
 #' }
 #'
 #' @examples
@@ -346,19 +514,26 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' qc_data <- obtain_qc_read_umi_table(cellranger_path)
 #'
-#' # Compute library size parameters
-#' lib_params <- library_computation(
+#' # Fit saturation curve
+#' lib_model <- library_computation(
 #'   QC_data = qc_data,
 #'   downsample_ratio = 0.7,
 #'   D2_rough = 0.3
 #' )
 #'
-#' # View parameters
-#' print(lib_params)
+#' # View fitted parameters
+#' coef(lib_model)
+#'
+#' # Extract specific parameters
+#' total_umis <- coef(lib_model)["total_UMIs"]
+#' variation <- coef(lib_model)["D2"]
 #'
 #' @seealso
-#' \code{\link{obtain_qc_read_umi_table}} for input data preparation
-#' \code{\link{fit_read_UMI_curve}} for using the fitted parameters
+#' \code{\link{obtain_qc_read_umi_table}} for input data preparation.
+#'
+#' \code{\link{reference_data_processing}} for the complete preprocessing workflow.
+#'
+#' \code{\link{library_estimation}} for extracting parameters from the fitted model.
 #' @keywords internal
 #' @export
 library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3){

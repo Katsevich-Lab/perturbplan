@@ -11,14 +11,18 @@ input_check_library_computation(
 )
 }
 \arguments{
-\item{QC_data}{Data frame. The QC'd molecular data from \code{\link{obtain_qc_read_umi_table}}
-containing columns \code{num_reads}, \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
+\item{QC_data}{Data frame. UMI-level molecule information from
+\code{\link{obtain_qc_read_umi_table}} containing columns \code{num_reads},
+\code{UMI_id}, \code{cell_id}, and \code{response_id}.}
 
-\item{downsample_ratio}{Numeric. The ratio for downsampling the dataset (default: 0.7).
-Must be between 0 and 1. It can take vector value to make several downsampling but one downsampling is often enough.}
+\item{downsample_ratio}{Numeric or numeric vector. Proportion(s) for downsampling
+the dataset to create additional observation points. Must be between 0 and 1.
+Can be a vector for multiple downsampling levels, but one level is often sufficient.
+Default: 0.7.}
 
-\item{D2_rough}{Numeric. Rough estimate of the D2 parameter in the S-M curve model (default: 0.3).
-Represents the variation parameter in the saturation curve.}
+\item{D2_rough}{Numeric. Rough prior estimate for the variation parameter (D2) in
+the S-M curve model. Represents PCR amplification bias. Typically 0.3 for perturb-seq,
+higher (e.g., 0.8) for TAP-seq. Default: 0.3.}
 }
 \description{
 Input checking function for library_computation

@@ -2,25 +2,59 @@
 % Please edit documentation in R/pilot_data_help.R
 \name{obtain_mapping_efficiency}
 \alias{obtain_mapping_efficiency}
-\title{Mapping efficiency of a Cell Ranger run}
+\title{Calculate Naive Mapping Efficiency from Cell Ranger Metrics}
 \usage{
 obtain_mapping_efficiency(QC_data, path_to_cellranger_output)
 }
 \arguments{
-\item{QC_data}{Output of \code{obtain_qc_read_umi_table()}.}
+\item{QC_data}{Data frame. Output of \code{\link{obtain_qc_read_umi_table}} containing
+a \code{num_reads} column with read counts per UMI.}
 
-\item{path_to_cellranger_output}{Folder containing \code{outs/metrics_summary.csv}.}
+\item{path_to_cellranger_output}{Character. Path to Cell Ranger run folder containing
+\code{outs/metrics_summary.csv} with a "Number of Reads" column.}
 }
 \value{
-Numeric proportion: mapped / total reads.
+Numeric value between 0 and 1 representing the proportion of total reads
+that successfully mapped to the transcriptome.
 }
 \description{
-Mapping efficiency of a Cell Ranger run
+Computes the naive mapping efficiency as the proportion of total reads that map
+to the transcriptome. This function is used internally by
+\code{\link{reference_data_preprocessing_10x}}.
+}
+\details{
+The function calculates:
+
+\deqn{\text{mapping_efficiency} = \frac{\text{mapped_reads}}{\text{total_reads}}}
+
+where:
+\itemize{
+\item \code{mapped_reads} = sum of \code{num_reads} from QC_data
+\item \code{total_reads} = "Number of Reads" from metrics_summary.csv
+}
+\subsection{Important Notes}{
+
+\itemize{
+\item The \code{metrics_summary.csv} file must contain a column named "Number of Reads"
+\item This column may need to be added or edited manually when Cell Ranger is run
+with multiple libraries or samples
+\item The function removes commas from the "Number of Reads" field before conversion
+\item This gives a "naive" estimate that will be adjusted in
+\code{\link{reference_data_processing}} when a gene list is specified
+}
+}
 }
 \examples{
 # Get mapping efficiency from Cell Ranger output
 cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 qc_data <- obtain_qc_read_umi_table(cellranger_path)
 mapping_eff <- obtain_mapping_efficiency(qc_data, cellranger_path)
+
+# View result
+print(mapping_eff)
+
+}
+\seealso{
+\code{\link{reference_data_preprocessing_10x}} for the complete aggregation workflow
 }
 \keyword{internal}

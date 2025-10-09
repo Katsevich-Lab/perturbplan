@@ -2,32 +2,59 @@
 % Please edit documentation in R/pilot_data_help.R
 \name{obtain_qc_response_data}
 \alias{obtain_qc_response_data}
-\title{Load and QC gene expression matrix from Cell Ranger output}
+\title{Load and QC Gene Expression Matrix from Cell Ranger Output}
 \usage{
 obtain_qc_response_data(path_to_cellranger_output)
 }
 \arguments{
-\item{path_to_cellranger_output}{Character. Path to an SRR-named folder
-(e.g. \code{"SRR12345678"}). This folder must contain:
+\item{path_to_cellranger_output}{Character. Path to a Cell Ranger run folder
+(e.g., \code{"SRR12345678"}). This folder must contain:
 \itemize{
 \item \code{outs/filtered_feature_bc_matrix/matrix.mtx.gz}
 \item \code{outs/filtered_feature_bc_matrix/features.tsv.gz}
 \item \code{outs/filtered_feature_bc_matrix/barcodes.tsv.gz}
-}
-In some cases, the subfolder \code{filtered_feature_bc_matrix} may need to be produced
-by unzipping the \code{filtered_feature_bc_matrix.tar.gz} file.}
+}}
 }
 \value{
-A \code{CsparseMatrix} (genes × cells) with cleaned, unique row names and column names.
+A sparse \code{CsparseMatrix} (genes as rows, cells as columns) with:
+\itemize{
+\item Unique, non-empty gene IDs as row names
+\item Unique, non-empty cell barcodes as column names
+\item Duplicate genes and barcodes removed (keeping first occurrence)
+}
 }
 \description{
-Reads a sparse gene-by-cell matrix (\code{matrix.mtx.gz}) together with
-feature annotations from a Cell Ranger run folder. The required files are
-located in the sub-directory \code{outs/filtered_feature_bc_matrix/}.
+Reads a sparse gene-by-cell expression matrix from Cell Ranger output and performs
+quality control checks. This function is used internally by
+\code{\link{reference_data_preprocessing_10x}}.
+}
+\details{
+In some cases, the subfolder \code{filtered_feature_bc_matrix/} may need to be
+produced by unzipping the \code{filtered_feature_bc_matrix.tar.gz} file from
+Cell Ranger output.
+
+The function:
+\enumerate{
+\item Reads the sparse matrix in Matrix Market format
+\item Converts to column-compressed sparse format (CsparseMatrix)
+\item Reads gene annotations from features.tsv.gz
+\item Removes duplicate or empty gene IDs
+\item Reads cell barcodes from barcodes.tsv.gz
+\item Removes duplicate or empty barcodes
+}
 }
 \examples{
 # Load example Cell Ranger output
 cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 response_matrix <- obtain_qc_response_data(cellranger_path)
+
+# Inspect the matrix
+dim(response_matrix)
+class(response_matrix)
+
+}
+\seealso{
+\code{\link{reference_data_preprocessing_10x}} for aggregating data from
+multiple Cell Ranger runs
 }
 \keyword{internal}

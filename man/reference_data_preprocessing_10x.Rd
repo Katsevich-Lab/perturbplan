@@ -13,61 +13,122 @@ reference_data_preprocessing_10x(
 }
 \arguments{
 \item{path_to_top_level_output}{Character. Path to the top-level directory
-containing Cell Ranger run-level subdirectories.}
+containing Cell Ranger run-level subdirectories. Each subdirectory should contain
+Cell Ranger output in the standard structure with \code{outs/} folders.}
 
-\item{path_to_run_level_output}{Optional character vector. A subset of run-level
-directory names (not full paths). These should match the basename of folders
-inside \code{path_to_top_level_output}. Unmatched entries will trigger a warning.}
+\item{path_to_run_level_output}{Optional character vector. Names of specific run-level
+directories to process (not full paths). Should match the basename of folders
+inside \code{path_to_top_level_output}. If NULL, all subdirectories are processed.
+Unmatched entries will trigger a warning.}
 
-\item{h5_rough}{Logical. If TRUE (default), h5 data will only be extracted from
-the first SRR folder. If FALSE, data from all SRRs will be combined.}
+\item{h5_rough}{Logical. If TRUE (default), extracts UMI-level molecule information
+from first SRR only for speed. If FALSE, combines UMI-level molecule information
+from all SRRs (slower but more comprehensive).}
 
-\item{skip_mapping_efficiency}{Logical. If TRUE, skips mapping efficiency calculation. It can be useful when we don't have a
-metrics_summary.csv file to calculate the total number of reads. Default: FALSE.}
+\item{skip_mapping_efficiency}{Logical. If TRUE, skips estimation of mapping efficiency.
+If FALSE (default), calculates naive mapping efficiency. Set to TRUE when
+\code{metrics_summary.csv} is unavailable or lacks "Number of Reads" column.}
 }
 \value{
 A list with three elements:
 \describe{
-\item{response_matrix}{A matrix of gene expression values (common genes only),
-combined across SRR directories.}
-\item{read_umi_table}{A data frame of molecule-level QC data from one or more SRRs,
-including the SRR label.}
-\item{mapping_efficiency}{A numeric value representing the naive mapping efficiency (proportion of reads mapped to transcriptome)}
+\item{response_matrix}{Sparse gene-by-cell expression matrix (genes as rows,
+cells as columns) with row and column names. Contains only genes common across
+all processed SRR runs, combined across all runs.}
+\item{read_umi_table}{Data frame with UMI-level molecule information, including columns:
+\itemize{
+\item \code{num_reads}: Number of reads supporting this UMI-cell combination
+\item \code{UMI_id}: UMI index
+\item \code{cell_id}: Cell barcode
+\item \code{response_id}: Gene identifier (e.g., Ensembl ID)
+\item \code{srr_idx}: SRR run identifier
+}}
+\item{mapping_efficiency}{Numeric value between 0 and 1 representing proportion
+of reads mapped to transcriptome if \code{skip_mapping_efficiency = FALSE},
+or NULL if \code{skip_mapping_efficiency = TRUE}.}
 }
 }
 \description{
-This function aggregates gene expression matrices and h5 molecule-level data
-from multiple SRR-level Cell Ranger output directories. It aligns all matrices
-to a common set of genes, performs basic consistency checks, and optionally
-restricts to a user-defined subset of run-level directories.
+Aggregates Cell Ranger outputs from multiple sequencing runs (SRRs) into a single
+data structure containing gene expression matrices, UMI-level molecule information,
+and naive mapping efficiency estimates. This is Step 1 of the pilot data preprocessing
+workflow for PerturbPlan power analysis.
 }
 \details{
-The function performs the following steps:
+\subsection{Input Requirements}{
+
+Your data should be organized with Cell Ranger output directories under a top-level folder:
+\preformatted{
+path_to_top_level_output/
+├── SRR_run_1/
+│   ├── outs/
+│   │   ├── filtered_feature_bc_matrix/
+│   │   │   ├── barcodes.tsv.gz
+│   │   │   ├── features.tsv.gz
+│   │   │   └── matrix.mtx.gz
+│   │   ├── molecule_info.h5
+│   │   ├── filtered_feature_bc_matrix.h5
+│   │   └── metrics_summary.csv
+├── SRR_run_2/
+│   └── ...
+└── SRR_run_3/
+    └── ...
+}
+
+## Processing Steps
+
+The function performs the following operations:
 \enumerate{
-\item Lists all SRR directories under the given top-level folder.
-\item Optionally filters to a subset of run-level names.
-\item Reads response matrices and retains only shared genes across SRRs.
-\item Optionally reads h5 QC data from one or all SRRs.
-\item Calculates mapping efficiency from the h5 QC data and the metrics summary file.
+  \item Lists all SRR directories under the given top-level folder
+\item Optionally filters to a subset of run-level names
+\item Reads gene expression matrices using \code{\link{obtain_qc_response_data}}
+\item Identifies and retains only genes shared across all SRRs
+\item Reads UMI-level molecule information using \code{\link{obtain_qc_read_umi_table}}
+\item Calculates naive mapping efficiency using \code{\link{obtain_mapping_efficiency}}
+}
+}
+
+\subsection{Important Notes}{
+
+\itemize{
+\item SRR directories should be generated by a recent version of Cell Ranger configured
+for the perturbation (CRISPR or Perturb-seq) workflow
+\item In some cases, \code{filtered_feature_bc_matrix/} may need to be produced by
+unzipping \code{filtered_feature_bc_matrix.tar.gz}
+\item For mapping efficiency calculation, \code{metrics_summary.csv} must include
+a column named "Number of Reads". This column may need to be added or edited
+manually when Cell Ranger is run with multiple libraries or samples.
+\item When \code{h5_rough = FALSE}, multiple mapping efficiencies are computed and
+the median value is returned
+}
 }
 }
 \examples{
-# Process tiny example dataset
+# Point to directory containing example Cell Ranger outputs
 extdata_path <- system.file("extdata", package = "perturbplan")
-# Note: This is a minimal example dataset for testing
-result <- reference_data_preprocessing_10x(
+
+# Aggregate data from all SRR runs
+raw_data <- reference_data_preprocessing_10x(
   path_to_top_level_output = extdata_path,
-  path_to_run_level_output = "cellranger_tiny",
-  h5_rough = TRUE
+  path_to_run_level_output = "cellranger_tiny",  # Only read subfolder cellranger_tiny
+  h5_rough = TRUE,  # Use first SRR for QC data (faster)
+  skip_mapping_efficiency = FALSE  # Estimate mapping efficiency
 )
 
 # Inspect structure
-str(result)
+str(raw_data)
 
 # Access components
-result$response_matrix
+head(raw_data$read_umi_table)
+dim(raw_data$response_matrix)
 
 }
 \seealso{
-\code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}}, \code{\link{obtain_mapping_efficiency}} for details on data extraction
+\code{\link{reference_data_processing}} for Step 2 of the preprocessing workflow.
+
+\code{\link{obtain_qc_response_data}}, \code{\link{obtain_qc_read_umi_table}},
+and \code{\link{obtain_mapping_efficiency}} for details on data extraction.
+
+See the vignette "Preprocess Reference Expression data for Web App" for the
+complete preprocessing workflow: \code{vignette("preprocess-reference", package = "perturbplan")}
 }
