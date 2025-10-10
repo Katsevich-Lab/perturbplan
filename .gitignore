@@ -7,10 +7,5 @@ inst/doc
 /Meta/
 *.Rcheck/
 *.tar.gz
-<<<<<<< HEAD
-docs
 lib/
 AGENTS.md
-=======
-# docs
->>>>>>> 1d51936 (fix bugs)

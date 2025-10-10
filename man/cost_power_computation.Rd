@@ -195,53 +195,6 @@ result2 <- cost_power_computation(
 )
 
 
-# Load pilot data
-pilot_data <- get_pilot_data_from_package("K562")
-
-# Compute power across TPM_threshold range
-result1 <- cost_power_computation(
-  minimizing_variable = "TPM_threshold",
-  fixed_variable = list(minimum_fold_change = 0.8),
-  baseline_expression_stats = pilot_data$baseline_expression_stats,
-  library_parameters = pilot_data$library_parameters,
-  power_target = 0.8,
-  cost_constraint = 15000
-)
-
-
-# Compute power across fold change range
-result2 <- cost_power_computation(
-  minimizing_variable = "minimum_fold_change",
-  fixed_variable = list(TPM_threshold = 50),
-  baseline_expression_stats = pilot_data$baseline_expression_stats,
-  library_parameters = pilot_data$library_parameters,
-  power_target = 0.8,
-  cost_constraint = NULL
-)
-
-
-# Optimize cost across all experimental designs
-result3 <- cost_power_computation(
-  minimizing_variable = "cost",
-  fixed_variable = list(TPM_threshold = 50, minimum_fold_change = 0.8),
-  baseline_expression_stats = pilot_data$baseline_expression_stats,
-  library_parameters = pilot_data$library_parameters,
-  power_target = 0.8,
-  cost_constraint = NULL
-)
-
-
-# Optimize cells per target with fixed detection parameters
-result4 <- cost_power_computation(
-  minimizing_variable = "cells_per_target",
-  fixed_variable = list(TPM_threshold = 50, minimum_fold_change = 0.8),
-  baseline_expression_stats = pilot_data$baseline_expression_stats,
-  library_parameters = pilot_data$library_parameters,
-  power_target = 0.8,
-  cost_constraint = 10000
-)
-
-
 }
 \seealso{
 \code{\link{compute_power_plan}} for the underlying power analysis

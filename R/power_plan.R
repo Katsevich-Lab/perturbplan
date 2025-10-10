@@ -692,56 +692,6 @@ compute_power_plan <- function(
 #'   \item \code{TPM_threshold}: Uses quantiles of baseline expression (10th to 99th percentile)
 #'   \item \code{minimum_fold_change}: Uses ranges based on test side (left: 0.5-0.9, right: 1-10, both: combined)
 #' }
-#'
-#' @examples
-#' # Load pilot data
-#' pilot_data <- get_pilot_data_from_package("K562")
-#'
-#' # Compute power across TPM_threshold range
-#' result1 <- cost_power_computation(
-#'   minimizing_variable = "TPM_threshold",
-#'   fixed_variable = list(minimum_fold_change = 0.8),
-#'   baseline_expression_stats = pilot_data$baseline_expression_stats,
-#'   library_parameters = pilot_data$library_parameters,
-#'   power_target = 0.8,
-#'   cost_constraint = 15000
-#' )
-#'
-#'
-#' # Compute power across fold change range
-#' result2 <- cost_power_computation(
-#'   minimizing_variable = "minimum_fold_change",
-#'   fixed_variable = list(TPM_threshold = 50),
-#'   baseline_expression_stats = pilot_data$baseline_expression_stats,
-#'   library_parameters = pilot_data$library_parameters,
-#'   power_target = 0.8,
-#'   cost_constraint = NULL
-#' )
-#'
-#'
-#' # Optimize cost across all experimental designs
-#' result3 <- cost_power_computation(
-#'   minimizing_variable = "cost",
-#'   fixed_variable = list(TPM_threshold = 50, minimum_fold_change = 0.8),
-#'   baseline_expression_stats = pilot_data$baseline_expression_stats,
-#'   library_parameters = pilot_data$library_parameters,
-#'   power_target = 0.8,
-#'   cost_constraint = NULL
-#' )
-#'
-#'
-#' # Optimize cells per target with fixed detection parameters
-#' result4 <- cost_power_computation(
-#'   minimizing_variable = "cells_per_target",
-#'   fixed_variable = list(TPM_threshold = 50, minimum_fold_change = 0.8),
-#'   baseline_expression_stats = pilot_data$baseline_expression_stats,
-#'   library_parameters = pilot_data$library_parameters,
-#'   power_target = 0.8,
-#'   cost_constraint = 10000
-#' )
-#'
-#'
-#' @export
 cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_variable = list(minimum_fold_change = 0.8),
                                    # experimental parameters
                                    MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13, assay = "perturb-seq",
@@ -1047,7 +997,7 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
                                      power_target, power_precision,
                                      MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4,
                                      cost_per_captured_cell = 0.086, cost_per_million_reads = 0.374,
-                                     cost_grid_size = 200){
+                                     cost_grid_size = 50){
 
   # Input validation
   input_check_find_optimal_cost_design(

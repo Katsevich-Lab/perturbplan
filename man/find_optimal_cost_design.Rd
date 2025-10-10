@@ -15,7 +15,7 @@ find_optimal_cost_design(
   gRNAs_per_target = 4,
   cost_per_captured_cell = 0.086,
   cost_per_million_reads = 0.374,
-  cost_grid_size = 200
+  cost_grid_size = 50
 )
 }
 \arguments{
