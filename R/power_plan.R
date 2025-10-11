@@ -351,7 +351,7 @@ compute_power_plan_per_grid <- function(
 #'   See \code{\link{reference_data_processing}} for parameter specifications.
 #' @param grid_size Integer. Grid size for each dimension (default: 10).
 #' @param min_power_threshold Numeric. Minimum power threshold (default: 0.01).
-#' @param max_power_threshold Numeric. Maximum power threshold (default: 0.8).
+#' @param max_power_threshold Numeric. Maximum power threshold to achieve (default: 0.8).
 #' @param mapping_efficiency Numeric. Mapping efficiency for raw reads to usable reads (default: 0.72).
 #'   See \code{\link{reference_data_processing}} for typical values.
 #'
