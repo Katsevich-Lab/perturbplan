@@ -22,7 +22,7 @@ input_check_find_optimal_cost_design(
 \item{cost_power_df}{Data frame. Output from \code{\link{cost_power_computation}}
 containing power analysis results with cost calculations. Must include columns:
 \code{overall_power}, \code{total_cost}, \code{cells_per_target},
-\code{raw_reads_per_cell}, plus the specified minimizing variable (except for cost optimization).}
+\code{sequenced_reads_per_cell}, plus the specified minimizing variable (except for cost optimization).}
 
 \item{minimizing_variable}{Character. The parameter being optimized. Must be one of:
 \itemize{

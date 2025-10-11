@@ -1117,7 +1117,7 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
 #' @param sequencing_platform Character. The sequencing platform used for RNA-seq.
 #'   Currently supported: "NovaSeq X 25B" (default).
 #' @param num_captured_cells Numeric. Number of captured cells in the experiment.
-#' @param raw_reads_per_cell Numeric. Number of raw sequencing reads per cell.
+#' @param sequenced_reads_per_cell Numeric. Number of raw sequencing reads per cell.
 #'
 #' @return Numeric. Total experimental cost in USD combining library preparation and sequencing costs.
 #'
@@ -1135,12 +1135,12 @@ extract_expression_info <- function(biological_system = "K562", B = 200, gene_li
 #' }
 #'
 #' Total cost = (cost_per_captured_cell × num_captured_cells) +
-#'              (cost_per_million_reads × raw_reads_per_cell × num_captured_cells / 1e6)
+#'              (cost_per_million_reads × sequenced_reads_per_cell × num_captured_cells / 1e6)
 #'
 #' @keywords internal
 cost_computation <- function(experimental_platform = "10x Chromium v3",
                              sequencing_platform = "NovaSeq X 25B",
-                             num_captured_cells, raw_reads_per_cell){
+                             num_captured_cells, sequenced_reads_per_cell){
 
   # Obtain cost per captured cell
   cost_per_captured_cell <- switch(experimental_platform,
@@ -1156,7 +1156,7 @@ cost_computation <- function(experimental_platform = "10x Chromium v3",
   library_preparation_cost <- cost_per_captured_cell * num_captured_cells
 
   # compute the sequencing cost
-  sequencing_cost <- cost_per_million_reads * raw_reads_per_cell * num_captured_cells / 1e6
+  sequencing_cost <- cost_per_million_reads * sequenced_reads_per_cell * num_captured_cells / 1e6
 
   # compute the total cost
   return(library_preparation_cost + sequencing_cost)

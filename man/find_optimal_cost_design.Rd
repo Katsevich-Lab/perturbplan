@@ -22,7 +22,7 @@ find_optimal_cost_design(
 \item{cost_power_df}{Data frame. Output from \code{\link{cost_power_computation}}
 containing power analysis results with cost calculations. Must include columns:
 \code{overall_power}, \code{total_cost}, \code{cells_per_target},
-\code{raw_reads_per_cell}, plus the specified minimizing variable (except for cost optimization).}
+\code{sequenced_reads_per_cell}, plus the specified minimizing variable (except for cost optimization).}
 
 \item{minimizing_variable}{Character. The parameter being optimized. Must be one of:
 \itemize{
@@ -114,52 +114,6 @@ Where:
 
 The function is designed to work with output from \code{cost_power_computation()}
 and provides fine-grained cost optimization for experimental design selection.
-}
-\examples{
-# Load pilot data and perform cost-power analysis
-pilot_data <- get_pilot_data_from_package("K562")
-cost_results <- cost_power_computation(
-  minimizing_variable = "TPM_threshold",
-  fixed_variable = list(minimum_fold_change = 0.8),
-  baseline_expression_stats = pilot_data$baseline_expression_stats,
-  library_parameters = pilot_data$library_parameters,
-  power_target = 0.8,
-  cost_constraint = 15000
-)
-
-# Find optimal cost-efficient designs
-optimal_designs <- find_optimal_cost_design(
-  cost_power_df = cost_results,
-  minimizing_variable = "TPM_threshold",
-  power_target = 0.8,
-  power_precision = 0.02,
-  num_targets = 100,
-  non_targeting_gRNAs = 10,
-  gRNAs_per_target = 4,
-  cost_grid_size = 100
-)
-
-# print equi-cost designs
-print(head(optimal_designs$optimal_cost_power_df),width = Inf)
-
-# print equi-power cost grid
-print(head(optimal_designs$optimal_cost_grid),width = Inf)
-
-# Find globally optimal cost design across all parameters
-cost_optimal <- find_optimal_cost_design(
-  cost_power_df = cost_results,
-  minimizing_variable = "cost",
-  power_target = 0.8,
-  power_precision = 0.02,
-  cost_grid_size = 50
-)
-
-# print equi-cost designs
-print(head(cost_optimal$optimal_cost_power_df),width = Inf)
-
-# print the equi-power cost grid
-print(head(cost_optimal$optimal_cost_grid),width = Inf)
-
 }
 \seealso{
 \code{\link{cost_power_computation}} for the underlying cost-power analysis

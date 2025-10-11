@@ -8,7 +8,7 @@ cost_computation(
   experimental_platform = "10x Chromium v3",
   sequencing_platform = "NovaSeq X 25B",
   num_captured_cells,
-  raw_reads_per_cell
+  sequenced_reads_per_cell
 )
 }
 \arguments{
@@ -20,7 +20,7 @@ Currently supported: "NovaSeq X 25B" (default).}
 
 \item{num_captured_cells}{Numeric. Number of captured cells in the experiment.}
 
-\item{raw_reads_per_cell}{Numeric. Number of raw sequencing reads per cell.}
+\item{sequenced_reads_per_cell}{Numeric. Number of raw sequencing reads per cell.}
 }
 \value{
 Numeric. Total experimental cost in USD combining library preparation and sequencing costs.
@@ -44,6 +44,6 @@ Current cost parameters:
 }
 
 Total cost = (cost_per_captured_cell × num_captured_cells) +
-(cost_per_million_reads × raw_reads_per_cell × num_captured_cells / 1e6)
+(cost_per_million_reads × sequenced_reads_per_cell × num_captured_cells / 1e6)
 }
 \keyword{internal}

@@ -23,7 +23,7 @@ setup_optimal_cost_test_data <- function() {
   cost_power_df <- expand.grid(
     TPM_threshold = c(5, 10, 15, 20),
     cells_per_target = c(500, 1000, 1500),
-    raw_reads_per_cell = c(5000, 8000, 12000)
+    sequenced_reads_per_cell = c(5000, 8000, 12000)
   ) |>
     dplyr::mutate(
       # Add other required columns
@@ -31,12 +31,12 @@ setup_optimal_cost_test_data <- function() {
       num_captured_cells = 100 * cells_per_target / 10, # MOI = 10, num_targets = 100
       library_size = 8000, # Fixed for simplicity
       library_cost = 0.086 * num_captured_cells,
-      sequencing_cost = 0.374 * raw_reads_per_cell * num_captured_cells / 1e6,
+      sequencing_cost = 0.374 * sequenced_reads_per_cell * num_captured_cells / 1e6,
       total_cost = library_cost + sequencing_cost,
       # Simulate realistic power values (higher for more cells/reads, lower for higher thresholds)
       overall_power = pmax(0.1, pmin(0.95,
         0.5 + 0.3 * log10(cells_per_target / 500) +
-        0.2 * log10(raw_reads_per_cell / 5000) -
+        0.2 * log10(sequenced_reads_per_cell / 5000) -
         0.15 * (TPM_threshold - 5) / 15 + rnorm(36, 0, 0.05)))
     )
 
@@ -65,16 +65,16 @@ test_that("find_optimal_cost_design basic functionality", {
   # Validate optimal_cost_power_df
   expect_s3_class(result$optimal_cost_power_df, "data.frame")
   required_cols_power <- c("TPM_threshold", "overall_power", "total_cost",
-                          "cells_per_target", "raw_reads_per_cell", "minimum_cost")
+                          "cells_per_target", "sequenced_reads_per_cell", "minimum_cost")
   expect_true(all(required_cols_power %in% names(result$optimal_cost_power_df)))
 
   # Validate optimal_cost_grid
   expect_s3_class(result$optimal_cost_grid, "data.frame")
-  required_cols_grid <- c("TPM_threshold", "minimum_cost", "raw_reads_per_cell", "total_cost")
+  required_cols_grid <- c("TPM_threshold", "minimum_cost", "sequenced_reads_per_cell", "total_cost")
   expect_true(all(required_cols_grid %in% names(result$optimal_cost_grid)))
 
   # Check that optimal_cost_grid has the flattened structure from unnest
-  expect_true("raw_reads_per_cell" %in% names(result$optimal_cost_grid))
+  expect_true("sequenced_reads_per_cell" %in% names(result$optimal_cost_grid))
   expect_true("cells_per_target" %in% names(result$optimal_cost_grid))
 })
 
@@ -132,7 +132,7 @@ test_that("find_optimal_cost_design cost calculations", {
 
     # Verify cost calculations
     expected_lib_cost <- 0.1 * grid_sample$num_captured_cells
-    expected_seq_cost <- 0.5 * grid_sample$raw_reads_per_cell * grid_sample$num_captured_cells / 1e6
+    expected_seq_cost <- 0.5 * grid_sample$sequenced_reads_per_cell * grid_sample$num_captured_cells / 1e6
     expected_total <- expected_lib_cost + expected_seq_cost
 
     expect_equal(grid_sample$library_cost, expected_lib_cost, tolerance = 1e-6)
@@ -226,11 +226,11 @@ test_that("find_optimal_cost_design column renaming", {
     power_precision = 0.1
   )
 
-  # Check that raw_reads_per_cell column exists (no renaming)
-  expect_true("raw_reads_per_cell" %in% names(result$optimal_cost_power_df))
+  # Check that sequenced_reads_per_cell column exists (no renaming)
+  expect_true("sequenced_reads_per_cell" %in% names(result$optimal_cost_power_df))
   expect_false("reads_per_cell" %in% names(result$optimal_cost_power_df))
 
   # Same check for cost grid
-  expect_true("raw_reads_per_cell" %in% names(result$optimal_cost_grid))
+  expect_true("sequenced_reads_per_cell" %in% names(result$optimal_cost_grid))
   expect_false("reads_per_cell" %in% names(result$optimal_cost_grid))
 })

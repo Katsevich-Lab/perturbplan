@@ -10,7 +10,7 @@ setup_validation_test_data <- function() {
     overall_power = c(0.7, 0.8, 0.9, 0.75, 0.85, 0.95, 0.6, 0.7, 0.8),
     total_cost = c(1000, 1500, 2000, 1100, 1600, 2100, 900, 1400, 1900),
     cells_per_target = rep(c(500, 1000, 1500), 3),
-    raw_reads_per_cell = rep(c(8000, 10000, 12000), 3),
+    sequenced_reads_per_cell = rep(c(8000, 10000, 12000), 3),
     minimum_fold_change = rep(0.8, 9)
   )
   
@@ -292,7 +292,7 @@ test_that("input_check_find_optimal_cost_design validates power criteria feasibi
     overall_power = c(0.1, 0.2, 0.3),  # All too low
     total_cost = c(1000, 1500, 2000),
     cells_per_target = c(500, 1000, 1500),
-    raw_reads_per_cell = c(8000, 10000, 12000),
+    sequenced_reads_per_cell = c(8000, 10000, 12000),
     minimum_fold_change = rep(0.8, 3)
   )
   

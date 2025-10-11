@@ -1,228 +1,78 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/404.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/AGENTS.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/CLAUDE.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/LICENSE.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/articles/posthoc.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/articles/preprocess-reference.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/articles/prospective-power.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/index.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/A549_Sakellaropoulos.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/BH_cutoff_bisection.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/FDP_estimate.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/K562_10x.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/K562_Gasperini.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/K562_Ray.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/THP1_Yao.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/T_CD8_Shifrut.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/adjusted_cutoff.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/check_power_results.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/compute_QC.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/compute_distribution_teststat.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/compute_distribution_teststat_random_es_cpp.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/compute_monte_carlo_teststat_cpp.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan_overall.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan_overall_cpp.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan_per_grid.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_posthoc.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/compute_single_power_cpp.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/compute_zero_prob.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/cost_computation.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/cost_power_computation.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/extract_expression_info.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/extract_fc_expression_info.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/find_optimal_cost_design.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/fit_read_UMI_curve.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/fit_read_UMI_curve_cpp.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/generate_reads_grid_cpp.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/generate_reads_grid_streamlined_cpp.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/get_pilot_data_from_package.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/iPSC_Tian.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/iPSC_neuron_Tian.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/identify_cell_range_cpp.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/identify_library_size_range.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/identify_library_size_range_cpp.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/identify_reads_range_cpp.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_compute_power_plan.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_cost_power_computation.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_find_optimal_cost_design.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_library_computation.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_posthoc.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_power_function.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/library_computation.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/library_estimation.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/obtain_expression_information.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/obtain_fixed_variable_constraining_cost.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/obtain_mapping_efficiency.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/obtain_qc_read_umi_table.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/obtain_qc_response_data.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/power_function.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/reference_data_preprocessing_10x.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/reference_data_processing.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/reference_expression_datasets.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/rejection_computation.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/score_test.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/summary_h5_data.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/validate_combined_pilot_data.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/validate_custom_baseline.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/validate_custom_baseline_rds.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/validate_custom_library_rds.html</loc>
-  </url>
-  <url>
-    <loc>https://katsevich-lab.github.io/perturbplan/reference/var_nb.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://katsevich-lab.github.io/perturbplan/404.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/AGENTS.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/CLAUDE.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/LICENSE-text.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/LICENSE.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/articles/index.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/articles/posthoc.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/articles/preprocess-reference.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/articles/prospective-power.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/authors.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/index.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/news/index.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/A549_Sakellaropoulos.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/BH_cutoff_bisection.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/FDP_estimate.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/K562_10x.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/K562_Gasperini.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/K562_Ray.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/THP1_Yao.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/T_CD8_Shifrut.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/adjusted_cutoff.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/check_power_results.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_QC.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_distribution_teststat.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_distribution_teststat_random_es_cpp.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_monte_carlo_teststat_cpp.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan_overall.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan_overall_cpp.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_plan_per_grid.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_power_posthoc.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_single_power_cpp.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/compute_zero_prob.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/cost_computation.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/cost_power_computation.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/extract_expression_info.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/extract_fc_expression_info.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/find_optimal_cost_design.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/fit_read_UMI_curve.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/fit_read_UMI_curve_cpp.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/generate_reads_grid_cpp.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/generate_reads_grid_streamlined_cpp.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/get_pilot_data_from_package.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/iPSC_Tian.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/iPSC_neuron_Tian.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/identify_cell_range_cpp.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/identify_library_size_range.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/identify_library_size_range_cpp.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/identify_reads_range_cpp.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/index.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_compute_power_plan.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_cost_power_computation.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_find_optimal_cost_design.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_library_computation.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_posthoc.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/input_check_power_function.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/library_computation.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/library_estimation.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/obtain_expression_information.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/obtain_fixed_variable_constraining_cost.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/obtain_mapping_efficiency.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/obtain_qc_read_umi_table.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/obtain_qc_response_data.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/power_function.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/reference_data_preprocessing_10x.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/reference_data_processing.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/reference_expression_datasets.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/rejection_computation.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/score_test.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/summary_h5_data.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/validate_combined_pilot_data.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/validate_custom_baseline.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/validate_custom_baseline_rds.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/validate_custom_library_rds.html</loc></url>
+<url><loc>https://katsevich-lab.github.io/perturbplan/reference/var_nb.html</loc></url>
 </urlset>
+

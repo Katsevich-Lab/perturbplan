@@ -31,7 +31,7 @@ test_that("compute_power_plan basic functionality with single values", {
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
-    reads_per_cell = 10000,
+    sequenced_reads_per_cell = 10000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     num_targets = 20,
@@ -44,7 +44,7 @@ test_that("compute_power_plan basic functionality with single values", {
 
   # Check required columns
   expected_cols <- c("minimum_fold_change", "TPM_threshold", "cells_per_target",
-                     "num_captured_cells", "raw_reads_per_cell", "library_size", "overall_power")
+                     "num_captured_cells", "sequenced_reads_per_cell", "library_size", "overall_power")
   expect_true(all(expected_cols %in% names(result)))
 
   # Validate specific values
@@ -60,7 +60,7 @@ test_that("compute_power_plan with numeric vectors", {
     TPM_threshold = c(5, 10, 15),
     minimum_fold_change = c(0.7, 0.8),
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     num_targets = 15
@@ -82,7 +82,7 @@ test_that("compute_power_planwith varying parameters", {
     TPM_threshold = "varying",
     minimum_fold_change = 0.8,
     cells_per_target = "varying",
-    reads_per_cell = "varying",
+    sequenced_reads_per_cell = "varying",
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     num_targets = 20,
@@ -95,7 +95,7 @@ test_that("compute_power_planwith varying parameters", {
   # Check that parameters actually vary
   expect_true(length(unique(result$TPM_threshold)) > 1)
   expect_true(length(unique(result$cells_per_target)) > 1)
-  expect_true(length(unique(result$raw_reads_per_cell)) > 1)
+  expect_true(length(unique(result$sequenced_reads_per_cell)) > 1)
   expect_true(all(result$minimum_fold_change == 0.8))  # Fixed value
 })
 
@@ -107,7 +107,7 @@ test_that("compute_power_planvarying parameter ranges", {
     TPM_threshold = "varying",
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     grid_size = 5
@@ -130,7 +130,7 @@ test_that("compute_power_planminimum_fold_change varying by test side", {
     TPM_threshold = 10,
     minimum_fold_change = "varying",
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     side = "left",
@@ -142,7 +142,7 @@ test_that("compute_power_planminimum_fold_change varying by test side", {
     TPM_threshold = 10,
     minimum_fold_change = "varying",
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     side = "right",
@@ -154,7 +154,7 @@ test_that("compute_power_planminimum_fold_change varying by test side", {
     TPM_threshold = 10,
     minimum_fold_change = "varying",
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     side = "both",
@@ -179,7 +179,7 @@ test_that("compute_power_plandifferent control groups", {
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     control_group = "complement",
@@ -191,7 +191,7 @@ test_that("compute_power_plandifferent control groups", {
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     control_group = "nt_cells",
@@ -213,7 +213,7 @@ test_that("compute_power_planexpression filtering by TPM_threshold", {
     TPM_threshold = 20,  # High threshold
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     num_targets = 15
@@ -224,7 +224,7 @@ test_that("compute_power_planexpression filtering by TPM_threshold", {
     TPM_threshold = 1,  # Low threshold
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     num_targets = 15
@@ -246,7 +246,7 @@ test_that("compute_power_planlibrary size calculation", {
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
-    reads_per_cell = c(5000, 10000, 15000),
+    sequenced_reads_per_cell = c(5000, 10000, 15000),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     num_targets = 15
@@ -258,9 +258,8 @@ test_that("compute_power_planlibrary size calculation", {
   # Library size should increase with reads per cell
   expect_true(all(diff(result$library_size) > 0))
 
-  # Raw reads per cell should match input (adjusted for mapping efficiency)
-  expected_raw_reads <- c(5000, 10000, 15000) / 0.72
-  expect_equal(result$raw_reads_per_cell, expected_raw_reads, tolerance = 1e-6)
+  # Sequenced reads per cell should match input directly
+  expect_equal(result$sequenced_reads_per_cell, c(5000, 10000, 15000), tolerance = 1e-6)
 })
 
 test_that("compute_power_planexperimental parameter validation", {
@@ -271,7 +270,7 @@ test_that("compute_power_planexperimental parameter validation", {
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     MOI = 5,  # Different MOI
@@ -294,7 +293,7 @@ test_that("compute_power_plangRNA variability effects", {
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     gRNA_variability = 0.05,  # Low variability
@@ -306,7 +305,7 @@ test_that("compute_power_plangRNA variability effects", {
     TPM_threshold = 10,
     minimum_fold_change = 0.8,
     cells_per_target = 1000,
-    reads_per_cell = 8000,
+    sequenced_reads_per_cell = 8000,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     gRNA_variability = 0.3,  # High variability
@@ -330,7 +329,7 @@ test_that("compute_power_planoutput completeness", {
     TPM_threshold = c(5, 15),
     minimum_fold_change = c(0.7, 0.9),
     cells_per_target = c(500, 1500),
-    reads_per_cell = c(6000, 12000),
+    sequenced_reads_per_cell = c(6000, 12000),
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     num_targets = 10
@@ -344,11 +343,11 @@ test_that("compute_power_planoutput completeness", {
     TPM_threshold = c(5, 15),
     minimum_fold_change = c(0.7, 0.9),
     cells_per_target = c(500, 1500),
-    raw_reads_per_cell = c(6000, 12000) / 0.72
+    sequenced_reads_per_cell = c(6000, 12000)
   )
 
   # Match by rounding to avoid floating point precision issues
-  result_rounded <- result[c("TPM_threshold", "minimum_fold_change", "cells_per_target", "raw_reads_per_cell")]
+  result_rounded <- result[c("TPM_threshold", "minimum_fold_change", "cells_per_target", "sequenced_reads_per_cell")]
   result_rounded[] <- lapply(result_rounded, round, digits = 6)
   param_combinations[] <- lapply(param_combinations, round, digits = 6)
 
@@ -369,6 +368,7 @@ test_that("compute_power_planmatches compute_power_plan_overall", {
   gRNAs_per_target_val <- 4
   non_targeting_gRNAs_val <- 10
   MOI_val <- 10
+  mapping_efficiency <- 0.72
 
   # Calculate experimental design parameters for compute_power_plan_overall
   total_gRNAs <- num_targets_val * gRNAs_per_target_val + non_targeting_gRNAs_val
@@ -378,7 +378,7 @@ test_that("compute_power_planmatches compute_power_plan_overall", {
 
   # Calculate library size
   library_size <- fit_read_UMI_curve_cpp(
-    reads_per_cell = reads_per_cell_val,
+    reads_per_cell = reads_per_cell_val * mapping_efficiency,
     UMI_per_cell = test_data$library_parameters$UMI_per_cell,
     variation = test_data$library_parameters$variation
   )
@@ -411,13 +411,14 @@ test_that("compute_power_planmatches compute_power_plan_overall", {
     TPM_threshold = TPM_threshold_val,
     minimum_fold_change = minimum_fold_change_val,
     cells_per_target = cells_per_target_val,
-    reads_per_cell = reads_per_cell_val,
+    sequenced_reads_per_cell = reads_per_cell_val,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     num_targets = num_targets_val,
     gRNAs_per_target = gRNAs_per_target_val,
     non_targeting_gRNAs = non_targeting_gRNAs_val,
     MOI = MOI_val,
+    mapping_efficiency = mapping_efficiency,
     grid_size = 1  # Single point for exact comparison
   )
 
@@ -443,5 +444,5 @@ test_that("compute_power_planmatches compute_power_plan_overall", {
   # Test 4: Validate other calculated values match expected
   expect_equal(result_full_grid$cells_per_target, cells_per_target_val)
   expect_equal(result_full_grid$library_size, library_size, tolerance = 1e-6)
-  expect_equal(result_full_grid$raw_reads_per_cell, reads_per_cell_val / 0.72, tolerance = 1e-6)
+  expect_equal(result_full_grid$sequenced_reads_per_cell, reads_per_cell_val, tolerance = 1e-6)
 })

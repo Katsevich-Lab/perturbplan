@@ -33,7 +33,7 @@ test_that("input_check_compute_power_planvalidates TPM_threshold parameter", {
       TPM_threshold = "invalid",
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
-      reads_per_cell = 8000,
+      sequenced_reads_per_cell = 8000,
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
       num_targets = 10
@@ -47,7 +47,7 @@ test_that("input_check_compute_power_planvalidates TPM_threshold parameter", {
       TPM_threshold = -5,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
-      reads_per_cell = 8000,
+      sequenced_reads_per_cell = 8000,
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
       num_targets = 10
@@ -61,7 +61,7 @@ test_that("input_check_compute_power_planvalidates TPM_threshold parameter", {
       TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
-      reads_per_cell = 8000,
+      sequenced_reads_per_cell = 8000,
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
       num_targets = 10
@@ -78,7 +78,7 @@ test_that("input_check_compute_power_planvalidates minimum_fold_change parameter
       TPM_threshold = 10,
       minimum_fold_change = "invalid",
       cells_per_target = 1000,
-      reads_per_cell = 8000,
+      sequenced_reads_per_cell = 8000,
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
       num_targets = 10
@@ -92,7 +92,7 @@ test_that("input_check_compute_power_planvalidates minimum_fold_change parameter
       TPM_threshold = 10,
       minimum_fold_change = -0.5,
       cells_per_target = 1000,
-      reads_per_cell = 8000,
+      sequenced_reads_per_cell = 8000,
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
       num_targets = 10
@@ -110,7 +110,7 @@ test_that("input_check_compute_power_planvalidates baseline expression data", {
       TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
-      reads_per_cell = 8000,
+      sequenced_reads_per_cell = 8000,
       baseline_expression_stats = NULL,
       library_parameters = test_data$library_parameters,
       num_targets = 10
@@ -124,7 +124,7 @@ test_that("input_check_compute_power_planvalidates baseline expression data", {
       TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
-      reads_per_cell = 8000,
+      sequenced_reads_per_cell = 8000,
       baseline_expression_stats = data.frame(wrong_column = 1:5),
       library_parameters = test_data$library_parameters,
       num_targets = 10
@@ -142,7 +142,7 @@ test_that("input_check_compute_power_planvalidates library parameters", {
       TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
-      reads_per_cell = 8000,
+      sequenced_reads_per_cell = 8000,
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = NULL,
       num_targets = 10
@@ -156,7 +156,7 @@ test_that("input_check_compute_power_planvalidates library parameters", {
       TPM_threshold = 10,
       minimum_fold_change = 0.8,
       cells_per_target = 1000,
-      reads_per_cell = 8000,
+      sequenced_reads_per_cell = 8000,
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = list(wrong_param = 100),
       num_targets = 10
@@ -314,7 +314,7 @@ test_that("input validation functions work with varying parameters", {
       TPM_threshold = "varying",
       minimum_fold_change = "varying",
       cells_per_target = "varying",
-      reads_per_cell = "varying",
+      sequenced_reads_per_cell = "varying",
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
       num_targets = 10
@@ -327,7 +327,7 @@ test_that("input validation functions work with varying parameters", {
       TPM_threshold = c(5, 10, 15),
       minimum_fold_change = "varying",
       cells_per_target = 1000,
-      reads_per_cell = c(6000, 8000, 10000),
+      sequenced_reads_per_cell = c(6000, 8000, 10000),
       baseline_expression_stats = test_data$baseline_expression_stats,
       library_parameters = test_data$library_parameters,
       num_targets = 10

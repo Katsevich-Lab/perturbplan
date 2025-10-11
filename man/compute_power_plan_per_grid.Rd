@@ -64,7 +64,7 @@ Data frame with columns:
 \item{library_size}{Numeric. Effective library size (UMIs)}
 \item{overall_power}{Numeric. Statistical power for this experimental design}
 \item{num_captured_cells}{Numeric. Number of captured cells}
-\item{raw_reads_per_cell}{Numeric. Raw reads per cell before mapping}
+\item{sequenced_reads_per_cell}{Numeric. Raw reads per cell before mapping}
 }
 }
 \description{

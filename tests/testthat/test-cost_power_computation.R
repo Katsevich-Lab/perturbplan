@@ -45,7 +45,7 @@ test_that("cost_power_computation basic functionality with TPM_threshold optimiz
 
   # Check required columns
   expected_cols <- c("minimum_fold_change", "TPM_threshold", "cells_per_target",
-                     "num_captured_cells", "raw_reads_per_cell", "library_size",
+                     "num_captured_cells", "sequenced_reads_per_cell", "library_size",
                      "overall_power", "library_cost", "sequencing_cost", "total_cost")
   expect_true(all(expected_cols %in% names(result)))
 
@@ -102,7 +102,7 @@ test_that("cost_power_computation with fixed experimental design", {
 
   # With fixed experimental design, should have consistent cells/reads
   expect_true(all(abs(result$cells_per_target - 500) < 1e-6))
-  expect_true(all(abs(result$raw_reads_per_cell - 8000/0.72) < 1e-6))  # Accounting for mapping efficiency
+  expect_true(all(abs(result$sequenced_reads_per_cell - round(8000/0.72)) < 1e-6))  # Accounting for mapping efficiency and rounding
 })
 
 
@@ -143,7 +143,7 @@ test_that("cost_power_computation cost calculations are correct", {
 
   # Verify cost calculations
   expected_library_cost <- result$num_captured_cells * 0.1
-  expected_sequencing_cost <- (0.5 * result$raw_reads_per_cell * result$num_captured_cells) / 1e6
+  expected_sequencing_cost <- (0.5 * result$sequenced_reads_per_cell * result$num_captured_cells) / 1e6
   expected_total_cost <- expected_library_cost + expected_sequencing_cost
 
   expect_equal(result$library_cost, expected_library_cost, tolerance = 1e-10)
@@ -321,9 +321,9 @@ test_that("cost_power_computation matches compute_power_plan_overall", {
   set.seed(12345)  # Reset seed
   temp_result <- compute_power_plan(
     TPM_threshold = test_row$TPM_threshold,
-    minimum_fold_change = test_row$minimum_fold_change, 
+    minimum_fold_change = test_row$minimum_fold_change,
     cells_per_target = test_row$cells_per_target,
-    reads_per_cell = test_row$raw_reads_per_cell * 0.72,  # Convert back to mapped reads
+    sequenced_reads_per_cell = test_row$sequenced_reads_per_cell,
     baseline_expression_stats = test_data$baseline_expression_stats,
     library_parameters = test_data$library_parameters,
     num_targets = num_targets_val,
@@ -360,5 +360,5 @@ test_that("cost_power_computation matches compute_power_plan_overall", {
     UMI_per_cell = test_data$library_parameters$UMI_per_cell,
     variation = test_data$library_parameters$variation
   )
-  expect_equal(test_row$library_size, expected_library_size, tolerance = 1e-6)
+  expect_equal(test_row$library_size, expected_library_size, tolerance = 1e-3)  # Allow for rounding in reads conversion
 })

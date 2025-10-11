@@ -2,7 +2,7 @@
 % Please edit documentation in R/power_plan.R
 \name{cost_power_computation}
 \alias{cost_power_computation}
-\title{Cost-Power Optimization for Perturb-seq Experimental Design}
+\title{Cost-Constrained Power Analysis for Perturb-seq Experiments}
 \usage{
 cost_power_computation(
   minimizing_variable = "TPM_threshold",
@@ -12,7 +12,6 @@ cost_power_computation(
   non_targeting_gRNAs = 10,
   gRNAs_per_target = 4,
   gRNA_variability = 0.13,
-  assay = "perturb-seq",
   control_group = "complement",
   side = "left",
   multiple_testing_alpha = 0.05,
@@ -53,8 +52,6 @@ Options: "TPM_threshold" or "minimum_fold_change". Default: "TPM_threshold".}
 
 \item{gRNA_variability}{Numeric. gRNA variability parameter (default: 0.13).}
 
-\item{assay}{String. Assay type: "perturb-seq" or "TAP-seq" (default: "perturb-seq").}
-
 \item{control_group}{Character. Control group type: "complement" or "non_targeting" (default: "complement").}
 
 \item{side}{Character. Test side: "left", "right", or "both" (default: "left").}
@@ -94,54 +91,17 @@ Set to \code{NULL} to disable cost constraints.}
 Data frame with power analysis results including:
 \itemize{
 \item Analysis parameters (TPM_threshold, minimum_fold_change, etc.)
-\item Experimental design (cells_per_target, num_captured_cells, raw_reads_per_cell)
-\item Power metrics (overall_power)
-\item Cost breakdown (library_cost, sequencing_cost, total_cost) - when cost_constraint is specified
-\item Power threshold indicator (meets_threshold) - when cost_constraint is NULL
-}
-
-Data frame with power analysis results including:
-\itemize{
-\item Analysis parameters (TPM_threshold, minimum_fold_change, etc.)
-\item Experimental design (cells_per_target, num_captured_cells, raw_reads_per_cell)
+\item Experimental design (cells_per_target, num_captured_cells, sequenced_reads_per_cell)
 \item Power metrics (overall_power)
 \item Cost breakdown (library_cost, sequencing_cost, total_cost)
 }
 }
 \description{
-Performs cost-constrained optimization to find the minimal parameter value that achieves
-target statistical power within a specified budget for perturb-seq experiments.
+Performs comprehensive power analysis across experimental design space with optional
+cost constraints for perturb-seq experiments. Computes power across parameter grids
+and applies filtering based on power targets and budget constraints.
 }
 \details{
-This function implements a two-stage optimization algorithm:
-
-\strong{Stage 1: Coarse Grid Search}
-\enumerate{
-\item Creates parameter grid for the minimizing variable:
-\itemize{
-\item TPM_threshold: 20 log-spaced values from 1 to 1000 TPM
-\item minimum_fold_change: 20 values based on test side (left: 0.01-1.0, right: 1.0-10.0, both: combined)
-}
-\item Runs power analysis across experimental design space
-\item Applies dual filtering:
-\itemize{
-\item Power filter: \code{power_target ± power_precision}
-      \item Cost filter: \code{total_cost \\le budget_precision × cost_constraint}
-    }
-\item Identifies minimum parameter value meeting both constraints
-}
-
-\strong{Stage 2: Fine Grid Search}
-\enumerate{
-\item Re-runs power analysis with optimal parameter and higher resolution (100 grid points)
-\item Combines coarse and fine search results for comprehensive output
-}
-
-\strong{Cost Model:}
-\deqn{Total Cost = Library Cost + Sequencing Cost}
-\deqn{Library Cost = cost\_per\_captured\_cell \times num\_captured\_cells}
-\deqn{Sequencing Cost = cost\_per\_million\_reads \times raw\_reads\_per\_cell \times num\_captured\_cells / 10^6}
-
 This function performs comprehensive power analysis by:
 \enumerate{
 \item Setting up parameter grids based on the minimizing variable
@@ -159,7 +119,7 @@ Total cost is calculated as the sum of library preparation and sequencing costs:
 Where:
 \itemize{
 \item \code{Library Cost = cost_per_captured_cell * num_captured_cells}
-\item \code{Sequencing Cost = cost_per_million_reads * (raw_reads_per_cell * num_captured_cells) / 1,000,000}
+\item \code{Sequencing Cost = cost_per_million_reads * (sequenced_reads_per_cell * num_captured_cells) / 1,000,000}
 }
 
 Parameter grid generation:
@@ -168,40 +128,4 @@ Parameter grid generation:
 \item \code{minimum_fold_change}: Uses ranges based on test side (left: 0.5-0.9, right: 1-10, both: combined)
 }
 }
-\examples{
-# Load pilot data
-pilot_data <- get_pilot_data_from_package("K562")
-
-# Optimize TPM threshold with fixed fold change
-result1 <- cost_power_computation(
-  minimizing_variable = "TPM_threshold",
-  fixed_variable = list(minimum_fold_change = 0.8),
-  baseline_expression_stats = pilot_data$baseline_expression_stats,
-  library_parameters = pilot_data$library_parameters,
-  power_target = 0.8,
-  cost_constraint = 15000,
-  cost_precision = 0.9
-)
-
-
-# Optimize fold change with fixed TPM threshold
-result2 <- cost_power_computation(
-  minimizing_variable = "minimum_fold_change",
-  fixed_variable = list(TPM_threshold = 10),
-  baseline_expression_stats = pilot_data$baseline_expression_stats,
-  library_parameters = pilot_data$library_parameters,
-  power_target = 0.9,
-  cost_constraint = NULL  # No cost constraint
-)
-
-
-}
-\seealso{
-\code{\link{compute_power_plan}} for the underlying power analysis
-\code{\link{find_optimal_cost_design}} for cost optimization
-Cost-Constrained Power Analysis for Perturb-seq Experiments
-
-Performs comprehensive power analysis across experimental design space with optional
-cost constraints for perturb-seq experiments. Computes power across parameter grids
-and applies filtering based on power targets and budget constraints.
-}
+\keyword{internal}

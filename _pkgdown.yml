@@ -24,7 +24,7 @@ template:
   #     </script>
   #     <script id="MathJax-script" async
   #       src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-  
+
 
 # ----------------
 # Home page
@@ -94,11 +94,6 @@ reference:
     contents:
       - compute_power_plan
       - compute_power_posthoc
-
-  - title: "Optimization functions"
-    desc: "These functions help users find the optimal experimental settings given power or cost."
-    contents:
-      - cost_power_computation
 
   - title: "Pilot data preprocessing functions"
     desc: "These functions help users create custom pilot data."

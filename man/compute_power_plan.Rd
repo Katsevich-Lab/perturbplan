@@ -8,13 +8,12 @@ compute_power_plan(
   TPM_threshold,
   minimum_fold_change,
   cells_per_target,
-  reads_per_cell,
+  sequenced_reads_per_cell,
   MOI = 10,
   num_targets = 100,
   non_targeting_gRNAs = 10,
   gRNAs_per_target = 4,
   gRNA_variability = 0.13,
-  assay = "perturb-seq",
   control_group = "complement",
   side = "left",
   multiple_testing_alpha = 0.05,
@@ -35,7 +34,7 @@ Pairs with effects at least this large are considered non-null.}
 
 \item{cells_per_target}{Numeric, numeric vector, or character. Number of cells per target, custom sequence, or "varying" for auto-generated grid.}
 
-\item{reads_per_cell}{Numeric, numeric vector, or character. Reads per cell, custom sequence, or "varying" for auto-generated grid.}
+\item{sequenced_reads_per_cell}{Numeric, numeric vector, or character. Sequenced reads per cell (raw sequencer output), custom sequence, or "varying" for auto-generated grid.}
 
 \item{MOI}{Numeric. Multiplicity of infection (default: 10).}
 
@@ -46,8 +45,6 @@ Pairs with effects at least this large are considered non-null.}
 \item{gRNAs_per_target}{Integer. Number of gRNAs per target (default: 4).}
 
 \item{gRNA_variability}{Numeric. Standard deviation for gRNA effect variation (default: 0.13).}
-
-\item{assay}{String. Assay type: "Perturb-seq" or "TAP-seq" (default: "perturb-seq").}
 
 \item{control_group}{String. Control group type (default: "complement").}
 
@@ -100,7 +97,7 @@ This function provides comprehensive power analysis by:
 TPM_threshold <- c(5, 10, 15)
 minimum_fold_change <- c(0.7, 0.8, 0.9)
 cells_per_target <- c(50, 100, 200)
-reads_per_cell <- c(10000, 25000, 50000)
+sequenced_reads_per_cell <- c(10000, 25000, 50000)
 
 # Get pilot data
 pilot_data <- get_pilot_data_from_package("K562")
@@ -110,7 +107,7 @@ full_results <- compute_power_plan(
   TPM_threshold = TPM_threshold,
   minimum_fold_change = minimum_fold_change,
   cells_per_target = cells_per_target,
-  reads_per_cell = reads_per_cell,
+  sequenced_reads_per_cell = sequenced_reads_per_cell,
   baseline_expression_stats = pilot_data$baseline_expression_stats,
   library_parameters = pilot_data$library_parameters,
   MOI = 10,

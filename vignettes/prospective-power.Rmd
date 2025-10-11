@@ -301,8 +301,8 @@ for (i in 1:nrow(designs)) {
     baseline_expression_stats = baseline_expression,
     library_parameters = library_params,
     cells_per_target = designs$Cells_per_gRNA[i],
-    reads_per_cell = designs$Reads_per_Cell[i],
-    MOI = 10, 
+    sequenced_reads_per_cell = designs$Reads_per_Cell[i],
+    MOI = 10,
     num_targets = 100,
     control_group = "complement",
     side = "left",
@@ -320,7 +320,7 @@ for (i in 1:nrow(designs)) {
     Overall_Power = power_result$overall_power,
     Overall_Cost = perturbplan:::cost_computation(
       num_captured_cells = power_result$num_captured_cells,
-      raw_reads_per_cell = power_result$raw_reads_per_cell
+      sequenced_reads_per_cell = power_result$sequenced_reads_per_cell
       )
   )
 }

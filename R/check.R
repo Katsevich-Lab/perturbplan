@@ -379,7 +379,7 @@ input_check_library_computation <- function(
 #' @return NULL
 #' @keywords internal
 input_check_compute_power_plan <- function(
-    TPM_threshold, minimum_fold_change, cells_per_target, reads_per_cell,
+    TPM_threshold, minimum_fold_change, cells_per_target, sequenced_reads_per_cell,
     MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
     control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,
     baseline_expression_stats, library_parameters,
@@ -441,23 +441,23 @@ input_check_compute_power_plan <- function(
     stop("`cells_per_target` must be numeric or the string 'varying'!")
   }
   
-  ########################## reads_per_cell #################################
-  if (missing(reads_per_cell)) {
-    stop("`reads_per_cell` must be specified!")
+  ########################## sequenced_reads_per_cell #################################
+  if (missing(sequenced_reads_per_cell)) {
+    stop("`sequenced_reads_per_cell` must be specified!")
   }
-  if (is.numeric(reads_per_cell)) {
-    if (any(reads_per_cell <= 0)) {
-      stop("`reads_per_cell` values must be positive!")
+  if (is.numeric(sequenced_reads_per_cell)) {
+    if (any(sequenced_reads_per_cell <= 0)) {
+      stop("`sequenced_reads_per_cell` values must be positive!")
     }
-    if (any(reads_per_cell != round(reads_per_cell))) {
-      stop("`reads_per_cell` values must be integers!")
+    if (any(sequenced_reads_per_cell != round(sequenced_reads_per_cell))) {
+      stop("`sequenced_reads_per_cell` values must be integers!")
     }
-  } else if (is.character(reads_per_cell)) {
-    if (length(reads_per_cell) != 1 || reads_per_cell != "varying") {
-      stop("`reads_per_cell` must be numeric or the string 'varying'!")
+  } else if (is.character(sequenced_reads_per_cell)) {
+    if (length(sequenced_reads_per_cell) != 1 || sequenced_reads_per_cell != "varying") {
+      stop("`sequenced_reads_per_cell` must be numeric or the string 'varying'!")
     }
   } else {
-    stop("`reads_per_cell` must be numeric or the string 'varying'!")
+    stop("`sequenced_reads_per_cell` must be numeric or the string 'varying'!")
   }
   
   ###################### Experimental parameters ############################
@@ -816,7 +816,7 @@ input_check_find_optimal_cost_design <- function(
   }
   
   # Check required columns
-  required_cols <- c("overall_power", "total_cost", "cells_per_target", "raw_reads_per_cell")
+  required_cols <- c("overall_power", "total_cost", "cells_per_target", "sequenced_reads_per_cell")
   missing_cols <- setdiff(required_cols, names(cost_power_df))
   if (length(missing_cols) > 0) {
     stop("`cost_power_df` is missing required columns: ",
@@ -898,7 +898,7 @@ input_check_find_optimal_cost_design <- function(
   
   ###################### Data validation ################################
   # Check for required numeric columns
-  numeric_cols <- c("overall_power", "total_cost", "cells_per_target", "raw_reads_per_cell")
+  numeric_cols <- c("overall_power", "total_cost", "cells_per_target", "sequenced_reads_per_cell")
   for (col in numeric_cols) {
     if (!is.numeric(cost_power_df[[col]])) {
       stop("Column `", col, "` in `cost_power_df` must be numeric!")

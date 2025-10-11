@@ -1,12 +1,11 @@
-pandoc: 3.1.11.1
-pkgdown: 2.0.9
+pandoc: 3.8.2
+pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   posthoc: posthoc.html
   preprocess-reference: preprocess-reference.html
   prospective-power: prospective-power.html
-last_built: 2025-10-10T17:54Z
+last_built: 2025-10-11T02:28Z
 urls:
   reference: https://katsevich-lab.github.io/perturbplan/reference
   article: https://katsevich-lab.github.io/perturbplan/articles
-

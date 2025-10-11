@@ -8,7 +8,7 @@ input_check_compute_power_plan(
   TPM_threshold,
   minimum_fold_change,
   cells_per_target,
-  reads_per_cell,
+  sequenced_reads_per_cell,
   MOI = 10,
   num_targets = 100,
   non_targeting_gRNAs = 10,
@@ -34,7 +34,7 @@ Pairs with effects at least this large are considered non-null.}
 
 \item{cells_per_target}{Numeric, numeric vector, or character. Number of cells per target, custom sequence, or "varying" for auto-generated grid.}
 
-\item{reads_per_cell}{Numeric, numeric vector, or character. Reads per cell, custom sequence, or "varying" for auto-generated grid.}
+\item{sequenced_reads_per_cell}{Numeric, numeric vector, or character. Sequenced reads per cell (raw sequencer output), custom sequence, or "varying" for auto-generated grid.}
 
 \item{MOI}{Numeric. Multiplicity of infection (default: 10).}
 
