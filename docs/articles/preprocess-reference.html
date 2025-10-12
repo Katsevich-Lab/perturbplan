@@ -81,42 +81,45 @@ analysis functions.</p>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>PerturbPlan requires three types of information from pilot data for
-power analysis:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Baseline Expression Statistics</strong>: Gene-level
-expression parameters (mean and dispersion) fitted from a negative
-binomial model</li>
-<li>
-<strong>Library Parameters</strong>: Read-to-UMI saturation curve
-parameters (UMI_per_cell and variation) that characterize library
-preparation and PCR amplification bias</li>
-<li>
-<strong>Mapping Efficiency</strong>: Proportion of reads that map to
-the transcriptome we’re interested in</li>
-</ol>
 <p>This preprocessing workflow consists of two main steps:</p>
 <ol style="list-style-type: decimal">
 <li>
-<strong><code><a href="../reference/reference_data_preprocessing_10x.html">reference_data_preprocessing_10x()</a></code></strong>:
-Load raw data from multiple SRR runs of raw Cell Ranger outputs and
-aggregate them into a list containing:
+<p><strong><code><a href="../reference/reference_data_preprocessing_10x.html">reference_data_preprocessing_10x()</a></code></strong>:
+Loading raw data from multiple SRR runs of raw Cell Ranger outputs and
+processing them into a list containing:</p>
 <ul>
 <li>Gene-by-cell expression matrix</li>
 <li>UMI-level molecule information dataframe</li>
-<li>Naive estimate of mapping efficiency (proportion of reads mapped to
-the whole transcriptome among all reads)</li>
+<li>Proportion of reads confidently mapped to the whole transcriptome
+among all reads</li>
 </ul>
 </li>
 <li>
-<strong><code><a href="../reference/reference_data_processing.html">reference_data_processing()</a></code></strong>: Fits
-statistical models with the aggregated data from Step 1 to extract
-parameters needed for power analysis</li>
+<p><strong><code><a href="../reference/reference_data_processing.html">reference_data_processing()</a></code></strong>:
+Fitting statistical models with the output from Step 1 and obtaining
+parameters needed for power analysis. These parameters include:</p>
+<ul>
+<li>
+<strong>Baseline expression statistics</strong>: Baseline gene
+expression parameters: <code>response_id</code>,
+<code>relative_expression</code> and <code>expression_size</code>
+</li>
+<li>
+<strong>Library parameters</strong>: Reads-UMIs saturation curve
+parameters: <code>UMI_per_cell</code> and <code>variation</code>. These
+two parameters characterize library size and PCR amplification bias,
+given the cell type and assay of interest</li>
+<li>
+<strong>Mapping efficiency</strong>: Proportion of reads that are
+confidently mapped to the transcripts of genes we’re interested in.</li>
+</ul>
+</li>
 </ol>
+<p>The output after the two-step preprocessing can be uploaded to the
+Web App as custom reference data.</p>
 </div>
 <div class="section level2">
-<h2 id="step-1-aggregate-cell-ranger-outputs">Step 1: Aggregate Cell Ranger Outputs<a class="anchor" aria-label="anchor" href="#step-1-aggregate-cell-ranger-outputs"></a>
+<h2 id="step-1-process-cell-ranger-outputs">Step 1: Process Cell Ranger Outputs<a class="anchor" aria-label="anchor" href="#step-1-process-cell-ranger-outputs"></a>
 </h2>
 <p>The <code>reference_data_preprocessing_10x</code> function aggregates
 Cell Ranger outputs from multiple sequencing runs (SRRs) into a single
@@ -158,7 +161,7 @@ libraries or multiple samples.</p>
 <h3 id="function-usage">Function Usage<a class="anchor" aria-label="anchor" href="#function-usage"></a>
 </h3>
 <p>There’s an example SRR folder called <code>cellranger_tiny</code>
-under thefolder <code>extdata</code> in our package, and we’ll use that
+under the folder <code>extdata</code> in our package, and we’ll use that
 for demonstration:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Point to directory containing example Cell Ranger outputs</span></span>
@@ -248,73 +251,18 @@ combination</li>
 <h2 id="step-2-extract-statistical-parameters">Step 2: Extract Statistical Parameters<a class="anchor" aria-label="anchor" href="#step-2-extract-statistical-parameters"></a>
 </h2>
 <p>The <code>reference_data_processing</code> function fits statistical
-models to extract gene-level expression parameters, library parameters
-and more sophisticated mapping efficiency required by PerturbPlan.</p>
-<div class="section level3">
-<h3 id="statistical-models">Statistical Models<a class="anchor" aria-label="anchor" href="#statistical-models"></a>
-</h3>
-<div class="section level4">
-<h4 id="gene-expression-model-negative-binomial">Gene Expression Model (Negative Binomial)<a class="anchor" aria-label="anchor" href="#gene-expression-model-negative-binomial"></a>
-</h4>
-<p>For each gene, the function fits a negative binomial (NB) model to
-characterize the distribution of gene expression levels across
-cells:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">gene_expression</mtext><mo>∼</mo><mtext mathvariant="normal">NB</mtext><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">mean</mtext><mo>=</mo><mtext mathvariant="normal">library_size</mtext><mo>×</mo><mtext mathvariant="normal">relative_expression</mtext><mo>,</mo><mtext mathvariant="normal">size</mtext><mo>=</mo><mtext mathvariant="normal">expression_size</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{gene_expression} \sim \text{NB}(\text{mean} = \text{library_size} \times \text{relative_expression}, \text{size} = \text{expression_size})</annotation></semantics></math></p>
-<p>where</p>
-<ul>
-<li>
-<code>gene_expression</code>: Number of observed UMIs for the gene
-in each cell</li>
-<li>
-<code>library_size</code>: Total UMI count per cell</li>
-</ul>
-<p>are the data to use, and</p>
-<ul>
-<li>
-<code>relative_expression</code>: Relative expression level of the
-gene (fitted parameter)</li>
-<li>
-<code>expression_size</code>: Dispersion parameter (small values
-indicate high biological variability)</li>
-</ul>
-<p>are the fitted parameters.</p>
-</div>
-<div class="section level4">
-<h4 id="sequencing-saturation-model-s-m-curve">Sequencing Saturation Model (S-M Curve)<a class="anchor" aria-label="anchor" href="#sequencing-saturation-model-s-m-curve"></a>
-</h4>
-<p>The function fits a saturation (S-M) curve that relates mapped reads
-per cell to observed UMIs per cell:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">UMI</mtext><mo>=</mo><mtext mathvariant="normal">total_UMIs</mtext><mo>×</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi mathvariant="normal">exp</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mfrac><mtext mathvariant="normal">reads</mtext><mtext mathvariant="normal">total_UMIs</mtext></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>×</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><mtext mathvariant="normal">variation</mtext><mo>×</mo><mfrac><msup><mtext mathvariant="normal">reads</mtext><mn>2</mn></msup><mrow><mn>2</mn><mo>×</mo><msup><mtext mathvariant="normal">total_UMIs</mtext><mn>2</mn></msup></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{UMI} = \text{total_UMIs} \times \left(1 - \exp\left(-\frac{\text{reads}}{\text{total_UMIs}}\right) \times \left(1 + \text{variation} \times \frac{\text{reads}^2}{2 \times \text{total_UMIs}^2}\right)\right)</annotation></semantics></math></p>
-<p>where</p>
-<ul>
-<li>
-<code>reads</code>: Number of mapped reads per cell</li>
-<li>
-<code>UMI</code>: Number of observed UMIs per cell</li>
-</ul>
-<p>are the data to use, and</p>
-<ul>
-<li>
-<code>total_UMIs</code> (UMI_per_cell): Maximum UMI per cell
-parameter at sequencing saturation</li>
-<li>
-<code>variation</code>: Variation parameter characterizing PCR
-amplification bias (between 0 and 1)</li>
-</ul>
-<p>are the fitted parameters.</p>
-</div>
-</div>
+models to extract gene expression parameters, library parameters and
+more sophisticated mapping efficiency required by PerturbPlan. We
+postpone the details of these two models to the end of this
+document.</p>
 <div class="section level3">
 <h3 id="function-usage-1">Function Usage<a class="anchor" aria-label="anchor" href="#function-usage-1"></a>
 </h3>
-<p>Here, we demonstrate two use cases of
+<p>We demonstrate two use cases of
 <code>reference_data_processing</code> with the aggregated data from
-Step 1, one for perturb-seq experimental design using all genes, and one
-for TAP-seq experimental design using a targeted gene list. The toy
-examples have too few reads, so the fitted parameters may be sensitive
-to the random seed and the prior variation parameter. In practice, our
-function demonstrates robustness to both the choice of random seed and
-moderate misspecification of the prior for the variation parameter.</p>
+Step 1 (<code>raw_data</code>): one for perturb-seq experimental design
+using all genes, and one for TAP-seq experimental design using a
+targeted gene list.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Set seed for reproducibility</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
@@ -331,12 +279,12 @@ moderate misspecification of the prior for the variation parameter.</p>
 <span>  h5_only <span class="op">=</span> <span class="cn">FALSE</span>,      <span class="co"># Set TRUE to skip expression model fitting</span></span>
 <span>  n_threads <span class="op">=</span> <span class="cn">NULL</span>      <span class="co"># No parallel processing</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-11 09:17:49.830637</span></span>
+<span><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-12 17:34:39.508177</span></span>
 <span><span class="co">#&gt; Step 1: Computing gene expression information...</span></span>
-<span><span class="co">#&gt; Start relative expression calculation @ 2025-10-11 09:17:49.856819</span></span>
-<span><span class="co">#&gt; Finish relative expression calculation @ 2025-10-11 09:17:49.857504</span></span>
+<span><span class="co">#&gt; Start relative expression calculation @ 2025-10-12 17:34:39.535149</span></span>
+<span><span class="co">#&gt; Finish relative expression calculation @ 2025-10-12 17:34:39.535818</span></span>
 <span><span class="co">#&gt; Number of genes passing TPM threshold: 5</span></span>
-<span><span class="co">#&gt; Start dispersion estimation (8 thread(s)) @ 2025-10-11 09:17:49.85776</span></span>
+<span><span class="co">#&gt; Start dispersion estimation (8 thread(s)) @ 2025-10-12 17:34:39.536077</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Starting computation</span></span>
 <span><span class="co">#&gt;  - G (genes) = 5</span></span>
 <span><span class="co">#&gt;  - C (cells) = 8</span></span>
@@ -356,9 +304,9 @@ moderate misspecification of the prior for the variation parameter.</p>
 <span><span class="co">#&gt; [gene 4] t_0 = 0.272921</span></span>
 <span><span class="co">#&gt; [gene 4] theta_mle_row result = 468.498</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Done.</span></span>
-<span><span class="co">#&gt; Finish dispersion estimation @ 2025-10-11 09:17:49.859129</span></span>
+<span><span class="co">#&gt; Finish dispersion estimation @ 2025-10-12 17:34:39.537431</span></span>
 <span><span class="co">#&gt; Step 2: Estimating library parameters...</span></span>
-<span><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-11 09:17:49.864753</span></span>
+<span><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-12 17:34:39.543179</span></span>
 <span><span class="co">#&gt; Processed 5 genes</span></span>
 <span><span class="co">#&gt; Library parameters: UMI_per_cell = 6, variation = 0.372</span></span>
 <span><span class="co">#&gt; Mapping efficiency = 1</span></span>
@@ -372,12 +320,12 @@ moderate misspecification of the prior for the variation parameter.</p>
 <span>  gene_list <span class="op">=</span> <span class="va">gene_list</span>, <span class="co"># Restrict to specific genes</span></span>
 <span>  TPM_thres <span class="op">=</span> <span class="fl">0</span>          <span class="co"># No expression threshold for filtering</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-11 09:17:49.865603</span></span>
+<span><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-12 17:34:39.544034</span></span>
 <span><span class="co">#&gt; Step 1: Computing gene expression information...</span></span>
-<span><span class="co">#&gt; Start relative expression calculation @ 2025-10-11 09:17:49.892189</span></span>
-<span><span class="co">#&gt; Finish relative expression calculation @ 2025-10-11 09:17:49.892385</span></span>
+<span><span class="co">#&gt; Start relative expression calculation @ 2025-10-12 17:34:39.567444</span></span>
+<span><span class="co">#&gt; Finish relative expression calculation @ 2025-10-12 17:34:39.567663</span></span>
 <span><span class="co">#&gt; Number of genes passing TPM threshold: 3</span></span>
-<span><span class="co">#&gt; Start dispersion estimation (8 thread(s)) @ 2025-10-11 09:17:49.89263</span></span>
+<span><span class="co">#&gt; Start dispersion estimation (8 thread(s)) @ 2025-10-12 17:34:39.567919</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Starting computation</span></span>
 <span><span class="co">#&gt;  - G (genes) = 3</span></span>
 <span><span class="co">#&gt;  - C (cells) = 8</span></span>
@@ -391,9 +339,9 @@ moderate misspecification of the prior for the variation parameter.</p>
 <span><span class="co">#&gt; [gene 2] t_0 = 0.5</span></span>
 <span><span class="co">#&gt; [gene 2] theta_mle_row result = 475.754</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Done.</span></span>
-<span><span class="co">#&gt; Finish dispersion estimation @ 2025-10-11 09:17:49.893255</span></span>
+<span><span class="co">#&gt; Finish dispersion estimation @ 2025-10-12 17:34:39.568558</span></span>
 <span><span class="co">#&gt; Step 2: Estimating library parameters...</span></span>
-<span><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-11 09:17:49.896448</span></span>
+<span><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-12 17:34:39.57174</span></span>
 <span><span class="co">#&gt; Processed 3 genes</span></span>
 <span><span class="co">#&gt; Library parameters: UMI_per_cell = 7, variation = 0.366</span></span>
 <span><span class="co">#&gt; Mapping efficiency = 0.727</span></span></code></pre></div>
@@ -427,6 +375,10 @@ hyperparameters for library model fitting (default: FALSE)</li>
 <code>n_threads</code>: Number of parallel processing threads
 (default: NULL for single-threaded)</li>
 </ul>
+<p><strong>Note</strong>: In practice, our function demonstrates
+robustness to downsampling with different seeds and moderate
+misspecification of the prior for the variation parameter
+(<code>D2_rough</code>).</p>
 </div>
 <div class="section level3">
 <h3 id="function-output-1">Function Output<a class="anchor" aria-label="anchor" href="#function-output-1"></a>
@@ -524,6 +476,63 @@ sequencing saturation model in
 <li>Vignette “Getting Started with PerturbPlan”: Overview of power
 analysis workflow</li>
 </ul>
+</div>
+<div class="section level2">
+<h2 id="mathematical-details-of-the-models-used-in-step-2">Mathematical details of the models used in Step 2<a class="anchor" aria-label="anchor" href="#mathematical-details-of-the-models-used-in-step-2"></a>
+</h2>
+<p>In particular, we consider two models, one for modeling gene
+expression and one for modeling read-UMI relationship.</p>
+<div class="section level3">
+<h3 id="negative-binomial-expression-model">Negative binomial expression model<a class="anchor" aria-label="anchor" href="#negative-binomial-expression-model"></a>
+</h3>
+<p>For each gene, the function fits a negative binomial (NB) model to
+characterize the distribution of gene expression levels across
+cells:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">gene_expression</mtext><mo>∼</mo><mtext mathvariant="normal">NB</mtext><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">mean</mtext><mo>=</mo><mtext mathvariant="normal">library_size</mtext><mo>×</mo><mtext mathvariant="normal">relative_expression</mtext><mo>,</mo><mtext mathvariant="normal">size</mtext><mo>=</mo><mtext mathvariant="normal">expression_size</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{gene_expression} \sim \text{NB}(\text{mean} = \text{library_size} \times \text{relative_expression}, \text{size} = \text{expression_size})</annotation></semantics></math></p>
+<p>where</p>
+<ul>
+<li>
+<code>gene_expression</code>: Number of observed UMIs for the gene
+in each cell</li>
+<li>
+<code>library_size</code>: Number of observed UMIs per cell</li>
+</ul>
+<p>are the data to use, and</p>
+<ul>
+<li>
+<code>relative_expression</code>: Relative expression level of the
+gene (fitted parameter)</li>
+<li>
+<code>expression_size</code>: Dispersion parameter (small values
+indicate high biological variability)</li>
+</ul>
+<p>are the fitted parameters.</p>
+</div>
+<div class="section level3">
+<h3 id="read-umi-model">Read-UMI model<a class="anchor" aria-label="anchor" href="#read-umi-model"></a>
+</h3>
+<p>The function fits a saturation curve that relates mapped reads per
+cell to observed UMIs per cell (<code>library_size</code>):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">library_size</mtext><mo>=</mo><mtext mathvariant="normal">UMI_per_cell</mtext><mo>×</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi mathvariant="normal">exp</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>−</mi><mfrac><mtext mathvariant="normal">mapped_reads_per_cell</mtext><mtext mathvariant="normal">UMI_per_cell</mtext></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>×</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>+</mo><mtext mathvariant="normal">variation</mtext><mo>×</mo><mfrac><msup><mtext mathvariant="normal">mapped_reads_per_cell</mtext><mn>2</mn></msup><mrow><mn>2</mn><mo>×</mo><msup><mtext mathvariant="normal">UMI_per_cell</mtext><mn>2</mn></msup></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{library_size} = \text{UMI_per_cell} \times \left(1 - \exp\left(-\frac{\text{mapped_reads_per_cell}}{\text{UMI_per_cell}}\right) \times \left(1 + \text{variation} \times \frac{\text{mapped_reads_per_cell}^2}{2 \times \text{UMI_per_cell}^2}\right)\right)</annotation></semantics></math></p>
+<p>where</p>
+<ul>
+<li>
+<code>mapped_reads_per_cell</code>: Number of mapped reads per
+cell</li>
+<li>
+<code>library_size</code>: Number of observed UMIs per cell</li>
+</ul>
+<p>are the data used to fit the model, and</p>
+<ul>
+<li>
+<code>UMI_per_cell</code>: Total UMI per cell obtained at sequencing
+saturation</li>
+<li>
+<code>variation</code>: Variation parameter characterizing PCR
+amplification bias (between 0 and 1)</li>
+</ul>
+<p>are the fitted parameters.</p>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

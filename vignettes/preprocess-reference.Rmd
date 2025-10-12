@@ -24,21 +24,21 @@ library(perturbplan)
 
 ## Overview
 
-PerturbPlan requires three types of information from pilot data for power analysis:
-
-1. **Baseline Expression Statistics**: Gene-level expression parameters (mean and dispersion) fitted from a negative binomial model
-2. **Library Parameters**: Read-to-UMI saturation curve parameters (UMI_per_cell and variation) that characterize library preparation and PCR amplification bias
-3. **Mapping Efficiency**: Proportion of reads that map to the transcriptome we're interested in
-
 This preprocessing workflow consists of two main steps:
 
-1. **`reference_data_preprocessing_10x()`**: Load raw data from multiple SRR runs of raw Cell Ranger outputs and aggregate them into a list containing:
+1. **`reference_data_preprocessing_10x()`**: Loading raw data from multiple SRR runs of raw Cell Ranger outputs and processing them into a list containing:
    - Gene-by-cell expression matrix
    - UMI-level molecule information dataframe
-   - Naive estimate of mapping efficiency (proportion of reads mapped to the whole transcriptome among all reads)
-2. **`reference_data_processing()`**: Fits statistical models with the aggregated data from Step 1 to extract parameters needed for power analysis
+   - Proportion of reads confidently mapped to the whole transcriptome among all reads
+2. **`reference_data_processing()`**: Fitting statistical models with the output from Step 1 and obtaining parameters needed for power analysis. These parameters include:
 
-## Step 1: Aggregate Cell Ranger Outputs
+   - **Baseline expression statistics**: Baseline gene expression parameters: `response_id`, `relative_expression` and `expression_size`
+   - **Library parameters**: Reads-UMIs saturation curve parameters: `UMI_per_cell` and `variation`. These two parameters characterize library size and PCR amplification bias, given the cell type and assay of interest
+   - **Mapping efficiency**: Proportion of reads that are confidently mapped to the transcripts of genes we're interested in.
+
+The output after the two-step preprocessing can be uploaded to the Web App as custom reference data.
+
+## Step 1: Process Cell Ranger Outputs
 
 The `reference_data_preprocessing_10x` function aggregates Cell Ranger outputs from multiple sequencing runs (SRRs) into a single data structure.
 
@@ -72,7 +72,7 @@ For more information about input format and required fields, see `?obtain_qc_res
 
 ### Function Usage
 
-There's an example SRR folder called `cellranger_tiny` under thefolder `extdata` in our package, and we'll use that for demonstration:
+There's an example SRR folder called `cellranger_tiny` under the folder `extdata` in our package, and we'll use that for demonstration:
 
 ```{r}
 # Point to directory containing example Cell Ranger outputs
@@ -114,49 +114,11 @@ str(raw_data)
 
 ## Step 2: Extract Statistical Parameters
 
-The `reference_data_processing` function fits statistical models to extract gene-level expression parameters, library parameters and more sophisticated mapping efficiency required by PerturbPlan.
-
-### Statistical Models
-
-#### Gene Expression Model (Negative Binomial)
-
-For each gene, the function fits a negative binomial (NB) model to characterize the distribution of gene expression levels across cells:
-
-$$\text{gene_expression} \sim \text{NB}(\text{mean} = \text{library_size} \times \text{relative_expression}, \text{size} = \text{expression_size})$$
-
-where
-
-- `gene_expression`: Number of observed UMIs for the gene in each cell
-- `library_size`: Total UMI count per cell
-
-are the data to use, and
-
-- `relative_expression`: Relative expression level of the gene (fitted parameter)
-- `expression_size`: Dispersion parameter (small values indicate high biological variability)
-
-are the fitted parameters.
-
-#### Sequencing Saturation Model (S-M Curve)
-
-The function fits a saturation (S-M) curve that relates mapped reads per cell to observed UMIs per cell:
-
-$$\text{UMI} = \text{total_UMIs} \times \left(1 - \exp\left(-\frac{\text{reads}}{\text{total_UMIs}}\right) \times \left(1 + \text{variation} \times \frac{\text{reads}^2}{2 \times \text{total_UMIs}^2}\right)\right)$$
-
-where
-
-- `reads`: Number of mapped reads per cell
-- `UMI`: Number of observed UMIs per cell
-
-are the data to use, and
-
-- `total_UMIs` (UMI_per_cell): Maximum UMI per cell parameter at sequencing saturation
-- `variation`: Variation parameter characterizing PCR amplification bias (between 0 and 1)
-
-are the fitted parameters.
+The `reference_data_processing` function fits statistical models to extract gene expression parameters, library parameters and more sophisticated mapping efficiency required by PerturbPlan. We postpone the details of these two models to the end of this document.
 
 ### Function Usage
 
-Here, we demonstrate two use cases of `reference_data_processing` with the aggregated data from Step 1, one for perturb-seq experimental design using all genes, and one for TAP-seq experimental design using a targeted gene list. The toy examples have too few reads, so the fitted parameters may be sensitive to the random seed and the prior variation parameter. In practice, our function demonstrates robustness to both the choice of random seed and moderate misspecification of the prior for the variation parameter.
+We demonstrate two use cases of `reference_data_processing` with the aggregated data from Step 1 (`raw_data`): one for perturb-seq experimental design using all genes, and one for TAP-seq experimental design using a targeted gene list. 
 
 ```{r}
 # Set seed for reproducibility
@@ -198,6 +160,8 @@ pilot_data_tapseq <- reference_data_processing(
 - `h5_only`: If `TRUE`, skips baseline expression step to save time, useful when you're trying to find sensible hyperparameters for library model fitting (default: FALSE)
 - `n_threads`: Number of parallel processing threads (default: NULL for single-threaded)
 
+**Note**: In practice, our function demonstrates robustness to downsampling with different seeds and moderate misspecification of the prior for the variation parameter (`D2_rough`).
+
 ### Function Output
 
 As for the output of `reference_data_processing`, the relative expression is higher and the mapping efficiency is lower in the TAP-seq example due to the change in normalization. The library parameters are similar between the two toy examples, but it's often not the case in reality. If we use a real TAP-seq dataset, the variation parameter in library_parameters would typically be higher (closer to 1) than that in perturb-seq (around 0.3).
@@ -228,3 +192,44 @@ str(pilot_data_tapseq)
 - `?obtain_expression_information`: Documentation on fitting the negative binomial model in `reference_data_processing`.
 - `?library_computation`: Documentation on fitting the sequencing saturation model in `reference_data_processing`.
 - Vignette "Getting Started with PerturbPlan": Overview of power analysis workflow
+
+
+## Mathematical details of the models used in Step 2
+
+In particular, we consider two models, one for modeling gene expression and one for modeling read-UMI relationship.
+
+### Negative binomial expression model
+
+For each gene, the function fits a negative binomial (NB) model to characterize the distribution of gene expression levels across cells:
+
+$$\text{gene_expression} \sim \text{NB}(\text{mean} = \text{library_size} \times \text{relative_expression}, \text{size} = \text{expression_size})$$
+
+where
+
+- `gene_expression`: Number of observed UMIs for the gene in each cell
+- `library_size`: Number of observed UMIs per cell
+
+are the data to use, and
+
+- `relative_expression`: Relative expression level of the gene (fitted parameter)
+- `expression_size`: Dispersion parameter (small values indicate high biological variability)
+
+are the fitted parameters.
+
+### Read-UMI model
+
+The function fits a saturation curve that relates mapped reads per cell to observed UMIs per cell (`library_size`):
+
+$$\text{library_size} = \text{UMI_per_cell} \times \left(1 - \exp\left(-\frac{\text{mapped_reads_per_cell}}{\text{UMI_per_cell}}\right) \times \left(1 + \text{variation} \times \frac{\text{mapped_reads_per_cell}^2}{2 \times \text{UMI_per_cell}^2}\right)\right)$$
+
+where
+
+- `mapped_reads_per_cell`: Number of mapped reads per cell
+- `library_size`: Number of observed UMIs per cell
+
+are the data used to fit the model, and
+
+- `UMI_per_cell`: Total UMI per cell obtained at sequencing saturation
+- `variation`: Variation parameter characterizing PCR amplification bias (between 0 and 1)
+
+are the fitted parameters.
