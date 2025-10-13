@@ -1,6 +1,6 @@
 Package: perturbplan
 Title: Perturbplan: Power and Design Tools for CRISPR Screens
-Version: 0.1.0
+Version: 0.2.0
 Authors@R:
     c(person("Ziang", "Niu", , "ziangniu@wharton.upenn.edu", role = c("aut", "cre")),
       person("Yihui", "He", , "yihuihe@wharton.upenn.edu", role = c("aut")),

@@ -1,3 +1,48 @@
+# perturbplan 0.2.0
+
+## Major Changes
+
+### Parameter Naming Standardization
+- **BREAKING CHANGE**: Renamed `reads_per_cell` and `raw_reads_per_cell` parameters to `sequenced_reads_per_cell` in some functions
+  - This change clarifies that the parameter refers to raw sequencing reads (before mapping), not mapped reads
+  - Affects: `compute_power_plan()`, `compute_power_posthoc()`, `cost_power_computation()`, `find_optimal_cost_design()`, and related functions
+- Improved internal handling of mapping efficiency with automatic conversion and rounding
+
+### New Vignettes and Documentation
+- **New vignette**: "Prepare Data For Web App" (`preprocess-reference.Rmd`)
+  - Comprehensive guide for preprocessing Cell Ranger outputs
+  - Documentation for `reference_data_preprocessing_10x()` and `reference_data_processing()`
+  - Examples for both Perturb-seq and TAP-seq workflows
+  - Mathematical details of negative binomial expression model and read-UMI saturation curve
+- Enhanced `prospective-power` vignette with updated parameter names
+- Improved documentation for all pilot data preprocessing functions
+
+### Enhanced Pilot Data Preprocessing
+- Added `gene_list` parameter to `reference_data_processing()` for TAP-seq targeted gene panel support
+- Created example TAP-seq pilot data with targeted gene list
+- Improved handling of different prior values for variation parameter (`D2_rough`)
+- Enhanced example raw data to reduce numerical singularity issues
+
+### Bug Fixes
+- Fixed Matrix package warnings for sparse matrix operations
+- Resolved devtools::check() issues
+- Fixed parameter passing in cost optimization functions
+- Improved numerical stability in dispersion estimation
+
+### Website and Documentation Improvements
+- Redesigned pkgdown site structure and homepage
+- Added hex logo
+- Rebuilt all documentation with updated parameter names
+- Improved function examples and cross-references
+- Enhanced vignette figures and visualizations
+
+## Testing
+- All tests updated for new parameter naming convention
+- Enhanced test coverage for parameter validation
+- All R CMD check tests passing (0 errors, 0 warnings)
+
+---
+
 # perturbplan 0.1.0
 
 ## New Features
