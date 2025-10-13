@@ -60,10 +60,10 @@ navbar:
       menu:
         - text: "Prepare Data For Web App"
           href: articles/preprocess-reference.html
-        - text: "Prospective Power Analysis"
-          href: articles/prospective-power.html
-        - text: "Retrospective Power Analysis"
-          href: articles/posthoc.html
+        # - text: "Prospective Power Analysis"
+        #   href: articles/prospective-power.html
+        # - text: "Retrospective Power Analysis"
+        #   href: articles/posthoc.html
 
     # News/changelog
     news:
@@ -87,13 +87,13 @@ navbar:
 # Tip: keep high-frequency user APIs at the top; advanced/internal last.
 # ----------------
 reference:
-  - title: "Power functions"
-    desc: >
-      Power analysis functions for experimental planning (underspecified parameters) and
-      post-hoc analysis (detailed cell count assignments per gRNA and pair).
-    contents:
-      - compute_power_plan
-      - compute_power_posthoc
+  # - title: "Power functions"
+  #   desc: >
+  #     Power analysis functions for experimental planning (underspecified parameters) and
+  #     post-hoc analysis (detailed cell count assignments per gRNA and pair).
+  #   contents:
+  #     - compute_power_plan
+  #     - compute_power_posthoc
 
   - title: "Pilot data preprocessing functions"
     desc: "These functions help users create custom pilot data."

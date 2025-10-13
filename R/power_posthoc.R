@@ -89,6 +89,7 @@
 #' power_results$expected_num_discoveries  # expected number of discoveries
 #' head(power_results$individual_power)    # power per enhancer-gene pair
 #'
+#' @keywords internal
 #' @export
 compute_power_posthoc <- function(
     discovery_pairs,

@@ -1,5 +1,6 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
 <!-- <img src="man/figures/logo.png" style="float: right; margin-top: 5px;" width="150" alt=""> -->
 
 # PerturbPlan
@@ -25,13 +26,8 @@ The PerturbPlan package supports three use cases:
     App](articles/preprocess-reference.html)** - Shiny app users wishing
     to provide custom reference data to the app should use the package
     to prepare their data before upload.
-2.  **[Advanced Prospective Power
-    Analysis](articles/prospective-power.html)** - While the app helps
-    users address 11 of the most commonly encountered experimental
-    design questions, the package supports more sophisticated analyses.
-3.  **[Retrospective Power Analysis](articles/posthoc.html)** - In
-    addition to experimental design—based on prospective power
-    analysis—the package also supports retrospective power analysis.
+    <!-- 2. **[Advanced Prospective Power Analysis](articles/prospective-power.html)** - While the app helps users address 11 of the most commonly encountered experimental design questions, the package supports more sophisticated analyses. -->
+    <!-- 3. **[Retrospective Power Analysis](articles/posthoc.html)** - In addition to experimental design---based on prospective power analysis---the package also supports retrospective  power analysis. -->
 
 ## Installation
 

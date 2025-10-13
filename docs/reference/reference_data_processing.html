@@ -25,8 +25,6 @@ built-in pilot data examples and the PerturbPlan Shiny application."><meta prope
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/preprocess-reference.html">Prepare Data For Web App</a></li>
-    <li><a class="dropdown-item" href="../articles/prospective-power.html">Prospective Power Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/posthoc.html">Retrospective Power Analysis</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://katsevich-lab-perturbplan.share.connect.posit.cloud/"><span class="fa fa-external-link-alt"></span> Web App</a></li>
@@ -226,12 +224,12 @@ complete preprocessing workflow: <code><a href="../articles/preprocess-reference
 <span class="r-in"><span>  h5_only <span class="op">=</span> <span class="cn">FALSE</span>,      <span class="co"># Fit expression model</span></span></span>
 <span class="r-in"><span>  n_threads <span class="op">=</span> <span class="cn">NULL</span>      <span class="co"># No parallel processing</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting pilot data preprocessing @ 2025-10-12 20:16:28.279733</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting pilot data preprocessing @ 2025-10-13 16:33:44.773965</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Step 1: Computing gene expression information...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Start relative expression calculation @ 2025-10-12 20:16:28.300249</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish relative expression calculation @ 2025-10-12 20:16:28.300497</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Start relative expression calculation @ 2025-10-13 16:33:44.798892</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish relative expression calculation @ 2025-10-13 16:33:44.79913</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Number of genes passing TPM threshold: 5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Start dispersion estimation (8 thread(s)) @ 2025-10-12 20:16:28.300728</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Start dispersion estimation (8 thread(s)) @ 2025-10-13 16:33:44.799391</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [theta_batch_cpp] Starting computation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - G (genes) = 5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - C (cells) = 8</span>
@@ -251,9 +249,9 @@ complete preprocessing workflow: <code><a href="../articles/preprocess-reference
 <span class="r-out co"><span class="r-pr">#&gt;</span> [gene 4] t_0 = 0.272921</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [gene 4] theta_mle_row result = 468.498</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [theta_batch_cpp] Done.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish dispersion estimation @ 2025-10-12 20:16:28.301494</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish dispersion estimation @ 2025-10-13 16:33:44.800254</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Step 2: Estimating library parameters...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed pilot data preprocessing @ 2025-10-12 20:16:28.304205</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed pilot data preprocessing @ 2025-10-13 16:33:44.80314</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Processed 5 genes</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Library parameters: UMI_per_cell = 6, variation = 0.372</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Mapping efficiency = 1</span>
@@ -279,12 +277,12 @@ complete preprocessing workflow: <code><a href="../articles/preprocess-reference
 <span class="r-in"><span>  gene_list <span class="op">=</span> <span class="va">gene_list</span>, <span class="co"># Restrict to specific genes</span></span></span>
 <span class="r-in"><span>  TPM_thres <span class="op">=</span> <span class="fl">0</span>          <span class="co"># No expression threshold for filtering</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting pilot data preprocessing @ 2025-10-12 20:16:28.306592</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting pilot data preprocessing @ 2025-10-13 16:33:44.805708</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Step 1: Computing gene expression information...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Start relative expression calculation @ 2025-10-12 20:16:28.3246</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish relative expression calculation @ 2025-10-12 20:16:28.324816</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Start relative expression calculation @ 2025-10-13 16:33:44.828426</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish relative expression calculation @ 2025-10-13 16:33:44.828623</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Number of genes passing TPM threshold: 3</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Start dispersion estimation (8 thread(s)) @ 2025-10-12 20:16:28.325063</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Start dispersion estimation (8 thread(s)) @ 2025-10-13 16:33:44.828872</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [theta_batch_cpp] Starting computation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - G (genes) = 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - C (cells) = 8</span>
@@ -298,9 +296,9 @@ complete preprocessing workflow: <code><a href="../articles/preprocess-reference
 <span class="r-out co"><span class="r-pr">#&gt;</span> [gene 2] t_0 = 0.5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [gene 2] theta_mle_row result = 475.754</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [theta_batch_cpp] Done.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish dispersion estimation @ 2025-10-12 20:16:28.325657</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish dispersion estimation @ 2025-10-13 16:33:44.829517</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Step 2: Estimating library parameters...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed pilot data preprocessing @ 2025-10-12 20:16:28.328541</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed pilot data preprocessing @ 2025-10-13 16:33:44.832729</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Processed 3 genes</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Library parameters: UMI_per_cell = 7, variation = 0.366</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Mapping efficiency = 0.727</span>

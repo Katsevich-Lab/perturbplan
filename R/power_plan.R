@@ -395,6 +395,7 @@ compute_power_plan_per_grid <- function(
 #' summary(full_results$overall_power)
 #'
 #' @importFrom stats quantile
+#' @keywords internal
 #' @export
 compute_power_plan <- function(
     # power-determining parameters

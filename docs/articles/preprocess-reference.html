@@ -40,8 +40,6 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="../articles/preprocess-reference.html">Prepare Data For Web App</a></li>
-    <li><a class="dropdown-item" href="../articles/prospective-power.html">Prospective Power Analysis</a></li>
-    <li><a class="dropdown-item" href="../articles/posthoc.html">Retrospective Power Analysis</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -291,12 +289,12 @@ targeted gene list.</p>
 <span>  h5_only <span class="op">=</span> <span class="cn">FALSE</span>,      <span class="co"># Set TRUE to skip expression model fitting</span></span>
 <span>  n_threads <span class="op">=</span> <span class="cn">NULL</span>      <span class="co"># No parallel processing</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-12 20:16:34.061454</span></span>
+<span><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-13 16:33:50.447761</span></span>
 <span><span class="co">#&gt; Step 1: Computing gene expression information...</span></span>
-<span><span class="co">#&gt; Start relative expression calculation @ 2025-10-12 20:16:34.087954</span></span>
-<span><span class="co">#&gt; Finish relative expression calculation @ 2025-10-12 20:16:34.088668</span></span>
+<span><span class="co">#&gt; Start relative expression calculation @ 2025-10-13 16:33:50.476455</span></span>
+<span><span class="co">#&gt; Finish relative expression calculation @ 2025-10-13 16:33:50.477228</span></span>
 <span><span class="co">#&gt; Number of genes passing TPM threshold: 5</span></span>
-<span><span class="co">#&gt; Start dispersion estimation (8 thread(s)) @ 2025-10-12 20:16:34.088928</span></span>
+<span><span class="co">#&gt; Start dispersion estimation (8 thread(s)) @ 2025-10-13 16:33:50.477499</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Starting computation</span></span>
 <span><span class="co">#&gt;  - G (genes) = 5</span></span>
 <span><span class="co">#&gt;  - C (cells) = 8</span></span>
@@ -316,9 +314,9 @@ targeted gene list.</p>
 <span><span class="co">#&gt; [gene 4] t_0 = 0.272921</span></span>
 <span><span class="co">#&gt; [gene 4] theta_mle_row result = 468.498</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Done.</span></span>
-<span><span class="co">#&gt; Finish dispersion estimation @ 2025-10-12 20:16:34.090271</span></span>
+<span><span class="co">#&gt; Finish dispersion estimation @ 2025-10-13 16:33:50.478859</span></span>
 <span><span class="co">#&gt; Step 2: Estimating library parameters...</span></span>
-<span><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-12 20:16:34.096027</span></span>
+<span><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-13 16:33:50.484596</span></span>
 <span><span class="co">#&gt; Processed 5 genes</span></span>
 <span><span class="co">#&gt; Library parameters: UMI_per_cell = 6, variation = 0.372</span></span>
 <span><span class="co">#&gt; Mapping efficiency = 1</span></span>
@@ -332,12 +330,12 @@ targeted gene list.</p>
 <span>  gene_list <span class="op">=</span> <span class="va">gene_list</span>, <span class="co"># Restrict to specific genes</span></span>
 <span>  TPM_thres <span class="op">=</span> <span class="fl">0</span>          <span class="co"># No expression threshold for filtering</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-12 20:16:34.096882</span></span>
+<span><span class="co">#&gt; Starting pilot data preprocessing @ 2025-10-13 16:33:50.485455</span></span>
 <span><span class="co">#&gt; Step 1: Computing gene expression information...</span></span>
-<span><span class="co">#&gt; Start relative expression calculation @ 2025-10-12 20:16:34.118318</span></span>
-<span><span class="co">#&gt; Finish relative expression calculation @ 2025-10-12 20:16:34.118518</span></span>
+<span><span class="co">#&gt; Start relative expression calculation @ 2025-10-13 16:33:50.509078</span></span>
+<span><span class="co">#&gt; Finish relative expression calculation @ 2025-10-13 16:33:50.509279</span></span>
 <span><span class="co">#&gt; Number of genes passing TPM threshold: 3</span></span>
-<span><span class="co">#&gt; Start dispersion estimation (8 thread(s)) @ 2025-10-12 20:16:34.118765</span></span>
+<span><span class="co">#&gt; Start dispersion estimation (8 thread(s)) @ 2025-10-13 16:33:50.509531</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Starting computation</span></span>
 <span><span class="co">#&gt;  - G (genes) = 3</span></span>
 <span><span class="co">#&gt;  - C (cells) = 8</span></span>
@@ -351,9 +349,9 @@ targeted gene list.</p>
 <span><span class="co">#&gt; [gene 2] t_0 = 0.5</span></span>
 <span><span class="co">#&gt; [gene 2] theta_mle_row result = 475.754</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Done.</span></span>
-<span><span class="co">#&gt; Finish dispersion estimation @ 2025-10-12 20:16:34.119395</span></span>
+<span><span class="co">#&gt; Finish dispersion estimation @ 2025-10-13 16:33:50.510174</span></span>
 <span><span class="co">#&gt; Step 2: Estimating library parameters...</span></span>
-<span><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-12 20:16:34.122493</span></span>
+<span><span class="co">#&gt; Completed pilot data preprocessing @ 2025-10-13 16:33:50.513318</span></span>
 <span><span class="co">#&gt; Processed 3 genes</span></span>
 <span><span class="co">#&gt; Library parameters: UMI_per_cell = 7, variation = 0.366</span></span>
 <span><span class="co">#&gt; Mapping efficiency = 0.727</span></span></code></pre></div>

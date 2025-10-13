@@ -122,3 +122,4 @@ power_results$expected_num_discoveries  # expected number of discoveries
 head(power_results$individual_power)    # power per enhancer-gene pair
 
 }
+\keyword{internal}
