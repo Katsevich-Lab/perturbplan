@@ -80,6 +80,9 @@ points, but typically one ratio suffices
 }
 }
 \examples{
+# Set seed for reproducibility (required for small toy datasets)
+set.seed(123)
+
 # Get QC data and compute library parameters
 cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 qc_data <- obtain_qc_read_umi_table(cellranger_path)
