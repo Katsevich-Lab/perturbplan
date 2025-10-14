@@ -36,6 +36,8 @@ home:
   links:
     - text: Report a bug
       href: https://github.com/Katsevich-Lab/perturbplan/issues
+    - text: Q&A and feature requests
+      href: https://github.com/Katsevich-Lab/perturbplan/discussions
   sidebar:
     # Order of sidebar blocks on the home page
     structure: [links, license, citation, authors, dev]
