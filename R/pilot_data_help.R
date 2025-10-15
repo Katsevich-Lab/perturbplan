@@ -304,15 +304,23 @@ obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
   gem_group <- rhdf5::h5read(raw_path, "gem_group")
   cell_id <- paste(barcodes[barcode_idx + 1], gem_group, sep = "-")
   RNA_idx <- rhdf5::h5read(raw_path, "feature_idx")
-  gene_id <- rhdf5::h5read(raw_path, "features")$id[RNA_idx + 1]
+
+  # Read feature information
+  features <- rhdf5::h5read(raw_path, "features")
+  gene_id <- features$id[RNA_idx + 1]
+  feature_type <- features$feature_type[RNA_idx + 1]
 
   raw_df <- data.frame(num_reads = count,
                        UMI_id    = umi_idx + 1,
                        cell_id   = cell_id,
-                       response_id = gene_id)
+                       response_id = gene_id,
+                       feature_type = feature_type)
 
   qc_cells <- rhdf5::h5read(qc_path, "matrix/barcodes")
-  dplyr::filter(raw_df, cell_id %in% qc_cells)
+
+  # Filter for QC-passed cells and Gene Expression features only and exclude feature_type
+  raw_df |> dplyr::filter(cell_id %in% qc_cells & feature_type == "Gene Expression") |>
+    dplyr::select(-feature_type)
 }
 
 #' Calculate Naive Mapping Efficiency from Cell Ranger Metrics

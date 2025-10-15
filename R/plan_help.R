@@ -43,6 +43,8 @@ get_pilot_data_from_package <- function(biological_system) {
   # Map biological system names to data file names
   data_mapping <- list(
     "K562" = "K562_Gasperini",
+    "K562_10x" = "K562_10x",
+    "K562_TAP" = "K562_Ray",
     "A549" = "A549_Sakellaropoulos",
     "THP-1" = "THP1_Yao",
     "T_CD8" = "T_CD8_Shifrut",

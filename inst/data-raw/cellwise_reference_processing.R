@@ -147,6 +147,7 @@ process_k562_tap <- function(path_to_dataset) {
   response_matrix <- k562_tap_data[[1]]
   read_umi_table <- k562_tap_data[[2]]
   mapping_efficiency <- k562_tap_data$mapping_efficiency
+  print(paste0("Mapping efficiency: ", mapping_efficiency))
   # read a gene list from file.path(path_to_dataset, "sample1", "outs", "target_panel.csv")
   # the gene list is in the first column without header (start from 7th row)
   # only keep unique genes
