@@ -20,7 +20,7 @@ A list with 3 elements:
 \item \code{variation}: Variation parameter for PCR bias (0.809)
 }
 }
-\item{mapping_efficiency}{Numeric. Mapping efficiency value (0.349)}
+\item{mapping_efficiency}{Numeric. Mapping efficiency value (0.371)}
 }
 }
 \source{

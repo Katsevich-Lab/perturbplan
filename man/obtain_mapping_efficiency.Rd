@@ -21,6 +21,9 @@ that successfully mapped to the transcriptome.
 Computes the naive mapping efficiency as the proportion of total reads that map
 to the transcriptome. This function is used internally by
 \code{\link{reference_data_preprocessing_10x}}.
+
+\strong{Note:} This function only supports Cell Ranger count output format,
+not Cell Ranger multi.
 }
 \details{
 The function calculates:
@@ -35,9 +38,11 @@ where:
 \subsection{Important Notes}{
 
 \itemize{
+\item \strong{Only Cell Ranger count format is supported.} Cell Ranger multi uses a different
+\code{metrics_summary.csv} format (row-based with "Library Type" and "Metric Name" columns)
+and is not compatible with this function
 \item The \code{metrics_summary.csv} file must contain a column named "Number of Reads"
-\item This column may need to be added or edited manually when Cell Ranger is run
-with multiple libraries or samples
+(Cell Ranger count format where metric names are column headers)
 \item The function removes commas from the "Number of Reads" field before conversion
 \item This gives a "naive" estimate that will be adjusted in
 \code{\link{reference_data_processing}} when a gene list is specified

@@ -20,3 +20,4 @@ echo "Now in package root: $PROJECT_ROOT"
 cd "$PROJECT_ROOT"
 
 Rscript "inst/data-raw/process_reference_expression_data.R"
+Rscript "inst/extdata/setup_example_rawdata.R"

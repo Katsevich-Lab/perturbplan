@@ -247,13 +247,28 @@ obtain_expression_information <- function(response_matrix,
 #'
 #' @description
 #' Extracts QC-filtered UMI-level molecule information from Cell Ranger HDF5 files.
+#' Only molecules with \code{feature_type == "Gene Expression"} are retained; other
+#' feature types (e.g., "Antibody Capture", "CRISPR Guide Capture") are filtered out.
 #' This function is used internally by \code{\link{reference_data_preprocessing_10x}}.
 #'
 #' @param path_to_cellranger_output Character. Path to Cell Ranger run folder
 #'   containing:
 #'   \itemize{
-#'     \item \code{outs/molecule_info.h5} – Raw molecule information
-#'     \item \code{outs/filtered_feature_bc_matrix.h5} – QC-filtered cell barcodes
+#'     \item \code{outs/molecule_info.h5} – Raw molecule information with required datasets:
+#'       \itemize{
+#'         \item \code{count}: Number of reads per molecule
+#'         \item \code{umi}: UMI indices
+#'         \item \code{barcodes}: Cell barcodes (without GEM group suffix)
+#'         \item \code{barcode_idx}: Barcode indices (0-based)
+#'         \item \code{gem_group}: GEM group identifiers
+#'         \item \code{feature_idx}: Feature indices (0-based)
+#'         \item \code{features/id}: Gene identifiers
+#'         \item \code{features/feature_type}: Feature types (e.g., "Gene Expression")
+#'       }
+#'     \item \code{outs/filtered_feature_bc_matrix.h5} – QC-filtered cell barcodes with:
+#'       \itemize{
+#'         \item \code{matrix/barcodes}: Cell barcodes passing QC filters
+#'       }
 #'   }
 #'
 #' @return Data frame with UMI-level molecule information containing columns:
@@ -270,8 +285,9 @@ obtain_expression_information <- function(response_matrix,
 #'   \item Reads raw molecule information from \code{molecule_info.h5}
 #'   \item Reads QC-filtered cell barcodes from \code{filtered_feature_bc_matrix.h5}
 #'   \item Filters molecule data to retain only QC-passed cells
+#'   \item Filters to retain only molecules with \code{feature_type == "Gene Expression"}
 #'   \item Constructs cell IDs with GEM group suffixes
-#'   \item Returns data frame with read counts per UMI per cell
+#'   \item Returns data frame with read counts per UMI per cell for Gene Expression features only
 #' }
 #'
 #' This data is used for fitting the library saturation (S-M) curve in
@@ -330,6 +346,9 @@ obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
 #' to the transcriptome. This function is used internally by
 #' \code{\link{reference_data_preprocessing_10x}}.
 #'
+#' \strong{Note:} This function only supports Cell Ranger count output format,
+#' not Cell Ranger multi.
+#'
 #' @param QC_data Data frame. Output of \code{\link{obtain_qc_read_umi_table}} containing
 #'   a \code{num_reads} column with read counts per UMI.
 #' @param path_to_cellranger_output Character. Path to Cell Ranger run folder containing
@@ -352,9 +371,11 @@ obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
 #' ## Important Notes
 #'
 #' \itemize{
+#'   \item \strong{Only Cell Ranger count format is supported.} Cell Ranger multi uses a different
+#'     \code{metrics_summary.csv} format (row-based with "Library Type" and "Metric Name" columns)
+#'     and is not compatible with this function
 #'   \item The \code{metrics_summary.csv} file must contain a column named "Number of Reads"
-#'   \item This column may need to be added or edited manually when Cell Ranger is run
-#'     with multiple libraries or samples
+#'     (Cell Ranger count format where metric names are column headers)
 #'   \item The function removes commas from the "Number of Reads" field before conversion
 #'   \item This gives a "naive" estimate that will be adjusted in
 #'     \code{\link{reference_data_processing}} when a gene list is specified

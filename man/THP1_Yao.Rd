@@ -16,7 +16,7 @@ A list with 3 elements:
 }
 \item{library_parameters}{List containing:
 \itemize{
-\item \code{UMI_per_cell}: Maximum UMI per cell parameter (77,799)
+\item \code{UMI_per_cell}: Maximum UMI per cell parameter (77,815)
 \item \code{variation}: Variation parameter for PCR bias (0.354)
 }
 }

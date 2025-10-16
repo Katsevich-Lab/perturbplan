@@ -10,8 +10,21 @@ obtain_qc_read_umi_table(path_to_cellranger_output)
 \item{path_to_cellranger_output}{Character. Path to Cell Ranger run folder
 containing:
 \itemize{
-\item \code{outs/molecule_info.h5} – Raw molecule information
-\item \code{outs/filtered_feature_bc_matrix.h5} – QC-filtered cell barcodes
+\item \code{outs/molecule_info.h5} – Raw molecule information with required datasets:
+\itemize{
+\item \code{count}: Number of reads per molecule
+\item \code{umi}: UMI indices
+\item \code{barcodes}: Cell barcodes (without GEM group suffix)
+\item \code{barcode_idx}: Barcode indices (0-based)
+\item \code{gem_group}: GEM group identifiers
+\item \code{feature_idx}: Feature indices (0-based)
+\item \code{features/id}: Gene identifiers
+\item \code{features/feature_type}: Feature types (e.g., "Gene Expression")
+}
+\item \code{outs/filtered_feature_bc_matrix.h5} – QC-filtered cell barcodes with:
+\itemize{
+\item \code{matrix/barcodes}: Cell barcodes passing QC filters
+}
 }}
 }
 \value{
@@ -25,6 +38,8 @@ Data frame with UMI-level molecule information containing columns:
 }
 \description{
 Extracts QC-filtered UMI-level molecule information from Cell Ranger HDF5 files.
+Only molecules with \code{feature_type == "Gene Expression"} are retained; other
+feature types (e.g., "Antibody Capture", "CRISPR Guide Capture") are filtered out.
 This function is used internally by \code{\link{reference_data_preprocessing_10x}}.
 }
 \details{
@@ -33,8 +48,9 @@ The function:
 \item Reads raw molecule information from \code{molecule_info.h5}
 \item Reads QC-filtered cell barcodes from \code{filtered_feature_bc_matrix.h5}
 \item Filters molecule data to retain only QC-passed cells
+\item Filters to retain only molecules with \code{feature_type == "Gene Expression"}
 \item Constructs cell IDs with GEM group suffixes
-\item Returns data frame with read counts per UMI per cell
+\item Returns data frame with read counts per UMI per cell for Gene Expression features only
 }
 
 This data is used for fitting the library saturation (S-M) curve in

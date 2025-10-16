@@ -187,6 +187,9 @@ create_and_write(mol_dst, "gem_group",   gem_group_s)
 create_and_write(mol_dst, "barcodes",    barcodes_s)      # bare barcodes in compact order
 rhdf5::h5createGroup(mol_dst, "features")
 create_and_write(mol_dst, "features/id", features_id_s)
+# Add feature_type column (all "Gene Expression" with same length as features/id)
+feature_type_s <- rep("Gene Expression", length(features_id_s))
+create_and_write(mol_dst, "features/feature_type", feature_type_s)
 rhdf5::H5close()
 
 # ============================================================
