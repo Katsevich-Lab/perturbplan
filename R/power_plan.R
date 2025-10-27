@@ -877,9 +877,9 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
       # compute the optimal cost dataframe
       optimal_design_df <- cost_power_df_filtered |>
         dplyr::summarise(minimum_cost = min(total_cost),
-                         min_reads = min(min(sequenced_reads_per_cell), 500),
+                         min_reads = min(sequenced_reads_per_cell),
                          max_reads = max(sequenced_reads_per_cell),
-                         min_cells = min(min(cells_per_target), 50),
+                         min_cells = min(cells_per_target),
                          max_cells = max(cells_per_target)) |>
         dplyr::ungroup() |>
         dplyr::mutate(cost_precision = unname(minimum_cost / 100))
@@ -890,9 +890,9 @@ find_optimal_cost_design <- function(cost_power_df, minimizing_variable,
       optimal_design_df <- cost_power_df_filtered |>
         dplyr::group_by(.data[[minimizing_variable]]) |>
         dplyr::summarise(minimum_cost = min(total_cost),
-                         min_reads = min(min(sequenced_reads_per_cell), 500),
+                         min_reads = min(sequenced_reads_per_cell),
                          max_reads = max(sequenced_reads_per_cell),
-                         min_cells = min(min(cells_per_target), 50),
+                         min_cells = min(cells_per_target),
                          max_cells = max(cells_per_target)) |>
         dplyr::ungroup() |>
         dplyr::mutate(cost_precision = unname(minimum_cost / 100))
