@@ -144,7 +144,7 @@ fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
 #' @description
 #' C++ implementation that determines the minimum and maximum reads per cell values
 #' for power analysis grid generation using binary search on the S-M curve.
-#' Uses saturation-based thresholds (10% and 95%) instead of platform-specific minimums.
+#' Uses saturation-based thresholds (10% and 98%) instead of platform-specific minimums.
 #'
 #' @param experimental_platform String. Experimental platform identifier (kept for compatibility, not used).
 #' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
@@ -156,7 +156,7 @@ fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
 #' This C++ implementation uses efficient binary search to find the reads per cell
 #' range for power analysis. Uses saturation-based thresholds:
 #' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell)
-#' - Maximum reads: 95% UMI saturation (diminishing returns beyond this point)
+#' - Maximum reads: 98% UMI saturation (diminishing returns beyond this point)
 #'
 #' @seealso \code{\link{identify_library_size_range}} for R version
 #' @export
@@ -198,7 +198,7 @@ generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variati
 #' This streamlined version removes the unused experimental_platform parameter.
 #' Uses efficient binary search to find the reads per cell range for power analysis:
 #' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell)
-#' - Maximum reads: 95% UMI saturation (diminishing returns beyond this point)
+#' - Maximum reads: 98% UMI saturation (diminishing returns beyond this point)
 #'
 #' @export
 identify_reads_range_cpp <- function(UMI_per_cell, variation) {
