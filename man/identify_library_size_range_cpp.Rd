@@ -19,14 +19,14 @@ List with min_reads_per_cell and max_reads_per_cell elements.
 \description{
 C++ implementation that determines the minimum and maximum reads per cell values
 for power analysis grid generation using binary search on the S-M curve.
-Uses saturation-based thresholds (10\% and 80\%) instead of platform-specific minimums.
+Uses saturation-based thresholds (10\% and 95\%) instead of platform-specific minimums.
 }
 \details{
 This C++ implementation uses efficient binary search to find the reads per cell
 range for power analysis. Uses saturation-based thresholds:
 \itemize{
 \item Minimum reads: 10\% UMI saturation (dynamic based on UMI_per_cell)
-\item Maximum reads: 80\% UMI saturation (diminishing returns beyond this point)
+\item Maximum reads: 95\% UMI saturation (diminishing returns beyond this point)
 }
 }
 \seealso{

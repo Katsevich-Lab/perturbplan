@@ -73,9 +73,9 @@ NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
 //' Identify optimal reads per cell range for power analysis grid (C++)
 //'
 //' @description
-//' C++ implementation that determines the minimum and maximum reads per cell values 
+//' C++ implementation that determines the minimum and maximum reads per cell values
 //' for power analysis grid generation using binary search on the S-M curve.
-//' Uses saturation-based thresholds (10% and 80%) instead of platform-specific minimums.
+//' Uses saturation-based thresholds (10% and 95%) instead of platform-specific minimums.
 //'
 //' @param experimental_platform String. Experimental platform identifier (kept for compatibility, not used).
 //' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
@@ -87,7 +87,7 @@ NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
 //' This C++ implementation uses efficient binary search to find the reads per cell
 //' range for power analysis. Uses saturation-based thresholds:
 //' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell)
-//' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
+//' - Maximum reads: 95% UMI saturation (diminishing returns beyond this point)
 //'
 //' @seealso \code{\link{identify_library_size_range}} for R version
 //' @export
@@ -127,12 +127,12 @@ List identify_library_size_range_cpp(std::string experimental_platform,
   }
   
   min_reads_per_cell = static_cast<int>(std::ceil(upper_bound_search));
-  
-  // Step 2: Determine maximum reads per cell for ~80% UMI saturation
-  double target_UMI = 0.8 * UMI_per_cell;
+
+  // Step 2: Determine maximum reads per cell for ~95% UMI saturation
+  double target_UMI = 0.95 * UMI_per_cell;
   double upper_bound = 10.0 * UMI_per_cell;  // Generous upper limit
-  
-  // Step 3: Check corner case - can we even reach 80% saturation?
+
+  // Step 3: Check corner case - can we even reach 95% saturation?
   NumericVector upper_reads = NumericVector::create(upper_bound);
   NumericVector upper_bound_UMI_vec = fit_read_UMI_curve_cpp(upper_reads, UMI_per_cell, variation);
   double upper_bound_UMI = upper_bound_UMI_vec[0];
@@ -140,18 +140,18 @@ List identify_library_size_range_cpp(std::string experimental_platform,
   int max_reads_per_cell;
   
   if (upper_bound_UMI < target_UMI) {
-    // Corner case: Even generous upper bound doesn't reach 80% saturation
+    // Corner case: Even generous upper bound doesn't reach 95% saturation
     max_reads_per_cell = static_cast<int>(round(upper_bound));
-    
+
     // Calculate actual saturation percentage for informative message
     double actual_saturation = round(100.0 * upper_bound_UMI / UMI_per_cell * 10.0) / 10.0;
-    
-    Rcout << "Note: 80% UMI saturation not achievable with practical read depths. "
+
+    Rcout << "Note: 95% UMI saturation not achievable with practical read depths. "
           << "Using maximum practical depth (" << max_reads_per_cell << " reads/cell) "
           << "which achieves " << actual_saturation << "% saturation." << std::endl;
     
   } else {
-    // Step 4: Normal case - use binary search to find 80% saturation point
+    // Step 4: Normal case - use binary search to find 95% saturation point
     double lower_bound = static_cast<double>(min_reads_per_cell);
     double tolerance = 0.01 * UMI_per_cell;  // 1% tolerance for convergence
     
@@ -248,9 +248,9 @@ NumericVector generate_reads_grid_cpp(std::string experimental_platform,
 //' Identify optimal reads per cell range (streamlined version)
 //'
 //' @description
-//' Streamlined C++ implementation that determines the minimum and maximum reads per cell values 
+//' Streamlined C++ implementation that determines the minimum and maximum reads per cell values
 //' for power analysis grid generation using binary search on the S-M curve.
-//' Uses saturation-based thresholds (10% and 80%) with a clean API.
+//' Uses saturation-based thresholds (10% and 95%) with a clean API.
 //'
 //' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
 //' @param variation Numeric. Variation parameter for S-M curve.
@@ -261,7 +261,7 @@ NumericVector generate_reads_grid_cpp(std::string experimental_platform,
 //' This streamlined version removes the unused experimental_platform parameter.
 //' Uses efficient binary search to find the reads per cell range for power analysis:
 //' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell)
-//' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
+//' - Maximum reads: 95% UMI saturation (diminishing returns beyond this point)
 //'
 //' @export
 // [[Rcpp::export]]
@@ -298,12 +298,12 @@ List identify_reads_range_cpp(double UMI_per_cell, double variation) {
   }
   
   min_reads_per_cell = static_cast<int>(std::ceil(upper_bound_search));
-  
-  // Step 2: Determine maximum reads per cell for ~80% UMI saturation
-  double target_UMI = 0.8 * UMI_per_cell;
+
+  // Step 2: Determine maximum reads per cell for ~95% UMI saturation
+  double target_UMI = 0.95 * UMI_per_cell;
   double upper_bound = 10.0 * UMI_per_cell;  // Generous upper limit
-  
-  // Step 3: Check corner case - can we even reach 80% saturation?
+
+  // Step 3: Check corner case - can we even reach 95% saturation?
   NumericVector upper_reads = NumericVector::create(upper_bound);
   NumericVector upper_bound_UMI_vec = fit_read_UMI_curve_cpp(upper_reads, UMI_per_cell, variation);
   double upper_bound_UMI = upper_bound_UMI_vec[0];
@@ -311,18 +311,18 @@ List identify_reads_range_cpp(double UMI_per_cell, double variation) {
   int max_reads_per_cell;
   
   if (upper_bound_UMI < target_UMI) {
-    // Corner case: Even generous upper bound doesn't reach 80% saturation
+    // Corner case: Even generous upper bound doesn't reach 95% saturation
     max_reads_per_cell = static_cast<int>(round(upper_bound));
-    
+
     // Calculate actual saturation percentage for informative message
     double actual_saturation = round(100.0 * upper_bound_UMI / UMI_per_cell * 10.0) / 10.0;
-    
-    Rcout << "Note: 80% UMI saturation not achievable with practical read depths. "
+
+    Rcout << "Note: 95% UMI saturation not achievable with practical read depths. "
           << "Using maximum practical depth (" << max_reads_per_cell << " reads/cell) "
           << "which achieves " << actual_saturation << "% saturation." << std::endl;
     
   } else {
-    // Step 4: Normal case - use binary search to find 80% saturation point
+    // Step 4: Normal case - use binary search to find 95% saturation point
     double lower_bound = static_cast<double>(min_reads_per_cell);
     double tolerance = 0.01 * UMI_per_cell;  // 1% tolerance for convergence
     
