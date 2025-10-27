@@ -756,8 +756,8 @@ input_check_cost_power_computation <- function(
     stop("`max_power` must be a numeric value in (0,1)!")
   }
 
-  if (!is.numeric(power_range) || length(power_range) != 1 || power_range <= 0 || power_range > 1) {
-    stop("`power_range` must be a numeric value in (0,1]!")
+  if (!is.numeric(power_range) || length(power_range) != 1 || power_range <= 0 || power_range >= 2) {
+    stop("`power_range` must be a numeric value in (0,2)!")
   }
 
   if (min_power >= max_power) {
