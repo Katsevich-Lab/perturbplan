@@ -77,4 +77,3 @@ This function performs two binary searches using a cross-search strategy:
 This cross-search strategy ensures min_cells <= max_cells and provides robust
 experimental design ranges from minimally acceptable to well-powered studies.
 }
-\keyword{internal}

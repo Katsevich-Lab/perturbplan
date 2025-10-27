@@ -56,4 +56,3 @@ The computation follows these steps:
 \item Calculate final asymptotic mean and standard deviation
 }
 }
-\keyword{internal}

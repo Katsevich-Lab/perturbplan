@@ -582,7 +582,7 @@ input_check_cost_power_computation <- function(
     MOI = 10, num_targets = 100, non_targeting_gRNAs = 10, gRNAs_per_target = 4, gRNA_variability = 0.13,
     control_group = "complement", side = "left", multiple_testing_alpha = 0.05, prop_non_null = 0.1,
     baseline_expression_stats, library_parameters,
-    grid_size = 20, power_target = 0.8, power_precision = 0.01, min_power = 0.05, max_power = 0.95,
+    grid_size = 20, power_target = 0.8, power_precision = 0.01, min_power = 0.05, max_power = 0.95, power_range = 0.6,
     cost_precision = 0.9,
     cost_per_captured_cell = 0.086, cost_per_million_reads = 0.374, cost_constraint = NULL,
     mapping_efficiency = 0.72
@@ -755,7 +755,11 @@ input_check_cost_power_computation <- function(
   if (!is.numeric(max_power) || length(max_power) != 1 || max_power <= 0 || max_power >= 1) {
     stop("`max_power` must be a numeric value in (0,1)!")
   }
-  
+
+  if (!is.numeric(power_range) || length(power_range) != 1 || power_range <= 0 || power_range > 1) {
+    stop("`power_range` must be a numeric value in (0,1]!")
+  }
+
   if (min_power >= max_power) {
     stop("`min_power` must be less than `max_power`!")
   }

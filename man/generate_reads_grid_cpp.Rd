@@ -27,4 +27,3 @@ NumericVector. Sequence of reads per cell values for grid.
 Convenience function that combines range identification with grid generation
 for power analysis heatmaps.
 }
-\keyword{internal}

@@ -541,6 +541,10 @@ compute_power_plan <- function(
 #' @param power_precision Numeric. Acceptable precision around power target (default: 0.01).
 #' @param min_power Numeric. Minimum power threshold for grid search (default: 0.05).
 #' @param max_power Numeric. Maximum power threshold for grid search (default: 0.95).
+#' @param power_range Numeric. Range around power target to search for designs (default: 0.6).
+#'   The grid search will explore designs with power between
+#'   \code{power_target - power_range/2} and \code{power_target + power_range/2},
+#'   constrained by \code{min_power} and \code{max_power}.
 #' @param cost_precision Numeric. Cost utilization factor (default: 0.9).
 #'   Filters designs with total cost \\le cost_precision × cost_constraint.
 #' @param cost_per_captured_cell Numeric. Cost per captured cell in dollars (default: 0.086).
@@ -590,7 +594,7 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
                                    # data inputs
                                    baseline_expression_stats, library_parameters,
                                    # grid parameters for power
-                                   grid_size = 20, power_target = 0.8, power_precision = 0.01, min_power = 0.05, max_power = 0.95,
+                                   grid_size = 20, power_target = 0.8, power_precision = 0.01, min_power = 0.05, max_power = 0.95, power_range = 0.6,
                                    # grid parameter for budget
                                    cost_precision = 0.9,
                                    # cost parameters
@@ -606,7 +610,7 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
     control_group = control_group, side = side, multiple_testing_alpha = multiple_testing_alpha,
     prop_non_null = prop_non_null, baseline_expression_stats = baseline_expression_stats,
     library_parameters = library_parameters, grid_size = grid_size, power_target = power_target,
-    power_precision = power_precision, min_power = min_power, max_power = max_power,
+    power_precision = power_precision, min_power = min_power, max_power = max_power, power_range = power_range,
     cost_precision = cost_precision, cost_per_captured_cell = cost_per_captured_cell,
     cost_per_million_reads = cost_per_million_reads, cost_constraint = cost_constraint,
     mapping_efficiency = mapping_efficiency
@@ -672,7 +676,7 @@ cost_power_computation <- function(minimizing_variable = "TPM_threshold", fixed_
     # data inputs
     baseline_expression_stats = baseline_expression_stats, library_parameters = library_parameters,
     # grid parameters
-    grid_size = grid_size, min_power_threshold = max(power_target - 0.3, min_power), max_power_threshold = min(power_target + 0.3, max_power),
+    grid_size = grid_size, min_power_threshold = max(power_target - power_range / 2, min_power), max_power_threshold = min(power_target + power_range / 2, max_power),
     # efficiency of library preparation and sequencing platform
     mapping_efficiency = mapping_efficiency
   ) |>
