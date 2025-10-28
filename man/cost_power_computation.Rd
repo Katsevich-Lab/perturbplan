@@ -53,7 +53,7 @@ Options: "TPM_threshold" or "minimum_fold_change". Default: "TPM_threshold".}
 
 \item{gRNA_variability}{Numeric. gRNA variability parameter (default: 0.13).}
 
-\item{control_group}{Character. Control group type: "complement" or "non_targeting" (default: "complement").}
+\item{control_group}{Character. Control group type: "complement" or "nt_cells" (default: "complement").}
 
 \item{side}{Character. Test side: "left", "right", or "both" (default: "left").}
 

@@ -529,7 +529,7 @@ compute_power_plan <- function(
 #' @param non_targeting_gRNAs Integer. Number of non-targeting gRNAs (default: 10).
 #' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
 #' @param gRNA_variability Numeric. gRNA variability parameter (default: 0.13).
-#' @param control_group Character. Control group type: "complement" or "non_targeting" (default: "complement").
+#' @param control_group Character. Control group type: "complement" or "nt_cells" (default: "complement").
 #' @param side Character. Test side: "left", "right", or "both" (default: "left").
 #' @param multiple_testing_alpha Numeric. Multiple testing significance level (default: 0.05).
 #' @param prop_non_null Numeric. Proportion of non-null hypotheses (default: 0.1).
