@@ -51,7 +51,7 @@ process_thp1_10x <- function(path_to_dataset) {
   response_matrix <- GetAssayData(seurat_obj, assay = "RNA", slot = "counts")
 
   # Subset the expression matrix to include only the selected 'nt_cells_once' cells
-  response_matrix <- response_matrix[, nt_cells]
+  response_matrix <- response_matrix[, nt_cells_once]
 
   # check whether there are negative values
   if (any(response_matrix < 0)) {
