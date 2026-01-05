@@ -20,7 +20,7 @@ process_k562_gasperini <- function(path_to_dataset) {
 
 process_k562_10x <- function(path_to_dataset) {
   message("Start processing K562_10x")
-  path_to_runs <- file.path(path_to_dataset, "processed")
+  path_to_runs <- path_to_dataset
   k562_data <- perturbplan::reference_data_preprocessing_10x(path_to_runs)
   response_matrix <- k562_data[[1]]
   read_umi_table <- k562_data[[2]]
