@@ -12,6 +12,7 @@ NULL
 #' @importFrom R.utils gunzip
 #' @importFrom dplyr filter bind_rows arrange
 #' @importFrom preseqR preseqR.ztnb.em
+#' @importFrom PoissonBinomial ppbinom
 NULL
 
 #' Load and QC Gene Expression Matrix from Cell Ranger Output
@@ -291,7 +292,7 @@ obtain_expression_information <- function(response_matrix,
 #' }
 #'
 #' This data is used for fitting the library saturation (S-M) curve in
-#' \code{\link{library_computation}}.
+#' \code{\link{library_estimation}}.
 #'
 #' @examples
 #' # Extract read/UMI information from Cell Ranger output
@@ -306,7 +307,7 @@ obtain_expression_information <- function(response_matrix,
 #' @seealso
 #' \code{\link{reference_data_preprocessing_10x}} for aggregating data from multiple runs.
 #'
-#' \code{\link{library_computation}} for fitting saturation curves using this data.
+#' \code{\link{library_estimation}} for fitting saturation curves using this data.
 #' @keywords internal
 #' @export
 obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
@@ -447,23 +448,6 @@ summary_h5_data <- function(QC_data){
   )
 }
 
-#' Compute the average total UMI per cell and UMI variation parameters.
-#'
-#' @inheritParams library_computation
-#'
-#' @return A list with elements:
-#' \describe{
-#'   \item{UMI_per_cell}{Total UMI per cell parameter}
-#'   \item{variation}{Variation parameter characterizing PCR bias}
-#' }
-#' @keywords internal
-
-library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
-  # Call library_computation which now directly returns the parameter list
-  return(library_computation(QC_data, downsample_ratio, D2_rough))
-}
-
-
 #' Fit Saturation-Magnitude (S-M) Curve Between Reads and UMIs Using PreseqR
 #'
 #' @description
@@ -475,10 +459,6 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 #' @param QC_data Data frame. UMI-level molecule information from
 #'   \code{\link{obtain_qc_read_umi_table}} containing columns \code{num_reads},
 #'   \code{UMI_id}, \code{cell_id}, and \code{response_id}.
-#' @param downsample_ratio Numeric. Not used in preseqR method but kept for
-#'   API compatibility. Default: 0.7.
-#' @param D2_rough Numeric. Not used in preseqR method but kept for
-#'   API compatibility. Default: 0.3.
 #'
 #' @return A list with two elements:
 #' \describe{
@@ -512,22 +492,13 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 #'   \item Computes UMI richness variation as 1/size
 #' }
 #'
-#' ## Important Notes
-#'
-#' \itemize{
-#'   \item This method replaces the previous downsampling-based approach
-#'   \item Parameters downsample_ratio and D2_rough are ignored but retained for compatibility
-#'   \item The preseqR method is more robust and doesn't require manual tuning
-#'   \item For large datasets, the ZTNB fitting may take several seconds
-#' }
-#'
 #' @examples
 #' # Get QC data and compute library parameters
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' qc_data <- obtain_qc_read_umi_table(cellranger_path)
 #'
 #' # Fit saturation curve using preseqR
-#' lib_params <- library_computation(QC_data = qc_data)
+#' lib_params <- library_estimation(QC_data = qc_data)
 #'
 #' # View fitted parameters
 #' lib_params$UMI_per_cell
@@ -537,11 +508,9 @@ library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
 #' \code{\link{obtain_qc_read_umi_table}} for input data preparation.
 #'
 #' \code{\link{reference_data_processing}} for the complete preprocessing workflow.
-#'
-#' \code{\link{library_estimation}} for the wrapper function.
 #' @keywords internal
 #' @export
-library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3){
+library_estimation <- function(QC_data){
 
   # Create read-UMI frequency table
   read_umi_summary <- QC_data$num_reads |> table()

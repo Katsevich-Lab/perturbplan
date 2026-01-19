@@ -1,9 +1,3 @@
-# NOTE: Library parameter values (UMI_per_cell and variation) in this file
-# were generated using the preseqR-based library_computation method.
-# If you regenerate the data files using inst/data-raw/regenerate_data_with_preseqR.R,
-# update the parameter values in the documentation below using the values printed
-# by that script or from inst/data-raw/preseqR_parameter_comparison.csv
-
 #' A549 Sakellaropoulos Chromium reference data for CRISPR power analysis
 #'
 #' @description

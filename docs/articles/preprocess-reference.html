@@ -295,17 +295,15 @@ targeted gene list.</p>
 <span>  mapping_efficiency <span class="op">=</span> <span class="va">raw_data</span><span class="op">$</span><span class="va">mapping_efficiency</span>,</span>
 <span>  gene_list <span class="op">=</span> <span class="cn">NULL</span>,     <span class="co"># Use all genes</span></span>
 <span>  TPM_thres <span class="op">=</span> <span class="fl">0.1</span>,      <span class="co"># Default expression threshold for filtering</span></span>
-<span>  downsample_ratio <span class="op">=</span> <span class="fl">0.6</span>,  <span class="co"># Downsampling for sequencing</span></span>
-<span>  D2_rough <span class="op">=</span> <span class="fl">0.4</span>,       <span class="co"># prior for variation parameter</span></span>
 <span>  h5_only <span class="op">=</span> <span class="cn">FALSE</span>,      <span class="co"># Set TRUE to skip expression model fitting</span></span>
 <span>  n_threads <span class="op">=</span> <span class="cn">NULL</span>      <span class="co"># No parallel processing</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Starting pilot data preprocessing @ 2026-01-19 16:41:49.844473</span></span>
+<span><span class="co">#&gt; Starting pilot data preprocessing @ 2026-01-19 17:42:23.949056</span></span>
 <span><span class="co">#&gt; Step 1: Computing gene expression information...</span></span>
-<span><span class="co">#&gt; Start relative expression calculation @ 2026-01-19 16:41:49.85136</span></span>
-<span><span class="co">#&gt; Finish relative expression calculation @ 2026-01-19 16:41:49.851941</span></span>
+<span><span class="co">#&gt; Start relative expression calculation @ 2026-01-19 17:42:23.956169</span></span>
+<span><span class="co">#&gt; Finish relative expression calculation @ 2026-01-19 17:42:23.956744</span></span>
 <span><span class="co">#&gt; Number of genes passing TPM threshold: 5</span></span>
-<span><span class="co">#&gt; Start dispersion estimation (12 thread(s)) @ 2026-01-19 16:41:49.852136</span></span>
+<span><span class="co">#&gt; Start dispersion estimation (12 thread(s)) @ 2026-01-19 17:42:23.956936</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Starting computation</span></span>
 <span><span class="co">#&gt;  - G (genes) = 5</span></span>
 <span><span class="co">#&gt;  - C (cells) = 8</span></span>
@@ -325,9 +323,9 @@ targeted gene list.</p>
 <span><span class="co">#&gt; [gene 4] t_0 = 0.272921</span></span>
 <span><span class="co">#&gt; [gene 4] theta_mle_row result = 468.498</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Done.</span></span>
-<span><span class="co">#&gt; Finish dispersion estimation @ 2026-01-19 16:41:49.853182</span></span>
+<span><span class="co">#&gt; Finish dispersion estimation @ 2026-01-19 17:42:23.957988</span></span>
 <span><span class="co">#&gt; Step 2: Estimating library parameters...</span></span>
-<span><span class="co">#&gt; Completed pilot data preprocessing @ 2026-01-19 16:41:49.85574</span></span>
+<span><span class="co">#&gt; Completed pilot data preprocessing @ 2026-01-19 17:42:23.960549</span></span>
 <span><span class="co">#&gt; Processed 5 genes</span></span>
 <span><span class="co">#&gt; Library parameters: UMI_per_cell = 5, variation = 1e-04</span></span>
 <span><span class="co">#&gt; Mapping efficiency = 1</span></span>
@@ -341,12 +339,12 @@ targeted gene list.</p>
 <span>  gene_list <span class="op">=</span> <span class="va">gene_list</span>, <span class="co"># Restrict to specific genes</span></span>
 <span>  TPM_thres <span class="op">=</span> <span class="fl">0</span>          <span class="co"># No expression threshold for filtering</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Starting pilot data preprocessing @ 2026-01-19 16:41:49.856392</span></span>
+<span><span class="co">#&gt; Starting pilot data preprocessing @ 2026-01-19 17:42:23.961197</span></span>
 <span><span class="co">#&gt; Step 1: Computing gene expression information...</span></span>
-<span><span class="co">#&gt; Start relative expression calculation @ 2026-01-19 16:41:49.860328</span></span>
-<span><span class="co">#&gt; Finish relative expression calculation @ 2026-01-19 16:41:49.860522</span></span>
+<span><span class="co">#&gt; Start relative expression calculation @ 2026-01-19 17:42:23.965131</span></span>
+<span><span class="co">#&gt; Finish relative expression calculation @ 2026-01-19 17:42:23.965299</span></span>
 <span><span class="co">#&gt; Number of genes passing TPM threshold: 3</span></span>
-<span><span class="co">#&gt; Start dispersion estimation (12 thread(s)) @ 2026-01-19 16:41:49.860748</span></span>
+<span><span class="co">#&gt; Start dispersion estimation (12 thread(s)) @ 2026-01-19 17:42:23.965489</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Starting computation</span></span>
 <span><span class="co">#&gt;  - G (genes) = 3</span></span>
 <span><span class="co">#&gt;  - C (cells) = 8</span></span>
@@ -360,9 +358,9 @@ targeted gene list.</p>
 <span><span class="co">#&gt; [gene 2] t_0 = 0.5</span></span>
 <span><span class="co">#&gt; [gene 2] theta_mle_row result = 475.754</span></span>
 <span><span class="co">#&gt; [theta_batch_cpp] Done.</span></span>
-<span><span class="co">#&gt; Finish dispersion estimation @ 2026-01-19 16:41:49.861223</span></span>
+<span><span class="co">#&gt; Finish dispersion estimation @ 2026-01-19 17:42:23.96595</span></span>
 <span><span class="co">#&gt; Step 2: Estimating library parameters...</span></span>
-<span><span class="co">#&gt; Completed pilot data preprocessing @ 2026-01-19 16:41:49.863039</span></span>
+<span><span class="co">#&gt; Completed pilot data preprocessing @ 2026-01-19 17:42:23.967715</span></span>
 <span><span class="co">#&gt; Processed 3 genes</span></span>
 <span><span class="co">#&gt; Library parameters: UMI_per_cell = 6, variation = 1e-04</span></span>
 <span><span class="co">#&gt; Mapping efficiency = 0.727</span></span></code></pre></div>
@@ -382,14 +380,6 @@ analysis to specific genes</li>
 <code>TPM_thres</code>: Threshold for filtering lowly expressed
 genes (default: 0.1)</li>
 <li>
-<code>downsample_ratio</code>: <strong>Deprecated.</strong> Retained
-for backwards compatibility but no longer used (preseqR method doesn’t
-require downsampling)</li>
-<li>
-<code>D2_rough</code>: <strong>Deprecated.</strong> Retained for
-backwards compatibility but no longer used (preseqR method estimates
-parameters directly from data)</li>
-<li>
 <code>h5_only</code>: If <code>TRUE</code>, the function will skip
 the construction of baseline expression dataframe to save time (default:
 FALSE)</li>
@@ -397,9 +387,9 @@ FALSE)</li>
 <code>n_threads</code>: Number of parallel processing threads
 (default: NULL for single-threaded)</li>
 </ul>
-<p><strong>Note:</strong> The library computation now uses preseqR’s
-zero-truncated negative binomial (ZTNB) model, which is more robust and
-doesn’t require manual parameter tuning.</p>
+<p><strong>Note:</strong> The library estimation now uses preseqR’s
+zero-truncated negative binomial (ZTNB) model, which automatically
+estimates UMI saturation parameters without requiring manual tuning.</p>
 </div>
 <div class="section level3">
 <h3 id="function-output-1">Function Output<a class="anchor" aria-label="anchor" href="#function-output-1"></a>
@@ -550,7 +540,7 @@ component of the output in
 fitting the negative binomial expression model in
 <code><a href="../reference/reference_data_processing.html">reference_data_processing()</a></code>.</li>
 <li>
-<code><a href="../reference/library_computation.html">?library_computation</a></code>: Documentation on fitting the
+<code><a href="../reference/library_estimation.html">?library_estimation</a></code>: Documentation on fitting the
 read-UMI model in <code><a href="../reference/reference_data_processing.html">reference_data_processing()</a></code>.</li>
 </ul>
 </div>

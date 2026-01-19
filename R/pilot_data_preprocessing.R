@@ -227,13 +227,8 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   are used (suitable for perturb-seq).
 #' @param TPM_thres Numeric. Threshold (in TPM) for filtering low-expression genes in
 #'   gene expression model. Default: 0.1.
-#' @param downsample_ratio Numeric. Proportion of downsampling in library saturation model
-#'   fitting. Default: 0.7.
-#' @param D2_rough Numeric. Rough prior value for library variation parameter. Typically
-#'   higher in TAP-seq experiments (e.g., 0.8) than perturb-seq experiments (0.3).
-#'   Default: 0.3.
 #' @param h5_only Logical. If TRUE, skips baseline expression step to save time. Useful
-#'   when tuning hyperparameters for library model fitting. Default: FALSE.
+#'   for faster processing when only library parameters are needed. Default: FALSE.
 #' @param n_threads Integer or NULL. Number of parallel processing threads. If NULL,
 #'   uses single-threaded execution. Default: NULL.
 #'
@@ -299,18 +294,16 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   \item If \code{gene_list} provided: adjusts mapping efficiency and filters genes
 #'   \item Fits negative binomial model using \code{\link{obtain_expression_information}}
 #'     to estimate gene-level expression parameters
-#'   \item Fits saturation model using \code{\link{library_computation}} to estimate
-#'     library parameters
+#'   \item Fits saturation model using \code{\link{library_estimation}} to estimate
+#'     library parameters using preseqR's ZTNB model
 #'   \item Returns structured output compatible with power analysis functions
 #' }
 #'
 #' ## Use Cases
 #'
 #' \itemize{
-#'   \item \strong{Perturb-seq}: Use all genes (\code{gene_list = NULL}), default
-#'     \code{D2_rough = 0.3}
-#'   \item \strong{TAP-seq}: Provide targeted gene list, higher \code{D2_rough}
-#'     (e.g., 0.8), set \code{TPM_thres = 0}
+#'   \item \strong{Perturb-seq}: Use all genes (\code{gene_list = NULL})
+#'   \item \strong{TAP-seq}: Provide targeted gene list, set \code{TPM_thres = 0}
 #' }
 #'
 #' @seealso
@@ -318,7 +311,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'
 #' \code{\link{obtain_expression_information}} for NB model fitting details.
 #'
-#' \code{\link{library_computation}} for S-M curve fitting details.
+#' \code{\link{library_estimation}} for S-M curve fitting details.
 #'
 #' See the vignette "Preprocess Reference Expression data for Web App" for the
 #' complete preprocessing workflow: \code{vignette("preprocess-reference", package = "perturbplan")}
@@ -345,8 +338,6 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   mapping_efficiency = raw_data$mapping_efficiency,
 #'   gene_list = NULL,     # Use all genes
 #'   TPM_thres = 0.1,      # Default expression threshold for filtering
-#'   downsample_ratio = 0.6,  # Downsampling for sequencing
-#'   D2_rough = 0.4,       # Prior for variation parameter
 #'   h5_only = FALSE,      # Fit expression model
 #'   n_threads = NULL      # No parallel processing
 #' )
@@ -369,7 +360,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'
 #' @export
 reference_data_processing <- function(response_matrix = NULL, read_umi_table, mapping_efficiency = NULL,
-                                      gene_list=NULL, TPM_thres = 0.1, downsample_ratio = 0.7, D2_rough = 0.3,
+                                      gene_list=NULL, TPM_thres = 0.1,
                                       h5_only = FALSE, n_threads = NULL
                                         ) {
 
@@ -410,11 +401,7 @@ reference_data_processing <- function(response_matrix = NULL, read_umi_table, ma
   read_umi_table <- read_umi_table |>
     dplyr::filter(response_id %in% gene_list)
   }
-  library_params <- library_estimation(
-    QC_data = read_umi_table,
-    downsample_ratio = downsample_ratio,
-    D2_rough = D2_rough
-  )
+  library_params <- library_estimation(QC_data = read_umi_table)
   
   # Construct the final output structure with simplified baseline expression
   result <- list(

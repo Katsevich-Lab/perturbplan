@@ -141,8 +141,6 @@ pilot_data_perturbseq <- reference_data_processing(
   mapping_efficiency = raw_data$mapping_efficiency,
   gene_list = NULL,     # Use all genes
   TPM_thres = 0.1,      # Default expression threshold for filtering
-  downsample_ratio = 0.6,  # Downsampling for sequencing
-  D2_rough = 0.4,       # prior for variation parameter
   h5_only = FALSE,      # Set TRUE to skip expression model fitting
   n_threads = NULL      # No parallel processing
 )
@@ -165,12 +163,10 @@ pilot_data_tapseq <- reference_data_processing(
 - `mapping_efficiency`: Mapping efficiency from Step 1
 - `gene_list`: Optional character vector to restrict analysis to specific genes
 - `TPM_thres`: Threshold for filtering lowly expressed genes (default: 0.1)
-- `downsample_ratio`: **Deprecated.** Retained for backwards compatibility but no longer used (preseqR method doesn't require downsampling)
-- `D2_rough`: **Deprecated.** Retained for backwards compatibility but no longer used (preseqR method estimates parameters directly from data)
 - `h5_only`: If `TRUE`, the function will skip the construction of baseline expression dataframe to save time (default: FALSE)
 - `n_threads`: Number of parallel processing threads (default: NULL for single-threaded)
 
-**Note:** The library computation now uses preseqR's zero-truncated negative binomial (ZTNB) model, which is more robust and doesn't require manual parameter tuning.
+**Note:** The library estimation now uses preseqR's zero-truncated negative binomial (ZTNB) model, which automatically estimates UMI saturation parameters without requiring manual tuning.
 
 ### Function Output
 
@@ -247,4 +243,4 @@ are the parameters estimated by fitting the ZTNB model to the read-UMI frequency
 - `?reference_data_processing`: Detailed documentation of `reference_data_processing()`.
 - `?obtain_qc_response_data`, `?obtain_qc_read_umi_table`, and `?obtain_mapping_efficiency`: Documentation on obtaining each component of the output in `reference_data_preprocessing_10x()`.
 - `?obtain_expression_information`: Documentation on fitting the negative binomial expression model in `reference_data_processing()`.
-- `?library_computation`: Documentation on fitting the read-UMI model in `reference_data_processing()`.
+- `?library_estimation`: Documentation on fitting the read-UMI model in `reference_data_processing()`.

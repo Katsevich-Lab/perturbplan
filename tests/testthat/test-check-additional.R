@@ -2,103 +2,45 @@
 # These tests focus on edge cases and error conditions
 
 # ============================================================================
-# Tests for input_check_library_computation
+# Tests for input_check_library_estimation
 # ============================================================================
 
-test_that("input_check_library_computation validates QC_data structure", {
+test_that("input_check_library_estimation validates QC_data structure", {
   # Test with NULL
   expect_error(
-    input_check_library_computation(QC_data = NULL, downsample_ratio = 0.7, D2_rough = 0.3),
+    input_check_library_estimation(QC_data = NULL),
     "QC_data.*must be a specified data frame"
   )
 
   # Test with non-data.frame
   expect_error(
-    input_check_library_computation(QC_data = list(), downsample_ratio = 0.7, D2_rough = 0.3),
+    input_check_library_estimation(QC_data = list()),
     "QC_data.*must be a specified data frame"
   )
 
   # Test with missing columns
   bad_df <- data.frame(wrong_col = 1:10)
   expect_error(
-    input_check_library_computation(QC_data = bad_df, downsample_ratio = 0.7, D2_rough = 0.3),
+    input_check_library_estimation(QC_data = bad_df),
     "num_reads"
   )
 })
 
-test_that("input_check_library_computation validates downsample_ratio", {
-  qc_data <- data.frame(
-    num_reads = 1:10,
-    UMI_id = 1:10,
-    cell_id = rep("cell1", 10),
-    response_id = rep("gene1", 10)
+test_that("input_check_library_estimation validates empty QC_data", {
+  empty_df <- data.frame(
+    num_reads = numeric(0),
+    UMI_id = integer(0),
+    cell_id = character(0),
+    response_id = character(0)
   )
 
-  # NULL downsample_ratio
   expect_error(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = NULL, D2_rough = 0.3),
-    "downsample_ratio"
-  )
-
-  # Non-numeric downsample_ratio
-  expect_error(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = "0.7", D2_rough = 0.3),
-    "downsample_ratio"
-  )
-
-  # downsample_ratio = 0
-  expect_error(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = 0, D2_rough = 0.3),
-    "downsample_ratio"
-  )
-
-  # downsample_ratio > 1
-  expect_error(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = 1.5, D2_rough = 0.3),
-    "downsample_ratio"
-  )
-
-  # downsample_ratio < 0
-  expect_error(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = -0.5, D2_rough = 0.3),
-    "downsample_ratio"
+    input_check_library_estimation(QC_data = empty_df),
+    "cannot be empty"
   )
 })
 
-test_that("input_check_library_computation validates D2_rough", {
-  qc_data <- data.frame(
-    num_reads = 1:10,
-    UMI_id = 1:10,
-    cell_id = rep("cell1", 10),
-    response_id = rep("gene1", 10)
-  )
-
-  # NULL D2_rough
-  expect_error(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = 0.7, D2_rough = NULL),
-    "D2_rough"
-  )
-
-  # Non-numeric D2_rough
-  expect_error(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = 0.7, D2_rough = "0.3"),
-    "D2_rough"
-  )
-
-  # D2_rough < 0
-  expect_error(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = 0.7, D2_rough = -0.1),
-    "D2_rough"
-  )
-
-  # D2_rough > 1
-  expect_error(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = 0.7, D2_rough = 1.5),
-    "D2_rough"
-  )
-})
-
-test_that("input_check_library_computation passes with valid inputs", {
+test_that("input_check_library_estimation passes with valid inputs", {
   qc_data <- data.frame(
     num_reads = 1:10,
     UMI_id = 1:10,
@@ -108,30 +50,7 @@ test_that("input_check_library_computation passes with valid inputs", {
 
   # Should pass without error
   expect_silent(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = 0.7, D2_rough = 0.3)
-  )
-
-  # Boundary values
-  expect_silent(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = 0.001, D2_rough = 0)
-  )
-
-  expect_silent(
-    input_check_library_computation(QC_data = qc_data, downsample_ratio = 1.0, D2_rough = 1.0)
-  )
-})
-
-test_that("input_check_library_computation validates empty QC_data", {
-  empty_df <- data.frame(
-    num_reads = numeric(0),
-    UMI_id = integer(0),
-    cell_id = character(0),
-    response_id = character(0)
-  )
-
-  expect_error(
-    input_check_library_computation(QC_data = empty_df, downsample_ratio = 0.7, D2_rough = 0.3),
-    "cannot be empty"
+    input_check_library_estimation(QC_data = qc_data)
   )
 })
 

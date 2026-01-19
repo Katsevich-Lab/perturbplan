@@ -2,29 +2,72 @@
 % Please edit documentation in R/pilot_data_help.R
 \name{library_estimation}
 \alias{library_estimation}
-\title{Compute the average total UMI per cell and UMI variation parameters.}
+\title{Fit Saturation-Magnitude (S-M) Curve Between Reads and UMIs Using PreseqR}
 \usage{
-library_estimation(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
+library_estimation(QC_data)
 }
 \arguments{
 \item{QC_data}{Data frame. UMI-level molecule information from
 \code{\link{obtain_qc_read_umi_table}} containing columns \code{num_reads},
 \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
-
-\item{downsample_ratio}{Numeric. Not used in preseqR method but kept for
-API compatibility. Default: 0.7.}
-
-\item{D2_rough}{Numeric. Not used in preseqR method but kept for
-API compatibility. Default: 0.3.}
 }
 \value{
-A list with elements:
+A list with two elements:
 \describe{
-\item{UMI_per_cell}{Total UMI per cell parameter}
-\item{variation}{Variation parameter characterizing PCR bias}
+\item{UMI_per_cell}{Maximum UMI count per cell at sequencing saturation}
+\item{variation}{Variation parameter characterizing UMI richness (1/size from ZTNB model)}
 }
 }
 \description{
-Compute the average total UMI per cell and UMI variation parameters.
+Fits a zero-truncated negative binomial model using preseqR to estimate the relationship
+between mapped reads per cell and observed UMIs per cell. The model accounts for both
+UMI saturation at high read depths and PCR amplification variability. This function is
+used internally by \code{\link{reference_data_processing}}.
+}
+\details{
+\subsection{PreseqR Model}{
+
+The function uses preseqR's zero-truncated negative binomial (ZTNB) model to fit
+the read-UMI distribution. The saturation curve is:
+
+\deqn{\text{UMI} = \text{saturation_UMIs} \times \left(1 - \left(1 + \text{variation} \times \frac{\text{reads}}{\text{saturation_UMIs}}\right)^{-1/\text{variation}}\right)}
+
+where:
+\itemize{
+\item \code{reads}: Number of mapped reads per cell (independent variable)
+\item \code{UMI}: Number of observed UMIs per cell (dependent variable)
+\item \code{saturation_UMIs}: Maximum UMI per cell at saturation
+\item \code{variation}: UMI richness variation (1/size parameter from ZTNB fit)
+}
+}
+
+\subsection{Fitting Procedure}{
+
+\enumerate{
+\item Creates read-UMI frequency table from QC data
+\item Fits ZTNB model using \code{preseqR.ztnb.em()}
+\item Extracts size and mu parameters
+\item Calculates saturation UMI count per cell
+\item Computes UMI richness variation as 1/size
+}
+}
+}
+\examples{
+# Get QC data and compute library parameters
+cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+qc_data <- obtain_qc_read_umi_table(cellranger_path)
+
+# Fit saturation curve using preseqR
+lib_params <- library_estimation(QC_data = qc_data)
+
+# View fitted parameters
+lib_params$UMI_per_cell
+lib_params$variation
+
+}
+\seealso{
+\code{\link{obtain_qc_read_umi_table}} for input data preparation.
+
+\code{\link{reference_data_processing}} for the complete preprocessing workflow.
 }
 \keyword{internal}

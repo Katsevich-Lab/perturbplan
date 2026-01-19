@@ -122,8 +122,7 @@ process_ipsc_10x <- function(path_to_dataset) {
 
   return(perturbplan::reference_data_processing(response_matrix=response_matrix,
                                                 read_umi_table=read_umi_table,
-                                                mapping_efficiency = mapping_efficiency,
-                                                downsample_ratio=0.4))
+                                                mapping_efficiency = mapping_efficiency))
 }
 
 process_ipsc_neuron_10x <- function(path_to_dataset) {
@@ -135,8 +134,7 @@ process_ipsc_neuron_10x <- function(path_to_dataset) {
 
   return(perturbplan::reference_data_processing(response_matrix=response_matrix,
                                                 read_umi_table=read_umi_table,
-                                                mapping_efficiency = mapping_efficiency,
-                                                downsample_ratio= c(0.1, 0.3, 0.5, 0.7)))
+                                                mapping_efficiency = mapping_efficiency))
 }
 
 
@@ -184,7 +182,5 @@ process_k562_tap <- function(path_to_dataset) {
                                                 read_umi_table=read_umi_table,
                                                 mapping_efficiency = mapping_efficiency,
                                                 gene_list = gene_list,
-                                                TPM_thres = 0,
-                                                D2_rough = 0.8,
-                                                downsample_ratio= c(0.1, 0.3, 0.5, 0.7)))
+                                                TPM_thres = 0))
 }

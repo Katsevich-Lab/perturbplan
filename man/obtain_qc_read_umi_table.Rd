@@ -54,7 +54,7 @@ The function:
 }
 
 This data is used for fitting the library saturation (S-M) curve in
-\code{\link{library_computation}}.
+\code{\link{library_estimation}}.
 }
 \examples{
 # Extract read/UMI information from Cell Ranger output
@@ -70,6 +70,6 @@ summary(qc_table$num_reads)
 \seealso{
 \code{\link{reference_data_preprocessing_10x}} for aggregating data from multiple runs.
 
-\code{\link{library_computation}} for fitting saturation curves using this data.
+\code{\link{library_estimation}} for fitting saturation curves using this data.
 }
 \keyword{internal}

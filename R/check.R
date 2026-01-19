@@ -328,17 +328,13 @@ input_check_power_function <- function(
 }
 
 
-#' Input checking function for library_computation
+#' Input checking function for library_estimation
 #'
-#' @inheritParams library_computation
+#' @inheritParams library_estimation
 #'
 #' @return NULL
 #' @keywords internal
-input_check_library_computation <- function(
-    QC_data = NULL,
-    downsample_ratio = NULL,
-    D2_rough = NULL
-) {
+input_check_library_estimation <- function(QC_data = NULL) {
   ###################### QC_data Check ######################
   if (is.null(QC_data) || !is.data.frame(QC_data)) {
     stop("`QC_data` must be a specified data frame.")
@@ -357,16 +353,6 @@ input_check_library_computation <- function(
   }
   if (nrow(QC_data) == 0) {
     stop("`QC_data` cannot be empty.")
-  }
-
-  ###################### downsample_ratio Check ######################
-  if (is.null(downsample_ratio) || !is.numeric(downsample_ratio) || downsample_ratio <= 0 || downsample_ratio > 1) {
-    stop("`downsample_ratio` must be a numeric value in (0,1].")
-  }
-
-  ###################### D2_rough Check ######################
-  if (is.null(D2_rough) || !is.numeric(D2_rough) || D2_rough < 0 || D2_rough > 1) {
-    stop("`D2_rough` must be a numeric value in [0,1].")
   }
 
   invisible(NULL)

@@ -113,8 +113,6 @@ test_that("reference_data_processing extracts parameters correctly", {
     mapping_efficiency = raw_data$mapping_efficiency,
     gene_list = NULL,
     TPM_thres = 0.1,
-    downsample_ratio = 0.6,
-    D2_rough = 0.4,
     h5_only = FALSE,
     n_threads = 1
   )
@@ -202,8 +200,6 @@ test_that("reference_data_processing with gene_list filters correctly", {
     mapping_efficiency = raw_data$mapping_efficiency,
     gene_list = gene_subset,
     TPM_thres = 0,  # Use low threshold to ensure genes pass
-    downsample_ratio = 0.6,
-    D2_rough = 0.4,
     h5_only = FALSE,
     n_threads = 1
   )
@@ -232,7 +228,6 @@ test_that("reference_data_processing respects TPM_thres parameter", {
     read_umi_table = raw_data$read_umi_table,
     mapping_efficiency = raw_data$mapping_efficiency,
     TPM_thres = 100,  # High threshold
-    downsample_ratio = 0.6,
     h5_only = FALSE,
     n_threads = 1
   )
@@ -243,7 +238,6 @@ test_that("reference_data_processing respects TPM_thres parameter", {
     read_umi_table = raw_data$read_umi_table,
     mapping_efficiency = raw_data$mapping_efficiency,
     TPM_thres = 0.01,  # Low threshold
-    downsample_ratio = 0.6,
     h5_only = FALSE,
     n_threads = 1
   )
