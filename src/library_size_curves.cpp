@@ -8,61 +8,61 @@ using namespace Rcpp;
  *  S-M Curve Implementation (C++)                             *
  *------------------------------------------------------------ */
 
-//' Compute effective library size from read depth using UMI saturation curve (C++)
+//' Compute effective library size from read depth using preseqR saturation curve (C++)
 //'
 //' @description
-//' C++ implementation of the saturation-magnitude (S-M) curve that relates 
-//' sequencing reads to unique UMI counts, accounting for PCR amplification 
-//' variability and UMI saturation.
+//' C++ implementation of the preseqR-based saturation curve that relates
+//' sequencing reads to unique UMI counts using a zero-truncated negative binomial model.
 //'
 //' @param reads_per_cell Numeric vector. Total reads per cell.
-//' @param UMI_per_cell Numeric. Maximum UMI per cell parameter from S-M curve fit.
-//' @param variation Numeric. Variation parameter characterizing PCR bias from S-M curve fit.
+//' @param UMI_per_cell Numeric. Maximum UMI per cell at saturation (from preseqR fit).
+//' @param variation Numeric. UMI richness variation parameter (1/size from ZTNB model).
 //'
 //' @return Numeric vector. Effective library size in UMIs for each read depth.
 //'
 //' @details
 //' This C++ implementation provides significant performance improvements over the R version
-//' for large-scale power analysis computations. The S-M curve formula:
-//' \deqn{effective\_UMI = UMI\_per\_cell \times (1 - exp(-reads\_per\_cell / UMI\_per\_cell) \times (1 + variation \times reads\_per\_cell^2 / (2 \times UMI\_per\_cell^2)))}
+//' for large-scale power analysis computations. The preseqR saturation curve formula:
+//' \deqn{effective\_UMI = UMI\_per\_cell \times (1 - (1 + variation \times reads\_per\_cell / UMI\_per\_cell)^{-1/variation})}
 //'
 //' @seealso \code{\link{fit_read_UMI_curve}} for R version
 //' @export
 // [[Rcpp::export]]
-NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell, 
-                                     double UMI_per_cell, 
+NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
+                                     double UMI_per_cell,
                                      double variation) {
-  
+
   // Input validation
   if (UMI_per_cell <= 0) {
     stop("UMI_per_cell must be positive");
   }
-  if (variation < 0) {
-    stop("variation must be non-negative");
+  if (variation <= 0) {
+    stop("variation must be positive");
   }
-  
+
   int n = reads_per_cell.size();
   NumericVector effective_UMI(n);
-  
+
   // Precompute constants
-  double inv_UMI = 1.0 / UMI_per_cell;
-  double var_factor = variation / (2.0 * UMI_per_cell * UMI_per_cell);
-  
-  // Vectorized computation
+  double inv_variation = -1.0 / variation;
+  double var_over_UMI = variation / UMI_per_cell;
+
+  // Vectorized computation using preseqR formula
   for (int i = 0; i < n; i++) {
     double reads = reads_per_cell[i];
-    
+
     // Input validation for each read value
     if (reads < 0) {
       stop("reads_per_cell values must be non-negative");
     }
-    
-    // S-M curve formula with optimized computation
-    double exp_term = exp(-reads * inv_UMI);
-    double variation_term = 1.0 + var_factor * reads * reads;
-    effective_UMI[i] = UMI_per_cell * (1.0 - exp_term * variation_term);
+
+    // PreseqR saturation curve formula:
+    // UMI = saturation_UMIs * (1 - (1 + variation * reads / saturation_UMIs)^(-1/variation))
+    double base = 1.0 + var_over_UMI * reads;
+    double power_term = pow(base, inv_variation);
+    effective_UMI[i] = UMI_per_cell * (1.0 - power_term);
   }
-  
+
   return effective_UMI;
 }
 

@@ -4,14 +4,14 @@
 NULL
 
 #' @importFrom methods as
-#' @importFrom stats setNames coef predict
+#' @importFrom stats setNames coef predict dnbinom
 #' @importFrom utils read.csv
 #' @importFrom Matrix readMM rowSums colSums
 #' @importClassesFrom Matrix CsparseMatrix CsparseMatrix
 #' @importFrom data.table fread
 #' @importFrom R.utils gunzip
 #' @importFrom dplyr filter bind_rows arrange
-#' @importFrom minpack.lm nlsLM
+#' @importFrom preseqR preseqR.ztnb.em
 NULL
 
 #' Load and QC Gene Expression Matrix from Cell Ranger Output
@@ -459,171 +459,117 @@ summary_h5_data <- function(QC_data){
 #' @keywords internal
 
 library_estimation <- function(QC_data, downsample_ratio=0.7, D2_rough=0.3){
-  library_model <- library_computation(QC_data, downsample_ratio, D2_rough)
-  total_UMIs <- stats::coef(library_model)["total_UMIs"]
-  umi_variation <- stats::coef(library_model)["D2"]
-
-  return(list(
-    UMI_per_cell = unname(as.numeric(total_UMIs)),
-    variation = unname(as.numeric(umi_variation))
-  ))
+  # Call library_computation which now directly returns the parameter list
+  return(library_computation(QC_data, downsample_ratio, D2_rough))
 }
 
 
-#' Fit Saturation-Magnitude (S-M) Curve Between Reads and UMIs
+#' Fit Saturation-Magnitude (S-M) Curve Between Reads and UMIs Using PreseqR
 #'
 #' @description
-#' Fits a nonlinear saturation curve model to estimate the relationship between mapped
-#' reads per cell and observed UMIs per cell. The model accounts for both UMI saturation
-#' at high read depths and PCR amplification variability. This function is used internally
-#' by \code{\link{reference_data_processing}}.
+#' Fits a zero-truncated negative binomial model using preseqR to estimate the relationship
+#' between mapped reads per cell and observed UMIs per cell. The model accounts for both
+#' UMI saturation at high read depths and PCR amplification variability. This function is
+#' used internally by \code{\link{reference_data_processing}}.
 #'
 #' @param QC_data Data frame. UMI-level molecule information from
 #'   \code{\link{obtain_qc_read_umi_table}} containing columns \code{num_reads},
 #'   \code{UMI_id}, \code{cell_id}, and \code{response_id}.
-#' @param downsample_ratio Numeric or numeric vector. Proportion(s) for downsampling
-#'   the dataset to create additional observation points. Must be between 0 and 1.
-#'   Can be a vector for multiple downsampling levels, but one level is often sufficient.
-#'   Default: 0.7.
-#' @param D2_rough Numeric. Rough prior estimate for the variation parameter (D2) in
-#'   the S-M curve model. Represents PCR amplification bias. Typically 0.3 for perturb-seq,
-#'   higher (e.g., 0.8) for TAP-seq. Default: 0.3.
+#' @param downsample_ratio Numeric. Not used in preseqR method but kept for
+#'   API compatibility. Default: 0.7.
+#' @param D2_rough Numeric. Not used in preseqR method but kept for
+#'   API compatibility. Default: 0.3.
 #'
-#' @return A fitted S-M curve model object of class \code{nlsLM} from the
-#'   \code{minpack.lm} package. The model has two fitted parameters accessible via
-#'   \code{coef()}:
+#' @return A list with two elements:
 #' \describe{
-#'   \item{total_UMIs}{Maximum UMI count per cell at sequencing saturation}
-#'   \item{D2}{Variation parameter characterizing PCR amplification bias (0 to 1)}
+#'   \item{UMI_per_cell}{Maximum UMI count per cell at sequencing saturation}
+#'   \item{variation}{Variation parameter characterizing UMI richness (1/size from ZTNB model)}
 #' }
 #'
 #' @details
-#' ## Saturation Model
+#' ## PreseqR Model
 #'
-#' The S-M curve model is:
+#' The function uses preseqR's zero-truncated negative binomial (ZTNB) model to fit
+#' the read-UMI distribution. The saturation curve is:
 #'
-#' \deqn{\text{UMI} = \text{total_UMIs} \times \left(1 - \exp\left(-\frac{\text{reads}}{\text{total_UMIs}}\right) \times \left(1 + D2 \times \frac{\text{reads}^2}{2 \times \text{total_UMIs}^2}\right)\right)}
+#' \deqn{\text{UMI} = \text{saturation_UMIs} \times \left(1 - \left(1 + \text{variation} \times \frac{\text{reads}}{\text{saturation_UMIs}}\right)^{-1/\text{variation}}\right)}
 #'
 #' where:
 #' \itemize{
 #'   \item \code{reads}: Number of mapped reads per cell (independent variable)
 #'   \item \code{UMI}: Number of observed UMIs per cell (dependent variable)
-#'   \item \code{total_UMIs}: Maximum UMI per cell at saturation (fitted parameter)
-#'   \item \code{D2}: Variation parameter for PCR bias, between 0 and 1 (fitted parameter)
+#'   \item \code{saturation_UMIs}: Maximum UMI per cell at saturation
+#'   \item \code{variation}: UMI richness variation (1/size parameter from ZTNB fit)
 #' }
 #'
 #' ## Fitting Procedure
 #'
 #' \enumerate{
-#'   \item Expands read data by replicating UMI indices according to read counts
-#'   \item Downsamples the read data at specified ratio(s) to create multiple observation points
-#'   \item Counts unique UMIs at each downsampled read depth
-#'   \item Fits nonlinear model using two different initial parameter sets:
-#'     \itemize{
-#'       \item "Delicate": Uses prior D2_rough and derives initial total_UMIs
-#'       \item "Rough": Uses observed UMI count as initial total_UMIs
-#'     }
-#'   \item Selects model with lower relative prediction error
-#'   \item Warns if relative error exceeds 5\%
+#'   \item Creates read-UMI frequency table from QC data
+#'   \item Fits ZTNB model using \code{preseqR.ztnb.em()}
+#'   \item Extracts size and mu parameters
+#'   \item Calculates saturation UMI count per cell
+#'   \item Computes UMI richness variation as 1/size
 #' }
 #'
 #' ## Important Notes
 #'
 #' \itemize{
-#'   \item The toy example data has very few reads, so fitted parameters may be sensitive
-#'     to random seed and prior specification
-#'   \item In practice with real data, the function demonstrates robustness to both random
-#'     seed choice and moderate prior misspecification
-#'   \item Multiple downsampling ratios can be provided as a vector for more observation
-#'     points, but typically one ratio suffices
+#'   \item This method replaces the previous downsampling-based approach
+#'   \item Parameters downsample_ratio and D2_rough are ignored but retained for compatibility
+#'   \item The preseqR method is more robust and doesn't require manual tuning
+#'   \item For large datasets, the ZTNB fitting may take several seconds
 #' }
 #'
 #' @examples
-#' # Set seed for reproducibility (required for small toy datasets)
-#' set.seed(123)
-#'
 #' # Get QC data and compute library parameters
 #' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 #' qc_data <- obtain_qc_read_umi_table(cellranger_path)
 #'
-#' # Fit saturation curve
-#' lib_model <- library_computation(
-#'   QC_data = qc_data,
-#'   downsample_ratio = 0.7,
-#'   D2_rough = 0.3
-#' )
+#' # Fit saturation curve using preseqR
+#' lib_params <- library_computation(QC_data = qc_data)
 #'
 #' # View fitted parameters
-#' coef(lib_model)
-#'
-#' # Extract specific parameters
-#' total_umis <- coef(lib_model)["total_UMIs"]
-#' variation <- coef(lib_model)["D2"]
+#' lib_params$UMI_per_cell
+#' lib_params$variation
 #'
 #' @seealso
 #' \code{\link{obtain_qc_read_umi_table}} for input data preparation.
 #'
 #' \code{\link{reference_data_processing}} for the complete preprocessing workflow.
 #'
-#' \code{\link{library_estimation}} for extracting parameters from the fitted model.
+#' \code{\link{library_estimation}} for the wrapper function.
 #' @keywords internal
 #' @export
 library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3){
 
-  ########################### downsample the data ##############################
-  # obtain the observed reads vector
+  # Create read-UMI frequency table
+  read_umi_summary <- QC_data$num_reads |> table()
+
+  # Extract read counts (names) and frequencies (values)
+  preseq_input <- cbind(as.integer(names(read_umi_summary)), as.vector(read_umi_summary))
+
+  # Fit ZTNB model using preseqR
+  preseq_output <- preseqR::preseqR.ztnb.em(preseq_input)
+
+  # Extract parameters from ZTNB fit
+  size <- as.numeric(preseq_output$size)
+  mu   <- as.numeric(preseq_output$mu)
+
+  # Calculate summary statistics
+  S0 <- sum(preseq_input[, 2])                        # initial distinct UMIs
+  R0 <- sum(preseq_input[, 1] * preseq_input[, 2])   # initial total reads
   cell_num <- length(unique(QC_data$cell_id))
-  num_observed_reads <- sum(QC_data$num_reads)
-  reads_vec <- rep(seq_along(QC_data$num_reads), QC_data$num_reads)
+  umis_per_cell  <- S0 / cell_num
+  reads_per_cell <- R0 / cell_num
 
-  # compute the number of observed UMIs (before downsampling)
-  num_observed_umis <- length(unique(reads_vec))
+  # Calculate saturation parameters
+  p0 <- 1 - dnbinom(0, size = size, mu = mu)   # P(seen at least once) at baseline
+  saturation_UMIs_per_cell <- umis_per_cell / p0
 
-  # perform downsampling and append the results together with observed reads-UMIs
-  num_downsampled_reads <- round(num_observed_reads * downsample_ratio)
-  num_downsampled_UMIs <- sapply(num_downsampled_reads, function(reads) length(unique(sample(reads_vec, reads))))
-  down_sample_added <- data.frame(num_reads = num_downsampled_reads / cell_num, num_UMIs = num_downsampled_UMIs / cell_num)
-  down_sample_df <- down_sample_added |>
-    dplyr::bind_rows(data.frame(num_reads = num_observed_reads / cell_num, num_UMIs = num_observed_umis / cell_num)) |>
-    dplyr::arrange(num_reads, num_UMIs)
-
-  ####################### fit nonlinear model ##################################
-  delicate_initial <- (1 + D2_rough) * (num_observed_reads / cell_num)^2 / (2 * (num_observed_reads - num_observed_umis) / cell_num)
-  rough_initial <- num_observed_umis / cell_num
-  inital_num_UMIs_vec <- stats::setNames(c(delicate_initial, rough_initial), c("delicate", "rough"))
-
-  # fit model with different initial values on total UMIs
-  fitted_output <- lapply(inital_num_UMIs_vec, function(initial_UMIs){
-
-    # do the model fitting
-    nlm_fitting <- minpack.lm::nlsLM(
-      num_UMIs ~ total_UMIs * (1 - exp(-num_reads / total_UMIs) * (1 + D2 * num_reads^2 / (2 * total_UMIs^2))),
-      data = down_sample_df,
-      start = list(total_UMIs = initial_UMIs, D2 = D2_rough),
-      upper = c(Inf, 1),
-      lower = c(0, 0)
-    )
-
-    # return the model and in-sample relative loss
-    relative_loss <- sum((stats::predict(nlm_fitting) / (down_sample_df$num_UMIs) - 1)^2)
-    output_list <- list(nlm_fitting, relative_loss)
-    names(output_list) <- c("fitted_model", "relative_error")
-    return(output_list)
-  })
-  # choose the model with lower relative error
-  if(fitted_output$delicate$relative_error > fitted_output$rough$relative_error){
-    final_model <- fitted_output$rough$fitted_model
-  }else{
-    final_model <- fitted_output$delicate$fitted_model
-  }
-  # add a warning about the relative error
-  if (!is.null(final_model$relative_error) &&
-      !is.na(final_model$relative_error) &&
-      final_model$relative_error > 0.05) {
-    perc_error <- round(100 * final_model$relative_error, 2)
-    warning(
-      sprintf("The relative error of the fitted model is %.2f%%. Consider adjusting downsample_ratio or D2_rough.", perc_error)
-    )
-  }
-  return(final_model)
+  # Return parameters in expected format
+  return(list(
+    UMI_per_cell = saturation_UMIs_per_cell,
+    variation = 1 / size
+  ))
 }
