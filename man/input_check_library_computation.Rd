@@ -15,14 +15,11 @@ input_check_library_computation(
 \code{\link{obtain_qc_read_umi_table}} containing columns \code{num_reads},
 \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
 
-\item{downsample_ratio}{Numeric or numeric vector. Proportion(s) for downsampling
-the dataset to create additional observation points. Must be between 0 and 1.
-Can be a vector for multiple downsampling levels, but one level is often sufficient.
-Default: 0.7.}
+\item{downsample_ratio}{Numeric. Not used in preseqR method but kept for
+API compatibility. Default: 0.7.}
 
-\item{D2_rough}{Numeric. Rough prior estimate for the variation parameter (D2) in
-the S-M curve model. Represents PCR amplification bias. Typically 0.3 for perturb-seq,
-higher (e.g., 0.8) for TAP-seq. Default: 0.3.}
+\item{D2_rough}{Numeric. Not used in preseqR method but kept for
+API compatibility. Default: 0.3.}
 }
 \description{
 Input checking function for library_computation

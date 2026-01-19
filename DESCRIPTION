@@ -18,6 +18,7 @@ Imports:
     methods,
     minpack.lm,
     parallel,
+    preseqR,
     rhdf5,
     stats,
     tidyr,

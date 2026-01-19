@@ -2,7 +2,7 @@
 % Please edit documentation in R/pilot_data_help.R
 \name{library_computation}
 \alias{library_computation}
-\title{Fit Saturation-Magnitude (S-M) Curve Between Reads and UMIs}
+\title{Fit Saturation-Magnitude (S-M) Curve Between Reads and UMIs Using PreseqR}
 \usage{
 library_computation(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 }
@@ -11,95 +11,74 @@ library_computation(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
 \code{\link{obtain_qc_read_umi_table}} containing columns \code{num_reads},
 \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
 
-\item{downsample_ratio}{Numeric or numeric vector. Proportion(s) for downsampling
-the dataset to create additional observation points. Must be between 0 and 1.
-Can be a vector for multiple downsampling levels, but one level is often sufficient.
-Default: 0.7.}
+\item{downsample_ratio}{Numeric. Not used in preseqR method but kept for
+API compatibility. Default: 0.7.}
 
-\item{D2_rough}{Numeric. Rough prior estimate for the variation parameter (D2) in
-the S-M curve model. Represents PCR amplification bias. Typically 0.3 for perturb-seq,
-higher (e.g., 0.8) for TAP-seq. Default: 0.3.}
+\item{D2_rough}{Numeric. Not used in preseqR method but kept for
+API compatibility. Default: 0.3.}
 }
 \value{
-A fitted S-M curve model object of class \code{nlsLM} from the
-\code{minpack.lm} package. The model has two fitted parameters accessible via
-\code{coef()}:
+A list with two elements:
 \describe{
-\item{total_UMIs}{Maximum UMI count per cell at sequencing saturation}
-\item{D2}{Variation parameter characterizing PCR amplification bias (0 to 1)}
+\item{UMI_per_cell}{Maximum UMI count per cell at sequencing saturation}
+\item{variation}{Variation parameter characterizing UMI richness (1/size from ZTNB model)}
 }
 }
 \description{
-Fits a nonlinear saturation curve model to estimate the relationship between mapped
-reads per cell and observed UMIs per cell. The model accounts for both UMI saturation
-at high read depths and PCR amplification variability. This function is used internally
-by \code{\link{reference_data_processing}}.
+Fits a zero-truncated negative binomial model using preseqR to estimate the relationship
+between mapped reads per cell and observed UMIs per cell. The model accounts for both
+UMI saturation at high read depths and PCR amplification variability. This function is
+used internally by \code{\link{reference_data_processing}}.
 }
 \details{
-\subsection{Saturation Model}{
+\subsection{PreseqR Model}{
 
-The S-M curve model is:
+The function uses preseqR's zero-truncated negative binomial (ZTNB) model to fit
+the read-UMI distribution. The saturation curve is:
 
-\deqn{\text{UMI} = \text{total_UMIs} \times \left(1 - \exp\left(-\frac{\text{reads}}{\text{total_UMIs}}\right) \times \left(1 + D2 \times \frac{\text{reads}^2}{2 \times \text{total_UMIs}^2}\right)\right)}
+\deqn{\text{UMI} = \text{saturation_UMIs} \times \left(1 - \left(1 + \text{variation} \times \frac{\text{reads}}{\text{saturation_UMIs}}\right)^{-1/\text{variation}}\right)}
 
 where:
 \itemize{
 \item \code{reads}: Number of mapped reads per cell (independent variable)
 \item \code{UMI}: Number of observed UMIs per cell (dependent variable)
-\item \code{total_UMIs}: Maximum UMI per cell at saturation (fitted parameter)
-\item \code{D2}: Variation parameter for PCR bias, between 0 and 1 (fitted parameter)
+\item \code{saturation_UMIs}: Maximum UMI per cell at saturation
+\item \code{variation}: UMI richness variation (1/size parameter from ZTNB fit)
 }
 }
 
 \subsection{Fitting Procedure}{
 
 \enumerate{
-\item Expands read data by replicating UMI indices according to read counts
-\item Downsamples the read data at specified ratio(s) to create multiple observation points
-\item Counts unique UMIs at each downsampled read depth
-\item Fits nonlinear model using two different initial parameter sets:
-\itemize{
-\item "Delicate": Uses prior D2_rough and derives initial total_UMIs
-\item "Rough": Uses observed UMI count as initial total_UMIs
-}
-\item Selects model with lower relative prediction error
-\item Warns if relative error exceeds 5\\%
+\item Creates read-UMI frequency table from QC data
+\item Fits ZTNB model using \code{preseqR.ztnb.em()}
+\item Extracts size and mu parameters
+\item Calculates saturation UMI count per cell
+\item Computes UMI richness variation as 1/size
 }
 }
 
 \subsection{Important Notes}{
 
 \itemize{
-\item The toy example data has very few reads, so fitted parameters may be sensitive
-to random seed and prior specification
-\item In practice with real data, the function demonstrates robustness to both random
-seed choice and moderate prior misspecification
-\item Multiple downsampling ratios can be provided as a vector for more observation
-points, but typically one ratio suffices
+\item This method replaces the previous downsampling-based approach
+\item Parameters downsample_ratio and D2_rough are ignored but retained for compatibility
+\item The preseqR method is more robust and doesn't require manual tuning
+\item For large datasets, the ZTNB fitting may take several seconds
 }
 }
 }
 \examples{
-# Set seed for reproducibility (required for small toy datasets)
-set.seed(123)
-
 # Get QC data and compute library parameters
 cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
 qc_data <- obtain_qc_read_umi_table(cellranger_path)
 
-# Fit saturation curve
-lib_model <- library_computation(
-  QC_data = qc_data,
-  downsample_ratio = 0.7,
-  D2_rough = 0.3
-)
+# Fit saturation curve using preseqR
+lib_params <- library_computation(QC_data = qc_data)
 
 # View fitted parameters
-coef(lib_model)
-
-# Extract specific parameters
-total_umis <- coef(lib_model)["total_UMIs"]
-variation <- coef(lib_model)["D2"]
+lib_params$UMI_per_cell
+lib_params$variation
 
 }
 \seealso{
@@ -107,6 +86,6 @@ variation <- coef(lib_model)["D2"]
 
 \code{\link{reference_data_processing}} for the complete preprocessing workflow.
 
-\code{\link{library_estimation}} for extracting parameters from the fitted model.
+\code{\link{library_estimation}} for the wrapper function.
 }
 \keyword{internal}

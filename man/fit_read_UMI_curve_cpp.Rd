@@ -2,29 +2,28 @@
 % Please edit documentation in R/RcppExports.R
 \name{fit_read_UMI_curve_cpp}
 \alias{fit_read_UMI_curve_cpp}
-\title{Compute effective library size from read depth using UMI saturation curve (C++)}
+\title{Compute effective library size from read depth using preseqR saturation curve (C++)}
 \usage{
 fit_read_UMI_curve_cpp(reads_per_cell, UMI_per_cell, variation)
 }
 \arguments{
 \item{reads_per_cell}{Numeric vector. Total reads per cell.}
 
-\item{UMI_per_cell}{Numeric. Maximum UMI per cell parameter from S-M curve fit.}
+\item{UMI_per_cell}{Numeric. Maximum UMI per cell at saturation (from preseqR fit).}
 
-\item{variation}{Numeric. Variation parameter characterizing PCR bias from S-M curve fit.}
+\item{variation}{Numeric. UMI richness variation parameter (1/size from ZTNB model).}
 }
 \value{
 Numeric vector. Effective library size in UMIs for each read depth.
 }
 \description{
-C++ implementation of the saturation-magnitude (S-M) curve that relates
-sequencing reads to unique UMI counts, accounting for PCR amplification
-variability and UMI saturation.
+C++ implementation of the preseqR-based saturation curve that relates
+sequencing reads to unique UMI counts using a zero-truncated negative binomial model.
 }
 \details{
 This C++ implementation provides significant performance improvements over the R version
-for large-scale power analysis computations. The S-M curve formula:
-\deqn{effective\_UMI = UMI\_per\_cell \times (1 - exp(-reads\_per\_cell / UMI\_per\_cell) \times (1 + variation \times reads\_per\_cell^2 / (2 \times UMI\_per\_cell^2)))}
+for large-scale power analysis computations. The preseqR saturation curve formula:
+\deqn{effective\_UMI = UMI\_per\_cell \times (1 - (1 + variation \times reads\_per\_cell / UMI\_per\_cell)^{-1/variation})}
 }
 \seealso{
 \code{\link{fit_read_UMI_curve}} for R version
