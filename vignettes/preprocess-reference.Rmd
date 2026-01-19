@@ -165,12 +165,12 @@ pilot_data_tapseq <- reference_data_processing(
 - `mapping_efficiency`: Mapping efficiency from Step 1
 - `gene_list`: Optional character vector to restrict analysis to specific genes
 - `TPM_thres`: Threshold for filtering lowly expressed genes (default: 0.1)
-- `downsample_ratio`: Proportion of downsampling when learning read-UMI model (default: 0.7)
-- `D2_rough`:  Rough prior value for library variation parameter (default for perturbseq experiment: 0.3)
+- `downsample_ratio`: **Deprecated.** Retained for backwards compatibility but no longer used (preseqR method doesn't require downsampling)
+- `D2_rough`: **Deprecated.** Retained for backwards compatibility but no longer used (preseqR method estimates parameters directly from data)
 - `h5_only`: If `TRUE`, the function will skip the construction of baseline expression dataframe to save time (default: FALSE)
 - `n_threads`: Number of parallel processing threads (default: NULL for single-threaded)
 
-**Note:** In practice, our function demonstrates robustness to downsampling with different seeds and moderate misspecification of the prior for the variation parameter (`D2_rough`).
+**Note:** The library computation now uses preseqR's zero-truncated negative binomial (ZTNB) model, which is more robust and doesn't require manual parameter tuning.
 
 ### Function Output
 
@@ -219,23 +219,25 @@ are the data to use, and
 
 are the estimated values.
 
-### Read-UMI model
+### Read-UMI model (preseqR method)
 
-The function fits a saturation curve that relates mapped reads per cell to observed UMIs per cell (`library_size`):
+The function uses preseqR's zero-truncated negative binomial (ZTNB) model to fit the relationship between mapped reads per cell and observed UMIs per cell (`library_size`). The resulting saturation curve is:
 
-$$\text{library_size} = \text{UMI_per_cell} \times \left(1 - \exp\left(-\frac{\text{mapped_reads_per_cell}}{\text{UMI_per_cell}}\right) \times \left(1 + \text{variation} \times \frac{\text{mapped_reads_per_cell}^2}{2 \times \text{UMI_per_cell}^2}\right)\right)$$
+$$\text{library_size} = \text{UMI_per_cell} \times \left(1 - \left(1 + \text{variation} \times \frac{\text{mapped_reads_per_cell}}{\text{UMI_per_cell}}\right)^{-1/\text{variation}}\right)$$
 
 where
 
 - `mapped_reads_per_cell`: Number of mapped reads per cell
 - `library_size`: Number of observed UMIs per cell
 
-are the data used to fit the model, and
+are the observed data, and
 
-- `UMI_per_cell`: Total UMI per cell obtained at sequencing saturation
-- `variation`: Variation parameter characterizing PCR amplification bias (between 0 and 1)
+- `UMI_per_cell`: Maximum UMI count per cell at sequencing saturation
+- `variation`: UMI richness variation parameter (inverse of the ZTNB size parameter)
 
-are the fitted parameters.
+are the parameters estimated by fitting the ZTNB model to the read-UMI frequency distribution.
+
+**Method:** The preseqR approach models the read-per-UMI distribution using a zero-truncated negative binomial distribution, which provides robust parameter estimation without requiring downsampling or manual tuning of priors.
 
 ---
 

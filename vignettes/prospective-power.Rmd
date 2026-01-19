@@ -412,10 +412,9 @@ From the library_params in the pilot data, let's first visualize the relationshi
 UMI_max <- library_params$UMI_per_cell
 variation <- library_params$variation
 
-# Generate saturation curve
+# Generate saturation curve using preseqR formula
 reads_range <- seq(1000, 100000, length.out = 200)
-umis_predicted <- UMI_max * (1 - exp(-reads_range / UMI_max) *
-                               (1 + variation * reads_range^2 / (2 * UMI_max^2)))
+umis_predicted <- UMI_max * (1 - (1 + variation * reads_range / UMI_max)^(-1/variation))
 
 saturation_df <- data.frame(
   Reads_per_Cell = reads_range,
@@ -434,14 +433,12 @@ ggplot(saturation_df, aes(x = Reads_per_Cell, y = UMIs_per_Cell)) +
   geom_point(data = data.frame(
     Reads_per_Cell = c(20000, 40000, 80000),
     Design = c("Wide", "Balanced", "Deep")
-  ), aes(x = Reads_per_Cell, y = UMI_max * (1 - exp(-Reads_per_Cell / UMI_max) *
-                                              (1 + variation * Reads_per_Cell^2 / (2 * UMI_max^2)))),
+  ), aes(x = Reads_per_Cell, y = UMI_max * (1 - (1 + variation * Reads_per_Cell / UMI_max)^(-1/variation))),
   size = 3, color = "darkgreen") +
   geom_text(data = data.frame(
     Reads_per_Cell = c(20000, 40000, 80000),
     Design = c("Wide", "Balanced", "Deep"),
-    UMI = UMI_max * (1 - exp(-c(20000, 40000, 80000) / UMI_max) *
-                       (1 + variation * c(20000, 40000, 80000)^2 / (2 * UMI_max^2)))
+    UMI = UMI_max * (1 - (1 + variation * c(20000, 40000, 80000) / UMI_max)^(-1/variation))
   ), aes(x = Reads_per_Cell, y = UMI, label = Design),
   vjust = -1, color = "darkgreen") +
   scale_x_continuous(labels = scales::comma) +

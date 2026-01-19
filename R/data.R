@@ -1,3 +1,9 @@
+# NOTE: Library parameter values (UMI_per_cell and variation) in this file
+# were generated using the preseqR-based library_computation method.
+# If you regenerate the data files using inst/data-raw/regenerate_data_with_preseqR.R,
+# update the parameter values in the documentation below using the values printed
+# by that script or from inst/data-raw/preseqR_parameter_comparison.csv
+
 #' A549 Sakellaropoulos Chromium reference data for CRISPR power analysis
 #'
 #' @description
@@ -17,8 +23,8 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (42,376)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.376)
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (48,179)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.608)
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.794)}
@@ -72,8 +78,8 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (59,161)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.397)
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (60,414)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.467)
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.711)}
@@ -123,8 +129,8 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (58,799)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.412)
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (63,710)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.599)
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.700)}
@@ -159,7 +165,7 @@
 #'
 #' @format A list with 3 elements:
 #' \describe{
-#'   \item{baseline_expression_stats}{Data frame with gene expression data (16,373 genes × 3 columns):
+#'   \item{baseline_expression_stats}{Data frame with gene expression data (16,366 genes × 3 columns):
 #'     \itemize{
 #'       \item \code{response_id}: Character vector of Ensembl gene IDs
 #'       \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
@@ -168,8 +174,8 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (77,815)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.354)
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (88,390)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.559)
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.677)}
@@ -219,8 +225,8 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (8,798)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.297)
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (8,957)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.372)
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.679)}
@@ -271,8 +277,8 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (39,079)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.405)
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (38,699)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.439)
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.704)}
@@ -322,8 +328,8 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (32,287)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.443)
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (30,173)
+#'       \item \code{variation}: Variation parameter for PCR bias (0.392)
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.614)}
@@ -376,8 +382,8 @@
 #'   }
 #'   \item{library_parameters}{List containing:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (2,377)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.809)
+#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (5,465)
+#'       \item \code{variation}: Variation parameter for PCR bias (4.895)
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.371)}

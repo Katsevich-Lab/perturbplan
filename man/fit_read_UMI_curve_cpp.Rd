@@ -28,3 +28,4 @@ for large-scale power analysis computations. The preseqR saturation curve formul
 \seealso{
 \code{\link{fit_read_UMI_curve}} for R version
 }
+\keyword{internal}

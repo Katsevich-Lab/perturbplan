@@ -550,7 +550,8 @@ library_computation <- function(QC_data, downsample_ratio = 0.7, D2_rough = 0.3)
   preseq_input <- cbind(as.integer(names(read_umi_summary)), as.vector(read_umi_summary))
 
   # Fit ZTNB model using preseqR
-  preseq_output <- preseqR::preseqR.ztnb.em(preseq_input)
+  # Suppress deprecation warning from preseqR's internal matrix operations
+  preseq_output <- suppressWarnings(preseqR::preseqR.ztnb.em(preseq_input))
 
   # Extract parameters from ZTNB fit
   size <- as.numeric(preseq_output$size)

@@ -28,6 +28,7 @@ List compute_distribution_teststat_random_es_cpp(double num_trt_cell,
 //' @param num_cntrl_cells Number of control cells
 //' @return List with Monte Carlo mean and standard deviation vectors
 //'
+//' @keywords internal
 //' @export
 // [[Rcpp::export]]
 List compute_monte_carlo_teststat_cpp(DataFrame fc_expression_df,
@@ -120,6 +121,7 @@ NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
 //' significant performance improvements by eliminating R function call overhead.
 //'
 //' @seealso \code{\link{compute_power_plan_overall}} for R version
+//' @keywords internal
 //' @export
 // [[Rcpp::export]]
 SEXP compute_power_plan_overall_cpp(DataFrame fc_expression_df,
@@ -230,6 +232,7 @@ SEXP compute_power_plan_overall_cpp(DataFrame fc_expression_df,
 //' optimal cell count ranges based on power thresholds.
 //'
 //' @seealso \code{\link{compute_power_plan_overall_cpp}} for full power analysis
+//' @keywords internal
 //' @export
 // [[Rcpp::export]]
 double compute_single_power_cpp(

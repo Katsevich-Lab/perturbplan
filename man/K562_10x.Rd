@@ -16,8 +16,8 @@ A list with 3 elements:
 }
 \item{library_parameters}{List containing:
 \itemize{
-\item \code{UMI_per_cell}: Maximum UMI per cell parameter (58,799)
-\item \code{variation}: Variation parameter for PCR bias (0.412)
+\item \code{UMI_per_cell}: Maximum UMI per cell parameter (63,710)
+\item \code{variation}: Variation parameter for PCR bias (0.599)
 }
 }
 \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.700)}

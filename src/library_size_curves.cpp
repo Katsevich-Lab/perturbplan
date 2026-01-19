@@ -26,6 +26,7 @@ using namespace Rcpp;
 //' \deqn{effective\_UMI = UMI\_per\_cell \times (1 - (1 + variation \times reads\_per\_cell / UMI\_per\_cell)^{-1/variation})}
 //'
 //' @seealso \code{\link{fit_read_UMI_curve}} for R version
+//' @keywords internal
 //' @export
 // [[Rcpp::export]]
 NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
@@ -90,6 +91,7 @@ NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
 //' - Maximum reads: 98% UMI saturation (diminishing returns beyond this point)
 //'
 //' @seealso \code{\link{identify_library_size_range}} for R version
+//' @keywords internal
 //' @export
 // [[Rcpp::export]]
 List identify_library_size_range_cpp(std::string experimental_platform,
@@ -215,6 +217,7 @@ List identify_library_size_range_cpp(std::string experimental_platform,
 //'
 //' @return NumericVector. Sequence of reads per cell values for grid.
 //'
+//' @keywords internal
 //' @export
 // [[Rcpp::export]]
 NumericVector generate_reads_grid_cpp(std::string experimental_platform,
@@ -263,6 +266,7 @@ NumericVector generate_reads_grid_cpp(std::string experimental_platform,
 //' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell)
 //' - Maximum reads: 98% UMI saturation (diminishing returns beyond this point)
 //'
+//' @keywords internal
 //' @export
 // [[Rcpp::export]]
 List identify_reads_range_cpp(double UMI_per_cell, double variation) {
@@ -381,6 +385,7 @@ List identify_reads_range_cpp(double UMI_per_cell, double variation) {
 //'
 //' @return NumericVector. Sequence of reads per cell values for grid.
 //'
+//' @keywords internal
 //' @export
 // [[Rcpp::export]]
 NumericVector generate_reads_grid_streamlined_cpp(double UMI_per_cell,

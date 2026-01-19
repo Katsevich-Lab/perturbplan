@@ -7,7 +7,7 @@
 \format{
 A list with 3 elements:
 \describe{
-\item{baseline_expression_stats}{Data frame with gene expression data (16,373 genes × 3 columns):
+\item{baseline_expression_stats}{Data frame with gene expression data (16,366 genes × 3 columns):
 \itemize{
 \item \code{response_id}: Character vector of Ensembl gene IDs
 \item \code{relative_expression}: Numeric vector of relative expression levels (TPM/1e6 scale)
@@ -16,8 +16,8 @@ A list with 3 elements:
 }
 \item{library_parameters}{List containing:
 \itemize{
-\item \code{UMI_per_cell}: Maximum UMI per cell parameter (77,815)
-\item \code{variation}: Variation parameter for PCR bias (0.354)
+\item \code{UMI_per_cell}: Maximum UMI per cell parameter (88,390)
+\item \code{variation}: Variation parameter for PCR bias (0.559)
 }
 }
 \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.677)}

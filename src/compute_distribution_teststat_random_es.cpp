@@ -41,8 +41,9 @@ using namespace Rcpp;
 //'   \item Compute treatment group variance (incorporating fold change variability)
 //'   \item Calculate final asymptotic mean and standard deviation
 //' }
-//' 
-//' 
+//'
+//'
+//' @keywords internal
 //' @export
 // [[Rcpp::export]]
 List compute_distribution_teststat_random_es_cpp(

@@ -16,7 +16,6 @@ Imports:
     data.table,
     dplyr,
     methods,
-    minpack.lm,
     parallel,
     preseqR,
     rhdf5,

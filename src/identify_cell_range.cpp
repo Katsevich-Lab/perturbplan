@@ -60,6 +60,7 @@ double compute_single_power_cpp(
 //' This cross-search strategy ensures min_cells <= max_cells and provides robust
 //' experimental design ranges from minimally acceptable to well-powered studies.
 //'
+//' @keywords internal
 //' @export
 // [[Rcpp::export]]
 List identify_cell_range_cpp(
