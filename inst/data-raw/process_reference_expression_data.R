@@ -1,13 +1,6 @@
 ## ------------------------------------------------------------
-## Ensure we are in package root
+## Assume working directory is package root
 ## ------------------------------------------------------------
-
-# Robustly set working directory to package root
-script_path <- normalizePath(sys.frame(1)$ofile %||% commandArgs(trailingOnly = FALSE)[1])
-script_dir  <- dirname(script_path)
-pkg_root    <- normalizePath(file.path(script_dir, "../.."))
-
-setwd(pkg_root)
 
 stopifnot(file.exists("DESCRIPTION"))
 
@@ -16,7 +9,7 @@ stopifnot(file.exists("DESCRIPTION"))
 ## ------------------------------------------------------------
 
 library(pkgload)
-load_all()   # <-- THIS is what updates to latest functions
+load_all()
 
 ## ------------------------------------------------------------
 ## Other dependencies
