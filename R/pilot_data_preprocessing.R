@@ -394,7 +394,7 @@ reference_data_processing <- function(response_matrix = NULL, read_umi_table, ma
     lst <- read_umi_table$response_id %in% gene_list
     mapping_efficiency <- mean(lst)* mapping_efficiency
   }
-  
+
   message("Step 2: Estimating library parameters...")
   if (!is.null(gene_list)){
   # Filter read_umi_table to only include molecules from the gene list
@@ -402,7 +402,7 @@ reference_data_processing <- function(response_matrix = NULL, read_umi_table, ma
     dplyr::filter(response_id %in% gene_list)
   }
   library_params <- library_estimation(QC_data = read_umi_table)
-  
+
   # Construct the final output structure with simplified baseline expression
   result <- list(
     baseline_expression_stats = baseline_expression_df,
@@ -412,8 +412,8 @@ reference_data_processing <- function(response_matrix = NULL, read_umi_table, ma
 
   message("Completed pilot data preprocessing @ ", Sys.time())
   message("Processed ", nrow(baseline_expression_df), " genes")
-  message("Library parameters: UMI_per_cell = ", round(library_params$UMI_per_cell),
-          ", variation = ", signif(library_params$variation, 3))
+  message("UMI_per_cell_at_saturation = ", round(library_params$UMI_per_cell_at_saturation),
+          ", Model = ", library_params$method_used)
   message("Mapping efficiency = ", ifelse(is.null(mapping_efficiency), "NA", round(mapping_efficiency, 3)))
 
   return(result)
