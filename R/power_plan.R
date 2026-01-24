@@ -191,9 +191,27 @@ compute_power_plan_per_grid <- function(
   mapping_efficiency = 0.72
 ) {
 
-  # Extract needed data
-  UMI_per_cell <- library_parameters$UMI_per_cell
-  variation <- library_parameters$variation
+  # Extract needed data - support both old and new library_parameters formats
+  if (!is.null(library_parameters$method_used)) {
+    # New format from library_estimation with preseqR parameters
+    rSAC_fn_wrapper <- library_parameters
+
+    # For legacy compatibility, extract UMI_per_cell and variation if available
+    # (used by some functions that still expect old format)
+    UMI_per_cell <- library_parameters$UMI_per_cell_at_saturation
+    if (library_parameters$method_used == "ZTNB") {
+      variation <- 1.0 / library_parameters$size
+    } else {
+      # For RFA, variation is not directly available
+      # Use a default value for legacy functions
+      variation <- 0.25
+    }
+  } else {
+    # Old format with UMI_per_cell and variation
+    UMI_per_cell <- library_parameters$UMI_per_cell
+    variation <- library_parameters$variation
+    rSAC_fn_wrapper <- NULL
+  }
 
   # Step 1: Determine reads per cell sequence
   if (is.numeric(reads_per_cell)) {
@@ -287,11 +305,11 @@ compute_power_plan_per_grid <- function(
     ) |>
     dplyr::rowwise() |>
     dplyr::mutate(
-      library_size = fit_read_UMI_curve_cpp(
-        reads_per_cell = reads_per_cell,
-        UMI_per_cell = UMI_per_cell,
-        variation = variation
-      ),
+      library_size = if (!is.null(rSAC_fn_wrapper)) {
+        fit_read_UMI_curve_cpp(reads_per_cell, rSAC_fn_wrapper)
+      } else {
+        fit_read_UMI_curve(reads_per_cell, UMI_per_cell = UMI_per_cell, variation = variation)
+      },
       overall_power = compute_single_power_cpp(
         num_cells = num_total_cells,
         reads_per_cell = reads_per_cell,

@@ -4,14 +4,14 @@
 NULL
 
 #' @importFrom methods as
-#' @importFrom stats setNames coef predict dnbinom
+#' @importFrom stats setNames coef predict dnbinom pnbinom
 #' @importFrom utils read.csv
 #' @importFrom Matrix readMM rowSums colSums
 #' @importClassesFrom Matrix CsparseMatrix CsparseMatrix
 #' @importFrom data.table fread
 #' @importFrom R.utils gunzip
 #' @importFrom dplyr filter bind_rows arrange
-#' @importFrom preseqR preseqR.ztnb.em
+#' @importFrom preseqR preseqR.ztnb.em ds.rSAC
 #' @importFrom PoissonBinomial ppbinom
 NULL
 
@@ -451,46 +451,59 @@ summary_h5_data <- function(QC_data){
 #' Fit Saturation-Magnitude (S-M) Curve Between Reads and UMIs Using PreseqR
 #'
 #' @description
-#' Fits a zero-truncated negative binomial model using preseqR to estimate the relationship
-#' between mapped reads per cell and observed UMIs per cell. The model accounts for both
-#' UMI saturation at high read depths and PCR amplification variability. This function is
-#' used internally by \code{\link{reference_data_processing}}.
+#' Fits a saturation curve using preseqR to estimate the relationship
+#' between mapped reads per cell and observed UMIs per cell. Automatically selects
+#' between RFA (Rational Function Approximation) and ZTNB (Zero-Truncated Negative Binomial)
+#' methods based on the estimated shape parameter. This function is used internally by
+#' \code{\link{reference_data_processing}}.
 #'
 #' @param QC_data Data frame. UMI-level molecule information from
 #'   \code{\link{obtain_qc_read_umi_table}} containing columns \code{num_reads},
 #'   \code{UMI_id}, \code{cell_id}, and \code{response_id}.
+#' @param mt Integer. Number of terms to use in RFA method (default: 20).
 #'
-#' @return A list with two elements:
+#' @return A list with method-specific parameters:
 #' \describe{
-#'   \item{UMI_per_cell}{Maximum UMI count per cell at sequencing saturation}
-#'   \item{variation}{Variation parameter characterizing UMI richness (1/size from ZTNB model)}
+#'   \item{method_used}{Character. Either "RFA" or "ZTNB" indicating which method was used}
+#'   \item{reads_norm}{Numeric. Normalization constant (reads per cell at pilot data)}
+#'   \item{n_cells}{Numeric. Number of cells in pilot data}
+#'   \item{UMI_per_cell_at_saturation}{Numeric. Maximum UMI per cell at infinite sequencing depth}
+#' }
+#'
+#' For RFA method (when shape <= 1):
+#' \describe{
+#'   \item{valid_estimator}{Logical. Whether RFA estimator is valid}
+#'   \item{coefs_real}{Numeric vector. Real parts of RFA coefficients (if valid)}
+#'   \item{coefs_imag}{Numeric vector. Imaginary parts of RFA coefficients (if valid)}
+#'   \item{poles_real}{Numeric vector. Real parts of RFA poles (if valid)}
+#'   \item{poles_imag}{Numeric vector. Imaginary parts of RFA poles (if valid)}
+#'   \item{constant_value}{Numeric. Constant prediction value (if invalid)}
+#' }
+#'
+#' For ZTNB method (when shape > 1):
+#' \describe{
+#'   \item{L}{Numeric. Total expected distinct UMIs at saturation}
+#'   \item{size}{Numeric. ZTNB shape parameter}
+#'   \item{mu}{Numeric. ZTNB mean parameter}
 #' }
 #'
 #' @details
-#' ## PreseqR Model
+#' ## Method Selection
 #'
-#' The function uses preseqR's zero-truncated negative binomial (ZTNB) model to fit
-#' the read-UMI distribution. The saturation curve is:
-#'
-#' \deqn{\text{UMI} = \text{saturation_UMIs} \times \left(1 - \left(1 + \text{variation} \times \frac{\text{reads}}{\text{saturation_UMIs}}\right)^{-1/\text{variation}}\right)}
-#'
-#' where:
+#' The function first fits a ZTNB model using \code{preseqR.ztnb.em()} and examines the
+#' shape parameter:
 #' \itemize{
-#'   \item \code{reads}: Number of mapped reads per cell (independent variable)
-#'   \item \code{UMI}: Number of observed UMIs per cell (dependent variable)
-#'   \item \code{saturation_UMIs}: Maximum UMI per cell at saturation
-#'   \item \code{variation}: UMI richness variation (1/size parameter from ZTNB fit)
+#'   \item If shape <= 1: Uses RFA method (ds.rSAC) for better extrapolation
+#'   \item If shape > 1: Uses ZTNB closed-form formula
 #' }
 #'
-#' ## Fitting Procedure
+#' ## RFA Method (shape <= 1)
 #'
-#' \enumerate{
-#'   \item Creates read-UMI frequency table from QC data
-#'   \item Fits ZTNB model using \code{preseqR.ztnb.em()}
-#'   \item Extracts size and mu parameters
-#'   \item Calculates saturation UMI count per cell
-#'   \item Computes UMI richness variation as 1/size
-#' }
+#' Uses rational function approximation: \eqn{f(t) = Re(coefs \%*\% (t/(t - poles))^r)}
+#'
+#' ## ZTNB Method (shape > 1)
+#'
+#' Uses closed-form: \eqn{f(t) = L \times P(X > 0 | \text{size}, \mu \times t)}
 #'
 #' @examples
 #' # Get QC data and compute library parameters
@@ -500,9 +513,9 @@ summary_h5_data <- function(QC_data){
 #' # Fit saturation curve using preseqR
 #' lib_params <- library_estimation(QC_data = qc_data)
 #'
-#' # View fitted parameters
-#' lib_params$UMI_per_cell
-#' lib_params$variation
+#' # Check which method was used
+#' lib_params$method_used
+#' lib_params$UMI_per_cell_at_saturation
 #'
 #' @seealso
 #' \code{\link{obtain_qc_read_umi_table}} for input data preparation.
@@ -510,36 +523,87 @@ summary_h5_data <- function(QC_data){
 #' \code{\link{reference_data_processing}} for the complete preprocessing workflow.
 #' @keywords internal
 #' @export
-library_estimation <- function(QC_data){
+library_estimation <- function(QC_data, mt = 20){
 
   # Create read-UMI frequency table
   read_umi_summary <- QC_data$num_reads |> table()
+  num_cells <- length(unique(QC_data$cell_id))
 
   # Extract read counts (names) and frequencies (values)
   preseq_input <- cbind(as.integer(names(read_umi_summary)), as.vector(read_umi_summary))
+  reads_per_cell_original <- sum(preseq_input[, 1] * preseq_input[, 2]) / num_cells
 
-  # Fit ZTNB model using preseqR
-  # Suppress deprecation warning from preseqR's internal matrix operations
-  preseq_output <- suppressWarnings(preseqR::preseqR.ztnb.em(preseq_input))
+  # Follow preseqR.rSAC logic exactly
+  para <- preseqR::preseqR.ztnb.em(preseq_input)
+  shape <- para$size
+  mu <- para$mu
 
-  # Extract parameters from ZTNB fit
-  size <- as.numeric(preseq_output$size)
-  mu   <- as.numeric(preseq_output$mu)
+  if (shape <= 1) {
+    # Use ds.rSAC method (RFA)
+    method_used <- "RFA"
 
-  # Calculate summary statistics
-  S0 <- sum(preseq_input[, 2])                        # initial distinct UMIs
-  R0 <- sum(preseq_input[, 1] * preseq_input[, 2])   # initial total reads
-  cell_num <- length(unique(QC_data$cell_id))
-  umis_per_cell  <- S0 / cell_num
-  reads_per_cell <- R0 / cell_num
+    # Call ds.rSAC following preseqR.rSAC logic
+    preseqR_fn <- suppressWarnings(preseqR::ds.rSAC(n = preseq_input, mt = mt))
+    fn_env <- environment(preseqR_fn)
 
-  # Calculate saturation parameters
-  p0 <- 1 - dnbinom(0, size = size, mu = mu)   # P(seen at least once) at baseline
-  saturation_UMIs_per_cell <- umis_per_cell / p0
+    # Extract parameters from ds.rSAC environment
+    coefs <- fn_env$coefs
+    poles <- fn_env$poles
+    valid_estimator <- fn_env$valid.estimator
 
-  # Return parameters in expected format
-  return(list(
-    UMI_per_cell = saturation_UMIs_per_cell,
-    variation = 1 / size
-  ))
+    if (!is.null(valid_estimator) && valid_estimator == FALSE) {
+      # Invalid estimator - will return constant
+      n_data <- fn_env$n
+      UMI_per_cell_at_saturation <- sum(n_data[, 2]) / num_cells
+
+      # Store parameters for invalid estimator case
+      params <- list(
+        method_used = method_used,
+        valid_estimator = FALSE,
+        constant_value = as.numeric(sum(n_data[, 2])),
+        reads_norm = as.numeric(reads_per_cell_original),
+        n_cells = as.numeric(num_cells),
+        UMI_per_cell_at_saturation = UMI_per_cell_at_saturation
+      )
+    } else {
+      # Valid RFA estimator
+      UMI_per_cell_at_saturation <- as.numeric(Re(sum(coefs))) / num_cells
+
+      # Store complex numbers as real and imaginary parts
+      params <- list(
+        method_used = method_used,
+        valid_estimator = TRUE,
+        coefs_real = as.numeric(Re(coefs)),
+        coefs_imag = as.numeric(Im(coefs)),
+        poles_real = as.numeric(Re(poles)),
+        poles_imag = as.numeric(Im(poles)),
+        reads_norm = as.numeric(reads_per_cell_original),
+        n_cells = as.numeric(num_cells),
+        UMI_per_cell_at_saturation = UMI_per_cell_at_saturation
+      )
+    }
+  } else {
+    # Use ZTNB closed-form method
+    method_used <- "ZTNB"
+
+    # Follow the exact formula from preseqR.rSAC
+    p <- 1 - dnbinom(0, size = shape, mu = mu)
+    L <- sum(as.numeric(preseq_input[, 2])) / p
+
+    # At saturation (infinite reads), the ZTNB formula approaches L
+    UMI_per_cell_at_saturation <- L / num_cells
+
+    # Store parameters needed for ZTNB formula
+    params <- list(
+      method_used = method_used,
+      L = as.numeric(L),
+      size = as.numeric(shape),
+      mu = as.numeric(mu),
+      reads_norm = as.numeric(reads_per_cell_original),
+      n_cells = as.numeric(num_cells),
+      UMI_per_cell_at_saturation = UMI_per_cell_at_saturation
+    )
+  }
+
+  params
 }

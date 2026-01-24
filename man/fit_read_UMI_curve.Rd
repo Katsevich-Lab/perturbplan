@@ -4,7 +4,12 @@
 \alias{fit_read_UMI_curve}
 \title{Compute effective library size from read depth using UMI saturation curve}
 \usage{
-fit_read_UMI_curve(reads_per_cell, UMI_per_cell, variation)
+fit_read_UMI_curve(
+  reads_per_cell,
+  rSAC_fn_wrapper = NULL,
+  UMI_per_cell = NULL,
+  variation = NULL
+)
 }
 \arguments{
 \item{reads_per_cell}{Numeric. Total reads per cell.}

@@ -1,6 +1,7 @@
 // [[Rcpp::depends(Rcpp)]]
 #include <Rcpp.h>
 #include <cmath>
+#include <complex>
 #include <algorithm>
 using namespace Rcpp;
 
@@ -8,39 +9,10 @@ using namespace Rcpp;
  *  S-M Curve Implementation (C++)                             *
  *------------------------------------------------------------ */
 
-//' Compute effective library size from read depth using preseqR saturation curve (C++)
-//'
-//' @description
-//' C++ implementation of the preseqR-based saturation curve that relates
-//' sequencing reads to unique UMI counts using a zero-truncated negative binomial model.
-//'
-//' @param reads_per_cell Numeric vector. Total reads per cell.
-//' @param UMI_per_cell Numeric. Maximum UMI per cell at saturation (from preseqR fit).
-//' @param variation Numeric. UMI richness variation parameter (1/size from ZTNB model).
-//'
-//' @return Numeric vector. Effective library size in UMIs for each read depth.
-//'
-//' @details
-//' This C++ implementation provides significant performance improvements over the R version
-//' for large-scale power analysis computations. The preseqR saturation curve formula:
-//' \deqn{effective\_UMI = UMI\_per\_cell \times (1 - (1 + variation \times reads\_per\_cell / UMI\_per\_cell)^{-1/variation})}
-//'
-//' @seealso \code{\link{fit_read_UMI_curve}} for R version
-//' @keywords internal
-//' @export
-// [[Rcpp::export]]
-NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
-                                     double UMI_per_cell,
-                                     double variation) {
-
-  // Input validation
-  if (UMI_per_cell <= 0) {
-    stop("UMI_per_cell must be positive");
-  }
-  if (variation <= 0) {
-    stop("variation must be positive");
-  }
-
+// Internal helper for simple ZTNB prediction (backward compatibility within this file)
+NumericVector fit_read_UMI_curve_simple(NumericVector reads_per_cell,
+                                       double UMI_per_cell,
+                                       double variation) {
   int n = reads_per_cell.size();
   NumericVector effective_UMI(n);
 
@@ -48,23 +20,138 @@ NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
   double inv_variation = -1.0 / variation;
   double var_over_UMI = variation / UMI_per_cell;
 
-  // Vectorized computation using preseqR formula
+  // Vectorized computation using simple ZTNB formula
   for (int i = 0; i < n; i++) {
     double reads = reads_per_cell[i];
-
-    // Input validation for each read value
     if (reads < 0) {
       stop("reads_per_cell values must be non-negative");
     }
 
-    // PreseqR saturation curve formula:
-    // UMI = saturation_UMIs * (1 - (1 + variation * reads / saturation_UMIs)^(-1/variation))
     double base = 1.0 + var_over_UMI * reads;
     double power_term = pow(base, inv_variation);
     effective_UMI[i] = UMI_per_cell * (1.0 - power_term);
   }
 
   return effective_UMI;
+}
+
+//' Compute effective library size from read depth using preseqR saturation curve (C++)
+//'
+//' @description
+//' C++ implementation of the preseqR-based saturation curve that relates
+//' sequencing reads to unique UMI counts. Supports both ZTNB and RFA methods.
+//'
+//' @param reads_per_cell Numeric vector. Total reads per cell.
+//' @param rSAC_fn_wrapper List. Parameters from library_estimation containing:
+//'   \itemize{
+//'     \item method_used: "ZTNB" or "RFA"
+//'     \item reads_norm: Normalization constant
+//'     \item n_cells: Number of cells
+//'     \item For ZTNB: L, size, mu
+//'     \item For RFA: valid_estimator, coefs_real, coefs_imag, poles_real, poles_imag, or constant_value
+//'   }
+//'
+//' @return Numeric vector. Effective library size in UMIs for each read depth.
+//'
+//' @details
+//' This C++ implementation provides significant performance improvements over the R version
+//' for large-scale power analysis computations. Supports two methods:
+//' \itemize{
+//'   \item ZTNB: Uses L * P(X > 0 | size, mu * t)
+//'   \item RFA: Uses rational function approximation with complex arithmetic
+//' }
+//'
+//' @seealso \code{\link{fit_read_UMI_curve}} for R wrapper
+//' @keywords internal
+//' @export
+// [[Rcpp::export]]
+NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
+                                     List rSAC_fn_wrapper) {
+
+  // Validate inputs
+  if (reads_per_cell.size() == 0) {
+    stop("reads_per_cell has length 0");
+  }
+
+  // Extract common parameters
+  double reads_norm = as<double>(rSAC_fn_wrapper["reads_norm"]);
+  double n_cells = as<double>(rSAC_fn_wrapper["n_cells"]);
+  std::string method_used = as<std::string>(rSAC_fn_wrapper["method_used"]);
+
+  // Normalize reads_per_cell to the scale used during estimation
+  int n = reads_per_cell.size();
+  NumericVector t(n);
+  for (int i = 0; i < n; i++) {
+    t[i] = reads_per_cell[i] / reads_norm;
+  }
+
+  NumericVector predictions(n);
+
+  if (method_used == "ZTNB") {
+    // Use ZTNB closed-form formula: L * pnbinom(0, size = size, mu = mu * t, lower.tail = FALSE)
+    double L = as<double>(rSAC_fn_wrapper["L"]);
+    double size = as<double>(rSAC_fn_wrapper["size"]);
+    double mu = as<double>(rSAC_fn_wrapper["mu"]);
+
+    for (int i = 0; i < n; i++) {
+      // P(X > 0) = 1 - P(X <= 0) = pnbinom(0, size, mu*t, lower.tail=FALSE)
+      // Use pnbinom_mu for mu parameterization
+      double mu_scaled = mu * t[i];
+      double prob = R::pnbinom_mu(0.0, size, mu_scaled, 0, 0); // lower_tail=0 (gives P(X>0)), log=0
+      predictions[i] = (L * prob) / n_cells;
+    }
+
+  } else if (method_used == "RFA") {
+    // Use RFA (ds.rSAC) formula
+    bool valid_estimator = as<bool>(rSAC_fn_wrapper["valid_estimator"]);
+
+    if (!valid_estimator) {
+      // Invalid estimator - return constant
+      double constant_value = as<double>(rSAC_fn_wrapper["constant_value"]);
+      for (int i = 0; i < n; i++) {
+        predictions[i] = constant_value / n_cells;
+      }
+    } else {
+      // Valid RFA estimator - use formula: Re(coefs %*% (x/(x - poles)))
+      NumericVector coefs_real = as<NumericVector>(rSAC_fn_wrapper["coefs_real"]);
+      NumericVector coefs_imag = as<NumericVector>(rSAC_fn_wrapper["coefs_imag"]);
+      NumericVector poles_real = as<NumericVector>(rSAC_fn_wrapper["poles_real"]);
+      NumericVector poles_imag = as<NumericVector>(rSAC_fn_wrapper["poles_imag"]);
+
+      int num_terms = coefs_real.size();
+
+      for (int i = 0; i < n; i++) {
+        double x = t[i];
+        std::complex<double> sum(0.0, 0.0);
+
+        for (int j = 0; j < num_terms; j++) {
+          std::complex<double> coef(coefs_real[j], coefs_imag[j]);
+          std::complex<double> pole(poles_real[j], poles_imag[j]);
+
+          // Compute x / (x - pole)
+          std::complex<double> ratio = x / (x - pole);
+
+          sum += coef * ratio;
+        }
+
+        predictions[i] = sum.real() / n_cells;
+      }
+    }
+  } else {
+    stop("Unknown method_used: " + method_used);
+  }
+
+  // Handle edge cases: ensure no negative values, NaN, or Inf
+  for (int i = 0; i < n; i++) {
+    if (std::isnan(predictions[i]) || std::isinf(predictions[i])) {
+      predictions[i] = 0.0;
+    }
+    if (predictions[i] < 0.0) {
+      predictions[i] = 0.0;
+    }
+  }
+
+  return predictions;
 }
 
 /*------------------------------------------------------------ *
@@ -118,7 +205,7 @@ List identify_library_size_range_cpp(std::string experimental_platform,
   while (upper_bound_search - lower_bound > tolerance) {
     double mid_reads = (lower_bound + upper_bound_search) / 2.0;
     NumericVector mid_reads_vec = NumericVector::create(mid_reads);
-    NumericVector current_UMI_vec = fit_read_UMI_curve_cpp(mid_reads_vec, UMI_per_cell, variation);
+    NumericVector current_UMI_vec = fit_read_UMI_curve_simple(mid_reads_vec, UMI_per_cell, variation);
     double current_UMI = current_UMI_vec[0];
     
     if (current_UMI >= target_min_UMI) {
@@ -136,7 +223,7 @@ List identify_library_size_range_cpp(std::string experimental_platform,
 
   // Step 3: Check corner case - can we even reach 98% saturation?
   NumericVector upper_reads = NumericVector::create(upper_bound);
-  NumericVector upper_bound_UMI_vec = fit_read_UMI_curve_cpp(upper_reads, UMI_per_cell, variation);
+  NumericVector upper_bound_UMI_vec = fit_read_UMI_curve_simple(upper_reads, UMI_per_cell, variation);
   double upper_bound_UMI = upper_bound_UMI_vec[0];
   
   int max_reads_per_cell;
@@ -162,7 +249,7 @@ List identify_library_size_range_cpp(std::string experimental_platform,
       double mid_point = (lower_bound + upper_bound) / 2.0;
       
       NumericVector mid_reads = NumericVector::create(mid_point);
-      NumericVector current_UMI_vec = fit_read_UMI_curve_cpp(mid_reads, UMI_per_cell, variation);
+      NumericVector current_UMI_vec = fit_read_UMI_curve_simple(mid_reads, UMI_per_cell, variation);
       double current_UMI = current_UMI_vec[0];
       
       // Check if we've found the target within tolerance
@@ -291,7 +378,7 @@ List identify_reads_range_cpp(double UMI_per_cell, double variation) {
   while (upper_bound_search - lower_bound > tolerance) {
     double mid_reads = (lower_bound + upper_bound_search) / 2.0;
     NumericVector mid_reads_vec = NumericVector::create(mid_reads);
-    NumericVector current_UMI_vec = fit_read_UMI_curve_cpp(mid_reads_vec, UMI_per_cell, variation);
+    NumericVector current_UMI_vec = fit_read_UMI_curve_simple(mid_reads_vec, UMI_per_cell, variation);
     double current_UMI = current_UMI_vec[0];
     
     if (current_UMI >= target_min_UMI) {
@@ -309,7 +396,7 @@ List identify_reads_range_cpp(double UMI_per_cell, double variation) {
 
   // Step 3: Check corner case - can we even reach 98% saturation?
   NumericVector upper_reads = NumericVector::create(upper_bound);
-  NumericVector upper_bound_UMI_vec = fit_read_UMI_curve_cpp(upper_reads, UMI_per_cell, variation);
+  NumericVector upper_bound_UMI_vec = fit_read_UMI_curve_simple(upper_reads, UMI_per_cell, variation);
   double upper_bound_UMI = upper_bound_UMI_vec[0];
   
   int max_reads_per_cell;
@@ -335,7 +422,7 @@ List identify_reads_range_cpp(double UMI_per_cell, double variation) {
       double mid_point = (lower_bound + upper_bound) / 2.0;
       
       NumericVector mid_reads = NumericVector::create(mid_point);
-      NumericVector current_UMI_vec = fit_read_UMI_curve_cpp(mid_reads, UMI_per_cell, variation);
+      NumericVector current_UMI_vec = fit_read_UMI_curve_simple(mid_reads, UMI_per_cell, variation);
       double current_UMI = current_UMI_vec[0];
       
       // Check if we've found the target within tolerance

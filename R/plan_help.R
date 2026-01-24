@@ -883,10 +883,33 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
 #' @seealso \code{\link{get_pilot_data_from_package}} for obtaining curve parameters
 #' @keywords internal
 #' @export
-fit_read_UMI_curve <- function(reads_per_cell, UMI_per_cell, variation){
+fit_read_UMI_curve <- function(reads_per_cell, rSAC_fn_wrapper = NULL, UMI_per_cell = NULL, variation = NULL){
 
-  # Wrapper function that calls the optimized C++ implementation
-  return(fit_read_UMI_curve_cpp(reads_per_cell, UMI_per_cell, variation))
+  # Determine which parameter format was provided
+  if (!is.null(rSAC_fn_wrapper)) {
+    # New format: use preseqR parameter structure directly
+    return(fit_read_UMI_curve_cpp(reads_per_cell, rSAC_fn_wrapper))
+
+  } else if (!is.null(UMI_per_cell) && !is.null(variation)) {
+    # Legacy format: construct ZTNB wrapper from old-style parameters
+    # This maintains backward compatibility with existing code
+
+    # Create a simple ZTNB-style wrapper
+    legacy_wrapper <- list(
+      method_used = "ZTNB",
+      L = UMI_per_cell,  # At saturation, ZTNB predicts L distinct UMIs
+      size = 1.0 / variation,  # variation = 1/size
+      mu = 1.0,  # Standard mu value for approximation
+      reads_norm = 1.0,  # No normalization for legacy parameters
+      n_cells = 1.0,  # Single cell normalization
+      UMI_per_cell_at_saturation = UMI_per_cell
+    )
+
+    return(fit_read_UMI_curve_cpp(reads_per_cell, legacy_wrapper))
+
+  } else {
+    stop("Must provide either rSAC_fn_wrapper OR both UMI_per_cell and variation")
+  }
 }
 
 #' Identify optimal reads per cell range for power analysis grid

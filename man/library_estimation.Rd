@@ -4,52 +4,67 @@
 \alias{library_estimation}
 \title{Fit Saturation-Magnitude (S-M) Curve Between Reads and UMIs Using PreseqR}
 \usage{
-library_estimation(QC_data)
+library_estimation(QC_data, mt = 20)
 }
 \arguments{
 \item{QC_data}{Data frame. UMI-level molecule information from
 \code{\link{obtain_qc_read_umi_table}} containing columns \code{num_reads},
 \code{UMI_id}, \code{cell_id}, and \code{response_id}.}
+
+\item{mt}{Integer. Number of terms to use in RFA method (default: 20).}
 }
 \value{
-A list with two elements:
+A list with method-specific parameters:
 \describe{
-\item{UMI_per_cell}{Maximum UMI count per cell at sequencing saturation}
-\item{variation}{Variation parameter characterizing UMI richness (1/size from ZTNB model)}
+\item{method_used}{Character. Either "RFA" or "ZTNB" indicating which method was used}
+\item{reads_norm}{Numeric. Normalization constant (reads per cell at pilot data)}
+\item{n_cells}{Numeric. Number of cells in pilot data}
+\item{UMI_per_cell_at_saturation}{Numeric. Maximum UMI per cell at infinite sequencing depth}
+}
+
+For RFA method (when shape <= 1):
+\describe{
+\item{valid_estimator}{Logical. Whether RFA estimator is valid}
+\item{coefs_real}{Numeric vector. Real parts of RFA coefficients (if valid)}
+\item{coefs_imag}{Numeric vector. Imaginary parts of RFA coefficients (if valid)}
+\item{poles_real}{Numeric vector. Real parts of RFA poles (if valid)}
+\item{poles_imag}{Numeric vector. Imaginary parts of RFA poles (if valid)}
+\item{constant_value}{Numeric. Constant prediction value (if invalid)}
+}
+
+For ZTNB method (when shape > 1):
+\describe{
+\item{L}{Numeric. Total expected distinct UMIs at saturation}
+\item{size}{Numeric. ZTNB shape parameter}
+\item{mu}{Numeric. ZTNB mean parameter}
 }
 }
 \description{
-Fits a zero-truncated negative binomial model using preseqR to estimate the relationship
-between mapped reads per cell and observed UMIs per cell. The model accounts for both
-UMI saturation at high read depths and PCR amplification variability. This function is
-used internally by \code{\link{reference_data_processing}}.
+Fits a saturation curve using preseqR to estimate the relationship
+between mapped reads per cell and observed UMIs per cell. Automatically selects
+between RFA (Rational Function Approximation) and ZTNB (Zero-Truncated Negative Binomial)
+methods based on the estimated shape parameter. This function is used internally by
+\code{\link{reference_data_processing}}.
 }
 \details{
-\subsection{PreseqR Model}{
+\subsection{Method Selection}{
 
-The function uses preseqR's zero-truncated negative binomial (ZTNB) model to fit
-the read-UMI distribution. The saturation curve is:
-
-\deqn{\text{UMI} = \text{saturation_UMIs} \times \left(1 - \left(1 + \text{variation} \times \frac{\text{reads}}{\text{saturation_UMIs}}\right)^{-1/\text{variation}}\right)}
-
-where:
+The function first fits a ZTNB model using \code{preseqR.ztnb.em()} and examines the
+shape parameter:
 \itemize{
-\item \code{reads}: Number of mapped reads per cell (independent variable)
-\item \code{UMI}: Number of observed UMIs per cell (dependent variable)
-\item \code{saturation_UMIs}: Maximum UMI per cell at saturation
-\item \code{variation}: UMI richness variation (1/size parameter from ZTNB fit)
+\item If shape <= 1: Uses RFA method (ds.rSAC) for better extrapolation
+\item If shape > 1: Uses ZTNB closed-form formula
 }
 }
 
-\subsection{Fitting Procedure}{
+\subsection{RFA Method (shape <= 1)}{
 
-\enumerate{
-\item Creates read-UMI frequency table from QC data
-\item Fits ZTNB model using \code{preseqR.ztnb.em()}
-\item Extracts size and mu parameters
-\item Calculates saturation UMI count per cell
-\item Computes UMI richness variation as 1/size
+Uses rational function approximation: \eqn{f(t) = Re(coefs \%*\% (t/(t - poles))^r)}
 }
+
+\subsection{ZTNB Method (shape > 1)}{
+
+Uses closed-form: \eqn{f(t) = L \times P(X > 0 | \text{size}, \mu \times t)}
 }
 }
 \examples{
@@ -60,9 +75,9 @@ qc_data <- obtain_qc_read_umi_table(cellranger_path)
 # Fit saturation curve using preseqR
 lib_params <- library_estimation(QC_data = qc_data)
 
-# View fitted parameters
-lib_params$UMI_per_cell
-lib_params$variation
+# Check which method was used
+lib_params$method_used
+lib_params$UMI_per_cell_at_saturation
 
 }
 \seealso{

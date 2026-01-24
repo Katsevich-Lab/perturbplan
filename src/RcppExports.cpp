@@ -162,15 +162,14 @@ BEGIN_RCPP
 END_RCPP
 }
 // fit_read_UMI_curve_cpp
-NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell, double UMI_per_cell, double variation);
-RcppExport SEXP _perturbplan_fit_read_UMI_curve_cpp(SEXP reads_per_cellSEXP, SEXP UMI_per_cellSEXP, SEXP variationSEXP) {
+NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell, List rSAC_fn_wrapper);
+RcppExport SEXP _perturbplan_fit_read_UMI_curve_cpp(SEXP reads_per_cellSEXP, SEXP rSAC_fn_wrapperSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type reads_per_cell(reads_per_cellSEXP);
-    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
-    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
-    rcpp_result_gen = Rcpp::wrap(fit_read_UMI_curve_cpp(reads_per_cell, UMI_per_cell, variation));
+    Rcpp::traits::input_parameter< List >::type rSAC_fn_wrapper(rSAC_fn_wrapperSEXP);
+    rcpp_result_gen = Rcpp::wrap(fit_read_UMI_curve_cpp(reads_per_cell, rSAC_fn_wrapper));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -308,7 +307,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
     {"_perturbplan_compute_distribution_teststat_random_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_random_es_cpp, 6},
     {"_perturbplan_identify_cell_range_cpp", (DL_FUNC) &_perturbplan_identify_cell_range_cpp, 17},
-    {"_perturbplan_fit_read_UMI_curve_cpp", (DL_FUNC) &_perturbplan_fit_read_UMI_curve_cpp, 3},
+    {"_perturbplan_fit_read_UMI_curve_cpp", (DL_FUNC) &_perturbplan_fit_read_UMI_curve_cpp, 2},
     {"_perturbplan_identify_library_size_range_cpp", (DL_FUNC) &_perturbplan_identify_library_size_range_cpp, 3},
     {"_perturbplan_generate_reads_grid_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_cpp, 4},
     {"_perturbplan_identify_reads_range_cpp", (DL_FUNC) &_perturbplan_identify_reads_range_cpp, 2},

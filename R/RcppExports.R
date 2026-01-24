@@ -121,24 +121,33 @@ identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_e
 #'
 #' @description
 #' C++ implementation of the preseqR-based saturation curve that relates
-#' sequencing reads to unique UMI counts using a zero-truncated negative binomial model.
+#' sequencing reads to unique UMI counts. Supports both ZTNB and RFA methods.
 #'
 #' @param reads_per_cell Numeric vector. Total reads per cell.
-#' @param UMI_per_cell Numeric. Maximum UMI per cell at saturation (from preseqR fit).
-#' @param variation Numeric. UMI richness variation parameter (1/size from ZTNB model).
+#' @param rSAC_fn_wrapper List. Parameters from library_estimation containing:
+#'   \itemize{
+#'     \item method_used: "ZTNB" or "RFA"
+#'     \item reads_norm: Normalization constant
+#'     \item n_cells: Number of cells
+#'     \item For ZTNB: L, size, mu
+#'     \item For RFA: valid_estimator, coefs_real, coefs_imag, poles_real, poles_imag, or constant_value
+#'   }
 #'
 #' @return Numeric vector. Effective library size in UMIs for each read depth.
 #'
 #' @details
 #' This C++ implementation provides significant performance improvements over the R version
-#' for large-scale power analysis computations. The preseqR saturation curve formula:
-#' \deqn{effective\_UMI = UMI\_per\_cell \times (1 - (1 + variation \times reads\_per\_cell / UMI\_per\_cell)^{-1/variation})}
+#' for large-scale power analysis computations. Supports two methods:
+#' \itemize{
+#'   \item ZTNB: Uses L * P(X > 0 | size, mu * t)
+#'   \item RFA: Uses rational function approximation with complex arithmetic
+#' }
 #'
-#' @seealso \code{\link{fit_read_UMI_curve}} for R version
+#' @seealso \code{\link{fit_read_UMI_curve}} for R wrapper
 #' @keywords internal
 #' @export
-fit_read_UMI_curve_cpp <- function(reads_per_cell, UMI_per_cell, variation) {
-    .Call(`_perturbplan_fit_read_UMI_curve_cpp`, reads_per_cell, UMI_per_cell, variation)
+fit_read_UMI_curve_cpp <- function(reads_per_cell, rSAC_fn_wrapper) {
+    .Call(`_perturbplan_fit_read_UMI_curve_cpp`, reads_per_cell, rSAC_fn_wrapper)
 }
 
 #' Identify optimal reads per cell range for power analysis grid (C++)

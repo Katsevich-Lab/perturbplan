@@ -80,9 +80,36 @@ NumericVector rejection_computation_cpp(const NumericVector &mean_list,
                                        const std::string   &side,
                                        double               cutoff);
 
-NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell, 
-                                     double UMI_per_cell, 
-                                     double variation);
+NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
+                                     List rSAC_fn_wrapper);
+
+// Helper function to create ZTNB-style wrapper from legacy parameters
+List create_legacy_wrapper(double UMI_per_cell, double variation, double reads_norm = 1.0, double n_cells = 1.0) {
+  // Create a simple ZTNB-style wrapper for backward compatibility
+  // This allows old code using UMI_per_cell/variation to work with new fit_read_UMI_curve_cpp
+
+  // Convert variation back to size parameter: variation = 1/size => size = 1/variation
+  double size = 1.0 / variation;
+
+  // For legacy compatibility, set mu such that the curve approximates the old formula
+  // The old formula was: UMI_per_cell * (1 - (1 + variation * r / UMI_per_cell)^(-1/variation))
+  // We approximate this with ZTNB parameters
+  double mu = 1.0;  // Default mu for approximation
+
+  // Calculate L from UMI_per_cell at saturation
+  // At saturation (infinite reads), ZTNB predicts L distinct UMIs
+  double L = UMI_per_cell * n_cells;
+
+  return List::create(
+    Named("method_used") = "ZTNB",
+    Named("L") = L,
+    Named("size") = size,
+    Named("mu") = mu,
+    Named("reads_norm") = reads_norm,
+    Named("n_cells") = n_cells,
+    Named("UMI_per_cell_at_saturation") = UMI_per_cell
+  );
+}
 
 //' Compute overall power for power analysis (C++)
 //'
@@ -281,7 +308,8 @@ double compute_single_power_cpp(
   
   // Step 1: Convert reads per cell to library size using S-M curve
   NumericVector reads_vec = NumericVector::create(reads_per_cell);
-  NumericVector library_size_vec = fit_read_UMI_curve_cpp(reads_vec, UMI_per_cell, variation);
+  List legacy_wrapper = create_legacy_wrapper(UMI_per_cell, variation);
+  NumericVector library_size_vec = fit_read_UMI_curve_cpp(reads_vec, legacy_wrapper);
   double library_size = library_size_vec[0];
   
   // Step 2: Calculate treatment and control cell counts based on experimental design
