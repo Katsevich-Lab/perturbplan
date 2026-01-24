@@ -1,4 +1,27 @@
-library(perturbplan)
+## ------------------------------------------------------------
+## Ensure we are in package root
+## ------------------------------------------------------------
+
+# Robustly set working directory to package root
+script_path <- normalizePath(sys.frame(1)$ofile %||% commandArgs(trailingOnly = FALSE)[1])
+script_dir  <- dirname(script_path)
+pkg_root    <- normalizePath(file.path(script_dir, "../.."))
+
+setwd(pkg_root)
+
+stopifnot(file.exists("DESCRIPTION"))
+
+## ------------------------------------------------------------
+## Load source-version of the package
+## ------------------------------------------------------------
+
+library(pkgload)
+load_all()   # <-- THIS is what updates to latest functions
+
+## ------------------------------------------------------------
+## Other dependencies
+## ------------------------------------------------------------
+
 library(tibble)   # tribble()
 library(purrr)    # pwalk()
 library(usethis)  # use_data()
