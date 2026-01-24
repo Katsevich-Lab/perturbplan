@@ -409,12 +409,11 @@ From the library_params in the pilot data, let's first visualize the relationshi
 
 ```{r saturation-curve, fig.width=8, fig.height=5}
 # Extract library parameters
-UMI_max <- library_params$UMI_per_cell
-variation <- library_params$variation
+UMI_max <- library_params$UMI_per_cell_at_saturation
 
-# Generate saturation curve using preseqR formula
+# Generate saturation curve using fit_read_UMI_curve_cpp
 reads_range <- seq(1000, 100000, length.out = 200)
-umis_predicted <- UMI_max * (1 - (1 + variation * reads_range / UMI_max)^(-1/variation))
+umis_predicted <- fit_read_UMI_curve_cpp(reads_range, library_params)
 
 saturation_df <- data.frame(
   Reads_per_Cell = reads_range,
@@ -433,20 +432,20 @@ ggplot(saturation_df, aes(x = Reads_per_Cell, y = UMIs_per_Cell)) +
   geom_point(data = data.frame(
     Reads_per_Cell = c(20000, 40000, 80000),
     Design = c("Wide", "Balanced", "Deep")
-  ), aes(x = Reads_per_Cell, y = UMI_max * (1 - (1 + variation * Reads_per_Cell / UMI_max)^(-1/variation))),
+  ), aes(x = Reads_per_Cell, y = fit_read_UMI_curve_cpp(c(20000, 40000, 80000), library_params)),
   size = 3, color = "darkgreen") +
   geom_text(data = data.frame(
     Reads_per_Cell = c(20000, 40000, 80000),
     Design = c("Wide", "Balanced", "Deep"),
-    UMI = UMI_max * (1 - (1 + variation * c(20000, 40000, 80000) / UMI_max)^(-1/variation))
+    UMI = fit_read_UMI_curve_cpp(c(20000, 40000, 80000), library_params)
   ), aes(x = Reads_per_Cell, y = UMI, label = Design),
   vjust = -1, color = "darkgreen") +
   scale_x_continuous(labels = scales::comma) +
   scale_y_continuous(labels = scales::comma) +
   labs(
     title = "Read-to-UMI Saturation Curve",
-    subtitle = sprintf("UMI_per_cell = %d, variation = %.3f",
-                      round(UMI_max), variation),
+    subtitle = sprintf("UMI_per_cell_at_saturation = %d, method = %s",
+                      round(UMI_max), library_params$method_used),
     x = "Reads per Cell",
     y = "UMIs per Cell",
     caption = "Green points show example experimental designs"

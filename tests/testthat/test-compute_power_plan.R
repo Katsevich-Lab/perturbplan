@@ -12,11 +12,9 @@ setup_grid_test_data <- function() {
     expression_size = runif(50, min = 0.5, max = 2.0)
   )
 
-  # Create library parameters
-  library_parameters <- list(
-    UMI_per_cell = 12000,
-    variation = 0.3
-  )
+  # Get library parameters from package data (rSAC_fn_wrapper format)
+  pilot_data <- get_pilot_data_from_package("K562")
+  library_parameters <- pilot_data$library_parameters
 
   list(
     baseline_expression_stats = baseline_expression_stats,
@@ -376,11 +374,10 @@ test_that("compute_power_planmatches compute_power_plan_overall", {
   num_trt_cells <- cells_per_target_val
   num_cntrl_cells <- num_total_cells - num_trt_cells
 
-  # Calculate library size
+  # Calculate library size using new interface
   library_size <- fit_read_UMI_curve_cpp(
     reads_per_cell = reads_per_cell_val * mapping_efficiency,
-    UMI_per_cell = test_data$library_parameters$UMI_per_cell,
-    variation = test_data$library_parameters$variation
+    rSAC_fn_wrapper = test_data$library_parameters
   )
 
   # Create fc_expression_df for compute_power_plan_overall

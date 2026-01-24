@@ -4,12 +4,18 @@
 \alias{generate_reads_grid_streamlined_cpp}
 \title{Generate reads per cell grid (streamlined version)}
 \usage{
-generate_reads_grid_streamlined_cpp(UMI_per_cell, variation, grid_size = 10L)
+generate_reads_grid_streamlined_cpp(rSAC_fn_wrapper, grid_size = 10L)
 }
 \arguments{
-\item{UMI_per_cell}{Numeric. Maximum UMI per cell parameter.}
-
-\item{variation}{Numeric. Variation parameter for S-M curve.}
+\item{rSAC_fn_wrapper}{List. Parameters from library_estimation containing:
+\itemize{
+\item method_used: "ZTNB" or "RFA"
+\item reads_norm: Normalization constant
+\item n_cells: Number of cells
+\item UMI_per_cell_at_saturation: Maximum UMI per cell
+\item For ZTNB: L, size, mu
+\item For RFA: valid_estimator, coefs_real, coefs_imag, poles_real, poles_imag, or constant_value
+}}
 
 \item{grid_size}{Integer. Number of points in the grid (default: 10).}
 }

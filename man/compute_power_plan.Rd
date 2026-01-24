@@ -59,7 +59,7 @@ at least as large as the specified minimum_fold_change (default: 0.1).}
 \item{baseline_expression_stats}{Data frame. Baseline expression statistics.
 See \code{\link{reference_data_processing}} for data format requirements.}
 
-\item{library_parameters}{List. Library parameters with UMI_per_cell and variation.
+\item{library_parameters}{List. rSAC_fn_wrapper format from \code{\link{library_estimation}}.
 See \code{\link{reference_data_processing}} for parameter specifications.}
 
 \item{grid_size}{Integer. Grid size for each dimension (default: 10).}

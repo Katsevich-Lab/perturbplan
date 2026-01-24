@@ -66,10 +66,9 @@ pilot_data <- get_pilot_data_from_package("K562")
 library_params <- pilot_data$library_parameters
 
 # Calculate effective library size for 25000 reads per cell
-library_size <- fit_read_UMI_curve(
+library_size <- fit_read_UMI_curve_cpp(
   reads_per_cell = 25000,
-  UMI_per_cell = library_params$UMI_per_cell,
-  variation = library_params$variation
+  rSAC_fn_wrapper = library_params
 )
 
 # Calculate power for a specific experimental design

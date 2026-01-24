@@ -116,8 +116,11 @@ gene-specific expression variability</p></li>
 </ul></dd>
 
 <dt>library_parameters</dt>
-<dd><p>List with:</p><ul><li><p><code>UMI_per_cell</code>: Estimated maximum UMI count per cell at saturation</p></li>
-<li><p><code>variation</code>: Estimated PCR amplification variation parameter (0 to 1)</p></li>
+<dd><p>List with saturation curve parameters from preseqR:</p><ul><li><p><code>method_used</code>: Selected method ("ZTNB" or "RFA")</p></li>
+<li><p><code>UMI_per_cell_at_saturation</code>: Estimated maximum UMI count per cell at infinite sequencing depth</p></li>
+<li><p><code>reads_norm</code>: Normalization constant (reads per cell in pilot data)</p></li>
+<li><p><code>n_cells</code>: Number of cells in pilot data</p></li>
+<li><p>Additional method-specific parameters (e.g., L, size, mu for ZTNB; coefs and poles for RFA)</p></li>
 </ul></dd>
 
 <dt>mapping_efficiency</dt>
@@ -142,16 +145,17 @@ distribution of gene expression levels across cells:</p>
 <li><p><code>relative_expression</code>: Relative expression level of the gene (fitted parameter)</p></li>
 <li><p><code>expression_size</code>: Dispersion parameter; small values indicate high biological
 variability (fitted parameter)</p></li>
-</ul><p><strong>Sequencing Saturation Model (S-M Curve):</strong></p>
-<p>The function fits a saturation (S-M) curve that relates mapped reads per cell to
-observed UMIs per cell:</p>
-<p><code>UMI = total_UMIs * (1 - exp(-reads/total_UMIs) * (1 + variation * reads^2/(2*total_UMIs^2)))</code></p>
-<p>where:</p><ul><li><p><code>reads</code>: Number of mapped reads per cell (data)</p></li>
-<li><p><code>UMI</code>: Number of observed UMIs per cell (data)</p></li>
-<li><p><code>total_UMIs</code> (UMI_per_cell): Maximum UMI per cell parameter at saturation
-(fitted parameter)</p></li>
-<li><p><code>variation</code>: Variation parameter characterizing PCR amplification bias,
-between 0 and 1 (fitted parameter)</p></li>
+</ul><p><strong>Sequencing Saturation Model (preseqR):</strong></p>
+<p>The function uses the preseqR package to fit a saturation curve relating mapped reads
+per cell to observed UMIs per cell. The preseqR approach:</p><ul><li><p><strong>Data-adaptively selects</strong> between ZTNB (Zero-Truncated Negative Binomial)
+and RFA (Rational Function Approximation) methods based on the estimated shape parameter</p></li>
+<li><p><strong>ZTNB method</strong> (shape &gt; 1): Uses closed-form negative binomial predictions</p></li>
+<li><p><strong>RFA method</strong> (shape ≤ 1): Uses rational function approximation for better
+extrapolation in low-complexity libraries</p></li>
+<li><p><strong>Edge case</strong>: If RFA estimator is invalid, returns constant predictions
+(rarely occurs in practice)</p></li>
+<li><p><strong>Key output</strong>: <code>UMI_per_cell_at_saturation</code> - Maximum UMI per cell
+at infinite sequencing depth, plus method-specific parameters for curve prediction</p></li>
 </ul></div>
 
 <div class="section">
@@ -162,7 +166,7 @@ between 0 and 1 (fitted parameter)</p></li>
 <li><p>Fits negative binomial model using <code><a href="obtain_expression_information.html">obtain_expression_information</a></code>
 to estimate gene-level expression parameters</p></li>
 <li><p>Fits saturation model using <code><a href="library_estimation.html">library_estimation</a></code> to estimate
-library parameters using preseqR's ZTNB model</p></li>
+library parameters using preseqR's data-adaptive method (ZTNB or RFA)</p></li>
 <li><p>Returns structured output compatible with power analysis functions</p></li>
 </ol></div>
 
@@ -207,12 +211,12 @@ complete preprocessing workflow: <code><a href="../articles/preprocess-reference
 <span class="r-in"><span>  h5_only <span class="op">=</span> <span class="cn">FALSE</span>,      <span class="co"># Fit expression model</span></span></span>
 <span class="r-in"><span>  n_threads <span class="op">=</span> <span class="cn">NULL</span>      <span class="co"># No parallel processing</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting pilot data preprocessing @ 2026-01-19 17:42:19.89449</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting pilot data preprocessing @ 2026-01-24 15:30:49.49588</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Step 1: Computing gene expression information...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Start relative expression calculation @ 2026-01-19 17:42:19.899711</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish relative expression calculation @ 2026-01-19 17:42:19.89988</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Start relative expression calculation @ 2026-01-24 15:30:49.501163</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish relative expression calculation @ 2026-01-24 15:30:49.501383</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Number of genes passing TPM threshold: 5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Start dispersion estimation (12 thread(s)) @ 2026-01-19 17:42:19.90005</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Start dispersion estimation (12 thread(s)) @ 2026-01-24 15:30:49.50158</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [theta_batch_cpp] Starting computation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - G (genes) = 5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - C (cells) = 8</span>
@@ -232,11 +236,11 @@ complete preprocessing workflow: <code><a href="../articles/preprocess-reference
 <span class="r-out co"><span class="r-pr">#&gt;</span> [gene 4] t_0 = 0.272921</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [gene 4] theta_mle_row result = 468.498</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [theta_batch_cpp] Done.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish dispersion estimation @ 2026-01-19 17:42:19.900684</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish dispersion estimation @ 2026-01-24 15:30:49.502295</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Step 2: Estimating library parameters...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed pilot data preprocessing @ 2026-01-19 17:42:19.902772</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed pilot data preprocessing @ 2026-01-24 15:30:49.504643</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Processed 5 genes</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Library parameters: UMI_per_cell = 5, variation = 1e-04</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> UMI_per_cell_at_saturation = 5, Model = ZTNB</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Mapping efficiency = 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Inspect structure</span></span></span>
@@ -246,9 +250,14 @@ complete preprocessing workflow: <code><a href="../articles/preprocess-reference
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ response_id        : chr [1:5] "ENSG00000243485" "ENSG00000238009" "ENSG00000239945" "ENSG00000241860" ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ relative_expression: num [1:5] 0.0909 0.3636 0.1818 0.1818 0.1818</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ expression_size    : num [1:5] 401 484 468 468 468</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ library_parameters       :List of 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ UMI_per_cell: num 4.72</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ variation   : num 1e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ library_parameters       :List of 7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ method_used               : chr "ZTNB"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ L                         : num 37.8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ size                      : num 10000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ mu                        : num 0.344</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ reads_norm                : num 1.62</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ n_cells                   : num 8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ UMI_per_cell_at_saturation: num 4.72</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ mapping_efficiency       : num 1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Example 2: Process for TAP-seq experimental design (targeted genes only)</span></span></span>
@@ -260,12 +269,12 @@ complete preprocessing workflow: <code><a href="../articles/preprocess-reference
 <span class="r-in"><span>  gene_list <span class="op">=</span> <span class="va">gene_list</span>, <span class="co"># Restrict to specific genes</span></span></span>
 <span class="r-in"><span>  TPM_thres <span class="op">=</span> <span class="fl">0</span>          <span class="co"># No expression threshold for filtering</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting pilot data preprocessing @ 2026-01-19 17:42:19.904739</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Starting pilot data preprocessing @ 2026-01-24 15:30:49.50749</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Step 1: Computing gene expression information...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Start relative expression calculation @ 2026-01-19 17:42:19.908772</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish relative expression calculation @ 2026-01-19 17:42:19.908913</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Start relative expression calculation @ 2026-01-24 15:30:49.511983</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish relative expression calculation @ 2026-01-24 15:30:49.512172</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Number of genes passing TPM threshold: 3</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Start dispersion estimation (12 thread(s)) @ 2026-01-19 17:42:19.909086</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Start dispersion estimation (12 thread(s)) @ 2026-01-24 15:30:49.512359</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [theta_batch_cpp] Starting computation</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - G (genes) = 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - C (cells) = 8</span>
@@ -279,11 +288,11 @@ complete preprocessing workflow: <code><a href="../articles/preprocess-reference
 <span class="r-out co"><span class="r-pr">#&gt;</span> [gene 2] t_0 = 0.5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [gene 2] theta_mle_row result = 475.754</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [theta_batch_cpp] Done.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish dispersion estimation @ 2026-01-19 17:42:19.909535</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Finish dispersion estimation @ 2026-01-24 15:30:49.512869</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Step 2: Estimating library parameters...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed pilot data preprocessing @ 2026-01-19 17:42:19.911182</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Completed pilot data preprocessing @ 2026-01-24 15:30:49.514727</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Processed 3 genes</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Library parameters: UMI_per_cell = 6, variation = 1e-04</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> UMI_per_cell_at_saturation = 6, Model = ZTNB</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Mapping efficiency = 0.727</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Inspect structure</span></span></span>
@@ -293,9 +302,14 @@ complete preprocessing workflow: <code><a href="../articles/preprocess-reference
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ response_id        : chr [1:3] "ENSG00000238009" "ENSG00000239945" "ENSG00000241860"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ relative_expression: num [1:3] 0.5 0.25 0.25</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ expression_size    : num [1:3] 487 476 476</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ library_parameters       :List of 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ UMI_per_cell: num 6.03</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ variation   : num 1e-04</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ library_parameters       :List of 7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ method_used               : chr "ZTNB"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ L                         : num 36.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ size                      : num 10000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ mu                        : num 0.25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ reads_norm                : num 1.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ n_cells                   : num 6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ UMI_per_cell_at_saturation: num 6.03</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ mapping_efficiency       : num 0.727</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

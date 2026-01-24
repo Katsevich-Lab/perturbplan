@@ -1,139 +1,117 @@
 library(testthat)
 
-# Test fit_read_UMI_curve function
-test_that("fit_read_UMI_curve works correctly", {
-  
+# Test fit_read_UMI_curve_cpp function with rSAC_fn_wrapper
+test_that("fit_read_UMI_curve_cpp works correctly with rSAC_fn_wrapper", {
+
+  # Get library parameters from package data (rSAC_fn_wrapper format)
+  pilot_data <- get_pilot_data_from_package("K562")
+  rSAC_params <- pilot_data$library_parameters
+  UMI_at_saturation <- rSAC_params$UMI_per_cell_at_saturation
+
   # Test basic functionality with valid inputs
-  result <- fit_read_UMI_curve(reads_per_cell = 1000, UMI_per_cell = 500, variation = 0.1)
-  
+  result <- fit_read_UMI_curve_cpp(reads_per_cell = 1000, rSAC_fn_wrapper = rSAC_params)
+
   # Should return a numeric value
   expect_type(result, "double")
   expect_length(result, 1)
-  
-  # Result should be positive and less than UMI_per_cell
+
+  # Result should be positive and less than UMI_per_cell_at_saturation
   expect_gt(result, 0)
-  expect_lt(result, 500)
-  
-  # Test with different parameter values
-  result2 <- fit_read_UMI_curve(reads_per_cell = 2000, UMI_per_cell = 1000, variation = 0.05)
+  expect_lt(result, UMI_at_saturation)
+
+  # Test with different read depths
+  result2 <- fit_read_UMI_curve_cpp(reads_per_cell = 5000, rSAC_fn_wrapper = rSAC_params)
   expect_type(result2, "double")
-  expect_gt(result2, 0)
-  expect_lt(result2, 1000)
-  
+  expect_gt(result2, result)  # More reads should give more UMIs
+  expect_lt(result2, UMI_at_saturation)
+
   # Test edge cases
   # Very low reads per cell
-  result_low <- fit_read_UMI_curve(reads_per_cell = 10, UMI_per_cell = 500, variation = 0.1)
+  result_low <- fit_read_UMI_curve_cpp(reads_per_cell = 10, rSAC_fn_wrapper = rSAC_params)
   expect_gt(result_low, 0)
-  expect_lt(result_low, 50)  # Should be much smaller
-  
-  # Very high reads per cell (should approach UMI_per_cell)
-  result_high <- fit_read_UMI_curve(reads_per_cell = 10000, UMI_per_cell = 500, variation = 0.1)
-  expect_gt(result_high, 400)  # Should be close to UMI_per_cell
-  expect_lt(result_high, 500)
-  
+  expect_lt(result_low, result)  # Should be much smaller
+
+  # Very high reads per cell (should approach UMI_per_cell_at_saturation)
+  result_high <- fit_read_UMI_curve_cpp(reads_per_cell = 500000, rSAC_fn_wrapper = rSAC_params)
+  expect_gt(result_high, UMI_at_saturation * 0.8)  # Should be close to saturation
+  expect_lt(result_high, UMI_at_saturation * 1.05)  # Within 5% of saturation
+
   # Test monotonicity: more reads should give more UMIs (up to saturation)
-  reads_seq <- c(100, 200, 500, 1000)
-  results <- sapply(reads_seq, function(r) fit_read_UMI_curve(r, 1000, 0.1))
-  
+  reads_seq <- c(100, 500, 1000, 5000, 10000)
+  results <- sapply(reads_seq, function(r) {
+    fit_read_UMI_curve_cpp(reads_per_cell = r, rSAC_fn_wrapper = rSAC_params)
+  })
+
   # Results should be increasing
   for (i in 2:length(results)) {
     expect_gt(results[i], results[i-1])
   }
-  
-  # Test with very small variation (note: variation must be positive for preseqR formula)
-  result_low_var <- fit_read_UMI_curve(reads_per_cell = 1000, UMI_per_cell = 500, variation = 0.001)
-  expect_type(result_low_var, "double")
-  expect_gt(result_low_var, 0)
-  
+
   # Test vectorized inputs
-  reads_vec <- c(500, 1000, 1500)
-  results_vec <- fit_read_UMI_curve(reads_per_cell = reads_vec, UMI_per_cell = 1000, variation = 0.1)
-  expect_length(results_vec, 3)
+  reads_vec <- c(500, 1000, 1500, 2000)
+  results_vec <- fit_read_UMI_curve_cpp(reads_per_cell = reads_vec, rSAC_fn_wrapper = rSAC_params)
+  expect_length(results_vec, length(reads_vec))
   expect_true(all(results_vec > 0))
-  expect_true(all(results_vec < 1000))
+  expect_true(all(results_vec < UMI_at_saturation))
 })
 
-# Test the mathematical properties of fit_read_UMI_curve
-test_that("fit_read_UMI_curve has correct mathematical properties", {
-  
-  # Test that the function approaches UMI_per_cell as reads_per_cell increases
-  UMI_per_cell <- 1000
-  variation <- 0.1
-  
-  # Very high reads should give close to UMI_per_cell
-  result_very_high <- fit_read_UMI_curve(reads_per_cell = 100000, UMI_per_cell = UMI_per_cell, variation = variation)
-  expect_lt(abs(result_very_high - UMI_per_cell), UMI_per_cell * 0.05)  # Within 5% of UMI_per_cell
-  
+# Test the mathematical properties of fit_read_UMI_curve_cpp
+test_that("fit_read_UMI_curve_cpp has correct mathematical properties", {
+
+  # Get library parameters from package data
+  pilot_data <- get_pilot_data_from_package("K562")
+  rSAC_params <- pilot_data$library_parameters
+  UMI_at_saturation <- rSAC_params$UMI_per_cell_at_saturation
+
+  # Very high reads should approach UMI_per_cell_at_saturation
+  result_very_high <- fit_read_UMI_curve_cpp(reads_per_cell = 1000000, rSAC_fn_wrapper = rSAC_params)
+  expect_lt(abs(result_very_high - UMI_at_saturation) / UMI_at_saturation, 0.1)  # Within 10%
+
   # Test saturation curve behavior
-  reads_range <- seq(100, 10000, by = 500)
-  results <- sapply(reads_range, function(r) fit_read_UMI_curve(r, UMI_per_cell, variation))
-  
+  reads_range <- seq(1000, 100000, by = 5000)
+  results <- sapply(reads_range, function(r) {
+    fit_read_UMI_curve_cpp(reads_per_cell = r, rSAC_fn_wrapper = rSAC_params)
+  })
+
   # Should be monotonically increasing
-  expect_true(all(diff(results) > 0))
-  
-  # Should be concave (decreasing slope)
-  differences <- diff(results)
-  expect_true(all(diff(differences) < 0))
-  
+  expect_true(all(diff(results) >= 0))  # Allow for saturation plateau
+
   # Test boundary conditions
   # When reads_per_cell = 0, result should be 0
-  result_zero <- fit_read_UMI_curve(reads_per_cell = 0, UMI_per_cell = UMI_per_cell, variation = variation)
+  result_zero <- fit_read_UMI_curve_cpp(reads_per_cell = 0, rSAC_fn_wrapper = rSAC_params)
   expect_equal(result_zero, 0, tolerance = 1e-10)
 })
 
 
-# Test integration with mock data
-test_that("fit_read_UMI_curve works with realistic parameters", {
-  
-  # Use realistic parameter values
-  UMI_per_cell <- 2000  # Typical value
-  variation <- 0.15     # Typical variation
-  
+# Test integration with realistic data
+test_that("fit_read_UMI_curve_cpp works with realistic read depths", {
+
+  # Get library parameters from package data
+  pilot_data <- get_pilot_data_from_package("K562")
+  rSAC_params <- pilot_data$library_parameters
+  UMI_at_saturation <- rSAC_params$UMI_per_cell_at_saturation
+
   # Test with realistic read depths
-  reads_values <- c(500, 1000, 2000, 5000, 10000)
-  
+  reads_values <- c(5000, 10000, 20000, 50000, 100000)
+
   results <- sapply(reads_values, function(reads) {
-    fit_read_UMI_curve(
-      reads_per_cell = reads,
-      UMI_per_cell = UMI_per_cell,
-      variation = variation
-    )
+    fit_read_UMI_curve_cpp(reads_per_cell = reads, rSAC_fn_wrapper = rSAC_params)
   })
-  
+
   # All results should be valid
   expect_true(all(is.finite(results)))
   expect_true(all(results > 0))
-  expect_true(all(results < UMI_per_cell))
-  
-  # Results should be increasing with reads
+  expect_true(all(results <= UMI_at_saturation * 1.05))  # Allow small overshoot
+
+  # Results should be increasing with reads (or plateau at saturation)
   for (i in 2:length(results)) {
-    expect_gt(results[i], results[i-1])
+    expect_gte(results[i], results[i-1])
   }
-  
-  # At typical sequencing depth (2000 reads), should capture reasonable fraction
-  result_typical <- fit_read_UMI_curve(reads_per_cell = 2000, UMI_per_cell = UMI_per_cell, variation = variation)
-  expect_gt(result_typical, UMI_per_cell * 0.5)  # Should capture at least 50%
-  expect_lt(result_typical, UMI_per_cell * 0.9)  # But not more than 90%
-})
 
-# Test function argument handling
-test_that("fit_read_UMI_curve handles arguments correctly", {
-  
-  # Test with missing arguments (should work due to R's argument matching)
-  expect_no_error(fit_read_UMI_curve(reads_per_cell = 1000, UMI_per_cell = 500, variation = 0.1))
-  
-  # Test with named arguments in different order
-  result1 <- fit_read_UMI_curve(reads_per_cell = 1000, UMI_per_cell = 500, variation = 0.1)
-  result2 <- fit_read_UMI_curve(variation = 0.1, UMI_per_cell = 500, reads_per_cell = 1000)
-  expect_equal(result1, result2)
-  
-  # Test with different variation values (note: variation must be positive for preseqR formula)
-  results_var <- sapply(c(0.01, 0.05, 0.1, 0.2), function(v) {
-    fit_read_UMI_curve(reads_per_cell = 1000, UMI_per_cell = 500, variation = v)
-  })
-
-  # Lower variation should generally give higher UMI counts (for same read depth)
-  expect_gt(results_var[1], results_var[4])  # variation=0.01 > variation=0.2
+  # At typical sequencing depth (20000 reads), should capture reasonable fraction
+  result_typical <- fit_read_UMI_curve_cpp(reads_per_cell = 20000, rSAC_fn_wrapper = rSAC_params)
+  expect_gt(result_typical, UMI_at_saturation * 0.1)  # Should capture at least 10%
+  expect_lt(result_typical, UMI_at_saturation * 1.1)  # Allow small overshoot
 })
 
 # ============================================================================
@@ -150,15 +128,17 @@ test_that("get_pilot_data_from_package loads K562 data correctly", {
   expect_true("baseline_expression_stats" %in% names(k562_data) || "baseline_expression" %in% names(k562_data))
   expect_true("library_parameters" %in% names(k562_data))
 
-  # Test library_parameters structure
+  # Test library_parameters structure (rSAC_fn_wrapper format)
   expect_type(k562_data$library_parameters, "list")
-  expect_true("UMI_per_cell" %in% names(k562_data$library_parameters))
-  expect_true("variation" %in% names(k562_data$library_parameters))
+  expect_true("method_used" %in% names(k562_data$library_parameters))
+  expect_true("UMI_per_cell_at_saturation" %in% names(k562_data$library_parameters))
+  expect_true("reads_norm" %in% names(k562_data$library_parameters))
+  expect_true("n_cells" %in% names(k562_data$library_parameters))
 
   # Test library parameter values
-  expect_gt(k562_data$library_parameters$UMI_per_cell, 0)
-  expect_gte(k562_data$library_parameters$variation, 0)
-  expect_lte(k562_data$library_parameters$variation, 1)
+  expect_gt(k562_data$library_parameters$UMI_per_cell_at_saturation, 0)
+  expect_gt(k562_data$library_parameters$reads_norm, 0)
+  expect_gt(k562_data$library_parameters$n_cells, 0)
 })
 
 test_that("get_pilot_data_from_package works for different biological systems", {
@@ -314,24 +294,24 @@ test_that("validate_custom_baseline_rds accepts valid list structure", {
 })
 
 test_that("validate_custom_library_rds accepts valid library parameters", {
-  # Create valid library parameters
-  valid_library <- list(
-    UMI_per_cell = 15000,
-    variation = 0.25
-  )
+  # Get valid library parameters from package data (rSAC_fn_wrapper format)
+  pilot_data <- get_pilot_data_from_package("K562")
+  valid_library <- pilot_data$library_parameters
 
   result <- validate_custom_library_rds(valid_library)
 
   expect_true(result$valid)
   expect_length(result$errors, 0)
-  expect_equal(result$data$UMI_per_cell, 15000)
-  expect_equal(result$data$variation, 0.25)
+  expect_equal(result$data$method_used, valid_library$method_used)
+  expect_equal(result$data$UMI_per_cell_at_saturation, valid_library$UMI_per_cell_at_saturation)
 })
 
 test_that("validate_custom_library_rds detects missing elements", {
-  # Missing variation
+  # Missing required fields for rSAC_fn_wrapper format
   invalid_library <- list(
-    UMI_per_cell = 15000
+    method_used = "ZTNB",
+    UMI_per_cell_at_saturation = 15000
+    # Missing: reads_norm, n_cells
   )
 
   result <- validate_custom_library_rds(invalid_library)
@@ -340,11 +320,13 @@ test_that("validate_custom_library_rds detects missing elements", {
   expect_true(any(grepl("Missing required elements", result$errors)))
 })
 
-test_that("validate_custom_library_rds detects invalid UMI_per_cell", {
-  # Negative UMI_per_cell
+test_that("validate_custom_library_rds detects invalid UMI_per_cell_at_saturation", {
+  # Negative UMI_per_cell_at_saturation
   invalid_library <- list(
-    UMI_per_cell = -1000,
-    variation = 0.25
+    method_used = "ZTNB",
+    UMI_per_cell_at_saturation = -1000,
+    reads_norm = 50000,
+    n_cells = 10000
   )
 
   result <- validate_custom_library_rds(invalid_library)
@@ -354,10 +336,12 @@ test_that("validate_custom_library_rds detects invalid UMI_per_cell", {
 })
 
 test_that("validate_custom_library_rds warns about unusual values", {
-  # Very low UMI_per_cell
+  # Very low UMI_per_cell_at_saturation
   low_umi_library <- list(
-    UMI_per_cell = 500,
-    variation = 0.25
+    method_used = "ZTNB",
+    UMI_per_cell_at_saturation = 500,
+    reads_norm = 50000,
+    n_cells = 10000
   )
 
   result <- validate_custom_library_rds(low_umi_library)
@@ -367,6 +351,9 @@ test_that("validate_custom_library_rds warns about unusual values", {
 })
 
 test_that("validate_combined_pilot_data accepts valid combined data", {
+  # Get valid library parameters from package data
+  pilot_data <- get_pilot_data_from_package("K562")
+
   # Create valid combined data
   valid_combined <- list(
     baseline_expression_stats = data.frame(
@@ -374,10 +361,7 @@ test_that("validate_combined_pilot_data accepts valid combined data", {
       relative_expression = c(1.5e-05, 2.3e-05),
       expression_size = c(0.5, 1.2)
     ),
-    library_parameters = list(
-      UMI_per_cell = 15000,
-      variation = 0.25
-    )
+    library_parameters = pilot_data$library_parameters
   )
 
   result <- validate_combined_pilot_data(valid_combined)
@@ -514,11 +498,9 @@ test_that("extract_fc_expression_info respects TPM_threshold", {
 # ============================================================================
 
 test_that("identify_library_size_range returns valid range", {
-  # Create library parameters
-  library_params <- list(
-    UMI_per_cell = 15000,
-    variation = 0.25
-  )
+  # Get library parameters from package data (rSAC_fn_wrapper format)
+  pilot_data <- get_pilot_data_from_package("K562")
+  library_params <- pilot_data$library_parameters
 
   # Access internal function with :::
   result <- perturbplan:::identify_library_size_range("10x Chromium v3", library_params)

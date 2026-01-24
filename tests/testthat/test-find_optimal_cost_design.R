@@ -12,11 +12,9 @@ setup_optimal_cost_test_data <- function() {
     expression_size = runif(30, min = 0.5, max = 2.0)
   )
 
-  # Create library parameters
-  library_parameters <- list(
-    UMI_per_cell = 12000,
-    variation = 0.3
-  )
+  # Get library parameters from package data (rSAC_fn_wrapper format)
+  pilot_data <- get_pilot_data_from_package("K562")
+  library_parameters <- pilot_data$library_parameters
 
   # Create mock cost-power data frame (simulating output from cost_power_computation)
   set.seed(12345)

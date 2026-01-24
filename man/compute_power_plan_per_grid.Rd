@@ -30,7 +30,9 @@ compute_power_plan_per_grid(
 
 \item{fc_expression_df}{Data frame with fold change and expression information.}
 
-\item{library_parameters}{List containing UMI_per_cell and variation parameters.}
+\item{library_parameters}{List. rSAC_fn_wrapper format from \code{\link{library_estimation}}
+containing method_used, UMI_per_cell_at_saturation, reads_norm, n_cells, and
+method-specific parameters.}
 
 \item{grid_size}{Integer. Number of points in each dimension of the grid (default: 10).}
 

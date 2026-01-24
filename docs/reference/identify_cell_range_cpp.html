@@ -53,8 +53,7 @@ finds min_cells with best-case reads and max_cells with worst-case reads.</p>
 <span>  <span class="va">min_reads_per_cell</span>,</span>
 <span>  <span class="va">max_reads_per_cell</span>,</span>
 <span>  <span class="va">fc_expression_df</span>,</span>
-<span>  <span class="va">UMI_per_cell</span>,</span>
-<span>  <span class="va">variation</span>,</span>
+<span>  <span class="va">rSAC_fn_wrapper</span>,</span>
 <span>  MOI <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  num_targets <span class="op">=</span> <span class="fl">100L</span>,</span>
 <span>  gRNAs_per_target <span class="op">=</span> <span class="fl">4L</span>,</span>
@@ -86,12 +85,9 @@ finds min_cells with best-case reads and max_cells with worst-case reads.</p>
 <dd><p>DataFrame with fold change and expression info</p></dd>
 
 
-<dt id="arg-umi-per-cell">UMI_per_cell<a class="anchor" aria-label="anchor" href="#arg-umi-per-cell"></a></dt>
-<dd><p>Numeric. Maximum UMI per cell parameter from S-M curve</p></dd>
-
-
-<dt id="arg-variation">variation<a class="anchor" aria-label="anchor" href="#arg-variation"></a></dt>
-<dd><p>Numeric. Variation parameter from S-M curve</p></dd>
+<dt id="arg-rsac-fn-wrapper">rSAC_fn_wrapper<a class="anchor" aria-label="anchor" href="#arg-rsac-fn-wrapper"></a></dt>
+<dd><p>List. Library parameters from library_estimation containing
+method_used, reads_norm, n_cells, and method-specific parameters</p></dd>
 
 
 <dt id="arg-moi">MOI<a class="anchor" aria-label="anchor" href="#arg-moi"></a></dt>

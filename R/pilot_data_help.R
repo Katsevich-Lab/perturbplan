@@ -534,7 +534,8 @@ library_estimation <- function(QC_data, mt = 20){
   reads_per_cell_original <- sum(preseq_input[, 1] * preseq_input[, 2]) / num_cells
 
   # Follow preseqR.rSAC logic exactly
-  para <- preseqR::preseqR.ztnb.em(preseq_input)
+  # Suppress warnings about deprecated array recycling from preseqR
+  para <- suppressWarnings(preseqR::preseqR.ztnb.em(preseq_input))
   shape <- para$size
   mu <- para$mu
 

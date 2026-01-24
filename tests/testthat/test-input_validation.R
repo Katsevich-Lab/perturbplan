@@ -12,11 +12,9 @@ setup_validation_test_data <- function() {
     expression_size = runif(20, min = 0.5, max = 2.0)
   )
 
-  # Create valid library parameters
-  library_parameters <- list(
-    UMI_per_cell = 12000,
-    variation = 0.3
-  )
+  # Get library parameters from package data (rSAC_fn_wrapper format)
+  pilot_data <- get_pilot_data_from_package("K562")
+  library_parameters <- pilot_data$library_parameters
 
   list(
     baseline_expression_stats = baseline_expression_stats,
@@ -161,7 +159,7 @@ test_that("input_check_compute_power_planvalidates library parameters", {
       library_parameters = list(wrong_param = 100),
       num_targets = 10
     ),
-    regexp = "must contain elements: UMI_per_cell, variation"
+    regexp = "library_estimation"
   )
 })
 

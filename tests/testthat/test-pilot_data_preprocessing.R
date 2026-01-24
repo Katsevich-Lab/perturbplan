@@ -133,16 +133,15 @@ test_that("reference_data_processing extracts parameters correctly", {
   # Test expression_size is positive
   expect_true(all(pilot_data$baseline_expression_stats$expression_size > 0))
 
-  # Test library_parameters
+  # Test library_parameters (rSAC_fn_wrapper format)
   expect_type(pilot_data$library_parameters, "list")
-  expect_true(all(c("UMI_per_cell", "variation") %in% names(pilot_data$library_parameters)))
+  expect_true(all(c("UMI_per_cell_at_saturation", "method_used") %in% names(pilot_data$library_parameters)))
 
-  # Test UMI_per_cell is positive
-  expect_gt(pilot_data$library_parameters$UMI_per_cell, 0)
+  # Test UMI_per_cell_at_saturation is positive
+  expect_gt(pilot_data$library_parameters$UMI_per_cell_at_saturation, 0)
 
-  # Test variation is between 0 and 1
-  expect_gte(pilot_data$library_parameters$variation, 0)
-  expect_lte(pilot_data$library_parameters$variation, 1)
+  # Test method_used is valid
+  expect_true(pilot_data$library_parameters$method_used %in% c("ZTNB", "RFA", "constant"))
 
   # Test mapping_efficiency
   expect_type(pilot_data$mapping_efficiency, "double")
@@ -175,7 +174,7 @@ test_that("reference_data_processing with h5_only = TRUE skips baseline expressi
 
   # library_parameters and mapping_efficiency should still exist
   expect_type(pilot_data$library_parameters, "list")
-  expect_true(all(c("UMI_per_cell", "variation") %in% names(pilot_data$library_parameters)))
+  expect_true(all(c("UMI_per_cell_at_saturation", "method_used") %in% names(pilot_data$library_parameters)))
 })
 
 test_that("reference_data_processing with gene_list filters correctly", {

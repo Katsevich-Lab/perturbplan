@@ -334,8 +334,14 @@
 <span>    expression_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.45</span>, <span class="fl">1.23</span>, <span class="va">...</span><span class="op">)</span>                          <span class="co"># Dispersion parameters</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  library_parameters <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    UMI_per_cell <span class="op">=</span> <span class="fl">15000</span>,    <span class="co"># Maximum UMI per cell parameter (positive numeric)</span></span>
-<span>    variation <span class="op">=</span> <span class="fl">0.25</span>         <span class="co"># Variation parameter for PCR bias (positive numeric)</span></span>
+<span>    method_used <span class="op">=</span> <span class="st">"ZTNB"</span>,                <span class="co"># Saturation curve method</span></span>
+<span>    UMI_per_cell_at_saturation <span class="op">=</span> <span class="fl">15000</span>,  <span class="co"># Maximum UMI at saturation</span></span>
+<span>    reads_norm <span class="op">=</span> <span class="fl">50000</span>,                  <span class="co"># Reads per cell normalization</span></span>
+<span>    n_cells <span class="op">=</span> <span class="fl">10000</span>,                     <span class="co"># Number of cells in pilot</span></span>
+<span>    size <span class="op">=</span> <span class="fl">2.5</span>,                          <span class="co"># ZTNB-specific: size parameter</span></span>
+<span>    mu <span class="op">=</span> <span class="fl">0.8</span>,                            <span class="co"># ZTNB-specific: mu parameter</span></span>
+<span>    L <span class="op">=</span> <span class="fl">8000</span>                             <span class="co"># ZTNB-specific: L parameter</span></span>
+<span>    <span class="co"># For RFA method, include: coefs = c(...), poles = c(...)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -345,7 +351,7 @@
 <div class="section level3">
 <h3 id="data-requirements">Data Requirements<a class="anchor" aria-label="anchor" href="#data-requirements"></a></h3>
 <p><strong>baseline_expression_stats component:</strong> - <strong>baseline_expression_stats</strong>: Data frame with required columns: - <strong>response_id</strong>: Character vector of gene IDs (preferably Ensembl format: ENSGXXXXXXXXXXX) - <strong>relative_expression</strong>: Numeric vector of expression levels on TPM/1e6 scale (i.e., raw TPM divided by 1,000,000) - <strong>expression_size</strong>: Numeric vector of positive dispersion parameters - <strong>No missing values</strong> in any column - <strong>Unique gene IDs</strong> (duplicates will be removed, keeping first occurrence)</p>
-<p><strong>library_parameters component:</strong> - <strong>UMI_per_cell</strong>: Maximum UMI per cell parameter from saturation curve fitting (typically 1000-50000) - <strong>variation</strong>: Variation parameter characterizing PCR amplification bias (typically 0.1-1.0) - <strong>Both parameters</strong> must be positive single numeric values - <strong>No missing values</strong> allowed</p>
+<p><strong>library_parameters component (rSAC_fn_wrapper format):</strong> - <strong>method_used</strong>: Character string indicating the saturation curve method (“ZTNB”, “RFA”, or “constant”) - <strong>UMI_per_cell_at_saturation</strong>: Maximum UMI count per cell at infinite sequencing depth (typically 1000-100000) - <strong>reads_norm</strong>: Normalization constant representing reads per cell in pilot data (positive numeric) - <strong>n_cells</strong>: Number of cells in pilot data (positive numeric, typically &gt;100) - <strong>Additional method-specific parameters</strong>: - For ZTNB: L, size, mu - For RFA: coefs (vector), poles (vector) - <strong>All required parameters</strong> must be present and valid - <strong>No missing values</strong> allowed in required fields</p>
 </div>
 <div class="section level3">
 <h3 id="creating-combined-pilot-data-files">Creating Combined Pilot Data Files<a class="anchor" aria-label="anchor" href="#creating-combined-pilot-data-files"></a></h3>
@@ -381,10 +387,22 @@
 <span>  expression_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.45</span>, <span class="fl">1.23</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Create your own library parameters</span></span>
+<span><span class="co"># Create your own library parameters using library_estimation()</span></span>
+<span><span class="co"># This requires read-UMI data from your pilot experiment</span></span>
+<span><span class="co"># See ?library_estimation for details</span></span>
+<span></span>
+<span><span class="co"># Or use library parameters from reference_data_processing()</span></span>
+<span><span class="co"># which automatically calls library_estimation()</span></span>
+<span></span>
+<span><span class="co"># Example structure (must be output from library_estimation):</span></span>
 <span><span class="va">my_library</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  UMI_per_cell <span class="op">=</span> <span class="fl">18000</span>,</span>
-<span>  variation <span class="op">=</span> <span class="fl">0.22</span></span>
+<span>  method_used <span class="op">=</span> <span class="st">"ZTNB"</span>,</span>
+<span>  UMI_per_cell_at_saturation <span class="op">=</span> <span class="fl">18000</span>,</span>
+<span>  reads_norm <span class="op">=</span> <span class="fl">45000</span>,</span>
+<span>  n_cells <span class="op">=</span> <span class="fl">8000</span>,</span>
+<span>  size <span class="op">=</span> <span class="fl">2.8</span>,</span>
+<span>  mu <span class="op">=</span> <span class="fl">0.75</span>,</span>
+<span>  L <span class="op">=</span> <span class="fl">7500</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Combine and save</span></span>
@@ -402,7 +420,7 @@
 </div>
 <div class="section level3">
 <h3 id="file-validation-1">File Validation<a class="anchor" aria-label="anchor" href="#file-validation-1"></a></h3>
-<p>The application automatically validates uploaded RDS files using <code><a href="reference/validate_combined_pilot_data.html">validate_combined_pilot_data()</a></code> and provides detailed error messages for: - Incorrect overall file structure or missing top-level elements - Invalid baseline expression data (delegates to <code><a href="reference/validate_custom_baseline_rds.html">validate_custom_baseline_rds()</a></code>) - Invalid library parameters (delegates to <code><a href="reference/validate_custom_library_rds.html">validate_custom_library_rds()</a></code>) - Missing values or duplicate gene IDs - File size limits (50MB maximum) - R version compatibility issues</p>
+<p>The application automatically validates uploaded RDS files using <code><a href="reference/validate_combined_pilot_data.html">validate_combined_pilot_data()</a></code> and provides detailed error messages for: - Incorrect overall file structure or missing top-level elements - Invalid baseline expression data (delegates to <code><a href="reference/validate_custom_baseline_rds.html">validate_custom_baseline_rds()</a></code>) - Invalid library parameters in rSAC_fn_wrapper format (delegates to <code><a href="reference/validate_custom_library_rds.html">validate_custom_library_rds()</a></code>) - Checks for required fields: method_used, reads_norm, n_cells, UMI_per_cell_at_saturation - Validates method_used is one of: “ZTNB”, “RFA”, or “constant” - Missing values or duplicate gene IDs - File size limits (50MB maximum) - R version compatibility issues</p>
 </div>
 <div class="section level3">
 <h3 id="integration-with-analysis-workflow">Integration with Analysis Workflow<a class="anchor" aria-label="anchor" href="#integration-with-analysis-workflow"></a></h3>
@@ -425,11 +443,7 @@
 </div>
 <div class="section level3">
 <h3 id="summary-display">Summary Display<a class="anchor" aria-label="anchor" href="#summary-display"></a></h3>
-<p>When combined pilot data is loaded successfully, the application displays: “Loaded custom baseline expression (X,XXX genes)<br>
-Average TPM: XX.X<br>
-Loaded custom library parameters<br>
-UMI per cell: XX,XXX<br>
-Variation: X.XXXe-XX”</p>
+<p>When combined pilot data is loaded successfully, the application displays: “Loaded custom baseline expression (X,XXX genes) Average TPM: XX.X Loaded custom library parameters Method: ZTNB (or RFA/constant) UMI at saturation: XX,XXX Reads normalization: XX,XXX Number of cells: XX,XXX”</p>
 </div>
 </div>
 <div class="section level2">

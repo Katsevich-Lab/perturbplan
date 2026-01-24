@@ -8,8 +8,7 @@ compute_single_power_cpp(
   num_cells,
   reads_per_cell,
   fc_expression_df,
-  UMI_per_cell,
-  variation,
+  rSAC_fn_wrapper,
   MOI = 10,
   num_targets = 100L,
   gRNAs_per_target = 4L,
@@ -27,9 +26,8 @@ compute_single_power_cpp(
 
 \item{fc_expression_df}{DataFrame with fold change and expression info}
 
-\item{UMI_per_cell}{Numeric. Maximum UMI per cell parameter from S-M curve}
-
-\item{variation}{Numeric. Variation parameter from S-M curve}
+\item{rSAC_fn_wrapper}{List. Library parameters from library_estimation containing
+method_used, reads_norm, n_cells, and method-specific parameters}
 
 \item{MOI}{Numeric. Multiplicity of infection (default 10)}
 

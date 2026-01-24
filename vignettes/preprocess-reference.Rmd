@@ -33,7 +33,7 @@ This preprocessing workflow consists of two main steps:
 2. **`reference_data_processing()`:** Fitting statistical models with the output from Step 1 and obtaining expression data, library and sequencing parameters required for power analysis. These parameters include:
 
    - **Baseline expression statistics:** Baseline gene expression data: `response_id`, `relative_expression` and `expression_size`
-   - **Library parameters:** Reads-UMIs saturation curve parameters: `UMI_per_cell` and `variation`. These two parameters characterize library size and PCR amplification bias, given the cell type and assay of interest
+   - **Library parameters:** Reads-UMI saturation curve parameters from preseqR including: `method_used` (ZTNB/RFA), `UMI_per_cell_at_saturation`, `reads_norm`, `n_cells`, and method-specific parameters. These characterize library size and sequencing saturation dynamics given the cell type and assay of interest
    - **Mapping efficiency:** Proportion of reads that are confidently mapped to the transcripts of genes we're interested in.
 
 The output after the two-step preprocessing can be uploaded to the Web App as custom reference data.
@@ -166,7 +166,7 @@ pilot_data_tapseq <- reference_data_processing(
 - `h5_only`: If `TRUE`, the function will skip the construction of baseline expression dataframe to save time (default: FALSE)
 - `n_threads`: Number of parallel processing threads (default: NULL for single-threaded)
 
-**Note:** The library estimation now uses preseqR's zero-truncated negative binomial (ZTNB) model, which automatically estimates UMI saturation parameters without requiring manual tuning.
+**Note:** The library estimation uses preseqR's data-adaptive saturation curve fitting, which automatically selects between ZTNB (Zero-Truncated Negative Binomial) and RFA (Rational Function Approximation) methods based on the shape of the read-UMI distribution. This ensures optimal parameter estimation without requiring manual method selection.
 
 ### Function Output
 
@@ -183,9 +183,12 @@ str(pilot_data_tapseq)
   - `response_id`: Ensembl gene identifier
   - `relative_expression`: Estimated relative expression proportions for each gene, normalized to sum to 1 across all genes of interest
   - `expression_size`: Estimated dispersion representing gene-specific expression variability
-- `library_parameters`: List with:
-  - `UMI_per_cell`: Estimated maximum UMI count per cell
-  - `variation`: Estimated PCR amplification variation parameter
+- `library_parameters`: List with saturation curve parameters from preseqR (rSAC_fn_wrapper format):
+  - `method_used`: Selected method ("ZTNB" or "RFA")
+  - `UMI_per_cell_at_saturation`: Estimated maximum UMI count per cell at infinite sequencing depth
+  - `reads_norm`: Normalization constant (reads per cell in pilot data)
+  - `n_cells`: Number of cells in pilot data
+  - Additional method-specific parameters (e.g., L, size, mu for ZTNB; coefs and poles for RFA)
 - `mapping_efficiency`: Adjusted mapping efficiency, accounting for the fraction of reads mapped to the genes of interest
 
 
@@ -193,47 +196,39 @@ str(pilot_data_tapseq)
 
 ---
 
-## Mathematical details of the models used in Step 2
+## Statistical Models Used in Step 2
 
-We consider two models, one for modeling gene expression and one for modeling read-UMI relationship.
+The `reference_data_processing()` function fits two statistical models to extract parameters needed for power analysis.
 
-### Negative binomial expression model
+### Negative Binomial Expression Model
 
-For each gene, the function fits a negative binomial (NB) model to characterize the distribution of gene expression levels across cells:
+For each gene, the function fits a negative binomial (NB) model to characterize the distribution of gene expression levels across cells. The model estimates two parameters for each gene:
 
-$$\text{gene_expression} \sim \text{NB}(\text{mean} = \text{library_size} \times \text{relative_expression}, \text{size} = \text{expression_size})$$
+- **`relative_expression`**: The relative expression level of the gene
+- **`expression_size`**: The dispersion parameter (reciprocal of variance relative to mean)
 
-where
+These parameters capture both the average expression level and the biological variability of each gene across cells.
 
-- `gene_expression`: Number of observed UMIs for the gene in each cell
-- `library_size`: Number of observed UMIs per cell
+### Read-UMI Saturation Curve (preseqR)
 
-are the data to use, and
+The function uses the `preseqR` package to fit a saturation curve that relates sequencing reads to unique UMI counts. The preseqR approach:
 
-- `relative_expression`: Relative expression level of the gene 
-- `expression_size`: Reciprocal of dispersion 
+- **Data-adaptively selects** between two methods based on the estimated shape parameter:
+  - **ZTNB (Zero-Truncated Negative Binomial)**: Used when shape > 1, provides closed-form predictions
+  - **RFA (Rational Function Approximation)**: Used when shape ≤ 1, provides better extrapolation for low-complexity libraries
 
-are the estimated values.
+- **In rare edge cases**, if the RFA estimator is invalid (rarely occurs in practice), the function returns a constant prediction based on the observed data. In this case, the saved parameters include:
+  - `method_used = "RFA"` (method attempted)
+  - `valid_estimator = FALSE` (indicates invalid estimator)
+  - `constant_value`: The total observed UMI count
+  - `UMI_per_cell_at_saturation`: Set to observed UMI per cell
+  - Standard parameters: `reads_norm`, `n_cells`
 
-### Read-UMI model (preseqR method)
+- **Estimates key parameters**:
+  - `UMI_per_cell_at_saturation`: Maximum UMI count per cell at infinite sequencing depth
+  - Method-specific parameters for accurate saturation curve prediction
 
-The function uses preseqR's zero-truncated negative binomial (ZTNB) model to fit the relationship between mapped reads per cell and observed UMIs per cell (`library_size`). The resulting saturation curve is:
-
-$$\text{library_size} = \text{UMI_per_cell} \times \left(1 - \left(1 + \text{variation} \times \frac{\text{mapped_reads_per_cell}}{\text{UMI_per_cell}}\right)^{-1/\text{variation}}\right)$$
-
-where
-
-- `mapped_reads_per_cell`: Number of mapped reads per cell
-- `library_size`: Number of observed UMIs per cell
-
-are the observed data, and
-
-- `UMI_per_cell`: Maximum UMI count per cell at sequencing saturation
-- `variation`: UMI richness variation parameter (inverse of the ZTNB size parameter)
-
-are the parameters estimated by fitting the ZTNB model to the read-UMI frequency distribution.
-
-**Method:** The preseqR approach models the read-per-UMI distribution using a zero-truncated negative binomial distribution, which provides robust parameter estimation without requiring downsampling or manual tuning of priors.
+The preseqR methodology provides robust parameter estimation without requiring manual method selection or parameter tuning. The data-adaptive approach ensures optimal performance across diverse experimental designs and library complexities.
 
 ---
 

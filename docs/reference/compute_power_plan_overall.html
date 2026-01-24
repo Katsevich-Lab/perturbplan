@@ -128,10 +128,9 @@ This is a core utility function used by grid-based power analysis functions.</p>
 <span class="r-in"><span><span class="va">library_params</span> <span class="op">&lt;-</span> <span class="va">pilot_data</span><span class="op">$</span><span class="va">library_parameters</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Calculate effective library size for 25000 reads per cell</span></span></span>
-<span class="r-in"><span><span class="va">library_size</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_read_UMI_curve.html">fit_read_UMI_curve</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span><span class="va">library_size</span> <span class="op">&lt;-</span> <span class="fu"><a href="fit_read_UMI_curve_cpp.html">fit_read_UMI_curve_cpp</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>  reads_per_cell <span class="op">=</span> <span class="fl">25000</span>,</span></span>
-<span class="r-in"><span>  UMI_per_cell <span class="op">=</span> <span class="va">library_params</span><span class="op">$</span><span class="va">UMI_per_cell</span>,</span></span>
-<span class="r-in"><span>  variation <span class="op">=</span> <span class="va">library_params</span><span class="op">$</span><span class="va">variation</span></span></span>
+<span class="r-in"><span>  rSAC_fn_wrapper <span class="op">=</span> <span class="va">library_params</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Calculate power for a specific experimental design</span></span></span>

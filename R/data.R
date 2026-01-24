@@ -15,10 +15,16 @@
 #'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
-#'   \item{library_parameters}{List containing:
+#'   \item{library_parameters}{List containing saturation curve parameters estimated using preseqR.
+#'     Data-adaptively selected method: ZTNB. Contains:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (48,179)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.608)
+#'       \item \code{method_used}: "ZTNB" - Zero-truncated negative binomial method
+#'       \item \code{L}: 1.19e9 - Total expected distinct UMIs at saturation
+#'       \item \code{size}: 1.64 - ZTNB shape parameter
+#'       \item \code{mu}: 0.244 - ZTNB mean parameter
+#'       \item \code{reads_norm}: 11,759 - Normalization constant (reads per cell)
+#'       \item \code{n_cells}: 24,744 - Number of cells in pilot data
+#'       \item \code{UMI_per_cell_at_saturation}: 48,179 - Maximum UMI per cell at infinite sequencing depth
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.794)}
@@ -70,10 +76,16 @@
 #'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
-#'   \item{library_parameters}{List containing:
+#'   \item{library_parameters}{List containing saturation curve parameters estimated using preseqR.
+#'     Data-adaptively selected method: ZTNB. Contains:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (60,414)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.467)
+#'       \item \code{method_used}: "ZTNB" - Zero-truncated negative binomial method
+#'       \item \code{L}: 4.68e8 - Total expected distinct UMIs at saturation
+#'       \item \code{size}: 2.14 - ZTNB shape parameter
+#'       \item \code{mu}: 0.395 - ZTNB mean parameter
+#'       \item \code{reads_norm}: 23,835 - Normalization constant (reads per cell)
+#'       \item \code{n_cells}: 7,749 - Number of cells in pilot data
+#'       \item \code{UMI_per_cell_at_saturation}: 60,414 - Maximum UMI per cell at infinite sequencing depth
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.711)}
@@ -121,10 +133,16 @@
 #'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
-#'   \item{library_parameters}{List containing:
+#'   \item{library_parameters}{List containing saturation curve parameters estimated using preseqR.
+#'     Data-adaptively selected method: ZTNB. Contains:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (63,710)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.599)
+#'       \item \code{method_used}: "ZTNB" - Zero-truncated negative binomial method
+#'       \item \code{L}: 4.86e8 - Total expected distinct UMIs at saturation
+#'       \item \code{size}: 1.67 - ZTNB shape parameter
+#'       \item \code{mu}: 0.451 - ZTNB mean parameter
+#'       \item \code{reads_norm}: 28,745 - Normalization constant (reads per cell)
+#'       \item \code{n_cells}: 7,632 - Number of cells in pilot data
+#'       \item \code{UMI_per_cell_at_saturation}: 63,710 - Maximum UMI per cell at infinite sequencing depth
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.700)}
@@ -166,10 +184,16 @@
 #'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
-#'   \item{library_parameters}{List containing:
+#'   \item{library_parameters}{List containing saturation curve parameters estimated using preseqR.
+#'     Data-adaptively selected method: ZTNB. Contains:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (88,390)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.559)
+#'       \item \code{method_used}: "ZTNB" - Zero-truncated negative binomial method
+#'       \item \code{L}: 4.96e8 - Total expected distinct UMIs at saturation
+#'       \item \code{size}: 1.79 - ZTNB shape parameter
+#'       \item \code{mu}: 0.124 - ZTNB mean parameter
+#'       \item \code{reads_norm}: 10,930 - Normalization constant (reads per cell)
+#'       \item \code{n_cells}: 5,608 - Number of cells in pilot data
+#'       \item \code{UMI_per_cell_at_saturation}: 88,390 - Maximum UMI per cell at infinite sequencing depth
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.677)}
@@ -217,10 +241,16 @@
 #'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
-#'   \item{library_parameters}{List containing:
+#'   \item{library_parameters}{List containing saturation curve parameters estimated using preseqR.
+#'     Data-adaptively selected method: ZTNB. Contains:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (8,957)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.372)
+#'       \item \code{method_used}: "ZTNB" - Zero-truncated negative binomial method
+#'       \item \code{L}: 1.11e8 - Total expected distinct UMIs at saturation
+#'       \item \code{size}: 2.69 - ZTNB shape parameter
+#'       \item \code{mu}: 2.17 - ZTNB mean parameter
+#'       \item \code{reads_norm}: 19,435 - Normalization constant (reads per cell)
+#'       \item \code{n_cells}: 12,340 - Number of cells in pilot data
+#'       \item \code{UMI_per_cell_at_saturation}: 8,957 - Maximum UMI per cell at infinite sequencing depth
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.679)}
@@ -269,10 +299,16 @@
 #'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
-#'   \item{library_parameters}{List containing:
+#'   \item{library_parameters}{List containing saturation curve parameters estimated using preseqR.
+#'     Data-adaptively selected method: ZTNB. Contains:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (38,699)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.439)
+#'       \item \code{method_used}: "ZTNB" - Zero-truncated negative binomial method
+#'       \item \code{L}: 5.16e8 - Total expected distinct UMIs at saturation
+#'       \item \code{size}: 2.28 - ZTNB shape parameter
+#'       \item \code{mu}: 0.55 - ZTNB mean parameter
+#'       \item \code{reads_norm}: 21,301 - Normalization constant (reads per cell)
+#'       \item \code{n_cells}: 13,321 - Number of cells in pilot data
+#'       \item \code{UMI_per_cell_at_saturation}: 38,699 - Maximum UMI per cell at infinite sequencing depth
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.704)}
@@ -320,10 +356,16 @@
 #'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
-#'   \item{library_parameters}{List containing:
+#'   \item{library_parameters}{List containing saturation curve parameters estimated using preseqR.
+#'     Data-adaptively selected method: ZTNB. Contains:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (30,173)
-#'       \item \code{variation}: Variation parameter for PCR bias (0.392)
+#'       \item \code{method_used}: "ZTNB" - Zero-truncated negative binomial method
+#'       \item \code{L}: 3.42e8 - Total expected distinct UMIs at saturation
+#'       \item \code{size}: 2.55 - ZTNB shape parameter
+#'       \item \code{mu}: 0.779 - ZTNB mean parameter
+#'       \item \code{reads_norm}: 23,512 - Normalization constant (reads per cell)
+#'       \item \code{n_cells}: 11,350 - Number of cells in pilot data
+#'       \item \code{UMI_per_cell_at_saturation}: 30,173 - Maximum UMI per cell at infinite sequencing depth
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.614)}
@@ -374,10 +416,18 @@
 #'       \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 #'     }
 #'   }
-#'   \item{library_parameters}{List containing:
+#'   \item{library_parameters}{List containing saturation curve parameters estimated using preseqR.
+#'     Data-adaptively selected method: RFA (Rational Function Approximation). Contains:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Maximum UMI per cell parameter (5,465)
-#'       \item \code{variation}: Variation parameter for PCR bias (4.895)
+#'       \item \code{method_used}: "RFA" - Rational function approximation method
+#'       \item \code{valid_estimator}: TRUE - RFA estimator is valid
+#'       \item \code{coefs_real}: Real parts of RFA coefficients
+#'       \item \code{coefs_imag}: Imaginary parts of RFA coefficients
+#'       \item \code{poles_real}: Real parts of RFA poles
+#'       \item \code{poles_imag}: Imaginary parts of RFA poles
+#'       \item \code{reads_norm}: 16,790 - Normalization constant (reads per cell)
+#'       \item \code{n_cells}: 8,278 - Number of cells in pilot data
+#'       \item \code{UMI_per_cell_at_saturation}: 3,684 - Maximum UMI per cell at infinite sequencing depth
 #'     }
 #'   }
 #'   \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.371)}

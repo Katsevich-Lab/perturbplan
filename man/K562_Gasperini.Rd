@@ -14,10 +14,16 @@ A list with 3 elements:
 \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 }
 }
-\item{library_parameters}{List containing:
+\item{library_parameters}{List containing saturation curve parameters estimated using preseqR.
+Data-adaptively selected method: ZTNB. Contains:
 \itemize{
-\item \code{UMI_per_cell}: Maximum UMI per cell parameter (60,414)
-\item \code{variation}: Variation parameter for PCR bias (0.467)
+\item \code{method_used}: "ZTNB" - Zero-truncated negative binomial method
+\item \code{L}: 4.68e8 - Total expected distinct UMIs at saturation
+\item \code{size}: 2.14 - ZTNB shape parameter
+\item \code{mu}: 0.395 - ZTNB mean parameter
+\item \code{reads_norm}: 23,835 - Normalization constant (reads per cell)
+\item \code{n_cells}: 7,749 - Number of cells in pilot data
+\item \code{UMI_per_cell_at_saturation}: 60,414 - Maximum UMI per cell at infinite sequencing depth
 }
 }
 \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.711)}

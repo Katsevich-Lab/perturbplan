@@ -46,19 +46,21 @@ for power analysis heatmaps.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">generate_reads_grid_streamlined_cpp</span><span class="op">(</span><span class="va">UMI_per_cell</span>, <span class="va">variation</span>, grid_size <span class="op">=</span> <span class="fl">10L</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">generate_reads_grid_streamlined_cpp</span><span class="op">(</span><span class="va">rSAC_fn_wrapper</span>, grid_size <span class="op">=</span> <span class="fl">10L</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
 
 
-<dl><dt id="arg-umi-per-cell">UMI_per_cell<a class="anchor" aria-label="anchor" href="#arg-umi-per-cell"></a></dt>
-<dd><p>Numeric. Maximum UMI per cell parameter.</p></dd>
-
-
-<dt id="arg-variation">variation<a class="anchor" aria-label="anchor" href="#arg-variation"></a></dt>
-<dd><p>Numeric. Variation parameter for S-M curve.</p></dd>
+<dl><dt id="arg-rsac-fn-wrapper">rSAC_fn_wrapper<a class="anchor" aria-label="anchor" href="#arg-rsac-fn-wrapper"></a></dt>
+<dd><p>List. Parameters from library_estimation containing:</p><ul><li><p>method_used: "ZTNB" or "RFA"</p></li>
+<li><p>reads_norm: Normalization constant</p></li>
+<li><p>n_cells: Number of cells</p></li>
+<li><p>UMI_per_cell_at_saturation: Maximum UMI per cell</p></li>
+<li><p>For ZTNB: L, size, mu</p></li>
+<li><p>For RFA: valid_estimator, coefs_real, coefs_imag, poles_real, poles_imag, or constant_value</p></li>
+</ul></dd>
 
 
 <dt id="arg-grid-size">grid_size<a class="anchor" aria-label="anchor" href="#arg-grid-size"></a></dt>

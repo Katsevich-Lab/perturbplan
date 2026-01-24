@@ -55,9 +55,9 @@ create_custom_pilot_data <- function(subset_size = 1000, seed = 123) {
   # baseline_subset <- baseline_subset[keep_high_expr, ]
   # cat("After TPM filtering:", nrow(baseline_subset), "genes remain\n")
   
-  # 3. Adjust library parameters if needed
-  # library_params$UMI_per_cell <- library_params$UMI_per_cell * 0.8
-  # library_params$variation <- library_params$variation * 1.1
+  # 3. Adjust library parameters if needed (advanced users only)
+  # Note: library_parameters must be in rSAC_fn_wrapper format from library_estimation()
+  # library_params$UMI_per_cell_at_saturation <- library_params$UMI_per_cell_at_saturation * 0.8
   
   # Construct the custom pilot data in the expected format
   custom_pilot_data <- list(
@@ -87,21 +87,23 @@ create_custom_pilot_data <- function(subset_size = 1000, seed = 123) {
          paste(setdiff(required_cols, colnames(baseline_df)), collapse = ", "))
   }
   
-  # Check library_parameters structure
+  # Check library_parameters structure (rSAC_fn_wrapper format)
   library_df <- custom_pilot_data$library_parameters
-  required_params <- c("UMI_per_cell", "variation")
+  required_params <- c("method_used", "reads_norm", "n_cells", "UMI_per_cell_at_saturation")
   has_params <- all(required_params %in% names(library_df))
-  
+
   if (!has_params) {
-    stop("library_parameters missing required elements: ",
+    stop("library_parameters must be output from library_estimation() with required elements: ",
          paste(setdiff(required_params, names(library_df)), collapse = ", "))
   }
   
   # Report final structure
   cat("✓ Custom pilot data created successfully!\n")
   cat("✓ Structure: baseline_expression_stats (", nrow(baseline_df), " genes) + library_parameters\n")
-  cat("✓ Library parameters: UMI_per_cell =", library_df$UMI_per_cell, 
-      ", variation =", round(library_df$variation, 4), "\n")
+  cat("✓ Library parameters: method =", library_df$method_used,
+      ", UMI_per_cell_at_saturation =", round(library_df$UMI_per_cell_at_saturation),
+      ", reads_norm =", round(library_df$reads_norm),
+      ", n_cells =", round(library_df$n_cells), "\n")
   
   # Calculate some summary statistics
   tpm_values <- baseline_df$relative_expression * 1e6
@@ -170,8 +172,11 @@ cat("    response_id = c('ENSG00000...', ...),\n")
 cat("    relative_expression = c(1.23e-05, ...),  # TPM/1e6 scale\n")
 cat("    expression_size = c(0.45, ...)           # Dispersion parameters\n")
 cat("  ),\n")
-cat("  library_parameters = list(\n")
-cat("    UMI_per_cell = 59158,     # From K562 data\n")
-cat("    variation = 0.397         # From K562 data\n")
+cat("  library_parameters = list(                 # rSAC_fn_wrapper from library_estimation()\n")
+cat("    method_used = 'ZTNB',                    # or 'RFA' or 'constant'\n")
+cat("    UMI_per_cell_at_saturation = 59158,      # Maximum UMI at saturation\n")
+cat("    reads_norm = 50000,                      # Reads per cell normalization\n")
+cat("    n_cells = 10000,                         # Number of cells\n")
+cat("    ...                                      # Additional method-specific params\n")
 cat("  )\n")
 cat(")\n")

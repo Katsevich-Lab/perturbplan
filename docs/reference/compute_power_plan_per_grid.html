@@ -83,7 +83,9 @@ with experimental design combinations and their corresponding power values.</p>
 
 
 <dt id="arg-library-parameters">library_parameters<a class="anchor" aria-label="anchor" href="#arg-library-parameters"></a></dt>
-<dd><p>List containing UMI_per_cell and variation parameters.</p></dd>
+<dd><p>List. rSAC_fn_wrapper format from <code><a href="library_estimation.html">library_estimation</a></code>
+containing method_used, UMI_per_cell_at_saturation, reads_norm, n_cells, and
+method-specific parameters.</p></dd>
 
 
 <dt id="arg-grid-size">grid_size<a class="anchor" aria-label="anchor" href="#arg-grid-size"></a></dt>
@@ -208,9 +210,9 @@ with experimental design combinations and their corresponding power values.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>               50          <span style="text-decoration: underline;">10</span>000        <span style="text-decoration: underline;">8</span>904.       0.003<span style="text-decoration: underline;">27</span>               512.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>              100          <span style="text-decoration: underline;">10</span>000        <span style="text-decoration: underline;">8</span>904.       0.014<span style="text-decoration: underline;">5</span>               <span style="text-decoration: underline;">1</span>025 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>              200          <span style="text-decoration: underline;">10</span>000        <span style="text-decoration: underline;">8</span>904.       0.078<span style="text-decoration: underline;">7</span>               <span style="text-decoration: underline;">2</span>050 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>               50          <span style="text-decoration: underline;">25</span>000       <span style="text-decoration: underline;">19</span>029.       0.005<span style="text-decoration: underline;">43</span>               512.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span>              100          <span style="text-decoration: underline;">25</span>000       <span style="text-decoration: underline;">19</span>029.       0.040<span style="text-decoration: underline;">4</span>               <span style="text-decoration: underline;">1</span>025 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span>              200          <span style="text-decoration: underline;">25</span>000       <span style="text-decoration: underline;">19</span>029.       0.219                <span style="text-decoration: underline;">2</span>050 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>               50          <span style="text-decoration: underline;">25</span>000       <span style="text-decoration: underline;">19</span>030.       0.005<span style="text-decoration: underline;">43</span>               512.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span>              100          <span style="text-decoration: underline;">25</span>000       <span style="text-decoration: underline;">19</span>030.       0.040<span style="text-decoration: underline;">4</span>               <span style="text-decoration: underline;">1</span>025 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span>              200          <span style="text-decoration: underline;">25</span>000       <span style="text-decoration: underline;">19</span>030.       0.219                <span style="text-decoration: underline;">2</span>050 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1 more variable: sequenced_reads_per_cell &lt;dbl&gt;</span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="st">"Grid size:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">power_grid</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "Grid size: 9"</span>

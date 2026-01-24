@@ -259,7 +259,9 @@ test_that("input_check_compute_power_plan validates grid_size", {
     relative_expression = 1e-5,
     expression_size = 1.0
   )
-  library_params <- list(UMI_per_cell = 10000, variation = 0.3)
+  # Get library parameters from package data (rSAC_fn_wrapper format)
+  pilot_data <- get_pilot_data_from_package("K562")
+  library_params <- pilot_data$library_parameters
 
   # grid_size = 0 should fail
   expect_error(
@@ -310,7 +312,9 @@ test_that("input_check_compute_power_plan validates power thresholds", {
     relative_expression = 1e-5,
     expression_size = 1.0
   )
-  library_params <- list(UMI_per_cell = 10000, variation = 0.3)
+  # Get library parameters from package data (rSAC_fn_wrapper format)
+  pilot_data <- get_pilot_data_from_package("K562")
+  library_params <- pilot_data$library_parameters
 
   # min_power_threshold >= max_power_threshold
   expect_error(
@@ -349,7 +353,9 @@ test_that("input_check_compute_power_plan validates mapping_efficiency boundarie
     relative_expression = 1e-5,
     expression_size = 1.0
   )
-  library_params <- list(UMI_per_cell = 10000, variation = 0.3)
+  # Get library parameters from package data (rSAC_fn_wrapper format)
+  pilot_data <- get_pilot_data_from_package("K562")
+  library_params <- pilot_data$library_parameters
 
   # mapping_efficiency > 1
   expect_error(

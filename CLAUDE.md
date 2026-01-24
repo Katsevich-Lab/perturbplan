@@ -249,8 +249,14 @@ combined_pilot_data <- list(
     expression_size = c(0.45, 1.23, ...)                          # Dispersion parameters
   ),
   library_parameters = list(
-    UMI_per_cell = 15000,    # Maximum UMI per cell parameter (positive numeric)
-    variation = 0.25         # Variation parameter for PCR bias (positive numeric)
+    method_used = "ZTNB",                # Saturation curve method
+    UMI_per_cell_at_saturation = 15000,  # Maximum UMI at saturation
+    reads_norm = 50000,                  # Reads per cell normalization
+    n_cells = 10000,                     # Number of cells in pilot
+    size = 2.5,                          # ZTNB-specific: size parameter
+    mu = 0.8,                            # ZTNB-specific: mu parameter
+    L = 8000                             # ZTNB-specific: L parameter
+    # For RFA method, include: coefs = c(...), poles = c(...)
   )
 )
 
@@ -268,11 +274,16 @@ saveRDS(combined_pilot_data, "my_combined_pilot_data.rds")
   - **No missing values** in any column
   - **Unique gene IDs** (duplicates will be removed, keeping first occurrence)
 
-**library_parameters component:**
-- **UMI_per_cell**: Maximum UMI per cell parameter from saturation curve fitting (typically 1000-50000)
-- **variation**: Variation parameter characterizing PCR amplification bias (typically 0.1-1.0)
-- **Both parameters** must be positive single numeric values
-- **No missing values** allowed
+**library_parameters component (rSAC_fn_wrapper format):**
+- **method_used**: Character string indicating the saturation curve method ("ZTNB", "RFA", or "constant")
+- **UMI_per_cell_at_saturation**: Maximum UMI count per cell at infinite sequencing depth (typically 1000-100000)
+- **reads_norm**: Normalization constant representing reads per cell in pilot data (positive numeric)
+- **n_cells**: Number of cells in pilot data (positive numeric, typically >100)
+- **Additional method-specific parameters**:
+  - For ZTNB: L, size, mu
+  - For RFA: coefs (vector), poles (vector)
+- **All required parameters** must be present and valid
+- **No missing values** allowed in required fields
 
 ### Creating Combined Pilot Data Files
 
@@ -307,10 +318,22 @@ my_baseline <- data.frame(
   expression_size = c(0.45, 1.23)
 )
 
-# Create your own library parameters
+# Create your own library parameters using library_estimation()
+# This requires read-UMI data from your pilot experiment
+# See ?library_estimation for details
+
+# Or use library parameters from reference_data_processing()
+# which automatically calls library_estimation()
+
+# Example structure (must be output from library_estimation):
 my_library <- list(
-  UMI_per_cell = 18000,
-  variation = 0.22
+  method_used = "ZTNB",
+  UMI_per_cell_at_saturation = 18000,
+  reads_norm = 45000,
+  n_cells = 8000,
+  size = 2.8,
+  mu = 0.75,
+  L = 7500
 )
 
 # Combine and save
@@ -330,7 +353,9 @@ Use the example script at `inst/extdata/create_combined_pilot_example.R` for gui
 The application automatically validates uploaded RDS files using `validate_combined_pilot_data()` and provides detailed error messages for:
 - Incorrect overall file structure or missing top-level elements
 - Invalid baseline expression data (delegates to `validate_custom_baseline_rds()`)
-- Invalid library parameters (delegates to `validate_custom_library_rds()`)
+- Invalid library parameters in rSAC_fn_wrapper format (delegates to `validate_custom_library_rds()`)
+  - Checks for required fields: method_used, reads_norm, n_cells, UMI_per_cell_at_saturation
+  - Validates method_used is one of: "ZTNB", "RFA", or "constant"
 - Missing values or duplicate gene IDs
 - File size limits (50MB maximum)
 - R version compatibility issues
@@ -360,11 +385,13 @@ Pre-built example files are available:
 ### Summary Display
 
 When combined pilot data is loaded successfully, the application displays:
-"Loaded custom baseline expression (X,XXX genes)  
-Average TPM: XX.X  
-Loaded custom library parameters  
-UMI per cell: XX,XXX  
-Variation: X.XXXe-XX"
+"Loaded custom baseline expression (X,XXX genes)
+Average TPM: XX.X
+Loaded custom library parameters
+Method: ZTNB (or RFA/constant)
+UMI at saturation: XX,XXX
+Reads normalization: XX,XXX
+Number of cells: XX,XXX"
 
 ## Development Notes
 

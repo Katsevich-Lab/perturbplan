@@ -61,8 +61,14 @@ information for power analysis of CRISPR-based perturbation experiments.</p>
 </ul></dd>
 
 <dt>library_parameters</dt>
-<dd><p>List containing:</p><ul><li><p><code>UMI_per_cell</code>: Maximum UMI per cell parameter (30,173)</p></li>
-<li><p><code>variation</code>: Variation parameter for PCR bias (0.392)</p></li>
+<dd><p>List containing saturation curve parameters estimated using preseqR.
+Data-adaptively selected method: ZTNB. Contains:</p><ul><li><p><code>method_used</code>: "ZTNB" - Zero-truncated negative binomial method</p></li>
+<li><p><code>L</code>: 3.42e8 - Total expected distinct UMIs at saturation</p></li>
+<li><p><code>size</code>: 2.55 - ZTNB shape parameter</p></li>
+<li><p><code>mu</code>: 0.779 - ZTNB mean parameter</p></li>
+<li><p><code>reads_norm</code>: 23,512 - Normalization constant (reads per cell)</p></li>
+<li><p><code>n_cells</code>: 11,350 - Number of cells in pilot data</p></li>
+<li><p><code>UMI_per_cell_at_saturation</code>: 30,173 - Maximum UMI per cell at infinite sequencing depth</p></li>
 </ul></dd>
 
 <dt>mapping_efficiency</dt>
@@ -99,9 +105,14 @@ sequencing with 10x Chromium technology.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ response_id        : chr [1:23882] "ENSG00000238009" "ENSG00000241860" "ENSG00000237491" "ENSG00000228794" ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ relative_expression: num [1:23882] 9.84e-07 1.83e-06 6.47e-06 4.42e-05 5.89e-06 ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ expression_size    : num [1:23882] 8.197 2.466 2.492 6.126 0.333 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ library_parameters       :List of 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ UMI_per_cell: num 30173</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ variation   : num 0.392</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ library_parameters       :List of 7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ method_used               : chr "ZTNB"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ L                         : num 3.42e+08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ size                      : num 2.55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ mu                        : num 0.779</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ reads_norm                : num 23512</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ n_cells                   : num 11350</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ UMI_per_cell_at_saturation: num 30173</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ mapping_efficiency       : num 0.614</span>
 </code></pre></div>
     </div>

@@ -48,10 +48,9 @@ utils::globalVariables(c("total_cost", "library_cost", "sequencing_cost", ".data
 #' library_params <- pilot_data$library_parameters
 #'
 #' # Calculate effective library size for 25000 reads per cell
-#' library_size <- fit_read_UMI_curve(
+#' library_size <- fit_read_UMI_curve_cpp(
 #'   reads_per_cell = 25000,
-#'   UMI_per_cell = library_params$UMI_per_cell,
-#'   variation = library_params$variation
+#'   rSAC_fn_wrapper = library_params
 #' )
 #'
 #' # Calculate power for a specific experimental design
@@ -100,7 +99,9 @@ compute_power_plan_overall <- function(
 #' @param cells_per_target Numeric, numeric vector, or character. Number of cells per target, custom sequence, or "varying" for auto-generated grid.
 #' @param reads_per_cell Numeric, numeric vector, or character. Reads per cell, custom sequence, or "varying" for auto-generated grid.
 #' @param fc_expression_df Data frame with fold change and expression information.
-#' @param library_parameters List containing UMI_per_cell and variation parameters.
+#' @param library_parameters List. rSAC_fn_wrapper format from \code{\link{library_estimation}}
+#'   containing method_used, UMI_per_cell_at_saturation, reads_norm, n_cells, and
+#'   method-specific parameters.
 #' @param grid_size Integer. Number of points in each dimension of the grid (default: 10).
 #' @param min_power_threshold Numeric. Minimum power threshold for cell range determination (default: 0.01).
 #' @param max_power_threshold Numeric. Maximum power threshold for cell range determination (default: 0.8).
@@ -191,26 +192,13 @@ compute_power_plan_per_grid <- function(
   mapping_efficiency = 0.72
 ) {
 
-  # Extract needed data - support both old and new library_parameters formats
-  if (!is.null(library_parameters$method_used)) {
-    # New format from library_estimation with preseqR parameters
-    rSAC_fn_wrapper <- library_parameters
+  # Extract library parameters wrapper for fit_read_UMI_curve_cpp
+  rSAC_fn_wrapper <- library_parameters
 
-    # For legacy compatibility, extract UMI_per_cell and variation if available
-    # (used by some functions that still expect old format)
-    UMI_per_cell <- library_parameters$UMI_per_cell_at_saturation
-    if (library_parameters$method_used == "ZTNB") {
-      variation <- 1.0 / library_parameters$size
-    } else {
-      # For RFA, variation is not directly available
-      # Use a default value for legacy functions
-      variation <- 0.25
-    }
-  } else {
-    # Old format with UMI_per_cell and variation
-    UMI_per_cell <- library_parameters$UMI_per_cell
-    variation <- library_parameters$variation
-    rSAC_fn_wrapper <- NULL
+  # Validate library_parameters format
+  if (!is.list(library_parameters) ||
+      !all(c("method_used", "UMI_per_cell_at_saturation") %in% names(library_parameters))) {
+    stop("library_parameters must be output from library_estimation()")
   }
 
   # Step 1: Determine reads per cell sequence
@@ -218,13 +206,10 @@ compute_power_plan_per_grid <- function(
     # Both single value and custom sequence
     reads_seq <- reads_per_cell
   } else if (reads_per_cell == "varying") {
-    # Auto-generated sequence using library size curves
-    reads_range <- identify_reads_range_cpp(
-      UMI_per_cell = UMI_per_cell,
-      variation = variation
-    )
-    min_reads_per_cell <- reads_range$min_reads_per_cell
-    max_reads_per_cell <- reads_range$max_reads_per_cell
+    # Auto-generated sequence - use simple heuristic based on UMI_per_cell_at_saturation
+    UMI_saturation <- library_parameters$UMI_per_cell_at_saturation
+    min_reads_per_cell <- round(0.1 * UMI_saturation)  # Rough estimate for 10% saturation
+    max_reads_per_cell <- round(5 * UMI_saturation)    # Rough estimate for high saturation
     reads_seq <- exp(seq(log(min_reads_per_cell), log(max_reads_per_cell), length.out = grid_size))
   }
 
@@ -248,8 +233,7 @@ compute_power_plan_per_grid <- function(
           min_reads_per_cell = min_reads_per_cell,
           max_reads_per_cell = max_reads_per_cell,
           fc_expression_df = fc_expression_df,
-          UMI_per_cell = UMI_per_cell,
-          variation = variation,
+          rSAC_fn_wrapper = rSAC_fn_wrapper,
           MOI = MOI,
           num_targets = num_targets,
           gRNAs_per_target = gRNAs_per_target,
@@ -305,17 +289,12 @@ compute_power_plan_per_grid <- function(
     ) |>
     dplyr::rowwise() |>
     dplyr::mutate(
-      library_size = if (!is.null(rSAC_fn_wrapper)) {
-        fit_read_UMI_curve_cpp(reads_per_cell, rSAC_fn_wrapper)
-      } else {
-        fit_read_UMI_curve(reads_per_cell, UMI_per_cell = UMI_per_cell, variation = variation)
-      },
+      library_size = fit_read_UMI_curve_cpp(reads_per_cell, rSAC_fn_wrapper),
       overall_power = compute_single_power_cpp(
         num_cells = num_total_cells,
         reads_per_cell = reads_per_cell,
         fc_expression_df = fc_expression_df,
-        UMI_per_cell = UMI_per_cell,
-        variation = variation,
+        rSAC_fn_wrapper = rSAC_fn_wrapper,
         MOI = MOI,
         num_targets = num_targets,
         gRNAs_per_target = gRNAs_per_target,
@@ -365,7 +344,7 @@ compute_power_plan_per_grid <- function(
 #' at least as large as the specified minimum_fold_change (default: 0.1).
 #' @param baseline_expression_stats Data frame. Baseline expression statistics.
 #'   See \code{\link{reference_data_processing}} for data format requirements.
-#' @param library_parameters List. Library parameters with UMI_per_cell and variation.
+#' @param library_parameters List. rSAC_fn_wrapper format from \code{\link{library_estimation}}.
 #'   See \code{\link{reference_data_processing}} for parameter specifications.
 #' @param grid_size Integer. Grid size for each dimension (default: 10).
 #' @param min_power_threshold Numeric. Minimum power threshold (default: 0.01).
@@ -553,7 +532,9 @@ compute_power_plan <- function(
 #' @param prop_non_null Numeric. Proportion of non-null hypotheses (default: 0.1).
 #' @param baseline_expression_stats Data frame. Baseline expression statistics with columns:
 #'   \code{response_id}, \code{relative_expression}, \code{expression_size}.
-#' @param library_parameters List. Library parameters containing \code{UMI_per_cell} and \code{variation}.
+#' @param library_parameters List. rSAC_fn_wrapper format from \code{\link{library_estimation}}
+#'   containing \code{method_used}, \code{UMI_per_cell_at_saturation}, \code{reads_norm},
+#'   \code{n_cells}, and method-specific parameters.
 #' @param grid_size Integer. Grid size for parameter search (default: 20).
 #' @param power_target Numeric. Target statistical power (default: 0.8).
 #' @param power_precision Numeric. Acceptable precision around power target (default: 0.01).

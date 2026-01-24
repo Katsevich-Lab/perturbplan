@@ -135,16 +135,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // identify_cell_range_cpp
-List identify_cell_range_cpp(double min_reads_per_cell, double max_reads_per_cell, DataFrame fc_expression_df, double UMI_per_cell, double variation, double MOI, int num_targets, int gRNAs_per_target, int non_targeting_gRNAs, std::string control_group, double multiple_testing_alpha, std::string side, double prop_non_null, double min_power_threshold, double max_power_threshold, double cell_lower_bound, double cell_upper_bound);
-RcppExport SEXP _perturbplan_identify_cell_range_cpp(SEXP min_reads_per_cellSEXP, SEXP max_reads_per_cellSEXP, SEXP fc_expression_dfSEXP, SEXP UMI_per_cellSEXP, SEXP variationSEXP, SEXP MOISEXP, SEXP num_targetsSEXP, SEXP gRNAs_per_targetSEXP, SEXP non_targeting_gRNAsSEXP, SEXP control_groupSEXP, SEXP multiple_testing_alphaSEXP, SEXP sideSEXP, SEXP prop_non_nullSEXP, SEXP min_power_thresholdSEXP, SEXP max_power_thresholdSEXP, SEXP cell_lower_boundSEXP, SEXP cell_upper_boundSEXP) {
+List identify_cell_range_cpp(double min_reads_per_cell, double max_reads_per_cell, DataFrame fc_expression_df, List rSAC_fn_wrapper, double MOI, int num_targets, int gRNAs_per_target, int non_targeting_gRNAs, std::string control_group, double multiple_testing_alpha, std::string side, double prop_non_null, double min_power_threshold, double max_power_threshold, double cell_lower_bound, double cell_upper_bound);
+RcppExport SEXP _perturbplan_identify_cell_range_cpp(SEXP min_reads_per_cellSEXP, SEXP max_reads_per_cellSEXP, SEXP fc_expression_dfSEXP, SEXP rSAC_fn_wrapperSEXP, SEXP MOISEXP, SEXP num_targetsSEXP, SEXP gRNAs_per_targetSEXP, SEXP non_targeting_gRNAsSEXP, SEXP control_groupSEXP, SEXP multiple_testing_alphaSEXP, SEXP sideSEXP, SEXP prop_non_nullSEXP, SEXP min_power_thresholdSEXP, SEXP max_power_thresholdSEXP, SEXP cell_lower_boundSEXP, SEXP cell_upper_boundSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type min_reads_per_cell(min_reads_per_cellSEXP);
     Rcpp::traits::input_parameter< double >::type max_reads_per_cell(max_reads_per_cellSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type fc_expression_df(fc_expression_dfSEXP);
-    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
-    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
+    Rcpp::traits::input_parameter< List >::type rSAC_fn_wrapper(rSAC_fn_wrapperSEXP);
     Rcpp::traits::input_parameter< double >::type MOI(MOISEXP);
     Rcpp::traits::input_parameter< int >::type num_targets(num_targetsSEXP);
     Rcpp::traits::input_parameter< int >::type gRNAs_per_target(gRNAs_per_targetSEXP);
@@ -157,7 +156,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type max_power_threshold(max_power_thresholdSEXP);
     Rcpp::traits::input_parameter< double >::type cell_lower_bound(cell_lower_boundSEXP);
     Rcpp::traits::input_parameter< double >::type cell_upper_bound(cell_upper_boundSEXP);
-    rcpp_result_gen = Rcpp::wrap(identify_cell_range_cpp(min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null, min_power_threshold, max_power_threshold, cell_lower_bound, cell_upper_bound));
+    rcpp_result_gen = Rcpp::wrap(identify_cell_range_cpp(min_reads_per_cell, max_reads_per_cell, fc_expression_df, rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null, min_power_threshold, max_power_threshold, cell_lower_bound, cell_upper_bound));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -174,54 +173,50 @@ BEGIN_RCPP
 END_RCPP
 }
 // identify_library_size_range_cpp
-List identify_library_size_range_cpp(std::string experimental_platform, double UMI_per_cell, double variation);
-RcppExport SEXP _perturbplan_identify_library_size_range_cpp(SEXP experimental_platformSEXP, SEXP UMI_per_cellSEXP, SEXP variationSEXP) {
+List identify_library_size_range_cpp(std::string experimental_platform, List rSAC_fn_wrapper);
+RcppExport SEXP _perturbplan_identify_library_size_range_cpp(SEXP experimental_platformSEXP, SEXP rSAC_fn_wrapperSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::string >::type experimental_platform(experimental_platformSEXP);
-    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
-    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
-    rcpp_result_gen = Rcpp::wrap(identify_library_size_range_cpp(experimental_platform, UMI_per_cell, variation));
+    Rcpp::traits::input_parameter< List >::type rSAC_fn_wrapper(rSAC_fn_wrapperSEXP);
+    rcpp_result_gen = Rcpp::wrap(identify_library_size_range_cpp(experimental_platform, rSAC_fn_wrapper));
     return rcpp_result_gen;
 END_RCPP
 }
 // generate_reads_grid_cpp
-NumericVector generate_reads_grid_cpp(std::string experimental_platform, double UMI_per_cell, double variation, int grid_size);
-RcppExport SEXP _perturbplan_generate_reads_grid_cpp(SEXP experimental_platformSEXP, SEXP UMI_per_cellSEXP, SEXP variationSEXP, SEXP grid_sizeSEXP) {
+NumericVector generate_reads_grid_cpp(std::string experimental_platform, List rSAC_fn_wrapper, int grid_size);
+RcppExport SEXP _perturbplan_generate_reads_grid_cpp(SEXP experimental_platformSEXP, SEXP rSAC_fn_wrapperSEXP, SEXP grid_sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::string >::type experimental_platform(experimental_platformSEXP);
-    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
-    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
+    Rcpp::traits::input_parameter< List >::type rSAC_fn_wrapper(rSAC_fn_wrapperSEXP);
     Rcpp::traits::input_parameter< int >::type grid_size(grid_sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(generate_reads_grid_cpp(experimental_platform, UMI_per_cell, variation, grid_size));
+    rcpp_result_gen = Rcpp::wrap(generate_reads_grid_cpp(experimental_platform, rSAC_fn_wrapper, grid_size));
     return rcpp_result_gen;
 END_RCPP
 }
 // identify_reads_range_cpp
-List identify_reads_range_cpp(double UMI_per_cell, double variation);
-RcppExport SEXP _perturbplan_identify_reads_range_cpp(SEXP UMI_per_cellSEXP, SEXP variationSEXP) {
+List identify_reads_range_cpp(List rSAC_fn_wrapper);
+RcppExport SEXP _perturbplan_identify_reads_range_cpp(SEXP rSAC_fn_wrapperSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
-    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
-    rcpp_result_gen = Rcpp::wrap(identify_reads_range_cpp(UMI_per_cell, variation));
+    Rcpp::traits::input_parameter< List >::type rSAC_fn_wrapper(rSAC_fn_wrapperSEXP);
+    rcpp_result_gen = Rcpp::wrap(identify_reads_range_cpp(rSAC_fn_wrapper));
     return rcpp_result_gen;
 END_RCPP
 }
 // generate_reads_grid_streamlined_cpp
-NumericVector generate_reads_grid_streamlined_cpp(double UMI_per_cell, double variation, int grid_size);
-RcppExport SEXP _perturbplan_generate_reads_grid_streamlined_cpp(SEXP UMI_per_cellSEXP, SEXP variationSEXP, SEXP grid_sizeSEXP) {
+NumericVector generate_reads_grid_streamlined_cpp(List rSAC_fn_wrapper, int grid_size);
+RcppExport SEXP _perturbplan_generate_reads_grid_streamlined_cpp(SEXP rSAC_fn_wrapperSEXP, SEXP grid_sizeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
-    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
+    Rcpp::traits::input_parameter< List >::type rSAC_fn_wrapper(rSAC_fn_wrapperSEXP);
     Rcpp::traits::input_parameter< int >::type grid_size(grid_sizeSEXP);
-    rcpp_result_gen = Rcpp::wrap(generate_reads_grid_streamlined_cpp(UMI_per_cell, variation, grid_size));
+    rcpp_result_gen = Rcpp::wrap(generate_reads_grid_streamlined_cpp(rSAC_fn_wrapper, grid_size));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -259,16 +254,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // compute_single_power_cpp
-double compute_single_power_cpp(double num_cells, double reads_per_cell, DataFrame fc_expression_df, double UMI_per_cell, double variation, double MOI, int num_targets, int gRNAs_per_target, int non_targeting_gRNAs, std::string control_group, double multiple_testing_alpha, std::string side, double prop_non_null);
-RcppExport SEXP _perturbplan_compute_single_power_cpp(SEXP num_cellsSEXP, SEXP reads_per_cellSEXP, SEXP fc_expression_dfSEXP, SEXP UMI_per_cellSEXP, SEXP variationSEXP, SEXP MOISEXP, SEXP num_targetsSEXP, SEXP gRNAs_per_targetSEXP, SEXP non_targeting_gRNAsSEXP, SEXP control_groupSEXP, SEXP multiple_testing_alphaSEXP, SEXP sideSEXP, SEXP prop_non_nullSEXP) {
+double compute_single_power_cpp(double num_cells, double reads_per_cell, DataFrame fc_expression_df, List rSAC_fn_wrapper, double MOI, int num_targets, int gRNAs_per_target, int non_targeting_gRNAs, std::string control_group, double multiple_testing_alpha, std::string side, double prop_non_null);
+RcppExport SEXP _perturbplan_compute_single_power_cpp(SEXP num_cellsSEXP, SEXP reads_per_cellSEXP, SEXP fc_expression_dfSEXP, SEXP rSAC_fn_wrapperSEXP, SEXP MOISEXP, SEXP num_targetsSEXP, SEXP gRNAs_per_targetSEXP, SEXP non_targeting_gRNAsSEXP, SEXP control_groupSEXP, SEXP multiple_testing_alphaSEXP, SEXP sideSEXP, SEXP prop_non_nullSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type num_cells(num_cellsSEXP);
     Rcpp::traits::input_parameter< double >::type reads_per_cell(reads_per_cellSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type fc_expression_df(fc_expression_dfSEXP);
-    Rcpp::traits::input_parameter< double >::type UMI_per_cell(UMI_per_cellSEXP);
-    Rcpp::traits::input_parameter< double >::type variation(variationSEXP);
+    Rcpp::traits::input_parameter< List >::type rSAC_fn_wrapper(rSAC_fn_wrapperSEXP);
     Rcpp::traits::input_parameter< double >::type MOI(MOISEXP);
     Rcpp::traits::input_parameter< int >::type num_targets(num_targetsSEXP);
     Rcpp::traits::input_parameter< int >::type gRNAs_per_target(gRNAs_per_targetSEXP);
@@ -277,7 +271,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type multiple_testing_alpha(multiple_testing_alphaSEXP);
     Rcpp::traits::input_parameter< std::string >::type side(sideSEXP);
     Rcpp::traits::input_parameter< double >::type prop_non_null(prop_non_nullSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_single_power_cpp(num_cells, reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null));
+    rcpp_result_gen = Rcpp::wrap(compute_single_power_cpp(num_cells, reads_per_cell, fc_expression_df, rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -306,15 +300,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_perturbplan_compute_QC_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_QC_fixed_es_cpp, 7},
     {"_perturbplan_compute_distribution_teststat_fixed_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_fixed_es_cpp, 6},
     {"_perturbplan_compute_distribution_teststat_random_es_cpp", (DL_FUNC) &_perturbplan_compute_distribution_teststat_random_es_cpp, 6},
-    {"_perturbplan_identify_cell_range_cpp", (DL_FUNC) &_perturbplan_identify_cell_range_cpp, 17},
+    {"_perturbplan_identify_cell_range_cpp", (DL_FUNC) &_perturbplan_identify_cell_range_cpp, 16},
     {"_perturbplan_fit_read_UMI_curve_cpp", (DL_FUNC) &_perturbplan_fit_read_UMI_curve_cpp, 2},
-    {"_perturbplan_identify_library_size_range_cpp", (DL_FUNC) &_perturbplan_identify_library_size_range_cpp, 3},
-    {"_perturbplan_generate_reads_grid_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_cpp, 4},
-    {"_perturbplan_identify_reads_range_cpp", (DL_FUNC) &_perturbplan_identify_reads_range_cpp, 2},
-    {"_perturbplan_generate_reads_grid_streamlined_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_streamlined_cpp, 3},
+    {"_perturbplan_identify_library_size_range_cpp", (DL_FUNC) &_perturbplan_identify_library_size_range_cpp, 2},
+    {"_perturbplan_generate_reads_grid_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_cpp, 3},
+    {"_perturbplan_identify_reads_range_cpp", (DL_FUNC) &_perturbplan_identify_reads_range_cpp, 1},
+    {"_perturbplan_generate_reads_grid_streamlined_cpp", (DL_FUNC) &_perturbplan_generate_reads_grid_streamlined_cpp, 2},
     {"_perturbplan_compute_monte_carlo_teststat_cpp", (DL_FUNC) &_perturbplan_compute_monte_carlo_teststat_cpp, 4},
     {"_perturbplan_compute_power_plan_overall_cpp", (DL_FUNC) &_perturbplan_compute_power_plan_overall_cpp, 9},
-    {"_perturbplan_compute_single_power_cpp", (DL_FUNC) &_perturbplan_compute_single_power_cpp, 13},
+    {"_perturbplan_compute_single_power_cpp", (DL_FUNC) &_perturbplan_compute_single_power_cpp, 12},
     {"_perturbplan_theta_batch_cpp", (DL_FUNC) &_perturbplan_theta_batch_cpp, 5},
     {NULL, NULL, 0}
 };

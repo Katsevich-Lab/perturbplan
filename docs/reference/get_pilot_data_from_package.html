@@ -80,9 +80,14 @@ pilot datasets stored in the package data/ directory.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ response_id        : chr [1:19942] "ENSG00000243485" "ENSG00000238009" "ENSG00000241860" "ENSG00000286448" ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ relative_expression: num [1:19942] 1.50e-07 1.55e-06 7.33e-07 9.31e-07 7.43e-06 ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ expression_size    : num [1:19942] 0.3556 2.4156 7.7329 0.0341 3.4513 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ library_parameters       :List of 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ UMI_per_cell: num 60414</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ variation   : num 0.467</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ library_parameters       :List of 7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ method_used               : chr "ZTNB"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ L                         : num 4.68e+08</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ size                      : num 2.14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ mu                        : num 0.395</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ reads_norm                : num 23835</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ n_cells                   : num 7749</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ UMI_per_cell_at_saturation: num 60414</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ mapping_efficiency       : num 0.711</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Access baseline expression data</span></span></span>
@@ -97,11 +102,26 @@ pilot datasets stored in the package data/ directory.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Access library parameters including mapping efficiency</span></span></span>
 <span class="r-in"><span><span class="va">k562_data</span><span class="op">$</span><span class="va">library_parameters</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $UMI_per_cell</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 60414.03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $method_used</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "ZTNB"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $variation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.4672588</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $L</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 468148310</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $size</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.140142</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $mu</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3945272</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $reads_norm</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 23834.87</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $n_cells</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 7749</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $UMI_per_cell_at_saturation</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 60414.03</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Mapping efficiency:"</span>, <span class="va">k562_data</span><span class="op">$</span><span class="va">mapping_efficiency</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Mapping efficiency: 0.7110861</span>

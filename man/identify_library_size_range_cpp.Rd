@@ -4,14 +4,20 @@
 \alias{identify_library_size_range_cpp}
 \title{Identify optimal reads per cell range for power analysis grid (C++)}
 \usage{
-identify_library_size_range_cpp(experimental_platform, UMI_per_cell, variation)
+identify_library_size_range_cpp(experimental_platform, rSAC_fn_wrapper)
 }
 \arguments{
 \item{experimental_platform}{String. Experimental platform identifier (kept for compatibility, not used).}
 
-\item{UMI_per_cell}{Numeric. Maximum UMI per cell parameter.}
-
-\item{variation}{Numeric. Variation parameter for S-M curve.}
+\item{rSAC_fn_wrapper}{List. Parameters from library_estimation containing:
+\itemize{
+\item method_used: "ZTNB" or "RFA"
+\item reads_norm: Normalization constant
+\item n_cells: Number of cells
+\item UMI_per_cell_at_saturation: Maximum UMI per cell
+\item For ZTNB: L, size, mu
+\item For RFA: valid_estimator, coefs_real, coefs_imag, poles_real, poles_imag, or constant_value
+}}
 }
 \value{
 List with min_reads_per_cell and max_reads_per_cell elements.
@@ -19,14 +25,14 @@ List with min_reads_per_cell and max_reads_per_cell elements.
 \description{
 C++ implementation that determines the minimum and maximum reads per cell values
 for power analysis grid generation using binary search on the S-M curve.
-Uses saturation-based thresholds (10\% and 98\%) instead of platform-specific minimums.
+Uses saturation-based thresholds (10\% and 80\%) instead of platform-specific minimums.
 }
 \details{
 This C++ implementation uses efficient binary search to find the reads per cell
 range for power analysis. Uses saturation-based thresholds:
 \itemize{
-\item Minimum reads: 10\% UMI saturation (dynamic based on UMI_per_cell)
-\item Maximum reads: 98\% UMI saturation (diminishing returns beyond this point)
+\item Minimum reads: 10\% UMI saturation (dynamic based on UMI_per_cell_at_saturation)
+\item Maximum reads: 80\% UMI saturation (diminishing returns beyond this point)
 }
 }
 \seealso{

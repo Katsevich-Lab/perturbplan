@@ -70,8 +70,16 @@ analysis for experiments targeting specific pathways or gene sets.</p>
 </ul></dd>
 
 <dt>library_parameters</dt>
-<dd><p>List containing:</p><ul><li><p><code>UMI_per_cell</code>: Maximum UMI per cell parameter (5,465)</p></li>
-<li><p><code>variation</code>: Variation parameter for PCR bias (4.895)</p></li>
+<dd><p>List containing saturation curve parameters estimated using preseqR.
+Data-adaptively selected method: RFA (Rational Function Approximation). Contains:</p><ul><li><p><code>method_used</code>: "RFA" - Rational function approximation method</p></li>
+<li><p><code>valid_estimator</code>: TRUE - RFA estimator is valid</p></li>
+<li><p><code>coefs_real</code>: Real parts of RFA coefficients</p></li>
+<li><p><code>coefs_imag</code>: Imaginary parts of RFA coefficients</p></li>
+<li><p><code>poles_real</code>: Real parts of RFA poles</p></li>
+<li><p><code>poles_imag</code>: Imaginary parts of RFA poles</p></li>
+<li><p><code>reads_norm</code>: 16,790 - Normalization constant (reads per cell)</p></li>
+<li><p><code>n_cells</code>: 8,278 - Number of cells in pilot data</p></li>
+<li><p><code>UMI_per_cell_at_saturation</code>: 3,684 - Maximum UMI per cell at infinite sequencing depth</p></li>
 </ul></dd>
 
 <dt>mapping_efficiency</dt>
@@ -114,9 +122,16 @@ at single-cell resolution.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ response_id        : chr [1:303] "ENSG00000235169" "ENSG00000130764" "ENSG00000116198" "ENSG00000159023" ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ relative_expression: num [1:303] 0.003732 0.000337 0.000121 0.001622 0.00034 ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ expression_size    : num [1:303] 2.55 3.92 18.58 5.21 1.73 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ library_parameters       :List of 2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ UMI_per_cell: num 5465</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ variation   : num 4.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  $ library_parameters       :List of 9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ method_used               : chr "RFA"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ valid_estimator           : logi TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ coefs_real                : num [1:4] 7227760 5803628 10233823 7231736</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ coefs_imag                : num [1:4] 0 0 0 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ poles_real                : num [1:4] -3.796 -0.7999 -0.2544 -0.0819</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ poles_imag                : num [1:4] 0 0 0 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ reads_norm                : num 16790</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ n_cells                   : num 8278</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ UMI_per_cell_at_saturation: num 3684</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ mapping_efficiency       : num 0.371</span>
 </code></pre></div>
     </div>

@@ -12,8 +12,7 @@ double compute_single_power_cpp(
   double num_cells,
   double reads_per_cell,
   DataFrame fc_expression_df,
-  double UMI_per_cell,
-  double variation,
+  List rSAC_fn_wrapper,
   double MOI,
   int num_targets,
   int gRNAs_per_target,
@@ -33,8 +32,8 @@ double compute_single_power_cpp(
 //' @param min_reads_per_cell Numeric. Minimum reads per cell from library size range
 //' @param max_reads_per_cell Numeric. Maximum reads per cell from library size range
 //' @param fc_expression_df DataFrame with fold change and expression info
-//' @param UMI_per_cell Numeric. Maximum UMI per cell parameter from S-M curve
-//' @param variation Numeric. Variation parameter from S-M curve
+//' @param rSAC_fn_wrapper List. Library parameters from library_estimation containing
+//'   method_used, reads_norm, n_cells, and method-specific parameters
 //' @param MOI Numeric. Multiplicity of infection (default 10)
 //' @param num_targets Integer. Number of targets (default 100)
 //' @param gRNAs_per_target Integer. gRNAs per target (default 4)
@@ -67,8 +66,7 @@ List identify_cell_range_cpp(
   double min_reads_per_cell,
   double max_reads_per_cell,
   DataFrame fc_expression_df,
-  double UMI_per_cell,
-  double variation,
+  List rSAC_fn_wrapper,
   double MOI = 10.0,
   int num_targets = 100,
   int gRNAs_per_target = 4,
@@ -91,12 +89,6 @@ List identify_cell_range_cpp(
   }
   if (min_reads_per_cell > max_reads_per_cell) {
     stop("min_reads_per_cell must be <= max_reads_per_cell");
-  }
-  if (UMI_per_cell <= 0) {
-    stop("UMI_per_cell must be positive");
-  }
-  if (variation < 0) {
-    stop("variation must be non-negative");
   }
   if (min_power_threshold <= 0 || min_power_threshold >= 1) {
     stop("min_power_threshold must be between 0 and 1");
@@ -143,7 +135,7 @@ List identify_cell_range_cpp(
   double max_total_cells = trt_to_total_cells(cell_upper_bound);
   double power_at_max = compute_single_power_cpp(
     max_total_cells, max_reads_per_cell, fc_expression_df,
-    UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
+    rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target,
     non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
   );
   
@@ -160,7 +152,7 @@ List identify_cell_range_cpp(
       
       double power = compute_single_power_cpp(
         mid_total_cells, max_reads_per_cell, fc_expression_df,
-        UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
+        rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target,
         non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
       );
       
@@ -176,7 +168,7 @@ List identify_cell_range_cpp(
     double min_total_cells = trt_to_total_cells(min_trt_cells);
     actual_min_power = compute_single_power_cpp(
       min_total_cells, max_reads_per_cell, fc_expression_df,
-      UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
+      rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target,
       non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
     );
   }
@@ -196,7 +188,7 @@ List identify_cell_range_cpp(
   // Check if max_power_threshold is achievable within bounds (reuse max_total_cells)
   power_at_max = compute_single_power_cpp(
     max_total_cells, min_reads_per_cell, fc_expression_df,
-    UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
+    rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target,
     non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
   );
   
@@ -213,7 +205,7 @@ List identify_cell_range_cpp(
       
       double power = compute_single_power_cpp(
         mid_total_cells, min_reads_per_cell, fc_expression_df,
-        UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
+        rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target,
         non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
       );
       
@@ -229,7 +221,7 @@ List identify_cell_range_cpp(
     double max_total_cells_final = trt_to_total_cells(max_trt_cells);
     actual_max_power = compute_single_power_cpp(
       max_total_cells_final, min_reads_per_cell, fc_expression_df,
-      UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
+      rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target,
       non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
     );
   }
@@ -246,7 +238,7 @@ List identify_cell_range_cpp(
     double min_total_cells_capped = trt_to_total_cells(min_trt_cells);
     actual_min_power = compute_single_power_cpp(
       min_total_cells_capped, min_reads_per_cell, fc_expression_df,
-      UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
+      rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target,
       non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
     );
   }
@@ -258,7 +250,7 @@ List identify_cell_range_cpp(
     double max_total_cells_capped = trt_to_total_cells(max_trt_cells);
     actual_max_power = compute_single_power_cpp(
       max_total_cells_capped, max_reads_per_cell, fc_expression_df,
-      UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
+      rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target,
       non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
     );
   }
@@ -273,12 +265,12 @@ List identify_cell_range_cpp(
     double common_total_cells = trt_to_total_cells(100.0);
     actual_min_power = compute_single_power_cpp(
       common_total_cells, min_reads_per_cell, fc_expression_df,
-      UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
+      rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target,
       non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
     );
     actual_max_power = compute_single_power_cpp(
       common_total_cells, max_reads_per_cell, fc_expression_df,
-      UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target,
+      rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target,
       non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null
     );
   }

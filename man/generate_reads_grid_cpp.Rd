@@ -6,17 +6,22 @@
 \usage{
 generate_reads_grid_cpp(
   experimental_platform,
-  UMI_per_cell,
-  variation,
+  rSAC_fn_wrapper,
   grid_size = 10L
 )
 }
 \arguments{
 \item{experimental_platform}{String. Experimental platform identifier.}
 
-\item{UMI_per_cell}{Numeric. Maximum UMI per cell parameter.}
-
-\item{variation}{Numeric. Variation parameter for S-M curve.}
+\item{rSAC_fn_wrapper}{List. Parameters from library_estimation containing:
+\itemize{
+\item method_used: "ZTNB" or "RFA"
+\item reads_norm: Normalization constant
+\item n_cells: Number of cells
+\item UMI_per_cell_at_saturation: Maximum UMI per cell
+\item For ZTNB: L, size, mu
+\item For RFA: valid_estimator, coefs_real, coefs_imag, poles_real, poles_imag, or constant_value
+}}
 
 \item{grid_size}{Integer. Number of points in the grid (default: 10).}
 }

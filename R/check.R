@@ -521,16 +521,25 @@ input_check_compute_power_plan <- function(
   if (!is.list(library_parameters)) {
     stop("`library_parameters` must be a list!")
   }
-  required_params_library <- c("UMI_per_cell", "variation")
+  # Check for rSAC_fn_wrapper format from library_estimation()
+  required_params_library <- c("method_used", "reads_norm", "n_cells", "UMI_per_cell_at_saturation")
   if (!all(required_params_library %in% names(library_parameters))) {
-    stop("`library_parameters` must contain elements: ",
+    stop("`library_parameters` must be output from library_estimation() containing: ",
          paste(required_params_library, collapse = ", "), "!")
   }
-  if (!is.numeric(library_parameters$UMI_per_cell) || library_parameters$UMI_per_cell <= 0) {
-    stop("`library_parameters$UMI_per_cell` must be a positive numeric value!")
+  if (!is.character(library_parameters$method_used) ||
+      !library_parameters$method_used %in% c("ZTNB", "RFA", "constant")) {
+    stop("`library_parameters$method_used` must be one of: 'ZTNB', 'RFA', or 'constant'!")
   }
-  if (!is.numeric(library_parameters$variation) || library_parameters$variation <= 0) {
-    stop("`library_parameters$variation` must be a positive numeric value!")
+  if (!is.numeric(library_parameters$UMI_per_cell_at_saturation) ||
+      library_parameters$UMI_per_cell_at_saturation <= 0) {
+    stop("`library_parameters$UMI_per_cell_at_saturation` must be a positive numeric value!")
+  }
+  if (!is.numeric(library_parameters$reads_norm) || library_parameters$reads_norm <= 0) {
+    stop("`library_parameters$reads_norm` must be a positive numeric value!")
+  }
+  if (!is.numeric(library_parameters$n_cells) || library_parameters$n_cells <= 0) {
+    stop("`library_parameters$n_cells` must be a positive numeric value!")
   }
   
   ###################### Grid parameters ################################
@@ -709,16 +718,25 @@ input_check_cost_power_computation <- function(
   if (!is.list(library_parameters)) {
     stop("`library_parameters` must be a list!")
   }
-  required_params_library <- c("UMI_per_cell", "variation")
+  # Check for rSAC_fn_wrapper format from library_estimation()
+  required_params_library <- c("method_used", "reads_norm", "n_cells", "UMI_per_cell_at_saturation")
   if (!all(required_params_library %in% names(library_parameters))) {
-    stop("`library_parameters` must contain elements: ",
+    stop("`library_parameters` must be output from library_estimation() containing: ",
          paste(required_params_library, collapse = ", "), "!")
   }
-  if (!is.numeric(library_parameters$UMI_per_cell) || library_parameters$UMI_per_cell <= 0) {
-    stop("`library_parameters$UMI_per_cell` must be a positive numeric value!")
+  if (!is.character(library_parameters$method_used) ||
+      !library_parameters$method_used %in% c("ZTNB", "RFA", "constant")) {
+    stop("`library_parameters$method_used` must be one of: 'ZTNB', 'RFA', or 'constant'!")
   }
-  if (!is.numeric(library_parameters$variation) || library_parameters$variation <= 0) {
-    stop("`library_parameters$variation` must be a positive numeric value!")
+  if (!is.numeric(library_parameters$UMI_per_cell_at_saturation) ||
+      library_parameters$UMI_per_cell_at_saturation <= 0) {
+    stop("`library_parameters$UMI_per_cell_at_saturation` must be a positive numeric value!")
+  }
+  if (!is.numeric(library_parameters$reads_norm) || library_parameters$reads_norm <= 0) {
+    stop("`library_parameters$reads_norm` must be a positive numeric value!")
+  }
+  if (!is.numeric(library_parameters$n_cells) || library_parameters$n_cells <= 0) {
+    stop("`library_parameters$n_cells` must be a positive numeric value!")
   }
   
   ###################### Power optimization parameters ###################

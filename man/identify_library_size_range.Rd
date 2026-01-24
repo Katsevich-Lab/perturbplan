@@ -10,8 +10,9 @@ identify_library_size_range(experimental_platform, library_parameters)
 \item{experimental_platform}{Character. Experimental platform identifier
 (e.g., "10x Chromium v3", "Other").}
 
-\item{library_parameters}{List. Library parameters containing
-UMI_per_cell and variation parameters for S-M curve analysis.}
+\item{library_parameters}{List. rSAC_fn_wrapper format from \code{\link{library_estimation}}
+containing method_used, UMI_per_cell_at_saturation, reads_norm, n_cells, and
+method-specific parameters for saturation curve analysis.}
 }
 \value{
 List with elements:
@@ -41,7 +42,7 @@ the reads per cell that achieves approximately 80\% UMI saturation. If
 returns the practical upper bound.
 }
 \seealso{
-\code{\link{fit_read_UMI_curve}} for S-M curve evaluation
+\code{\link{fit_read_UMI_curve_cpp}} for S-M curve evaluation
 \code{\link{get_pilot_data_from_package}} for obtaining library parameters
 \code{\link{identify_library_size_range_cpp}} for C++ implementation
 }

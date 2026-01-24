@@ -64,7 +64,9 @@ Options: "TPM_threshold" or "minimum_fold_change". Default: "TPM_threshold".}
 \item{baseline_expression_stats}{Data frame. Baseline expression statistics with columns:
 \code{response_id}, \code{relative_expression}, \code{expression_size}.}
 
-\item{library_parameters}{List. Library parameters containing \code{UMI_per_cell} and \code{variation}.}
+\item{library_parameters}{List. rSAC_fn_wrapper format from \code{\link{library_estimation}}
+containing \code{method_used}, \code{UMI_per_cell_at_saturation}, \code{reads_norm},
+\code{n_cells}, and method-specific parameters.}
 
 \item{grid_size}{Integer. Grid size for parameter search (default: 20).}
 

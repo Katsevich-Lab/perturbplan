@@ -83,34 +83,6 @@ NumericVector rejection_computation_cpp(const NumericVector &mean_list,
 NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
                                      List rSAC_fn_wrapper);
 
-// Helper function to create ZTNB-style wrapper from legacy parameters
-List create_legacy_wrapper(double UMI_per_cell, double variation, double reads_norm = 1.0, double n_cells = 1.0) {
-  // Create a simple ZTNB-style wrapper for backward compatibility
-  // This allows old code using UMI_per_cell/variation to work with new fit_read_UMI_curve_cpp
-
-  // Convert variation back to size parameter: variation = 1/size => size = 1/variation
-  double size = 1.0 / variation;
-
-  // For legacy compatibility, set mu such that the curve approximates the old formula
-  // The old formula was: UMI_per_cell * (1 - (1 + variation * r / UMI_per_cell)^(-1/variation))
-  // We approximate this with ZTNB parameters
-  double mu = 1.0;  // Default mu for approximation
-
-  // Calculate L from UMI_per_cell at saturation
-  // At saturation (infinite reads), ZTNB predicts L distinct UMIs
-  double L = UMI_per_cell * n_cells;
-
-  return List::create(
-    Named("method_used") = "ZTNB",
-    Named("L") = L,
-    Named("size") = size,
-    Named("mu") = mu,
-    Named("reads_norm") = reads_norm,
-    Named("n_cells") = n_cells,
-    Named("UMI_per_cell_at_saturation") = UMI_per_cell
-  );
-}
-
 //' Compute overall power for power analysis (C++)
 //'
 //' @description
@@ -234,8 +206,8 @@ SEXP compute_power_plan_overall_cpp(DataFrame fc_expression_df,
 //' @param num_cells Numeric. Total number of cells in the experiment
 //' @param reads_per_cell Numeric. Sequencing reads per cell
 //' @param fc_expression_df DataFrame with fold change and expression info
-//' @param UMI_per_cell Numeric. Maximum UMI per cell parameter from S-M curve
-//' @param variation Numeric. Variation parameter from S-M curve
+//' @param rSAC_fn_wrapper List. Library parameters from library_estimation containing
+//'   method_used, reads_norm, n_cells, and method-specific parameters
 //' @param MOI Numeric. Multiplicity of infection (default 10)
 //' @param num_targets Integer. Number of targets (default 100)
 //' @param gRNAs_per_target Integer. gRNAs per target (default 4)
@@ -266,8 +238,7 @@ double compute_single_power_cpp(
   double num_cells,
   double reads_per_cell,
   DataFrame fc_expression_df,
-  double UMI_per_cell,
-  double variation,
+  List rSAC_fn_wrapper,
   double MOI = 10.0,
   int num_targets = 100,
   int gRNAs_per_target = 4,
@@ -276,19 +247,13 @@ double compute_single_power_cpp(
   double multiple_testing_alpha = 0.05,
   std::string side = "left",
   double prop_non_null = 0.1) {
-  
+
   // Input validation
   if (num_cells <= 0) {
     stop("num_cells must be positive");
   }
   if (reads_per_cell <= 0) {
     stop("reads_per_cell must be positive");
-  }
-  if (UMI_per_cell <= 0) {
-    stop("UMI_per_cell must be positive");
-  }
-  if (variation < 0) {
-    stop("variation must be non-negative");
   }
   if (MOI <= 0) {
     stop("MOI must be positive");
@@ -305,11 +270,10 @@ double compute_single_power_cpp(
   if (control_group != "complement" && control_group != "nt_cells") {
     stop("control_group must be 'complement' or 'nt_cells'");
   }
-  
+
   // Step 1: Convert reads per cell to library size using S-M curve
   NumericVector reads_vec = NumericVector::create(reads_per_cell);
-  List legacy_wrapper = create_legacy_wrapper(UMI_per_cell, variation);
-  NumericVector library_size_vec = fit_read_UMI_curve_cpp(reads_vec, legacy_wrapper);
+  NumericVector library_size_vec = fit_read_UMI_curve_cpp(reads_vec, rSAC_fn_wrapper);
   double library_size = library_size_vec[0];
   
   // Step 2: Calculate treatment and control cell counts based on experimental design

@@ -62,8 +62,9 @@ and S-M curve saturation analysis.</p>
 
 
 <dt id="arg-library-parameters">library_parameters<a class="anchor" aria-label="anchor" href="#arg-library-parameters"></a></dt>
-<dd><p>List. Library parameters containing
-UMI_per_cell and variation parameters for S-M curve analysis.</p></dd>
+<dd><p>List. rSAC_fn_wrapper format from <code><a href="library_estimation.html">library_estimation</a></code>
+containing method_used, UMI_per_cell_at_saturation, reads_norm, n_cells, and
+method-specific parameters for saturation curve analysis.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -91,7 +92,7 @@ returns the practical upper bound.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="fit_read_UMI_curve.html">fit_read_UMI_curve</a></code> for S-M curve evaluation
+    <div class="dont-index"><p><code><a href="fit_read_UMI_curve_cpp.html">fit_read_UMI_curve_cpp</a></code> for S-M curve evaluation
 <code><a href="get_pilot_data_from_package.html">get_pilot_data_from_package</a></code> for obtaining library parameters
 <code><a href="identify_library_size_range_cpp.html">identify_library_size_range_cpp</a></code> for C++ implementation</p></div>
     </div>

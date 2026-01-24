@@ -617,46 +617,63 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
     return(list(valid = FALSE, data = NULL, errors = errors, warnings = warnings, summary = ""))
   }
 
-  # Check required elements
-  required_elements <- c("UMI_per_cell", "variation")
+  # Check required elements for rSAC_fn_wrapper format from library_estimation()
+  required_elements <- c("method_used", "reads_norm", "n_cells", "UMI_per_cell_at_saturation")
   missing_elements <- setdiff(required_elements, names(data))
   if (length(missing_elements) > 0) {
     errors <- c(errors, paste("Missing required elements:", paste(missing_elements, collapse = ", ")))
+    errors <- c(errors, "library_parameters must be output from library_estimation()")
   }
 
-  # Check for unexpected elements
-  unexpected_elements <- setdiff(names(data), required_elements)
-  if (length(unexpected_elements) > 0) {
-    warnings <- c(warnings, paste("Unexpected elements will be ignored:", paste(unexpected_elements, collapse = ", ")))
-  }
-
-  # Validate UMI_per_cell
-  if ("UMI_per_cell" %in% names(data)) {
-    umi_val <- data$UMI_per_cell
-    if (!is.numeric(umi_val) || length(umi_val) != 1) {
-      errors <- c(errors, "UMI_per_cell must be a single numeric value")
-    } else if (is.na(umi_val) || !is.finite(umi_val)) {
-      errors <- c(errors, "UMI_per_cell cannot be NA or infinite")
-    } else if (umi_val <= 0) {
-      errors <- c(errors, "UMI_per_cell must be positive")
-    } else if (umi_val < 1000) {
-      warnings <- c(warnings, "UMI_per_cell is unusually low (< 1000)")
-    } else if (umi_val > 50000) {
-      warnings <- c(warnings, "UMI_per_cell is unusually high (> 50000)")
+  # Validate method_used
+  if ("method_used" %in% names(data)) {
+    method_val <- data$method_used
+    if (!is.character(method_val) || length(method_val) != 1) {
+      errors <- c(errors, "method_used must be a single character value")
+    } else if (!method_val %in% c("ZTNB", "RFA", "constant")) {
+      errors <- c(errors, "method_used must be one of: 'ZTNB', 'RFA', or 'constant'")
     }
   }
 
-  # Validate variation
-  if ("variation" %in% names(data)) {
-    var_val <- data$variation
-    if (!is.numeric(var_val) || length(var_val) != 1) {
-      errors <- c(errors, "variation must be a single numeric value")
-    } else if (is.na(var_val) || !is.finite(var_val)) {
-      errors <- c(errors, "variation cannot be NA or infinite")
-    } else if (var_val <= 0) {
-      errors <- c(errors, "variation must be positive")
-    } else if (var_val > 1) {
-      warnings <- c(warnings, "variation parameter is unusually high (> 1)")
+  # Validate UMI_per_cell_at_saturation
+  if ("UMI_per_cell_at_saturation" %in% names(data)) {
+    umi_val <- data$UMI_per_cell_at_saturation
+    if (!is.numeric(umi_val) || length(umi_val) != 1) {
+      errors <- c(errors, "UMI_per_cell_at_saturation must be a single numeric value")
+    } else if (is.na(umi_val) || !is.finite(umi_val)) {
+      errors <- c(errors, "UMI_per_cell_at_saturation cannot be NA or infinite")
+    } else if (umi_val <= 0) {
+      errors <- c(errors, "UMI_per_cell_at_saturation must be positive")
+    } else if (umi_val < 1000) {
+      warnings <- c(warnings, "UMI_per_cell_at_saturation is unusually low (< 1000)")
+    } else if (umi_val > 100000) {
+      warnings <- c(warnings, "UMI_per_cell_at_saturation is unusually high (> 100000)")
+    }
+  }
+
+  # Validate reads_norm
+  if ("reads_norm" %in% names(data)) {
+    reads_val <- data$reads_norm
+    if (!is.numeric(reads_val) || length(reads_val) != 1) {
+      errors <- c(errors, "reads_norm must be a single numeric value")
+    } else if (is.na(reads_val) || !is.finite(reads_val)) {
+      errors <- c(errors, "reads_norm cannot be NA or infinite")
+    } else if (reads_val <= 0) {
+      errors <- c(errors, "reads_norm must be positive")
+    }
+  }
+
+  # Validate n_cells
+  if ("n_cells" %in% names(data)) {
+    cells_val <- data$n_cells
+    if (!is.numeric(cells_val) || length(cells_val) != 1) {
+      errors <- c(errors, "n_cells must be a single numeric value")
+    } else if (is.na(cells_val) || !is.finite(cells_val)) {
+      errors <- c(errors, "n_cells cannot be NA or infinite")
+    } else if (cells_val <= 0) {
+      errors <- c(errors, "n_cells must be positive")
+    } else if (cells_val < 100) {
+      warnings <- c(warnings, "n_cells is unusually low (< 100)")
     }
   }
 
@@ -664,8 +681,10 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
   if (length(errors) == 0) {
     summary_text <- paste0(
       "Loaded custom library parameters<br/>",
-      "UMI per cell: ", formatC(data$UMI_per_cell, format = "d", big.mark = ","), "<br/>",
-      "Variation: ", formatC(data$variation, format = "e")
+      "Method: ", data$method_used, "<br/>",
+      "UMI at saturation: ", formatC(data$UMI_per_cell_at_saturation, format = "d", big.mark = ","), "<br/>",
+      "Reads normalization: ", formatC(data$reads_norm, format = "d", big.mark = ","), "<br/>",
+      "Number of cells: ", formatC(data$n_cells, format = "d", big.mark = ",")
     )
   } else {
     summary_text <- ""
@@ -815,101 +834,54 @@ validate_combined_pilot_data <- function(data, file_path = "uploaded file") {
   ))
 }
 
-#' Compute effective library size from read depth using UMI saturation curve
+#' Compute effective library size from read depth using preseqR saturation curve
 #'
 #' @description
 #' This function computes the effective library size (in UMIs) from sequencing read depth
-#' using fitted saturation curves that account for PCR amplification bias and UMI saturation.
+#' using fitted saturation curves from preseqR that account for PCR amplification bias and
+#' UMI saturation. This is an R wrapper for the C++ implementation.
 #'
-#' @param reads_per_cell Numeric. Total reads per cell.
-#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter from S-M curve fit.
-#' @param variation Numeric. Variation parameter characterizing PCR bias from S-M curve fit.
+#' @param reads_per_cell Numeric vector. Total reads per cell.
+#' @param rSAC_fn_wrapper List. Parameter structure from \code{\link{library_estimation}}
+#'   containing method_used, reads_norm, n_cells, and method-specific parameters.
 #'
-#' @return Numeric. Effective library size in UMIs.
+#' @return Numeric vector. Effective library size in UMIs.
 #'
 #' @details
-#' The saturation-magnitude (S-M) curve model relates sequencing reads to unique UMI counts
-#' accounting for:
+#' The saturation-magnitude (S-M) curve model relates sequencing reads to unique UMI counts.
+#' This function supports two methods from preseqR:
 #' \itemize{
-#'   \item PCR amplification variability
-#'   \item UMI saturation at high read depths
-#'   \item Platform-specific technical biases
+#'   \item ZTNB: Zero-truncated negative binomial closed-form formula
+#'   \item RFA: Rational function approximation for better extrapolation
 #' }
 #'
+#' The rSAC_fn_wrapper parameter must be obtained from \code{\link{library_estimation}}.
+#'
 #' @examples
-#' # Get library parameters from pilot data
-#' pilot_data <- get_pilot_data_from_package("K562")
-#' library_params <- pilot_data$library_parameters
+#' # Get QC data and estimate library parameters
+#' cellranger_path <- system.file("extdata/cellranger_tiny", package = "perturbplan")
+#' qc_data <- obtain_qc_read_umi_table(cellranger_path)
+#' rSAC_params <- library_estimation(QC_data = qc_data)
 #'
 #' # Define read depths to test
 #' read_depths <- c(10000, 25000, 50000, 100000)
 #'
 #' # Calculate effective library sizes
-#' effective_umis <- fit_read_UMI_curve(
-#'   reads_per_cell = read_depths,
-#'   UMI_per_cell = library_params$UMI_per_cell,
-#'   variation = library_params$variation
-#' )
+#' effective_umis <- fit_read_UMI_curve_cpp(read_depths, rSAC_params)
 #'
 #' # View the results
 #' data.frame(
 #'   reads_per_cell = read_depths,
 #'   effective_UMI = effective_umis,
-#'   saturation_pct = round(100 * effective_umis / library_params$UMI_per_cell, 1)
+#'   saturation_pct = round(100 * effective_umis / rSAC_params$UMI_per_cell_at_saturation, 1)
 #' )
 #'
-#' @examples
-#' # Get library parameters from pilot data
-#' pilot_data <- get_pilot_data_from_package("K562")
-#' library_params <- pilot_data$library_parameters
-#'
-#' # Define read depths to test
-#' read_depths <- c(10000, 25000, 50000, 100000)
-#'
-#' # Calculate effective library sizes
-#' effective_umis <- fit_read_UMI_curve(
-#'   reads_per_cell = read_depths,
-#'   UMI_per_cell = library_params$UMI_per_cell,
-#'   variation = library_params$variation
-#' )
-#'
-#' # View the results
-#' data.frame(
-#'   reads_per_cell = read_depths,
-#'   effective_UMI = effective_umis,
-#'   saturation_pct = round(100 * effective_umis / library_params$UMI_per_cell, 1)
-#' )
-#'
-#' @seealso \code{\link{get_pilot_data_from_package}} for obtaining curve parameters
+#' @seealso \code{\link{library_estimation}} for fitting S-M curve parameters
 #' @keywords internal
 #' @export
-fit_read_UMI_curve <- function(reads_per_cell, rSAC_fn_wrapper = NULL, UMI_per_cell = NULL, variation = NULL){
-
-  # Determine which parameter format was provided
-  if (!is.null(rSAC_fn_wrapper)) {
-    # New format: use preseqR parameter structure directly
-    return(fit_read_UMI_curve_cpp(reads_per_cell, rSAC_fn_wrapper))
-
-  } else if (!is.null(UMI_per_cell) && !is.null(variation)) {
-    # Legacy format: construct ZTNB wrapper from old-style parameters
-    # This maintains backward compatibility with existing code
-
-    # Create a simple ZTNB-style wrapper
-    legacy_wrapper <- list(
-      method_used = "ZTNB",
-      L = UMI_per_cell,  # At saturation, ZTNB predicts L distinct UMIs
-      size = 1.0 / variation,  # variation = 1/size
-      mu = 1.0,  # Standard mu value for approximation
-      reads_norm = 1.0,  # No normalization for legacy parameters
-      n_cells = 1.0,  # Single cell normalization
-      UMI_per_cell_at_saturation = UMI_per_cell
-    )
-
-    return(fit_read_UMI_curve_cpp(reads_per_cell, legacy_wrapper))
-
-  } else {
-    stop("Must provide either rSAC_fn_wrapper OR both UMI_per_cell and variation")
-  }
+fit_read_UMI_curve_cpp <- function(reads_per_cell, rSAC_fn_wrapper){
+  # Direct call to C++ implementation
+  .Call(`_perturbplan_fit_read_UMI_curve_cpp`, reads_per_cell, rSAC_fn_wrapper)
 }
 
 #' Identify optimal reads per cell range for power analysis grid
@@ -921,8 +893,9 @@ fit_read_UMI_curve <- function(reads_per_cell, rSAC_fn_wrapper = NULL, UMI_per_c
 #'
 #' @param experimental_platform Character. Experimental platform identifier
 #'   (e.g., "10x Chromium v3", "Other").
-#' @param library_parameters List. Library parameters containing
-#'   UMI_per_cell and variation parameters for S-M curve analysis.
+#' @param library_parameters List. rSAC_fn_wrapper format from \code{\link{library_estimation}}
+#'   containing method_used, UMI_per_cell_at_saturation, reads_norm, n_cells, and
+#'   method-specific parameters for saturation curve analysis.
 #'
 #' @return List with elements:
 #' \describe{
@@ -946,23 +919,20 @@ fit_read_UMI_curve <- function(reads_per_cell, rSAC_fn_wrapper = NULL, UMI_per_c
 #' returns the practical upper bound.
 #'
 #' @seealso
-#' \code{\link{fit_read_UMI_curve}} for S-M curve evaluation
+#' \code{\link{fit_read_UMI_curve_cpp}} for S-M curve evaluation
 #' \code{\link{get_pilot_data_from_package}} for obtaining library parameters
 #' \code{\link{identify_library_size_range_cpp}} for C++ implementation
 #' @keywords internal
 identify_library_size_range <- function(experimental_platform, library_parameters) {
 
-  # Input validation for library_parameters structure
-  if (!is.list(library_parameters) || !all(c("UMI_per_cell", "variation") %in% names(library_parameters))) {
-    stop("library_parameters must be a list with UMI_per_cell and variation elements")
+  # Input validation for library_parameters structure (rSAC_fn_wrapper format)
+  if (!is.list(library_parameters) ||
+      !all(c("method_used", "UMI_per_cell_at_saturation") %in% names(library_parameters))) {
+    stop("library_parameters must be output from library_estimation()")
   }
 
-  # Extract parameters and call optimized C++ implementation
-  UMI_per_cell <- library_parameters$UMI_per_cell
-  variation <- library_parameters$variation
-
-  # Wrapper around the C++ implementation
-  return(identify_library_size_range_cpp(experimental_platform, UMI_per_cell, variation))
+  # Wrapper around the C++ implementation - pass library_parameters directly as rSAC_fn_wrapper
+  return(identify_library_size_range_cpp(experimental_platform, library_parameters))
 }
 
 #' Extract baseline expression information without fold change augmentation

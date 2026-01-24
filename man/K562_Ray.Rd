@@ -14,10 +14,18 @@ A list with 3 elements:
 \item \code{expression_size}: Numeric vector of dispersion parameters (theta)
 }
 }
-\item{library_parameters}{List containing:
+\item{library_parameters}{List containing saturation curve parameters estimated using preseqR.
+Data-adaptively selected method: RFA (Rational Function Approximation). Contains:
 \itemize{
-\item \code{UMI_per_cell}: Maximum UMI per cell parameter (5,465)
-\item \code{variation}: Variation parameter for PCR bias (4.895)
+\item \code{method_used}: "RFA" - Rational function approximation method
+\item \code{valid_estimator}: TRUE - RFA estimator is valid
+\item \code{coefs_real}: Real parts of RFA coefficients
+\item \code{coefs_imag}: Imaginary parts of RFA coefficients
+\item \code{poles_real}: Real parts of RFA poles
+\item \code{poles_imag}: Imaginary parts of RFA poles
+\item \code{reads_norm}: 16,790 - Normalization constant (reads per cell)
+\item \code{n_cells}: 8,278 - Number of cells in pilot data
+\item \code{UMI_per_cell_at_saturation}: 3,684 - Maximum UMI per cell at infinite sequencing depth
 }
 }
 \item{mapping_efficiency}{Numeric. Mapping efficiency value (0.371)}

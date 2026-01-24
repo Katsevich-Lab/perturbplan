@@ -84,8 +84,8 @@ compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_
 #' @param min_reads_per_cell Numeric. Minimum reads per cell from library size range
 #' @param max_reads_per_cell Numeric. Maximum reads per cell from library size range
 #' @param fc_expression_df DataFrame with fold change and expression info
-#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter from S-M curve
-#' @param variation Numeric. Variation parameter from S-M curve
+#' @param rSAC_fn_wrapper List. Library parameters from library_estimation containing
+#'   method_used, reads_norm, n_cells, and method-specific parameters
 #' @param MOI Numeric. Multiplicity of infection (default 10)
 #' @param num_targets Integer. Number of targets (default 100)
 #' @param gRNAs_per_target Integer. gRNAs per target (default 4)
@@ -113,8 +113,8 @@ compute_distribution_teststat_random_es_cpp <- function(num_trt_cell, num_cntrl_
 #'
 #' @keywords internal
 #' @export
-identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI = 10.0, num_targets = 100L, gRNAs_per_target = 4L, non_targeting_gRNAs = 10L, control_group = "complement", multiple_testing_alpha = 0.05, side = "left", prop_non_null = 0.1, min_power_threshold = 0.01, max_power_threshold = 0.8, cell_lower_bound = 100.0, cell_upper_bound = 1e7) {
-    .Call(`_perturbplan_identify_cell_range_cpp`, min_reads_per_cell, max_reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null, min_power_threshold, max_power_threshold, cell_lower_bound, cell_upper_bound)
+identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_expression_df, rSAC_fn_wrapper, MOI = 10.0, num_targets = 100L, gRNAs_per_target = 4L, non_targeting_gRNAs = 10L, control_group = "complement", multiple_testing_alpha = 0.05, side = "left", prop_non_null = 0.1, min_power_threshold = 0.01, max_power_threshold = 0.8, cell_lower_bound = 100.0, cell_upper_bound = 1e7) {
+    .Call(`_perturbplan_identify_cell_range_cpp`, min_reads_per_cell, max_reads_per_cell, fc_expression_df, rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null, min_power_threshold, max_power_threshold, cell_lower_bound, cell_upper_bound)
 }
 
 #' Compute effective library size from read depth using preseqR saturation curve (C++)
@@ -143,7 +143,7 @@ identify_cell_range_cpp <- function(min_reads_per_cell, max_reads_per_cell, fc_e
 #'   \item RFA: Uses rational function approximation with complex arithmetic
 #' }
 #'
-#' @seealso \code{\link{fit_read_UMI_curve}} for R wrapper
+#' @seealso \code{\link{identify_library_size_range}} for R wrapper that uses this function
 #' @keywords internal
 #' @export
 fit_read_UMI_curve_cpp <- function(reads_per_cell, rSAC_fn_wrapper) {
@@ -155,25 +155,32 @@ fit_read_UMI_curve_cpp <- function(reads_per_cell, rSAC_fn_wrapper) {
 #' @description
 #' C++ implementation that determines the minimum and maximum reads per cell values
 #' for power analysis grid generation using binary search on the S-M curve.
-#' Uses saturation-based thresholds (10% and 98%) instead of platform-specific minimums.
+#' Uses saturation-based thresholds (10% and 80%) instead of platform-specific minimums.
 #'
 #' @param experimental_platform String. Experimental platform identifier (kept for compatibility, not used).
-#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
-#' @param variation Numeric. Variation parameter for S-M curve.
+#' @param rSAC_fn_wrapper List. Parameters from library_estimation containing:
+#'   \itemize{
+#'     \item method_used: "ZTNB" or "RFA"
+#'     \item reads_norm: Normalization constant
+#'     \item n_cells: Number of cells
+#'     \item UMI_per_cell_at_saturation: Maximum UMI per cell
+#'     \item For ZTNB: L, size, mu
+#'     \item For RFA: valid_estimator, coefs_real, coefs_imag, poles_real, poles_imag, or constant_value
+#'   }
 #'
 #' @return List with min_reads_per_cell and max_reads_per_cell elements.
 #'
 #' @details
 #' This C++ implementation uses efficient binary search to find the reads per cell
 #' range for power analysis. Uses saturation-based thresholds:
-#' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell)
-#' - Maximum reads: 98% UMI saturation (diminishing returns beyond this point)
+#' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell_at_saturation)
+#' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 #'
 #' @seealso \code{\link{identify_library_size_range}} for R version
 #' @keywords internal
 #' @export
-identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell, variation) {
-    .Call(`_perturbplan_identify_library_size_range_cpp`, experimental_platform, UMI_per_cell, variation)
+identify_library_size_range_cpp <- function(experimental_platform, rSAC_fn_wrapper) {
+    .Call(`_perturbplan_identify_library_size_range_cpp`, experimental_platform, rSAC_fn_wrapper)
 }
 
 #' Generate reads per cell grid using S-M curve analysis (C++)
@@ -183,16 +190,23 @@ identify_library_size_range_cpp <- function(experimental_platform, UMI_per_cell,
 #' for power analysis heatmaps.
 #'
 #' @param experimental_platform String. Experimental platform identifier.
-#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
-#' @param variation Numeric. Variation parameter for S-M curve.
+#' @param rSAC_fn_wrapper List. Parameters from library_estimation containing:
+#'   \itemize{
+#'     \item method_used: "ZTNB" or "RFA"
+#'     \item reads_norm: Normalization constant
+#'     \item n_cells: Number of cells
+#'     \item UMI_per_cell_at_saturation: Maximum UMI per cell
+#'     \item For ZTNB: L, size, mu
+#'     \item For RFA: valid_estimator, coefs_real, coefs_imag, poles_real, poles_imag, or constant_value
+#'   }
 #' @param grid_size Integer. Number of points in the grid (default: 10).
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
 #'
 #' @keywords internal
 #' @export
-generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variation, grid_size = 10L) {
-    .Call(`_perturbplan_generate_reads_grid_cpp`, experimental_platform, UMI_per_cell, variation, grid_size)
+generate_reads_grid_cpp <- function(experimental_platform, rSAC_fn_wrapper, grid_size = 10L) {
+    .Call(`_perturbplan_generate_reads_grid_cpp`, experimental_platform, rSAC_fn_wrapper, grid_size)
 }
 
 #' Identify optimal reads per cell range (streamlined version)
@@ -200,23 +214,30 @@ generate_reads_grid_cpp <- function(experimental_platform, UMI_per_cell, variati
 #' @description
 #' Streamlined C++ implementation that determines the minimum and maximum reads per cell values
 #' for power analysis grid generation using binary search on the S-M curve.
-#' Uses saturation-based thresholds (10% and 95%) with a clean API.
+#' Uses saturation-based thresholds (10% and 80%) with a clean API.
 #'
-#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
-#' @param variation Numeric. Variation parameter for S-M curve.
+#' @param rSAC_fn_wrapper List. Parameters from library_estimation containing:
+#'   \itemize{
+#'     \item method_used: "ZTNB" or "RFA"
+#'     \item reads_norm: Normalization constant
+#'     \item n_cells: Number of cells
+#'     \item UMI_per_cell_at_saturation: Maximum UMI per cell
+#'     \item For ZTNB: L, size, mu
+#'     \item For RFA: valid_estimator, coefs_real, coefs_imag, poles_real, poles_imag, or constant_value
+#'   }
 #'
 #' @return List with min_reads_per_cell and max_reads_per_cell elements.
 #'
 #' @details
 #' This streamlined version removes the unused experimental_platform parameter.
 #' Uses efficient binary search to find the reads per cell range for power analysis:
-#' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell)
-#' - Maximum reads: 98% UMI saturation (diminishing returns beyond this point)
+#' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell_at_saturation)
+#' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 #'
 #' @keywords internal
 #' @export
-identify_reads_range_cpp <- function(UMI_per_cell, variation) {
-    .Call(`_perturbplan_identify_reads_range_cpp`, UMI_per_cell, variation)
+identify_reads_range_cpp <- function(rSAC_fn_wrapper) {
+    .Call(`_perturbplan_identify_reads_range_cpp`, rSAC_fn_wrapper)
 }
 
 #' Generate reads per cell grid (streamlined version)
@@ -225,16 +246,23 @@ identify_reads_range_cpp <- function(UMI_per_cell, variation) {
 #' Streamlined convenience function that combines range identification with grid generation
 #' for power analysis heatmaps.
 #'
-#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter.
-#' @param variation Numeric. Variation parameter for S-M curve.
+#' @param rSAC_fn_wrapper List. Parameters from library_estimation containing:
+#'   \itemize{
+#'     \item method_used: "ZTNB" or "RFA"
+#'     \item reads_norm: Normalization constant
+#'     \item n_cells: Number of cells
+#'     \item UMI_per_cell_at_saturation: Maximum UMI per cell
+#'     \item For ZTNB: L, size, mu
+#'     \item For RFA: valid_estimator, coefs_real, coefs_imag, poles_real, poles_imag, or constant_value
+#'   }
 #' @param grid_size Integer. Number of points in the grid (default: 10).
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
 #'
 #' @keywords internal
 #' @export
-generate_reads_grid_streamlined_cpp <- function(UMI_per_cell, variation, grid_size = 10L) {
-    .Call(`_perturbplan_generate_reads_grid_streamlined_cpp`, UMI_per_cell, variation, grid_size)
+generate_reads_grid_streamlined_cpp <- function(rSAC_fn_wrapper, grid_size = 10L) {
+    .Call(`_perturbplan_generate_reads_grid_streamlined_cpp`, rSAC_fn_wrapper, grid_size)
 }
 
 #' Compute Monte Carlo test statistics for power analysis with random effect sizes
@@ -304,8 +332,8 @@ compute_power_plan_overall_cpp <- function(fc_expression_df, library_size, num_t
 #' @param num_cells Numeric. Total number of cells in the experiment
 #' @param reads_per_cell Numeric. Sequencing reads per cell
 #' @param fc_expression_df DataFrame with fold change and expression info
-#' @param UMI_per_cell Numeric. Maximum UMI per cell parameter from S-M curve
-#' @param variation Numeric. Variation parameter from S-M curve
+#' @param rSAC_fn_wrapper List. Library parameters from library_estimation containing
+#'   method_used, reads_norm, n_cells, and method-specific parameters
 #' @param MOI Numeric. Multiplicity of infection (default 10)
 #' @param num_targets Integer. Number of targets (default 100)
 #' @param gRNAs_per_target Integer. gRNAs per target (default 4)
@@ -331,8 +359,8 @@ compute_power_plan_overall_cpp <- function(fc_expression_df, library_size, num_t
 #' @seealso \code{\link{compute_power_plan_overall_cpp}} for full power analysis
 #' @keywords internal
 #' @export
-compute_single_power_cpp <- function(num_cells, reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI = 10.0, num_targets = 100L, gRNAs_per_target = 4L, non_targeting_gRNAs = 10L, control_group = "complement", multiple_testing_alpha = 0.05, side = "left", prop_non_null = 0.1) {
-    .Call(`_perturbplan_compute_single_power_cpp`, num_cells, reads_per_cell, fc_expression_df, UMI_per_cell, variation, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null)
+compute_single_power_cpp <- function(num_cells, reads_per_cell, fc_expression_df, rSAC_fn_wrapper, MOI = 10.0, num_targets = 100L, gRNAs_per_target = 4L, non_targeting_gRNAs = 10L, control_group = "complement", multiple_testing_alpha = 0.05, side = "left", prop_non_null = 0.1) {
+    .Call(`_perturbplan_compute_single_power_cpp`, num_cells, reads_per_cell, fc_expression_df, rSAC_fn_wrapper, MOI, num_targets, gRNAs_per_target, non_targeting_gRNAs, control_group, multiple_testing_alpha, side, prop_non_null)
 }
 
 theta_batch_cpp <- function(Y, library_size, rel_expr, rough = FALSE, n_threads = 0L) {

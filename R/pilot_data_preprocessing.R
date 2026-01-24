@@ -242,10 +242,13 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'       \item \code{expression_size}: Estimated dispersion (size) parameter representing
 #'         gene-specific expression variability
 #'     }}
-#'   \item{library_parameters}{List with:
+#'   \item{library_parameters}{List with saturation curve parameters from preseqR:
 #'     \itemize{
-#'       \item \code{UMI_per_cell}: Estimated maximum UMI count per cell at saturation
-#'       \item \code{variation}: Estimated PCR amplification variation parameter (0 to 1)
+#'       \item \code{method_used}: Selected method ("ZTNB" or "RFA")
+#'       \item \code{UMI_per_cell_at_saturation}: Estimated maximum UMI count per cell at infinite sequencing depth
+#'       \item \code{reads_norm}: Normalization constant (reads per cell in pilot data)
+#'       \item \code{n_cells}: Number of cells in pilot data
+#'       \item Additional method-specific parameters (e.g., L, size, mu for ZTNB; coefs and poles for RFA)
 #'     }}
 #'   \item{mapping_efficiency}{Numeric. Adjusted mapping efficiency accounting for
 #'     fraction of reads mapped to genes of interest.}
@@ -270,21 +273,20 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'     variability (fitted parameter)
 #' }
 #'
-#' \strong{Sequencing Saturation Model (S-M Curve):}
+#' \strong{Sequencing Saturation Model (preseqR):}
 #'
-#' The function fits a saturation (S-M) curve that relates mapped reads per cell to
-#' observed UMIs per cell:
-#'
-#' \code{UMI = total_UMIs * (1 - exp(-reads/total_UMIs) * (1 + variation * reads^2/(2*total_UMIs^2)))}
-#'
-#' where:
+#' The function uses the preseqR package to fit a saturation curve relating mapped reads
+#' per cell to observed UMIs per cell. The preseqR approach:
 #' \itemize{
-#'   \item \code{reads}: Number of mapped reads per cell (data)
-#'   \item \code{UMI}: Number of observed UMIs per cell (data)
-#'   \item \code{total_UMIs} (UMI_per_cell): Maximum UMI per cell parameter at saturation
-#'     (fitted parameter)
-#'   \item \code{variation}: Variation parameter characterizing PCR amplification bias,
-#'     between 0 and 1 (fitted parameter)
+#'   \item \strong{Data-adaptively selects} between ZTNB (Zero-Truncated Negative Binomial)
+#'     and RFA (Rational Function Approximation) methods based on the estimated shape parameter
+#'   \item \strong{ZTNB method} (shape > 1): Uses closed-form negative binomial predictions
+#'   \item \strong{RFA method} (shape ≤ 1): Uses rational function approximation for better
+#'     extrapolation in low-complexity libraries
+#'   \item \strong{Edge case}: If RFA estimator is invalid, returns constant predictions
+#'     (rarely occurs in practice)
+#'   \item \strong{Key output}: \code{UMI_per_cell_at_saturation} - Maximum UMI per cell
+#'     at infinite sequencing depth, plus method-specific parameters for curve prediction
 #' }
 #'
 #' ## Processing Steps
@@ -295,7 +297,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   \item Fits negative binomial model using \code{\link{obtain_expression_information}}
 #'     to estimate gene-level expression parameters
 #'   \item Fits saturation model using \code{\link{library_estimation}} to estimate
-#'     library parameters using preseqR's ZTNB model
+#'     library parameters using preseqR's data-adaptive method (ZTNB or RFA)
 #'   \item Returns structured output compatible with power analysis functions
 #' }
 #'
