@@ -11,7 +11,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "vignettes/figures/preprocess-reference-",
+  fig.path = "figures/preprocess-reference-",
   out.width = "100%"
 )
 ```
@@ -20,6 +20,8 @@ This vignette demonstrates how to preprocess your own perturb-seq pilot data for
 
 ```{r setup}
 library(perturbplan)
+library(ggplot2)
+library(dplyr)
 ```
 
 ## Overview
@@ -229,6 +231,118 @@ The function uses the `preseqR` package to fit a saturation curve that relates s
   - Method-specific parameters for accurate saturation curve prediction
 
 The preseqR methodology provides robust parameter estimation without requiring manual method selection or parameter tuning. The data-adaptive approach ensures optimal performance across diverse experimental designs and library complexities.
+
+---
+
+## Comparing Default Dataset Saturation Curves
+
+PerturbPlan includes several default datasets from different cell types and experimental systems. This section demonstrates how to visualize and compare the read-UMI saturation curves across all default datasets.
+
+### Load Default Datasets
+
+```{r load-defaults}
+# Load all perturbplan default datasets
+data("K562_Gasperini", package = "perturbplan")
+data("K562_10x", package = "perturbplan")
+data("K562_Ray", package = "perturbplan")
+data("A549_Sakellaropoulos", package = "perturbplan")
+data("THP1_Yao", package = "perturbplan")
+data("T_CD8_Shifrut", package = "perturbplan")
+data("iPSC_Tian", package = "perturbplan")
+data("iPSC_neuron_Tian", package = "perturbplan")
+
+# Create a list of all datasets with their display names
+default_datasets <- list(
+  "K562 (Gasperini)" = K562_Gasperini,
+  "K562 (10x)" = K562_10x,
+  "K562 (Ray)" = K562_Ray,
+  "A549 (Sakellaropoulos)" = A549_Sakellaropoulos,
+  "THP-1 (Yao)" = THP1_Yao,
+  "CD8+ T (Shifrut)" = T_CD8_Shifrut,
+  "iPSC (Tian)" = iPSC_Tian,
+  "iPSC neuron (Tian)" = iPSC_neuron_Tian
+)
+```
+
+### Generate Saturation Curve Predictions
+
+```{r generate-predictions}
+# Find the maximum UMI_per_cell_at_saturation across all datasets
+max_umi_saturation <- max(sapply(default_datasets, function(dataset_obj) {
+  dataset_obj$library_parameters$UMI_per_cell_at_saturation
+}))
+
+# Create a grid of reads_per_cell values for prediction
+# Extend to 10x the maximum UMI saturation
+reads_grid <- 10^seq(log10(1000), log10(max_umi_saturation * 10), length.out = 200)
+
+# Generate predictions for each dataset using perturbplan:::fit_read_UMI_curve_cpp
+all_datasets_df <- bind_rows(
+  lapply(names(default_datasets), function(dataset_name) {
+    dataset_obj <- default_datasets[[dataset_name]]
+    library_params <- dataset_obj$library_parameters
+
+    library_size_pred <- perturbplan:::fit_read_UMI_curve_cpp(reads_grid, library_params)
+
+    data.frame(
+      reads_per_cell = reads_grid,
+      library_size = library_size_pred,
+      dataset = dataset_name,
+      stringsAsFactors = FALSE
+    )
+  })
+)
+```
+
+### Visualize Saturation Curves
+
+```{r saturation-comparison, fig.width=8, fig.height=6}
+# Define color scheme for all datasets using a colorblind-friendly palette
+dataset_colors <- c(
+  "K562 (Gasperini)" = "#E69F00",        # orange
+  "K562 (10x)" = "#56B4E9",              # sky blue
+  "K562 (Ray)" = "#009E73",              # bluish green
+  "A549 (Sakellaropoulos)" = "#F0E442",  # yellow
+  "THP-1 (Yao)" = "#0072B2",             # blue
+  "CD8+ T (Shifrut)" = "#D55E00",        # vermillion
+  "iPSC (Tian)" = "#CC79A7",             # reddish purple
+  "iPSC neuron (Tian)" = "#999999"       # gray
+)
+
+# Create the comparison plot
+ggplot(all_datasets_df, aes(x = reads_per_cell, y = library_size, color = dataset)) +
+  geom_line(linewidth = 1.25) +
+  scale_color_manual(values = dataset_colors) +
+  scale_x_log10(labels = scales::comma) +
+  scale_y_log10(labels = scales::comma) +
+  labs(
+    x = "Reads per cell",
+    y = "UMIs per cell",
+    color = NULL,
+    title = "UMI-read saturation curves for PerturbPlan default datasets"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title      = element_text(size = 12, hjust = 0.5, vjust = 2),
+    axis.title.x    = element_text(size = 12),
+    axis.text.x     = element_text(size = 10, hjust = 0.7),
+    axis.title.y    = element_text(size = 12),
+    axis.text.y     = element_text(size = 10),
+    legend.title    = element_blank(),
+    legend.text     = element_text(size = 10),
+    legend.position = "bottom"
+  )
+```
+
+### Interpretation
+
+This comparison plot reveals important differences in sequencing saturation characteristics across cell types and experimental systems:
+
+- **Saturation plateau**: Different datasets reach different maximum UMI counts, reflecting differences in transcriptional complexity and library preparation protocols
+- **Cell type and assay consistency**: K562 (Gasperini) and K562 (10x) share the same cell type and assay, and their curves are much closer to each other than to other datasets. This validates our approach of providing default data based on cell type and assay
+- **Implications for experimental design**: These saturation curves inform optimal sequencing depth choices for different cell types
+
+The fitted saturation curves from your own pilot data (generated in Step 2 above) can be used similarly to predict library sizes for power analysis in experimental design.
 
 ---
 

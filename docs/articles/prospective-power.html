@@ -285,7 +285,7 @@ the number of cells at 2,000 per gRNA target:</p>
 <span>    plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,</span>
 <span>    panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="articles/figures/prospective-power-compare-read-depths-1.png" width="100%"></p>
+<p><img src="figures/prospective-power-compare-read-depths-1.png" width="100%"></p>
 <p>Then, let’s compare how power scales with the number of cells per
 target, fixing sequencing depth at 40,000 reads per cell:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
@@ -364,7 +364,7 @@ target, fixing sequencing depth at 40,000 reads per cell:</p>
 <span>    plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,</span>
 <span>    panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="articles/figures/prospective-power-compare-cell-numbers-1.png" width="100%"></p>
+<p><img src="figures/prospective-power-compare-cell-numbers-1.png" width="100%"></p>
 </div>
 <div class="section level3">
 <h3 id="interpretation">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation"></a>
@@ -506,7 +506,7 @@ overall power and cost:</p>
 <span>    plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,</span>
 <span>    panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="articles/figures/prospective-power-power-comparison-1.png" width="100%"></p>
+<p><img src="figures/prospective-power-power-comparison-1.png" width="100%"></p>
 </div>
 <div class="section level3">
 <h3 id="interpretation-1">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation-1"></a>
@@ -577,7 +577,7 @@ across genes in the K562 pilot data:</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>panel.grid.minor.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_line</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"gray90"</span>, linewidth <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="articles/figures/prospective-power-expression-distribution-1.png" width="100%"></p>
+<p><img src="figures/prospective-power-expression-distribution-1.png" width="100%"></p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># Expression vs dispersion relationship</span></span>
@@ -594,7 +594,7 @@ across genes in the K562 pilot data:</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; `geom_smooth()` using formula = 'y ~ x'</span></span></code></pre></div>
-<p><img src="articles/figures/prospective-power-expression-distribution-2.png" width="100%"></p>
+<p><img src="figures/prospective-power-expression-distribution-2.png" width="100%"></p>
 </div>
 <div class="section level3">
 <h3 id="read-saturation-curve-visualization">Read saturation Curve Visualization<a class="anchor" aria-label="anchor" href="#read-saturation-curve-visualization"></a>
@@ -647,7 +647,7 @@ experimental designs in Section 2 map onto the curve:</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="articles/figures/prospective-power-saturation-curve-1.png" width="100%"></p>
+<p><img src="figures/prospective-power-saturation-curve-1.png" width="100%"></p>
 <p>Also, we can visualize how the percentage of UMI detected
 (saturation) increases with read depth:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
@@ -668,7 +668,7 @@ experimental designs in Section 2 map onto the curve:</p>
 <span>    y <span class="op">=</span> <span class="st">"Saturation (%)"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="articles/figures/prospective-power-saturation-percentage-1.png" width="100%"></p>
+<p><img src="figures/prospective-power-saturation-percentage-1.png" width="100%"></p>
 </div>
 </div>
 <div class="section level2">

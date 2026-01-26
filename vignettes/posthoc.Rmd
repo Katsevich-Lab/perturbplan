@@ -11,7 +11,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "vignettes/figures/posthoc-",
+  fig.path = "figures/posthoc-",
   out.width = "100%"
 )
 ```
