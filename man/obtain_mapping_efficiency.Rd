@@ -28,7 +28,7 @@ not Cell Ranger multi.
 \details{
 The function calculates:
 
-\deqn{\text{mapping_efficiency} = \frac{\text{mapped_reads}}{\text{total_reads}}}
+\deqn{\text{mapping\_efficiency} = \frac{\text{mapped\_reads}}{\text{total\_reads}}}
 
 where:
 \itemize{

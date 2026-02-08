@@ -35,7 +35,7 @@ using namespace Rcpp;
 //'   \item RFA: Uses rational function approximation with complex arithmetic
 //' }
 //'
-//' @seealso \code{\link{fit_read_UMI_curve}} for R wrapper
+//' @seealso \code{\link{library_estimation}} for fitting S-M curve parameters
 //' @keywords internal
 //' @export
 // [[Rcpp::export]]

@@ -50,7 +50,7 @@ levels and dispersion parameters for each gene. This function is used internally
 
 For each gene, the model is:
 
-\deqn{\text{gene_expression} \sim \text{NB}(\text{mean} = \text{library_size} \times \text{relative_expression}, \text{size} = \text{expression_size})}
+\deqn{\text{gene\_expression} \sim \text{NB}(\text{mean} = \text{library\_size} \times \text{relative\_expression}, \text{size} = \text{expression\_size})}
 
 where \code{library_size} is the total UMI count per cell and \code{relative_expression}
 and \code{expression_size} are the fitted parameters.

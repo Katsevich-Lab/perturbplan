@@ -95,7 +95,7 @@ per cell to observed UMIs per cell. The preseqR approach:
 \item \strong{Data-adaptively selects} between ZTNB (Zero-Truncated Negative Binomial)
 and RFA (Rational Function Approximation) methods based on the estimated shape parameter
 \item \strong{ZTNB method} (shape > 1): Uses closed-form negative binomial predictions
-\item \strong{RFA method} (shape ≤ 1): Uses rational function approximation for better
+\item \strong{RFA method} (shape <= 1): Uses rational function approximation for better
 extrapolation in low-complexity libraries
 \item \strong{Edge case}: If RFA estimator is invalid, returns constant predictions
 (rarely occurs in practice)

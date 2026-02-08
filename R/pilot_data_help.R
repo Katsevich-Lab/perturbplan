@@ -139,7 +139,7 @@ obtain_qc_response_data <- function(path_to_cellranger_output) {
 #'
 #' For each gene, the model is:
 #'
-#' \deqn{\text{gene_expression} \sim \text{NB}(\text{mean} = \text{library_size} \times \text{relative_expression}, \text{size} = \text{expression_size})}
+#' \deqn{\text{gene\_expression} \sim \text{NB}(\text{mean} = \text{library\_size} \times \text{relative\_expression}, \text{size} = \text{expression\_size})}
 #'
 #' where \code{library_size} is the total UMI count per cell and \code{relative_expression}
 #' and \code{expression_size} are the fitted parameters.
@@ -361,7 +361,7 @@ obtain_qc_read_umi_table <- function(path_to_cellranger_output) {
 #' @details
 #' The function calculates:
 #'
-#' \deqn{\text{mapping_efficiency} = \frac{\text{mapped_reads}}{\text{total_reads}}}
+#' \deqn{\text{mapping\_efficiency} = \frac{\text{mapped\_reads}}{\text{total\_reads}}}
 #'
 #' where:
 #' \itemize{

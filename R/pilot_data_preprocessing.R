@@ -49,19 +49,19 @@ utils::globalVariables(c("Perturb_tpm", "Tap_tpm", "in_band", "expression_status
 #' Your data should be organized with Cell Ranger output directories under a top-level folder:
 #' \preformatted{
 #' path_to_top_level_output/
-#' ├── SRR_run_1/
-#' │   ├── outs/
-#' │   │   ├── filtered_feature_bc_matrix/
-#' │   │   │   ├── barcodes.tsv.gz
-#' │   │   │   ├── features.tsv.gz
-#' │   │   │   └── matrix.mtx.gz
-#' │   │   ├── molecule_info.h5
-#' │   │   ├── filtered_feature_bc_matrix.h5
-#' │   │   └── metrics_summary.csv
-#' ├── SRR_run_2/
-#' │   └── ...
-#' └── SRR_run_3/
-#'     └── ...
+#' +-- SRR_run_1/
+#' |   +-- outs/
+#' |   |   +-- filtered_feature_bc_matrix/
+#' |   |   |   +-- barcodes.tsv.gz
+#' |   |   |   +-- features.tsv.gz
+#' |   |   |   +-- matrix.mtx.gz
+#' |   |   +-- molecule_info.h5
+#' |   |   +-- filtered_feature_bc_matrix.h5
+#' |   |   +-- metrics_summary.csv
+#' +-- SRR_run_2/
+#' |   +-- ...
+#' +-- SRR_run_3/
+#'     +-- ...
 #' }
 #'
 #' ## Processing Steps
@@ -281,7 +281,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   \item \strong{Data-adaptively selects} between ZTNB (Zero-Truncated Negative Binomial)
 #'     and RFA (Rational Function Approximation) methods based on the estimated shape parameter
 #'   \item \strong{ZTNB method} (shape > 1): Uses closed-form negative binomial predictions
-#'   \item \strong{RFA method} (shape ≤ 1): Uses rational function approximation for better
+#'   \item \strong{RFA method} (shape <= 1): Uses rational function approximation for better
 #'     extrapolation in low-complexity libraries
 #'   \item \strong{Edge case}: If RFA estimator is invalid, returns constant predictions
 #'     (rarely occurs in practice)

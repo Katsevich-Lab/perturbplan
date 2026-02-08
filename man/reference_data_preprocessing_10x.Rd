@@ -62,26 +62,27 @@ workflow for PerturbPlan power analysis.
 Your data should be organized with Cell Ranger output directories under a top-level folder:
 \preformatted{
 path_to_top_level_output/
-├── SRR_run_1/
-│   ├── outs/
-│   │   ├── filtered_feature_bc_matrix/
-│   │   │   ├── barcodes.tsv.gz
-│   │   │   ├── features.tsv.gz
-│   │   │   └── matrix.mtx.gz
-│   │   ├── molecule_info.h5
-│   │   ├── filtered_feature_bc_matrix.h5
-│   │   └── metrics_summary.csv
-├── SRR_run_2/
-│   └── ...
-└── SRR_run_3/
-    └── ...
++-- SRR_run_1/
+|   +-- outs/
+|   |   +-- filtered_feature_bc_matrix/
+|   |   |   +-- barcodes.tsv.gz
+|   |   |   +-- features.tsv.gz
+|   |   |   +-- matrix.mtx.gz
+|   |   +-- molecule_info.h5
+|   |   +-- filtered_feature_bc_matrix.h5
+|   |   +-- metrics_summary.csv
++-- SRR_run_2/
+|   +-- ...
++-- SRR_run_3/
+    +-- ...
+}
 }
 
-## Processing Steps
+\subsection{Processing Steps}{
 
 The function performs the following operations:
 \enumerate{
-  \item Lists all SRR directories under the given top-level folder
+\item Lists all SRR directories under the given top-level folder
 \item Optionally filters to a subset of run-level names
 \item Reads gene expression matrices using \code{\link{obtain_qc_response_data}}
 \item Identifies and retains only genes shared across all SRRs

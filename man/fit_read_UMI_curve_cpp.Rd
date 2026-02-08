@@ -65,7 +65,7 @@ data.frame(
 
 }
 \seealso{
-\code{\link{identify_library_size_range}} for R wrapper that uses this function
+\code{\link{library_estimation}} for fitting S-M curve parameters
 
 \code{\link{library_estimation}} for fitting S-M curve parameters
 }
