@@ -1,3 +1,42 @@
+# perturbplan 0.3.0
+
+## Breaking Changes
+
+- **New library estimation backend**: Replaced `minpack.lm` NLS fitting with `preseqR` ZTNB/RFA saturation curve methods. `library_estimation()` now returns an `rSAC_fn_wrapper` list instead of scalar parameters.
+- **Dependency changes**: Added `preseqR` and `PoissonBinomial`; removed `minpack.lm`
+- Internal C++ functions now accept `rSAC_fn_wrapper` instead of `UMI_per_cell`/`variation`
+- Removed deprecated `downsampling_ratio` and `D2_rough` arguments
+
+## New Features
+
+- `power_range` parameter for `cost_power_computation()`
+- Lower/upper caps for cells and reads in grid search
+- Saturation threshold increased to 98% for better extrapolation
+- Feature type filtering in `obtain_qc_read_umi_table()` (Gene Expression only)
+
+## Data Updates
+
+- All 8 reference datasets regenerated with new preseqR-based library estimation
+
+## Documentation
+
+- Expanded `preprocess-reference` vignette with multi-dataset saturation curve comparison
+- Fixed LaTeX errors in PDF manual generation
+- Rebuilt pkgdown website with updated favicon
+
+## Testing
+
+- Test coverage increased to ~70% with 6 new test files
+- Over 1,900 new lines of test code
+
+## Bug Fixes
+
+- Fixed pilot data preprocessing bugs
+- Fixed path handling bugs
+- Improved numerical stability in dispersion estimation
+
+---
+
 # perturbplan 0.2.0
 
 ## Major Changes
