@@ -177,7 +177,7 @@ fit_read_UMI_curve_cpp <- function(reads_per_cell, rSAC_fn_wrapper) {
 #' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 #'
 #' @seealso \code{\link{identify_library_size_range}} for R version
-#' @export
+#' @keywords internal
 identify_library_size_range_cpp <- function(experimental_platform, rSAC_fn_wrapper) {
     .Call(`_perturbplan_identify_library_size_range_cpp`, experimental_platform, rSAC_fn_wrapper)
 }
@@ -202,7 +202,7 @@ identify_library_size_range_cpp <- function(experimental_platform, rSAC_fn_wrapp
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
 #'
-#' @export
+#' @keywords internal
 generate_reads_grid_cpp <- function(experimental_platform, rSAC_fn_wrapper, grid_size = 10L) {
     .Call(`_perturbplan_generate_reads_grid_cpp`, experimental_platform, rSAC_fn_wrapper, grid_size)
 }
@@ -232,7 +232,7 @@ generate_reads_grid_cpp <- function(experimental_platform, rSAC_fn_wrapper, grid
 #' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell_at_saturation)
 #' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 #'
-#' @export
+#' @keywords internal
 identify_reads_range_cpp <- function(rSAC_fn_wrapper) {
     .Call(`_perturbplan_identify_reads_range_cpp`, rSAC_fn_wrapper)
 }
@@ -256,7 +256,7 @@ identify_reads_range_cpp <- function(rSAC_fn_wrapper) {
 #'
 #' @return NumericVector. Sequence of reads per cell values for grid.
 #'
-#' @export
+#' @keywords internal
 generate_reads_grid_streamlined_cpp <- function(rSAC_fn_wrapper, grid_size = 10L) {
     .Call(`_perturbplan_generate_reads_grid_streamlined_cpp`, rSAC_fn_wrapper, grid_size)
 }

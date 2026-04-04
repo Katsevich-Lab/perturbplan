@@ -159,7 +159,7 @@ NumericVector fit_read_UMI_curve_cpp(NumericVector reads_per_cell,
 //' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 //'
 //' @seealso \code{\link{identify_library_size_range}} for R version
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 List identify_library_size_range_cpp(std::string experimental_platform,
                                      List rSAC_fn_wrapper) {
@@ -290,7 +290,7 @@ List identify_library_size_range_cpp(std::string experimental_platform,
 //'
 //' @return NumericVector. Sequence of reads per cell values for grid.
 //'
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 NumericVector generate_reads_grid_cpp(std::string experimental_platform,
                                       List rSAC_fn_wrapper,
@@ -343,7 +343,7 @@ NumericVector generate_reads_grid_cpp(std::string experimental_platform,
 //' - Minimum reads: 10% UMI saturation (dynamic based on UMI_per_cell_at_saturation)
 //' - Maximum reads: 80% UMI saturation (diminishing returns beyond this point)
 //'
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 List identify_reads_range_cpp(List rSAC_fn_wrapper) {
 
@@ -468,7 +468,7 @@ List identify_reads_range_cpp(List rSAC_fn_wrapper) {
 //'
 //' @return NumericVector. Sequence of reads per cell values for grid.
 //'
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 NumericVector generate_reads_grid_streamlined_cpp(List rSAC_fn_wrapper,
                                                   int grid_size = 10) {
@@ -489,5 +489,4 @@ NumericVector generate_reads_grid_streamlined_cpp(List rSAC_fn_wrapper,
 
   return grid;
 }
-
 
