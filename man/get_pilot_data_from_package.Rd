@@ -7,13 +7,16 @@
 get_pilot_data_from_package(biological_system)
 }
 \arguments{
-\item{biological_system}{Character. The biological system name (e.g., "K562", "A549", "THP-1", "T_CD8", "iPSC")}
+\item{biological_system}{Character. The biological system name. Available options:
+"K562", "K562_10x", "K562_TAP", "A549", "THP-1", "T_CD8", "iPSC", "iPSC_neuron".}
 }
 \value{
 A list containing:
 \describe{
-\item{baseline_expression_stats}{Data frame with gene expression data or list with baseline_expression_stats data frame}
-\item{library_parameters}{List with UMI_per_cell and variation parameters}
+\item{baseline_expression_stats}{Data frame with columns response_id, relative_expression, expression_size}
+\item{library_parameters}{List from \code{\link{library_estimation}} with method_used,
+UMI_per_cell_at_saturation, reads_norm, n_cells, and method-specific parameters}
+\item{mapping_efficiency}{Numeric. Mapping efficiency estimate (fraction of reads mapped to transcriptome)}
 }
 }
 \description{

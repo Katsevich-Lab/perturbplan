@@ -33,16 +33,18 @@ are used (suitable for perturb-seq).}
 \item{TPM_thres}{Numeric. Threshold (in TPM) for filtering low-expression genes in
 gene expression model. Default: 0.1.}
 
-\item{h5_only}{Logical. If TRUE, skips baseline expression step to save time. Useful
-for faster processing when only library parameters are needed. Default: FALSE.}
+\item{h5_only}{Logical. If TRUE, skips baseline expression estimation — the returned
+\code{baseline_expression_stats} will be NULL. Useful when only library parameters
+are needed. Default: FALSE.}
 
-\item{n_threads}{Integer or NULL. Number of parallel processing threads. If NULL,
-uses single-threaded execution. Default: NULL.}
+\item{n_threads}{Integer or NULL. Number of parallel processing threads. If NULL
+(default), auto-detects via the \env{NSLOTS} environment variable or
+\code{parallel::detectCores()}. Pass an explicit integer to override.}
 }
 \value{
 A list containing:
 \describe{
-\item{baseline_expression_stats}{Data frame with columns:
+\item{baseline_expression_stats}{Data frame with columns (or NULL if \code{h5_only = TRUE}):
 \itemize{
 \item \code{response_id}: Ensembl gene identifier
 \item \code{relative_expression}: Estimated relative expression proportions,
@@ -145,7 +147,7 @@ pilot_data_perturbseq <- reference_data_processing(
   gene_list = NULL,     # Use all genes
   TPM_thres = 0.1,      # Default expression threshold for filtering
   h5_only = FALSE,      # Fit expression model
-  n_threads = NULL      # No parallel processing
+  n_threads = NULL      # Auto-detect threads
 )
 
 # Inspect structure

@@ -26,11 +26,14 @@ This function validates that an uploaded RDS file contains valid library paramet
 with the correct structure and value ranges for power analysis.
 }
 \details{
-Expected RDS structure:
-\code{
+Expected RDS structure (output from \code{\link{library_estimation}}):
+\preformatted{
 list(
-  UMI_per_cell = numeric_value,  # Positive number
-  variation = numeric_value      # Positive number between 0 and 1
+  method_used = "ZTNB",                # or "RFA" or "constant"
+  UMI_per_cell_at_saturation = 15000,  # Positive number
+  reads_norm = 50000,                  # Positive number
+  n_cells = 10000,                     # Positive number
+  ...                                  # Method-specific parameters
 )
 }
 }

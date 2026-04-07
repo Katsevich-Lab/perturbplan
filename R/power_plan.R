@@ -787,7 +787,7 @@ check_power_results <- function(power_df,
 #' @param cost_per_million_reads Numeric. Cost per million sequencing reads in dollars
 #'   (default: 0.374). Used for sequencing cost calculations.
 #' @param cost_grid_size Integer. Number of grid points for cost optimization grid
-#'   (default: 200). Higher values provide finer resolution but longer computation time.
+#'   (default: 50). Higher values provide finer resolution but longer computation time.
 #'
 #' @return A list containing two elements:
 #' \describe{

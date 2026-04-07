@@ -174,7 +174,9 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
   if (h5_rough) {
     read_umi_table <- perturbplan::obtain_qc_read_umi_table(run_dirs[1]) |>
       dplyr::mutate(srr_idx = run_dir_names[1])
-    mapping_efficiency <- obtain_mapping_efficiency(read_umi_table,run_dirs[1])
+    if (!skip_mapping_efficiency) {
+      mapping_efficiency <- obtain_mapping_efficiency(read_umi_table,run_dirs[1])
+    }
   } else {
     read_umi_table <- list()
     for (i in seq_along(run_dirs)) {
@@ -227,14 +229,16 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   are used (suitable for perturb-seq).
 #' @param TPM_thres Numeric. Threshold (in TPM) for filtering low-expression genes in
 #'   gene expression model. Default: 0.1.
-#' @param h5_only Logical. If TRUE, skips baseline expression step to save time. Useful
-#'   for faster processing when only library parameters are needed. Default: FALSE.
-#' @param n_threads Integer or NULL. Number of parallel processing threads. If NULL,
-#'   uses single-threaded execution. Default: NULL.
+#' @param h5_only Logical. If TRUE, skips baseline expression estimation — the returned
+#'   \code{baseline_expression_stats} will be NULL. Useful when only library parameters
+#'   are needed. Default: FALSE.
+#' @param n_threads Integer or NULL. Number of parallel processing threads. If NULL
+#'   (default), auto-detects via the \env{NSLOTS} environment variable or
+#'   \code{parallel::detectCores()}. Pass an explicit integer to override.
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{baseline_expression_stats}{Data frame with columns:
+#'   \item{baseline_expression_stats}{Data frame with columns (or NULL if \code{h5_only = TRUE}):
 #'     \itemize{
 #'       \item \code{response_id}: Ensembl gene identifier
 #'       \item \code{relative_expression}: Estimated relative expression proportions,
@@ -341,7 +345,7 @@ reference_data_preprocessing_10x <- function(path_to_top_level_output,
 #'   gene_list = NULL,     # Use all genes
 #'   TPM_thres = 0.1,      # Default expression threshold for filtering
 #'   h5_only = FALSE,      # Fit expression model
-#'   n_threads = NULL      # No parallel processing
+#'   n_threads = NULL      # Auto-detect threads
 #' )
 #'
 #' # Inspect structure

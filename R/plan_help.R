@@ -6,12 +6,15 @@
 #' Internal function to load baseline expression and library parameters from the
 #' pilot datasets stored in the package data/ directory.
 #'
-#' @param biological_system Character. The biological system name (e.g., "K562", "A549", "THP-1", "T_CD8", "iPSC")
+#' @param biological_system Character. The biological system name. Available options:
+#'   "K562", "K562_10x", "K562_TAP", "A549", "THP-1", "T_CD8", "iPSC", "iPSC_neuron".
 #'
 #' @return A list containing:
 #' \describe{
-#'   \item{baseline_expression_stats}{Data frame with gene expression data or list with baseline_expression_stats data frame}
-#'   \item{library_parameters}{List with UMI_per_cell and variation parameters}
+#'   \item{baseline_expression_stats}{Data frame with columns response_id, relative_expression, expression_size}
+#'   \item{library_parameters}{List from \code{\link{library_estimation}} with method_used,
+#'     UMI_per_cell_at_saturation, reads_norm, n_cells, and method-specific parameters}
+#'   \item{mapping_efficiency}{Numeric. Mapping efficiency estimate (fraction of reads mapped to transcriptome)}
 #' }
 #'
 #' @examples
@@ -82,18 +85,19 @@ get_pilot_data_from_package <- function(biological_system) {
 #' @param minimum_fold_change Numeric. Minimum expected fold change effect (mean of gRNA effect distribution).
 #' @param gRNA_variability Numeric. Standard deviation of gRNA effect sizes, representing variability between gRNAs targeting the same gene.
 #' @param biological_system Character. Biological system for baseline expression. Available options:
-#'   "K562", "A549", "THP-1", "T_CD8", "iPSC" (default: "K562").
-#' @param B Integer. Number of Monte Carlo samples to generate when gene_list is NULL (default: 200).
-#'   Ignored when gene_list is provided.
+#'   "K562", "K562_10x", "K562_TAP", "A549", "THP-1", "T_CD8", "iPSC", "iPSC_neuron" (default: "K562").
+#' @param B Integer. Number of Monte Carlo samples to draw (default: 200).
+#'   In both modes (gene_list provided or NULL), B weighted samples are drawn with replacement.
 #' @param gene_list Character vector. Optional list of Ensembl gene IDs to use for analysis.
-#'   If provided, expression parameters will be extracted for ALL specified genes (no sampling).
-#'   If NULL (default), B genes are randomly sampled from baseline data.
+#'   If provided, importance-samples B genes from the unique gene list with weights proportional
+#'   to gene multiplicity. If NULL (default), B genes are uniformly sampled from baseline data.
 #' @param TPM_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
 #'   levels below TPM_threshold/1e6 are filtered out before power calculation.
 #' @param custom_pilot_data List. Optional custom pilot data. If provided,
 #'   this data is used instead of the default biological_system data. Must contain
-#'   baseline_expression_stats (data frame with relative_expression and expression_size columns)
-#'   and library_parameters (with UMI_per_cell and variation). See
+#'   baseline_expression_stats (data frame with response_id, relative_expression, and expression_size columns)
+#'   and library_parameters (list from \code{\link{library_estimation}} with method_used,
+#'   UMI_per_cell_at_saturation, reads_norm, n_cells, and method-specific parameters). See
 #'   \code{\link{reference_data_preprocessing_10x}} for processing 10x Cell Ranger output and
 #'   \code{\link{reference_data_processing}} for further pilot data processing.
 #' @param gRNAs_per_target Integer. Number of gRNAs per target (default: 4).
@@ -109,10 +113,12 @@ get_pilot_data_from_package <- function(biological_system) {
 #' }
 #'
 #' @details
-#' The function operates in two modes:
+#' The function operates in two modes, both drawing B samples with replacement:
 #' \itemize{
-#'   \item \strong{Gene-specific mode} (gene_list provided): Uses ALL specified genes, no sampling
-#'   \item \strong{Random sampling mode} (gene_list = NULL): Randomly samples B genes from baseline
+#'   \item \strong{Gene-specific mode} (gene_list provided): Importance-samples B genes from
+#'     unique genes in the list, with weights proportional to gene multiplicity
+#'   \item \strong{Random sampling mode} (gene_list = NULL): Uniformly samples B genes from
+#'     the TPM-filtered baseline
 #' }
 #'
 #' In both modes:
@@ -409,25 +415,29 @@ validate_custom_baseline <- function(data, file_path = "uploaded file") {
 #'
 #' @description
 #' This function validates that custom baseline expression RDS data has the required
-#' structure with baseline expression data and dispersion curve function.
+#' structure for use in power analysis.
 #'
-#' @param data List object from RDS file containing baseline expression data
+#' @param data Data frame or list from RDS file containing baseline expression data.
+#'   Accepted formats: a data frame directly, a list with \code{baseline_expression_stats}
+#'   (preferred), or a list with \code{baseline_expression} (deprecated).
 #' @param file_path Character. Optional file path for error messages (default: "uploaded file")
 #'
 #' @return List with validation results:
 #' \describe{
 #'   \item{valid}{Logical. TRUE if data passes all validation checks}
-#'   \item{data}{List. Validated data structure (if valid=TRUE)}
+#'   \item{data}{Data frame. Validated baseline expression data (if valid=TRUE)}
 #'   \item{errors}{Character vector. Error messages (if valid=FALSE)}
 #'   \item{warnings}{Character vector. Warning messages}
 #'   \item{summary}{Character. Summary statistics for display}
 #' }
 #'
 #' @details
-#' Required structure:
-#' - List with two elements: 'baseline_expression' and 'expression_dispersion_curve'
-#' - baseline_expression: Data frame with columns 'response_id', 'relative_expression', 'expression_size'
-#' - expression_dispersion_curve: Function that takes a numeric vector and returns dispersion values
+#' Accepted formats (in order of preference):
+#' \enumerate{
+#'   \item Data frame with columns: response_id, relative_expression, expression_size
+#'   \item List with \code{baseline_expression_stats} data frame (preferred key)
+#'   \item List with \code{baseline_expression} data frame (deprecated, triggers warning)
+#' }
 #'
 #' @keywords internal
 validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
@@ -598,11 +608,14 @@ validate_custom_baseline_rds <- function(data, file_path = "uploaded file") {
 #' }
 #'
 #' @details
-#' Expected RDS structure:
-#' \code{
+#' Expected RDS structure (output from \code{\link{library_estimation}}):
+#' \preformatted{
 #' list(
-#'   UMI_per_cell = numeric_value,  # Positive number
-#'   variation = numeric_value      # Positive number between 0 and 1
+#'   method_used = "ZTNB",                # or "RFA" or "constant"
+#'   UMI_per_cell_at_saturation = 15000,  # Positive number
+#'   reads_norm = 50000,                  # Positive number
+#'   n_cells = 10000,                     # Positive number
+#'   ...                                  # Method-specific parameters
 #' )
 #' }
 #'
@@ -710,15 +723,18 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
 #'
 #' @param data A list object loaded from an RDS file, expected to contain:
 #'   \itemize{
-#'     \item baseline_expression: A list with baseline expression data and dispersion curve
-#'     \item library_parameters: A list with UMI_per_cell and variation parameters
+#'     \item baseline_expression_stats: Data frame with response_id, relative_expression,
+#'       expression_size columns (or deprecated key \code{baseline_expression})
+#'     \item library_parameters: List from \code{\link{library_estimation}} with method_used,
+#'       UMI_per_cell_at_saturation, reads_norm, n_cells, and method-specific parameters
 #'   }
 #' @param file_path Character. Path or description of the uploaded file for error messages.
 #'
 #' @return A list with elements:
 #' \describe{
 #'   \item{valid}{Logical indicating if validation passed}
-#'   \item{data}{The validated data (if valid) or NULL}
+#'   \item{data}{The validated data (if valid) or NULL, with structure
+#'     \code{list(baseline_expression_stats = data.frame(...), library_parameters = list(...))}}
 #'   \item{errors}{Character vector of error messages}
 #'   \item{warnings}{Character vector of warning messages}
 #'   \item{summary}{HTML-formatted summary text for display}
@@ -732,13 +748,17 @@ validate_custom_library_rds <- function(data, filename = "uploaded file") {
 #' Expected structure:
 #' \preformatted{
 #' list(
-#'   baseline_expression = list(
-#'     baseline_expression = data.frame(...),
-#'     expression_dispersion_curve = function(v) {...}
+#'   baseline_expression_stats = data.frame(
+#'     response_id = character(),
+#'     relative_expression = numeric(),
+#'     expression_size = numeric()
 #'   ),
 #'   library_parameters = list(
-#'     UMI_per_cell = numeric_value,
-#'     variation = numeric_value
+#'     method_used = "ZTNB",
+#'     UMI_per_cell_at_saturation = 15000,
+#'     reads_norm = 50000,
+#'     n_cells = 10000,
+#'     ...
 #'   )
 #' )
 #' }
@@ -943,18 +963,19 @@ identify_library_size_range <- function(experimental_platform, library_parameter
 #' and gene sampling. This is a modularized version of the first part of extract_fc_expression_info.
 #'
 #' @param biological_system Character. Biological system for baseline expression. Available options:
-#'   "K562", "A549", "THP-1", "T_CD8", "iPSC" (default: "K562").
-#' @param B Integer. Number of Monte Carlo samples to generate when gene_list is NULL (default: 200).
-#'   Ignored when gene_list is provided.
+#'   "K562", "K562_10x", "K562_TAP", "A549", "THP-1", "T_CD8", "iPSC", "iPSC_neuron" (default: "K562").
+#' @param B Integer. Number of Monte Carlo samples to draw (default: 200).
+#'   In both modes (gene_list provided or NULL), B weighted samples are drawn with replacement.
 #' @param gene_list Character vector. Optional list of Ensembl gene IDs to use for analysis.
-#'   If provided, expression parameters will be extracted for ALL specified genes (no sampling).
-#'   If NULL (default), B genes are randomly sampled from baseline data.
+#'   If provided, importance-samples B genes from the unique gene list with weights proportional
+#'   to gene multiplicity. If NULL (default), B genes are uniformly sampled from baseline data.
 #' @param TPM_threshold Numeric. Minimum TPM threshold (default: 10). Genes with expression
 #'   levels below TPM_threshold/1e6 are filtered out before power calculation.
 #' @param custom_pilot_data List. Optional custom pilot data. If provided,
 #'   this data is used instead of the default biological_system data. Must contain
-#'   baseline_expression_stats (data frame with gene expression data)
-#'   and library_parameters (with UMI_per_cell and variation).
+#'   baseline_expression_stats (data frame with response_id, relative_expression, and expression_size columns)
+#'   and library_parameters (list from \code{\link{library_estimation}} with method_used,
+#'   UMI_per_cell_at_saturation, reads_norm, n_cells, and method-specific parameters).
 #'
 #' @return A list with elements:
 #' \describe{
@@ -964,10 +985,12 @@ identify_library_size_range <- function(experimental_platform, library_parameter
 #' }
 #'
 #' @details
-#' The function operates in two modes:
+#' The function operates in two modes, both drawing B samples with replacement:
 #' \itemize{
-#'   \item \strong{Gene-specific mode} (gene_list provided): Uses ALL specified genes with importance sampling
-#'   \item \strong{Random sampling mode} (gene_list = NULL): Randomly samples B genes from baseline
+#'   \item \strong{Gene-specific mode} (gene_list provided): Importance-samples B genes from
+#'     unique genes in the list, with weights proportional to gene multiplicity
+#'   \item \strong{Random sampling mode} (gene_list = NULL): Uniformly samples B genes from
+#'     the TPM-filtered baseline
 #' }
 #'
 #' Processing steps:

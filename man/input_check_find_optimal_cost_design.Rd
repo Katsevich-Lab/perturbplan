@@ -57,7 +57,7 @@ Used to calculate total gRNAs and experimental design parameters.}
 (default: 0.374). Used for sequencing cost calculations.}
 
 \item{cost_grid_size}{Integer. Number of grid points for cost optimization grid
-(default: 200). Higher values provide finer resolution but longer computation time.}
+(default: 50). Higher values provide finer resolution but longer computation time.}
 }
 \description{
 Input checking function for find_optimal_cost_design

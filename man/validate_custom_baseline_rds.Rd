@@ -7,7 +7,9 @@
 validate_custom_baseline_rds(data, file_path = "uploaded file")
 }
 \arguments{
-\item{data}{List object from RDS file containing baseline expression data}
+\item{data}{Data frame or list from RDS file containing baseline expression data.
+Accepted formats: a data frame directly, a list with \code{baseline_expression_stats}
+(preferred), or a list with \code{baseline_expression} (deprecated).}
 
 \item{file_path}{Character. Optional file path for error messages (default: "uploaded file")}
 }
@@ -15,7 +17,7 @@ validate_custom_baseline_rds(data, file_path = "uploaded file")
 List with validation results:
 \describe{
 \item{valid}{Logical. TRUE if data passes all validation checks}
-\item{data}{List. Validated data structure (if valid=TRUE)}
+\item{data}{Data frame. Validated baseline expression data (if valid=TRUE)}
 \item{errors}{Character vector. Error messages (if valid=FALSE)}
 \item{warnings}{Character vector. Warning messages}
 \item{summary}{Character. Summary statistics for display}
@@ -23,14 +25,14 @@ List with validation results:
 }
 \description{
 This function validates that custom baseline expression RDS data has the required
-structure with baseline expression data and dispersion curve function.
+structure for use in power analysis.
 }
 \details{
-Required structure:
-\itemize{
-\item List with two elements: 'baseline_expression' and 'expression_dispersion_curve'
-\item baseline_expression: Data frame with columns 'response_id', 'relative_expression', 'expression_size'
-\item expression_dispersion_curve: Function that takes a numeric vector and returns dispersion values
+Accepted formats (in order of preference):
+\enumerate{
+\item Data frame with columns: response_id, relative_expression, expression_size
+\item List with \code{baseline_expression_stats} data frame (preferred key)
+\item List with \code{baseline_expression} data frame (deprecated, triggers warning)
 }
 }
 \keyword{internal}

@@ -9,8 +9,10 @@ validate_combined_pilot_data(data, file_path = "uploaded file")
 \arguments{
 \item{data}{A list object loaded from an RDS file, expected to contain:
 \itemize{
-\item baseline_expression: A list with baseline expression data and dispersion curve
-\item library_parameters: A list with UMI_per_cell and variation parameters
+\item baseline_expression_stats: Data frame with response_id, relative_expression,
+expression_size columns (or deprecated key \code{baseline_expression})
+\item library_parameters: List from \code{\link{library_estimation}} with method_used,
+UMI_per_cell_at_saturation, reads_norm, n_cells, and method-specific parameters
 }}
 
 \item{file_path}{Character. Path or description of the uploaded file for error messages.}
@@ -19,7 +21,8 @@ validate_combined_pilot_data(data, file_path = "uploaded file")
 A list with elements:
 \describe{
 \item{valid}{Logical indicating if validation passed}
-\item{data}{The validated data (if valid) or NULL}
+\item{data}{The validated data (if valid) or NULL, with structure
+\code{list(baseline_expression_stats = data.frame(...), library_parameters = list(...))}}
 \item{errors}{Character vector of error messages}
 \item{warnings}{Character vector of warning messages}
 \item{summary}{HTML-formatted summary text for display}
@@ -38,13 +41,17 @@ and \code{\link{validate_custom_library_rds}}.
 Expected structure:
 \preformatted{
 list(
-  baseline_expression = list(
-    baseline_expression = data.frame(...),
-    expression_dispersion_curve = function(v) {...}
+  baseline_expression_stats = data.frame(
+    response_id = character(),
+    relative_expression = numeric(),
+    expression_size = numeric()
   ),
   library_parameters = list(
-    UMI_per_cell = numeric_value,
-    variation = numeric_value
+    method_used = "ZTNB",
+    UMI_per_cell_at_saturation = 15000,
+    reads_norm = 50000,
+    n_cells = 10000,
+    ...
   )
 )
 }

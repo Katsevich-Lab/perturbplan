@@ -21,22 +21,23 @@ extract_fc_expression_info(
 \item{gRNA_variability}{Numeric. Standard deviation of gRNA effect sizes, representing variability between gRNAs targeting the same gene.}
 
 \item{biological_system}{Character. Biological system for baseline expression. Available options:
-"K562", "A549", "THP-1", "T_CD8", "iPSC" (default: "K562").}
+"K562", "K562_10x", "K562_TAP", "A549", "THP-1", "T_CD8", "iPSC", "iPSC_neuron" (default: "K562").}
 
-\item{B}{Integer. Number of Monte Carlo samples to generate when gene_list is NULL (default: 200).
-Ignored when gene_list is provided.}
+\item{B}{Integer. Number of Monte Carlo samples to draw (default: 200).
+In both modes (gene_list provided or NULL), B weighted samples are drawn with replacement.}
 
 \item{gene_list}{Character vector. Optional list of Ensembl gene IDs to use for analysis.
-If provided, expression parameters will be extracted for ALL specified genes (no sampling).
-If NULL (default), B genes are randomly sampled from baseline data.}
+If provided, importance-samples B genes from the unique gene list with weights proportional
+to gene multiplicity. If NULL (default), B genes are uniformly sampled from baseline data.}
 
 \item{TPM_threshold}{Numeric. Minimum TPM threshold (default: 10). Genes with expression
 levels below TPM_threshold/1e6 are filtered out before power calculation.}
 
 \item{custom_pilot_data}{List. Optional custom pilot data. If provided,
 this data is used instead of the default biological_system data. Must contain
-baseline_expression_stats (data frame with relative_expression and expression_size columns)
-and library_parameters (with UMI_per_cell and variation). See
+baseline_expression_stats (data frame with response_id, relative_expression, and expression_size columns)
+and library_parameters (list from \code{\link{library_estimation}} with method_used,
+UMI_per_cell_at_saturation, reads_norm, n_cells, and method-specific parameters). See
 \code{\link{reference_data_preprocessing_10x}} for processing 10x Cell Ranger output and
 \code{\link{reference_data_processing}} for further pilot data processing.}
 
@@ -59,10 +60,12 @@ data to create a comprehensive dataset for Monte Carlo power analysis simulation
 It can handle both user-specified genes and random sampling scenarios.
 }
 \details{
-The function operates in two modes:
+The function operates in two modes, both drawing B samples with replacement:
 \itemize{
-\item \strong{Gene-specific mode} (gene_list provided): Uses ALL specified genes, no sampling
-\item \strong{Random sampling mode} (gene_list = NULL): Randomly samples B genes from baseline
+\item \strong{Gene-specific mode} (gene_list provided): Importance-samples B genes from
+unique genes in the list, with weights proportional to gene multiplicity
+\item \strong{Random sampling mode} (gene_list = NULL): Uniformly samples B genes from
+the TPM-filtered baseline
 }
 
 In both modes:
