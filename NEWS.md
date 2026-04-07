@@ -1,3 +1,19 @@
+# perturbplan 0.3.1
+
+## Documentation
+
+- Fixed outdated roxygen docs for pilot-data validators (`validate_custom_baseline_rds`, `validate_custom_library_rds`, `validate_combined_pilot_data`) to reflect current `baseline_expression_stats` + `library_parameters` schema
+- Corrected `extract_fc_expression_info` and `extract_expression_info` docs: `gene_list` uses importance sampling, not "all genes"
+- Updated `get_pilot_data_from_package` docs with all 8 biological systems and `mapping_efficiency` return value
+- Fixed `reference_data_processing` docs: `n_threads = NULL` auto-detects threads, `h5_only = TRUE` returns NULL for `baseline_expression_stats`
+- Fixed `find_optimal_cost_design` docs: `cost_grid_size` default is 50, not 200
+
+## Bug Fixes
+
+- Fixed `reference_data_preprocessing_10x`: `h5_rough = TRUE` path now correctly respects `skip_mapping_efficiency = TRUE`
+
+---
+
 # perturbplan 0.3.0
 
 ## Breaking Changes
