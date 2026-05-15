@@ -4,7 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Package Overview
 
-PerturbPlan is an R package for experimental design and power analysis for perturb-seq experiments (CRISPR-based single-cell perturbation experiments). It combines R and C++ code for efficient statistical computations.
+PerturbPlan is an R package (current version 0.3.1) for **power analysis and experimental design of CRISPR perturbation single-cell experiments** — both perturb-seq (whole-transcriptome) and TAP-seq (targeted). It combines R and C++ (Rcpp) code for efficient statistical computation.
+
+The package is developed by the Katsevich Lab (Wharton/UPenn) and pairs with a separately deployed **PerturbPlan web app** (<https://katsevich-lab-perturbplan.share.connect.posit.cloud/>). The package's current primary public role is **preparing custom reference data for that web app**; it also exposes more advanced programmatic power-analysis APIs that go "beyond the web app."
+
+> Note: There is **no Shiny app bundled in this package** (no `inst/shiny/`, no `launch_app()`). The web app is a separate deployment.
 
 ## Common Development Commands
 
@@ -14,10 +18,7 @@ PerturbPlan is an R package for experimental design and power analysis for pertu
 R CMD build .
 
 # Check the package (replace version as needed)
-R CMD check perturbplan_0.0.1.tar.gz
-
-# Install the package locally
-R CMD INSTALL .
+R CMD check perturbplan_0.3.1.tar.gz
 ```
 
 ### Development Workflow
@@ -29,403 +30,95 @@ devtools::load_all()
 devtools::test()
 
 # Run a specific test file
-devtools::test(filter = "test-library_computation")
+devtools::test(filter = "library_computation")
 
 # Generate documentation from roxygen2 comments
 devtools::document()
 
 # Check package without building
 devtools::check()
-```
 
-### Shiny App
-```r
-# Launch the interactive app (runs app.R)
-perturbplan::launch_app()
+# Rebuild the pkgdown site
+pkgdown::build_site()
 ```
 
 ## Architecture
 
-### Core Components
+The package supports three workflows.
 
-1. **Power Analysis Pipeline** (`R/power_plan.R`, `R/plan_help.R`)
-   - `calculate_power_grid()`: Main function for heatmap power analysis  
-   - `compute_power_grid_efficient()`: Efficient grid-based power analysis using C++ Monte Carlo
-   - `compute_power_posthoc()`: Main function for post-hoc power analysis
-   - Integrates with C++ implementations for performance
+### 1. Pilot-data preprocessing (`R/pilot_data_preprocessing.R`, `R/pilot_data_help.R`)
 
-2. **Parameter Estimation** (`R/parameter_estimation.R`, `R/parameter_estimation_help.R`)
-   - `library_estimation()`: Estimates parameters from existing data
-   - `library_computation()`: Computes QC-aware library statistics
+Turns raw 10x Cell Ranger output into reference data usable by the web app and power functions.
 
-3. **C++ Performance Layer** (`src/`)
-   - `BH_cutoff.cpp`: Benjamini-Hochberg multiple testing corrections
-   - `compute_distribution_teststat_*.cpp`: Test statistic distributions
-   - `power_curves.cpp`: Monte Carlo integration for power curves
-   - Key C++ functions: `compute_monte_carlo_teststat_cpp()`, `compute_fc_curve_cpp()`, `compute_expression_curve_cpp()`
-   - Uses Rcpp for seamless R/C++ integration
+- `reference_data_preprocessing_10x()` — Step 1: aggregates Cell Ranger outputs across SRR runs into a response matrix, a read-UMI table, and a naive mapping-efficiency estimate. (Cell Ranger **count** only — not Cell Ranger multi.)
+- `reference_data_processing()` — Step 2: produces `baseline_expression_stats` (negative-binomial expression parameters) and `library_parameters` (read-UMI saturation curve).
+- Helpers: `obtain_qc_response_data()`, `obtain_qc_read_umi_table()`, `obtain_mapping_efficiency()`, `obtain_expression_information()`, `library_estimation()`.
 
-4. **Quality Control** (`R/QC_computation.R`)
-   - Implements pairwise QC checks for perturb-seq data
-   - Filters based on minimum non-zero cell counts
+### 2. Prospective power analysis / design optimization (`R/power_plan.R`, `R/plan_help.R`)
 
-5. **Input Validation** (`R/check.R`)
-   - Comprehensive validation functions for all major operations
-   - Ensures data consistency across the pipeline
+- `compute_power_plan()` / `compute_power_plan_overall()` / `compute_power_plan_per_grid()` — power for prospective experimental designs.
+- `cost_power_computation()` — power analysis with cost minimization across experimental parameters.
+- `find_optimal_cost_design()` — binary-search optimization to find designs meeting a power target.
+- `obtain_fixed_variable_constraining_cost()` — cost-constrained design helper.
+- `extract_fc_expression_info()` / `extract_expression_info()` — sample fold-change/expression info (importance sampling over a gene list).
+- `get_pilot_data_from_package()` — load one of the bundled pilot datasets.
 
-### Data Flow
+### 3. Retrospective (post-hoc) power analysis (`R/power_posthoc.R`, `R/posthoc_help.R`)
 
-1. User provides:
-   - Cell counts per gRNA
-   - Baseline expression statistics
-   - Perturbation-gene pairs to analyze (Random mode or Custom CSV with `grna_target`, `response_id` columns)
-   - Analysis parameters (control group, test side, QC thresholds)
+- `compute_power_posthoc()` — power for a completed experiment, given per-gRNA cell counts (`cells_per_grna`) and `discovery_pairs`. Returns individual power per perturbation-gene pair plus expected total discoveries. Uses a score-test statistic and BH/Bonferroni FDP estimation.
 
-2. The package:
-   - Validates inputs and CSV format (if Custom mode)
-   - Handles gene multiplicity using weighted sampling for duplicate genes in pairs
-   - Computes QC-aware library sizes
-   - Calculates test statistic distributions using C++
-   - Estimates power for each perturbation-gene pair
+### Cross-cutting components
 
-3. Returns:
-   - Individual power for each pair
-   - Expected total discoveries
+- **C++ performance layer** (`src/`): test-statistic distributions (`compute_distribution_teststat_fixed_es.cpp`, `compute_distribution_teststat_random_es.cpp`), BH multiple-testing cutoff (`BH_cutoff.cpp`), QC (`compute_QC.cpp`), library-size saturation curves (`library_size_curves.cpp`), cell-range identification (`identify_cell_range.cpp`), Monte Carlo overall power (`overall_power.cpp`). Bound via Rcpp; see `R/RcppExports.R` / `src/RcppExports.cpp`. Built with `BH`, `Rcpp`, `RcppEigen`, `PoissonBinomial` (`LinkingTo`).
+- **Quality control** (`R/QC_computation.R`): pairwise QC checks (minimum non-zero cell counts).
+- **Input validation** (`R/check.R`): one validator per major public function.
+- **Variable bindings** (`R/perturbplan.R`): `utils::globalVariables()` declarations to suppress NSE R CMD check notes.
 
-### Key Design Decisions
+### Data
 
-- **Rcpp Integration**: C++ code handles computationally intensive operations (distribution calculations, multiple testing corrections)
-- **Modular Design**: Separate functions for parameter estimation, QC computation, and power analysis allow flexible workflows
-- **Shiny Interface**: Provides non-programmatic access via `inst/shiny/app.R`
-- **C++ Optimization**: Monte Carlo loops implemented in C++ for significant performance improvements
-- **Weighted Sampling**: Preserves gene multiplicity from perturbation-gene pairs using efficient weighted sampling instead of row duplication
+`data/` ships 8 reference pilot datasets, each a list with `baseline_expression_stats`, `library_parameters`, and `mapping_efficiency`:
+`K562_Gasperini`, `K562_10x`, `K562_Ray` (TAP-seq), `A549_Sakellaropoulos`, `THP1_Yao`, `T_CD8_Shifrut`, `iPSC_Tian`, `iPSC_neuron_Tian`. Documented in `R/data.R`; regeneration scripts in `inst/data-raw/`.
 
-## Performance
+## Key Design Decisions
 
-The package has been optimized for computational efficiency:
-
-- **C++ Monte Carlo**: `.compute_power_plan_efficient()` replaces the older R-based `.compute_underspecified_power_efficient()` with C++ implementations
-- **Batch Processing**: Monte Carlo samples processed in batch using `compute_monte_carlo_teststat_cpp()`
-- **Efficient Curves**: Power curves computed using optimized C++ functions (`compute_fc_curve_cpp`, `compute_expression_curve_cpp`)
-- **Memory-Efficient Sampling**: Uses weighted sampling for gene multiplicity instead of duplicating rows, reducing memory usage while preserving statistical correctness
-
-## Shiny Application Features
-
-### Perturbation-Gene Pairs Analysis
-
-The Shiny app provides an intuitive interface for specifying perturbation-gene pairs:
-
-- **Random Mode**: Randomly samples genes from the baseline expression dataset
-- **Custom Mode**: Accepts CSV files with user-specified perturbation-gene pairs
-  - Required format: CSV with `grna_target` and `response_id` columns
-  - `response_id` must contain Ensembl gene IDs (e.g., ENSG00000141510)
-  - Preserves gene multiplicity: genes appearing in multiple pairs get proportional weight in power calculations
-  - Example file: `inst/extdata/sample_pairs.csv`
-
-### UI Organization
-
-The application features a streamlined two-tab structure:
-
-1. **Overall Power**: Unified tab with sub-tabs for "Heatmap" and "Slice" views
-2. **Drill-down Power**: Detailed power curve analysis for selected experimental conditions
-
-Analysis choices are ordered for logical workflow:
-1. **Perturbation-gene pairs to analyze**: Random/Custom dropdown
-2. **Minimum TPM threshold**: Gene expression filtering
-3. **Test side**: Left (knockdown), Right (overexpression)
-4. **Control group**: Complement cells vs Non-targeting cells  
-5. **FDR target level**: Multiple testing correction threshold
-
-### Power Visualization Interface
-
-#### Overall Power Tab
-- **Heatmap Sub-tab**: Interactive power heatmap with click-to-select functionality
-  - Drill-down controls for cells, reads per cell, or both (tiles)
-  - Context-sensitive sidebar showing only relevant controls
-- **Slice Sub-tab**: Line plots showing power curves for selected heatmap slices
-  - Conditional display: shows instruction message when no slices selected
-  - Interactive point selection with multiple selection support
-
-#### Drill-down Power Tab
-Provides detailed power curve analysis with:
-
-- **Tabbed Interface**: Separate tabs for "Expression" and "Fold Change" plots
-- **Display Options**: Control box with three visualization modes:
-  - "All together": All experimental designs on a single plot with:
-    - Color representing number of cells
-    - Linetype and point shape representing reads per cell
-    - Legends positioned on the right for optimal space usage
-    - Clean legend labels (no redundant "reads/cell" text)
-  - "Facet over cells": Horizontal panels separated by cell count, colored by reads per cell
-  - "Facet over reads per cell": Horizontal panels separated by reads per cell, colored by cell count
-- **Interactive Features**: 
-  - ggside marginal histograms showing distribution of expression/fold change values
-  - Points added to all line plots for better data visibility
-  - Square aspect ratio panels for optimal viewing
-  - Consistent 570px box heights across all tabs
-- **Performance Optimization**: Default 10×10 grid (instead of 20×20) for faster computation
-
-### File Validation
-
-- Validates CSV format and required columns
-- Provides clear error messages for format issues
-- Shows loading status: "Loaded X pairs (Y unique genes)"
-- Warns about genes filtered out due to low TPM
-
-### Excel Download Organization
-
-The results Excel file is organized with numbered sheets for logical reading:
-
-1. **1_Parameters**: Analysis settings and input parameters
-2. **2_Power_Grid**: Main heatmap results (cells × reads per cell power grid)
-3. **3_Gene_List**: Input gene list (if custom pairs provided)
-4. **4_Selected_Designs**: Information about drill-down selections
-5. **5_Fold_Change_Power**: Detailed fold change power curves
-6. **6_Expression_Power**: Detailed expression (TPM) power curves
-
-Each sheet uses logical column ordering:
-- **Design** column shows "cells × reads" format for easy identification
-- **Cells** and **Reads_per_Cell** as separate numeric columns for analysis
-- **Data columns** (Expression_TPM, Fold_Change, Power) follow design info
-- **Clear naming**: Descriptive column headers without redundancy
+- **C++ for hot paths**: Monte Carlo loops, distribution calculations, and multiple-testing corrections are implemented in C++. Prefer C++ implementations over R loops for computationally intensive operations.
+- **Modular workflows**: preprocessing, prospective power, and post-hoc power are independent function families with shared C++ and validation layers.
+- **`rSAC_fn_wrapper` library model** (since v0.3.0): `library_estimation()` returns an `rSAC_fn_wrapper` list (`method_used`, `UMI_per_cell_at_saturation`, `reads_norm`, `n_cells`, plus method-specific params) using `preseqR` ZTNB/RFA saturation-curve fitting — this replaced the older `minpack.lm` NLS fit. Internal C++ functions consume this wrapper.
 
 ## Testing
 
-The package uses testthat (edition 3) with helper functions in `tests/testthat/helper-*.R` for test data generation. Tests compare analytical computations against simulations to ensure accuracy.
+The package uses testthat (edition 3) with helper functions in `tests/testthat/helper-*.R` for test-data generation. Tests compare analytical computations against simulations to ensure accuracy. Test coverage is ~70%.
 
-## Known Issues
+## Vignettes
 
-Current R CMD check warnings that need attention:
+`vignettes/` contains three articles:
+- `preprocess-reference.Rmd` — "Prepare Data For Web App" (the primary, currently navbar-linked article).
+- `prospective-power.Rmd` — advanced prospective power workflows (perturb-seq vs TAP-seq, comparing designs).
+- `posthoc.Rmd` — retrospective power analysis.
 
-- **Missing Imports**: Need to declare imports for `Matrix`, `sceptre`, `shiny` packages
-- **Namespace Issues**: Missing imports for standard R functions (`setNames`, `read.csv`, `as`)
-- **Hidden Files**: `.claude` directory should be added to `.Rbuildignore`
-
-To fix namespace issues, add to NAMESPACE:
-```r
-importFrom("methods", "as")
-importFrom("stats", "setNames")
-importFrom("utils", "read.csv")
-```
+`_pkgdown.yml` currently only links `preprocess-reference` in the navbar; the other two are present but commented out.
 
 ## Parameter Naming Convention
 
-**IMPORTANT**: Use `TPM_threshold` instead of `TPM_threshold` everywhere in the package.
+**IMPORTANT**: Use `TPM_threshold` (Transcripts Per Million) everywhere — never `tmp_threshold`.
 
-- All function parameters should use `TPM_threshold`
-- All variable names should use `TPM_threshold`  
-- All documentation should reference `TPM_threshold`
-- UI inputs should use `"TPM_threshold"` as input ID
+- All function parameters, variable names, and documentation should use `TPM_threshold`.
+- When modifying existing functions, preserve existing parameter names exactly.
+- Note `sequenced_reads_per_cell` refers to **raw** sequencing reads (before mapping), not mapped reads (renamed from `reads_per_cell`/`raw_reads_per_cell` in v0.2.0).
 
-This ensures consistency across the entire codebase and avoids confusion between "TPM" (Transcripts Per Million) and "tmp" (temporary).
+## Common Mistakes to Avoid
 
-## Common Typos to Avoid
-
-- **`TPM_threshold` vs `TPM_threshold`**: Always use `TPM_threshold` (Transcripts Per Million), not `TPM_threshold` (temporary)
-- **Parameter consistency**: When adding parameters to functions, double-check spelling matches existing usage
-- **Function signatures**: Ensure parameter names match between function definitions and calls
-- **Careful attention to existing code**: When modifying existing functions, preserve existing parameter names exactly as they are
-
-## Combined Pilot Data Upload
-
-The Shiny application supports uploading combined pilot data that includes both baseline expression and library parameters in a single RDS file. This ensures consistency between these components and simplifies the upload process.
-
-### Using Combined Pilot Data
-
-1. **Navigate to "Experimental setup" section** in the sidebar
-2. **Select "Custom"** for pilot data
-3. **Upload an RDS file** with the required combined structure (see below)
-4. **Proceed with analysis** - all power calculations will use your custom data
-
-### Required RDS File Structure
-
-The RDS file must contain a list with exactly two named elements:
-
-```r
-combined_pilot_data <- list(
-  baseline_expression_stats = data.frame(
-    response_id = c("ENSG00000141510", "ENSG00000157764", ...),    # Ensembl gene IDs
-    relative_expression = c(1.23e-05, 4.56e-06, ...),             # TPM/1e6 scale
-    expression_size = c(0.45, 1.23, ...)                          # Dispersion parameters
-  ),
-  library_parameters = list(
-    method_used = "ZTNB",                # Saturation curve method
-    UMI_per_cell_at_saturation = 15000,  # Maximum UMI at saturation
-    reads_norm = 50000,                  # Reads per cell normalization
-    n_cells = 10000,                     # Number of cells in pilot
-    size = 2.5,                          # ZTNB-specific: size parameter
-    mu = 0.8,                            # ZTNB-specific: mu parameter
-    L = 8000                             # ZTNB-specific: L parameter
-    # For RFA method, include: coefs = c(...), poles = c(...)
-  )
-)
-
-# Save as RDS file
-saveRDS(combined_pilot_data, "my_combined_pilot_data.rds")
-```
-
-### Data Requirements
-
-**baseline_expression_stats component:**
-- **baseline_expression_stats**: Data frame with required columns:
-  - **response_id**: Character vector of gene IDs (preferably Ensembl format: ENSGXXXXXXXXXXX)
-  - **relative_expression**: Numeric vector of expression levels on TPM/1e6 scale (i.e., raw TPM divided by 1,000,000)
-  - **expression_size**: Numeric vector of positive dispersion parameters 
-  - **No missing values** in any column
-  - **Unique gene IDs** (duplicates will be removed, keeping first occurrence)
-
-**library_parameters component (rSAC_fn_wrapper format):**
-- **method_used**: Character string indicating the saturation curve method ("ZTNB", "RFA", or "constant")
-- **UMI_per_cell_at_saturation**: Maximum UMI count per cell at infinite sequencing depth (typically 1000-100000)
-- **reads_norm**: Normalization constant representing reads per cell in pilot data (positive numeric)
-- **n_cells**: Number of cells in pilot data (positive numeric, typically >100)
-- **Additional method-specific parameters**:
-  - For ZTNB: L, size, mu
-  - For RFA: coefs (vector), poles (vector)
-- **All required parameters** must be present and valid
-- **No missing values** allowed in required fields
-
-### Creating Combined Pilot Data Files
-
-#### Method 1: From Default Data
-```r
-# Load the package and default data
-library(perturbplan)
-pilot_data <- get_pilot_data_from_package("K562")
-baseline_data <- if (!is.null(pilot_data$baseline_expression_stats)) {
-  pilot_data$baseline_expression_stats
-} else {
-  pilot_data$baseline_expression$baseline_expression
-}
-library_data <- pilot_data$library_parameters
-
-# Combine into the expected structure
-combined_pilot_data <- list(
-  baseline_expression_stats = baseline_data,
-  library_parameters = library_data
-)
-
-# Save as RDS
-saveRDS(combined_pilot_data, "my_combined_pilot_data.rds")
-```
-
-#### Method 2: From Your Own Measurements
-```r
-# Create your own baseline expression data
-my_baseline <- data.frame(
-  response_id = c("ENSG00000141510", "ENSG00000157764"),
-  relative_expression = c(1.23e-05, 4.56e-06),
-  expression_size = c(0.45, 1.23)
-)
-
-# Create your own library parameters using library_estimation()
-# This requires read-UMI data from your pilot experiment
-# See ?library_estimation for details
-
-# Or use library parameters from reference_data_processing()
-# which automatically calls library_estimation()
-
-# Example structure (must be output from library_estimation):
-my_library <- list(
-  method_used = "ZTNB",
-  UMI_per_cell_at_saturation = 18000,
-  reads_norm = 45000,
-  n_cells = 8000,
-  size = 2.8,
-  mu = 0.75,
-  L = 7500
-)
-
-# Combine and save
-combined_pilot_data <- list(
-  baseline_expression_stats = my_baseline,
-  library_parameters = my_library
-)
-
-saveRDS(combined_pilot_data, "my_custom_pilot_data.rds")
-```
-
-#### Method 3: Using the Example Script
-Use the example script at `inst/extdata/create_combined_pilot_example.R` for guidance on creating combined pilot data files.
-
-### File Validation
-
-The application automatically validates uploaded RDS files using `validate_combined_pilot_data()` and provides detailed error messages for:
-- Incorrect overall file structure or missing top-level elements
-- Invalid baseline expression data (delegates to `validate_custom_baseline_rds()`)
-- Invalid library parameters in rSAC_fn_wrapper format (delegates to `validate_custom_library_rds()`)
-  - Checks for required fields: method_used, reads_norm, n_cells, UMI_per_cell_at_saturation
-  - Validates method_used is one of: "ZTNB", "RFA", or "constant"
-- Missing values or duplicate gene IDs
-- File size limits (50MB maximum)
-- R version compatibility issues
-
-### Integration with Analysis Workflow
-
-Combined pilot data integrates seamlessly with all analysis features:
-- **Compatible with both Random and Custom gene list modes**
-- **Works with all analysis parameters** (test side, control group, FDR levels)
-- **Included in Excel downloads** with clear documentation of data source
-- **Supports all visualization features** (heatmaps, power curves, drill-down analysis)
-- **Ensures consistency** between baseline expression and library parameters from the same experiment
-
-### Performance Considerations
-
-- **File size**: Keep RDS files under 50MB for optimal performance
-- **Gene count**: 1,000-10,000 genes typically provide good balance of comprehensiveness and speed
-- **Memory usage**: Large datasets may require more RAM for analysis
-- **Parameter ranges**: Extreme values may affect analysis speed or accuracy
-
-### Example Files
-
-Pre-built example files are available:
-- `inst/extdata/example_combined_pilot_data.rds`: Combined K562 baseline and library data
-- `inst/extdata/create_combined_pilot_example.R`: Script for creating combined files
-
-### Summary Display
-
-When combined pilot data is loaded successfully, the application displays:
-"Loaded custom baseline expression (X,XXX genes)
-Average TPM: XX.X
-Loaded custom library parameters
-Method: ZTNB (or RFA/constant)
-UMI at saturation: XX,XXX
-Reads normalization: XX,XXX
-Number of cells: XX,XXX"
-
-## Development Notes
-
-- **Function Migration**: `.compute_underspecified_power_efficient()` has been replaced with `.compute_power_plan_efficient()` for better performance
-- **C++ Priority**: When possible, use C++ implementations over R loops for computationally intensive operations
-- **Grid Analysis**: Use `compute_power_grid_efficient()` for systematic power analysis across experimental conditions
-- **ggside Faceting**: When using ggplot2 faceting with ggside histograms, convert numeric faceting variables to factors explicitly to avoid "Can't combine factor and double" errors. Use `factor()` with proper levels and labels before `facet_grid()`.
+- **`TPM_threshold` vs `tmp_threshold`**: always use `TPM_threshold`.
+- **Parameter consistency**: when adding parameters, verify spelling matches existing usage and that function definitions and call sites agree.
+- **Preserve existing code**: when modifying existing functions, keep parameter names exactly as they are.
 
 ## Git Workflow Requirements
 
 **IMPORTANT**: When commit and push is requested, the **entire repository** should be committed and pushed, not just specific changes.
 
-- **Complete Sync**: After commit and push, there should be **no difference** between the local directory and remote repository
-- **Clean Working Tree**: `git status` should show a clean working tree after pushing
-- **Full Commit**: Use `git add .` to stage all changes before committing, unless specifically instructed to commit only particular files
-- **Repository Consistency**: The remote repository should always reflect the complete current state of the local development environment
+- **Complete Sync**: after commit and push, there should be **no difference** between the local directory and remote repository.
+- **Clean Working Tree**: `git status` should show a clean working tree after pushing.
+- **Full Commit**: use `git add .` to stage all changes before committing, unless specifically instructed otherwise.
+- **Repository Consistency**: the remote repository should always reflect the complete current state of local development.
 
-This ensures repository consistency and prevents issues with uncommitted changes being left behind during development sessions.
-
-## Shiny UI Tab Modification Guidelines
-
-**IMPORTANT**: When making modifications to tabs in the Shiny UI, always ensure changes align with existing patterns:
-
-- **Tab Header Colors**: Follow the established color scheme defined in CSS selectors (e.g., `#exp-header`, `#perturbation-header`, `#analysis-header`, `#effects-header`)
-- **Collapsibility**: Maintain the collapsible functionality with proper JavaScript integration
-- **CSS Consistency**: Update all relevant CSS selectors and JavaScript arrays when adding/removing/modifying tabs
-- **Pattern Matching**: New tabs should follow the exact same structure as existing tabs:
-  - Header styling with hover effects
-  - Chevron icons with proper rotation
-  - Content containers with consistent padding and background
-  - Display states (`display: none` for collapsed, `display: block` for expanded)
-
-When adding or modifying tabs, check:
-1. CSS selectors in `ui_styles.R` include the new tab IDs
-2. JavaScript arrays (`allSections`, `allChevrons`) are updated
-3. Initial state setup includes the new tab
-4. Color scheme and hover effects match existing tabs
+Active development happens on the `dev` branch; `main` is the release branch.
